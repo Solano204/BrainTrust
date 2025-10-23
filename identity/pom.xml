@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>education</artifactId>
+    <artifactId>identity</artifactId>
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
@@ -18,12 +18,12 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>com.braintrust</groupId>
-            <artifactId>shared</artifactId>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
         </dependency>
         <dependency>
             <groupId>com.braintrust</groupId>
-            <artifactId>identity</artifactId>
+            <artifactId>shared</artifactId>
         </dependency>
     </dependencies>
 
