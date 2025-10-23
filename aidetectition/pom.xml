@@ -9,7 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>education</artifactId>
+    <artifactId>aidetectition</artifactId>
 
     <properties>
         <maven.compiler.source>22</maven.compiler.source>
@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>com.braintrust</groupId>
-            <artifactId>identity</artifactId>
+            <artifactId>education</artifactId>
         </dependency>
     </dependencies>
 
