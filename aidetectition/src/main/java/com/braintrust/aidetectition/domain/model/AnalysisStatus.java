@@ -1,6 +1,6 @@
 package com.braintrust.aidetectition.domain.model;
 
 // Enum para AI Detection
-enum AnalysisStatus {
+public enum AnalysisStatus {
     PENDING, COMPLETED, FAILED
 }

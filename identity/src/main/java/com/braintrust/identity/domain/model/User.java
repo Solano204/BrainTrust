@@ -51,6 +51,26 @@ public class User extends AggregateRoot<UserId> {
         return studentId.trim();
     }
 
+
+    // ✅ ADD THIS STATIC METHOD FOR RECONSTITUTION
+    public static User reconstitute(
+            UserId id,
+            PersonId personId,
+            Email email,
+            Password password,
+            Role role,
+            boolean active,
+            LocalDateTime createdAt,
+            String studentId) {
+
+        User user = new User(id, personId, email, password, role);
+        user.active = active;
+        user.createdAt = createdAt;
+        user.studentId = studentId;
+        return user;
+    }
+
+
     // Comportamiento de dominio rico - sin events
     public void changePassword(Password newPassword) {
         if (!this.active) {
@@ -91,6 +111,6 @@ public class User extends AggregateRoot<UserId> {
     public boolean isActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public String getStudentId() { return studentId; }
-
+    public Password getPassword() { return password; } // ✅ ADD THIS
     // No exponemos el password directamente por seguridad
 }
