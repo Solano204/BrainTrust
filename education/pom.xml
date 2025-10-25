@@ -25,6 +25,10 @@
             <groupId>com.braintrust</groupId>
             <artifactId>identity</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.braintrust</groupId>
+            <artifactId>aidetectition</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
