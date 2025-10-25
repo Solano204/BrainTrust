@@ -1,7 +1,7 @@
 package com.braintrust.education.domain.valueobjects;
 
+import com.braintrust.education.domain.model.DocumentType;
 import com.braintrust.shared.domain.ValueObject;
-import org.w3c.dom.DocumentType;
 
 import java.time.LocalDateTime;
 
