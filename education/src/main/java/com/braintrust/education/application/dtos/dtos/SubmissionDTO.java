@@ -1,6 +1,10 @@
 package com.braintrust.education.application.dtos.dtos;
 
 
+import com.braintrust.aidetectition.application.dtos.dtos.AIDetectionResultDTO;
+
+import java.util.List;
+
 // 📍 education/application/dtos/SubmissionDTO.java
 public record SubmissionDTO(
         String id,
