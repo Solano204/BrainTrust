@@ -7,6 +7,7 @@ import com.braintrust.aidetectition.application.dtos.dtos.DetectionSummaryDTO;
 import com.braintrust.aidetectition.domain.model.AnalysisStatus;
 import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
 import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,9 +18,9 @@ import java.util.Optional;
 public interface AnalysisService {
 
     // Commands
-    AnalysisId analyzeSubmission(AnalyzeSubmissionCommand command);
-    void retryAnalysis(AnalysisId analysisId);
-    void cancelAnalysis(AnalysisId analysisId);
+    AnalysisId analyzeSubmission(AnalyzeSubmissionCommand command) throws JsonProcessingException;
+    void retryAnalysis(AnalysisId analysisId) throws JsonProcessingException;
+    void cancelAnalysis(AnalysisId analysisId) throws JsonProcessingException;
 
     // Queries
     AnalysisResultDTO getAnalysisResult(AnalysisId analysisId);

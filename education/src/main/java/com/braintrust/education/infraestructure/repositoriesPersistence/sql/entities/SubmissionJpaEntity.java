@@ -3,6 +3,8 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.ent
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "submissions", indexes = {
@@ -40,6 +42,13 @@ public class SubmissionJpaEntity  {
     @Column(name = "teacher_feedback", columnDefinition = "TEXT")
     private String teacherFeedback;
 
+
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "submission_id")
+    private List<DocumentJpaEntity> documents = new ArrayList<>();
+
+
     // Constructors
     public SubmissionJpaEntity() {}
 
@@ -63,6 +72,12 @@ public class SubmissionJpaEntity  {
 
     public String getAssignmentId() { return assignmentId; }
     public void setAssignmentId(String assignmentId) { this.assignmentId = assignmentId; }
+
+
+
+    public List<DocumentJpaEntity> getDocuments() { return documents; }
+    public void setDocuments(List<DocumentJpaEntity> documents) { this.documents = documents; }
+
 
     public String getStudentId() { return studentId; }
     public void setStudentId(String studentId) { this.studentId = studentId; }

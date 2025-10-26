@@ -54,10 +54,7 @@ public class SubmissionApplicationService implements SubmissionService {
         List<Document> documents = command.attachments().stream()
                 .map(dto -> new Document(
                         dto.name(),
-                        dto.fileType(),
-                        dto.storagePath(),
-                        dto.textContent(),
-                        DocumentType.valueOf(dto.documentType())
+                        dto.fileType()
                 ))
                 .collect(Collectors.toList());
 
@@ -65,8 +62,8 @@ public class SubmissionApplicationService implements SubmissionService {
         Submission submission = assignment.submitWork(studentId, command.content(), documents);
 
         // Save both assignment and submission
-        assignmentRepository.save(assignment);
-        Submission savedSubmission = submissionRepository.save(submission);
+        assignmentRepository.save(assignment); // UPDATE
+        Submission savedSubmission = submissionRepository.save(submission); // CREATE
 
         return savedSubmission.getId();
     }
@@ -244,8 +241,7 @@ public class SubmissionApplicationService implements SubmissionService {
                         doc.getName(),
                         doc.getStoragePath(),
                         doc.getCreatedAt().toString(),
-                        "SUBMISSION", // ✅ Get from entity
-                        0L // TODO: Get file size
+                        "SUBMISSION" // ✅ Get from entity
                 ))
                 .collect(Collectors.toList());
 
@@ -260,9 +256,9 @@ public class SubmissionApplicationService implements SubmissionService {
         return new SubmissionDTO(
                 submission.getId().getValue(),
                 submission.getAssignmentId().getValue(),
-                "Assignment Title", // TODO: Get from Assignment
+                "HI ", // TODO: Get from Assignment
                 submission.getStudentId().getValue(),
-                "Student Name", // TODO: Get from UserQueryPort
+                "Student", // TODO: Get from UserQueryPort
                 submission.getContent(),
                 submission.getStatus().name(),
                 gradeDTO,

@@ -1,8 +1,8 @@
 package com.braintrust.education.application.service;
 
-// 📍 education/application/services/CourseApplicationService.java
-import com.braintrust.education.application.Maps.CourseMapper;
-import com.braintrust.education.application.dtos.*;
+
+// 📍 education/infrastructure/persistence/JpaCourseRepositoryAdapter.java
+
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.CourseDTO;
 import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
@@ -11,10 +11,9 @@ import com.braintrust.education.application.ports.in.CourseService;
 import com.braintrust.education.application.ports.out.*;
 import com.braintrust.education.domain.exceptions.CourseCodeAlreadyExistsException;
 import com.braintrust.education.domain.exceptions.CourseNotFoundException;
-import com.braintrust.education.domain.exceptions.StudentAlreadyEnrolledException;
-import com.braintrust.education.domain.exceptions.UnitNotFoundException;
 import com.braintrust.education.domain.model.*;
 import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.CourseMapper;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,25 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.braintrust.education.application.Maps.CourseMapper.mapToCourseDTO;
-
-
 @Service
 @Transactional
 public class CourseApplicationService implements CourseService {
 
     private final CourseRepository courseRepository;
-    private final EnrollmentRepository enrollmentRepository;
-    private final UnitRepository unitRepository;
 
-    public CourseApplicationService(
-            CourseRepository courseRepository,
-            EnrollmentRepository enrollmentRepository,
-            UnitRepository unitRepository
-    ) {
+    public CourseApplicationService(CourseRepository courseRepository) {
         this.courseRepository = courseRepository;
-        this.enrollmentRepository = enrollmentRepository;
-        this.unitRepository = unitRepository;
     }
 
     // ✅ COURSE COMMANDS
@@ -136,17 +124,12 @@ public class CourseApplicationService implements CourseService {
 
         Course course = findCourseByIdOrThrow(courseId);
 
-        if (enrollmentRepository.existsByCourseAndStudent(courseId, studentId)) {
-            throw new StudentAlreadyEnrolledException("Student already enrolled in this course");
-        }
-
         Enrollment enrollment = course.enrollStudent(studentId);
-        Enrollment savedEnrollment = enrollmentRepository.save(enrollment);
 
-        // Save course to persist enrollment relationship
+        // ✅ ONLY save the aggregate root - JPA cascades to enrollments
         courseRepository.save(course);
 
-        return savedEnrollment.getId();
+        return enrollment.getId();
     }
 
     @Override
@@ -173,10 +156,10 @@ public class CourseApplicationService implements CourseService {
                 command.description()
         );
 
-        CourseUnit savedUnit = unitRepository.save(unit);
+        // ✅ ONLY save the aggregate root - JPA cascades to units
         courseRepository.save(course);
 
-        return savedUnit.getId();
+        return unit.getId();
     }
 
     @Override
@@ -191,29 +174,39 @@ public class CourseApplicationService implements CourseService {
                 command.imageUrl()
         );
 
-        CourseUnit savedUnit = unitRepository.save(unit);
         courseRepository.save(course);
 
-        return savedUnit.getId();
+        return unit.getId();
     }
 
     @Override
     public void updateUnit(UpdateUnitCommand command) {
         UnitId unitId = UnitId.fromString(command.unitId());
-        CourseUnit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new UnitNotFoundException("Unit not found: " + command.unitId()));
+
+        Course course = findCourseByUnitIdOrThrow(unitId);
+
+        CourseUnit unit = course.getUnits().stream()
+                .filter(u -> u.getId().equals(unitId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Unit not found in course"));
 
         unit.updateDetails(command.name(), command.description());
-        unitRepository.save(unit);
+
+        courseRepository.save(course);
     }
 
     @Override
     public void updateUnitImage(UnitId unitId, String imageUrl) {
-        CourseUnit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new UnitNotFoundException("Unit not found"));
+        Course course = findCourseByUnitIdOrThrow(unitId);
+
+        CourseUnit unit = course.getUnits().stream()
+                .filter(u -> u.getId().equals(unitId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Unit not found in course"));
 
         unit.setUrlImage(imageUrl);
-        unitRepository.save(unit);
+
+        courseRepository.save(course);
     }
 
     // ✅ COURSE QUERIES
@@ -222,7 +215,7 @@ public class CourseApplicationService implements CourseService {
     @Transactional(readOnly = true)
     public CourseDTO getCourseById(CourseId courseId) {
         Course course = findCourseByIdOrThrow(courseId);
-        return mapToCourseDTO(course);
+        return CourseMapper.mapToCourseDTO(course); // ✅ FIXED
     }
 
     @Override
@@ -230,7 +223,7 @@ public class CourseApplicationService implements CourseService {
     public CourseDTO getCourseByCode(CourseCode code) {
         Course course = courseRepository.findByCode(code)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with code: " + code.getValue()));
-        return mapToCourseDTO(course);
+        return CourseMapper.mapToCourseDTO(course); // ✅ FIXED
     }
 
     @Override
@@ -238,7 +231,7 @@ public class CourseApplicationService implements CourseService {
     public List<CourseDTO> getCoursesByTeacher(UserId teacherId) {
         List<Course> courses = courseRepository.findByTeacherId(teacherId);
         return courses.stream()
-                .map(CourseMapper::mapToCourseDTO) // ✅ Use static method reference
+                .map(CourseMapper::mapToCourseDTO)
                 .collect(Collectors.toList());
     }
 
@@ -263,8 +256,9 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public List<EnrollmentDTO> getCourseEnrollments(CourseId courseId) {
-        List<Enrollment> enrollments = enrollmentRepository.findByCourseId(courseId);
-        return enrollments.stream()
+        Course course = findCourseByIdOrThrow(courseId);
+
+        return course.getEnrollments().stream()
                 .map(CourseMapper::mapToEnrollmentDTO)
                 .collect(Collectors.toList());
     }
@@ -272,8 +266,9 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseUnitDTO> getCourseUnits(CourseId courseId) {
-        List<CourseUnit> units = unitRepository.findByCourseIdOrderByNumber(courseId);
-        return units.stream()
+        Course course = findCourseByIdOrThrow(courseId);
+
+        return course.getUnits().stream()
                 .map(CourseMapper::mapToUnitDTO)
                 .collect(Collectors.toList());
     }
@@ -281,7 +276,11 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public boolean isStudentEnrolled(CourseId courseId, UserId studentId) {
-        return enrollmentRepository.existsByCourseAndStudent(courseId, studentId);
+        Course course = findCourseByIdOrThrow(courseId);
+
+        return course.getEnrollments().stream()
+                .anyMatch(enrollment -> enrollment.getStudentId().equals(studentId)
+                        && enrollment.isActive());
     }
 
     @Override
@@ -297,4 +296,8 @@ public class CourseApplicationService implements CourseService {
                 .orElseThrow(() -> new CourseNotFoundException("Course not found: " + courseId.getValue()));
     }
 
+    private Course findCourseByUnitIdOrThrow(UnitId unitId) {
+        return courseRepository.findByUnitId(unitId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found for unit: " + unitId.getValue()));
+    }
 }

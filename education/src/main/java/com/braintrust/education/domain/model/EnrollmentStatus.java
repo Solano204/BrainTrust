@@ -1,5 +1,5 @@
 package com.braintrust.education.domain.model;
 
-enum EnrollmentStatus {
+public enum EnrollmentStatus {
     ACTIVE, COMPLETED, CANCELLED
 }

@@ -33,7 +33,7 @@ public class MockAIDetectionProvider implements AIDetectionProvider {
             metadata.put("processingTimeMs", 1000);
             metadata.put("version", modelType.getVersion());
 
-            return new DetectionResult(aiProbability, modelType, content, metadata);
+            return new DetectionResult(aiProbability, modelType, content,List.of(), metadata);
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

@@ -4,6 +4,7 @@ import com.braintrust.aidetectition.domain.model.AnalysisRequest;
 import com.braintrust.aidetectition.domain.model.AnalysisStatus;
 import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
 import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.util.Optional;
 public interface AnalysisRequestRepository {
 
     // Commands
-    AnalysisRequest save(AnalysisRequest analysisRequest);
+    AnalysisRequest save(AnalysisRequest analysisRequest) throws JsonProcessingException;
     void delete(AnalysisRequest analysisRequest);
 
     // Queries
