@@ -11,8 +11,7 @@ public class Document extends ValueObject {
     private final String storagePath;
     private final LocalDateTime createdAt;
 
-    public Document(String name, String fileType, String storagePath,
-                    String textContent, DocumentType type) {
+    public Document(String name,  String storagePath) {
         this.name = validateName(name);
         this.storagePath = storagePath;
         this.createdAt = LocalDateTime.now();

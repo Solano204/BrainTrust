@@ -14,10 +14,12 @@ import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
 import com.braintrust.aidetectition.domain.valueobjects.DetectionResult;
 import com.braintrust.aidetectition.domain.valueobjects.ModelType;
 import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -39,23 +41,18 @@ public class AnalysisApplicationService implements AnalysisService {
         this.aiDetectionProvider = aiDetectionProvider;
     }
 
-    // ✅ COMMANDS
-
     @Override
-    public AnalysisId analyzeSubmission(AnalyzeSubmissionCommand command) {
+    public AnalysisId analyzeSubmission(AnalyzeSubmissionCommand command) throws JsonProcessingException {
         SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
 
-        // Check if analysis already exists
         Optional<AnalysisRequest> existing = analysisRepository.findBySubmissionId(submissionId);
         if (existing.isPresent() && existing.get().isPending()) {
             throw new AnalysisAlreadyExistsException("Analysis already in progress for this submission");
         }
 
-        // Create analysis request
         AnalysisRequest analysisRequest = AnalysisRequest.create(submissionId, command.content());
         AnalysisRequest savedRequest = analysisRepository.save(analysisRequest);
 
-        // Perform AI analysis asynchronously (in a real app, use @Async or message queue)
         try {
             ModelType modelType = command.preferredModel() != null
                     ? ModelType.valueOf(command.preferredModel())
@@ -75,7 +72,7 @@ public class AnalysisApplicationService implements AnalysisService {
     }
 
     @Override
-    public void retryAnalysis(AnalysisId analysisId) {
+    public void retryAnalysis(AnalysisId analysisId) throws JsonProcessingException {
         AnalysisRequest analysisRequest = findAnalysisRequestByIdOrThrow(analysisId);
 
         if (!analysisRequest.getStatus().equals(AnalysisStatus.FAILED)) {
@@ -98,7 +95,7 @@ public class AnalysisApplicationService implements AnalysisService {
     }
 
     @Override
-    public void cancelAnalysis(AnalysisId analysisId) {
+    public void cancelAnalysis(AnalysisId analysisId) throws JsonProcessingException {
         AnalysisRequest analysisRequest = findAnalysisRequestByIdOrThrow(analysisId);
 
         if (analysisRequest.isCompleted()) {
@@ -108,8 +105,6 @@ public class AnalysisApplicationService implements AnalysisService {
         analysisRequest.markAsFailed("Cancelled by user");
         analysisRepository.save(analysisRequest);
     }
-
-    // ✅ QUERIES
 
     @Override
     @Transactional(readOnly = true)
@@ -159,7 +154,6 @@ public class AnalysisApplicationService implements AnalysisService {
                 .filter(AnalysisRequest::isPending)
                 .count();
 
-        // Model usage stats
         Map<ModelType, Integer> modelUsageMap = analyses.stream()
                 .filter(AnalysisRequest::isCompleted)
                 .collect(Collectors.groupingBy(
@@ -173,7 +167,6 @@ public class AnalysisApplicationService implements AnalysisService {
                 modelUsageMap.getOrDefault(ModelType.ENSEMBLE, 0)
         );
 
-        // Confidence distribution
         int high = (int) analyses.stream()
                 .filter(AnalysisRequest::isCompleted)
                 .filter(a -> a.getResult().getProbability().isLikelyAI())
@@ -195,7 +188,7 @@ public class AnalysisApplicationService implements AnalysisService {
                 completed,
                 failed,
                 pending,
-                "0.5", // TODO: Calculate average processing time
+                "0.5",
                 modelUsage,
                 confidenceDist,
                 high,
@@ -213,12 +206,12 @@ public class AnalysisApplicationService implements AnalysisService {
                 .filter(AnalysisRequest::isCompleted)
                 .map(analysis -> new DetectionSummaryDTO(
                         analysis.getSubmissionId().getValue(),
-                        "Student Name", // TODO: Get from UserQueryPort
-                        "Assignment Title", // TODO: Get from Assignment
-                        "Course Name", // TODO: Get from Course
+                        "Student Name",
+                        "Assignment Title",
+                        "Course Name",
                         analysis.getResult().getProbability().getValue().toString(),
                         analysis.getResult().getProbability().isLikelyAI(),
-                        LocalDateTime.now().toString() // TODO: Add analyzed timestamp
+                        analysis.getAnalyzedAt().toString()
                 ))
                 .collect(Collectors.toList());
     }
@@ -233,6 +226,23 @@ public class AnalysisApplicationService implements AnalysisService {
     private AnalysisResultDTO mapToAnalysisResultDTO(AnalysisRequest analysisRequest) {
         DetectionResult result = analysisRequest.getResult();
 
+        // ✅ Map detected segments
+        List<DetectedSegmentDTO> segmentDTOs = List.of();
+        if (result != null && !result.getDetectedSegments().isEmpty()) {
+            segmentDTOs = result.getDetectedSegments().stream()
+                    .map(segment -> new DetectedSegmentDTO(
+                            segment.getText(),
+                            segment.getStartIndex(),
+                            segment.getEndIndex(),
+                            segment.getAiProbability().toString(),
+                            segment.getAiProbability().multiply(new BigDecimal("100"))
+                                    .setScale(2, RoundingMode.HALF_UP) + "%",
+                            segment.getReason(),
+                            segment.isHighConfidence()
+                    ))
+                    .collect(Collectors.toList());
+        }
+
         Map<String, Object> metadata = result != null ? result.getMetadata() : Map.of();
 
         return new AnalysisResultDTO(
@@ -246,8 +256,9 @@ public class AnalysisApplicationService implements AnalysisService {
                 result != null && result.getProbability().isUncertain(),
                 result != null && result.getProbability().isLikelyHuman(),
                 analysisRequest.getStatus().name(),
-                LocalDateTime.now(), // TODO: Add analyzed timestamp to domain
+                analysisRequest.getAnalyzedAt(),
                 analysisRequest.getErrorMessage(),
+                segmentDTOs, // ✅ Include detected segments
                 metadata
         );
     }

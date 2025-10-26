@@ -71,10 +71,7 @@ public class AssignmentApplicationService implements AssignmentService {
                         DocumentType documentType = DocumentType.fromString(dto.documentType().toUpperCase());
                         return new Document(
                                 dto.name(),
-                                dto.fileType(),
-                                dto.storagePath(),
-                                dto.textContent(),
-                                documentType
+                                dto.storagePath()
                         );
                     } catch (IllegalArgumentException e) {
                         throw new InvalidDocumentTypeException("Invalid document type: " + dto.documentType());
@@ -91,6 +88,8 @@ public class AssignmentApplicationService implements AssignmentService {
                 command.instructions(),
                 documents
         );
+
+
 
         Assignment savedAssignment = assignmentRepository.save(assignment);
         return savedAssignment.getId();
@@ -215,10 +214,7 @@ public class AssignmentApplicationService implements AssignmentService {
         List<DocumentDTO> attachmentDTOs = assignment.getAttachments().stream()
                 .map(doc -> new DocumentDTO(
                         doc.getName(),
-                        doc.getStoragePath(),
-                        doc.getCreatedAt().toString(),
-                        "PDF",
-                        0L // TODO: Get file size
+                        doc.getStoragePath()
                 ))
                 .collect(Collectors.toList());
 

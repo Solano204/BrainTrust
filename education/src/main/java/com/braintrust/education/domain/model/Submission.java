@@ -53,6 +53,30 @@ public class Submission extends AggregateRoot<SubmissionId> {
         return content.trim();
     }
 
+
+
+    // ✅ Factory Method para RECONSTITUIR desde base de datos
+    public static Submission reconstitute(SubmissionId id, AssignmentId assignmentId,
+                                          UserId studentId, String content,
+                                          List<Document> attachments, LocalDateTime submittedAt,
+                                          SubmissionStatus status, Grade grade,
+                                          String teacherFeedback) {
+        Submission submission = new Submission(id, assignmentId, studentId, content);
+
+        // Sobrescribir valores del constructor con los de la BD
+        submission.submittedAt = submittedAt;
+        submission.status = status;
+        submission.grade = grade;
+        submission.teacherFeedback = teacherFeedback;
+
+        if (attachments != null) {
+            submission.attachments.addAll(attachments);
+        }
+
+        return submission;
+    }
+
+
     // Comportamiento de dominio - sin events
     public void grade(Grade grade, String feedback) {
         if (this.status != SubmissionStatus.SUBMITTED) {

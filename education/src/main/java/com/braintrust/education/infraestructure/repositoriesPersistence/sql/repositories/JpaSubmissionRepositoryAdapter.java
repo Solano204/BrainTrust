@@ -3,6 +3,8 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.rep
 import com.braintrust.education.application.ports.out.SubmissionRepository;
 import com.braintrust.education.domain.model.*;
 import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.SubmissionEntityMapper;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.SubmissionJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import org.springframework.stereotype.Repository;
 
@@ -39,13 +41,13 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
 
     @Override
     public Optional<Submission> findById(SubmissionId submissionId) {
-        return jpaRepository.findById(submissionId.getValue())
+        return jpaRepository.findByIdWithDocuments(submissionId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public List<Submission> findByAssignmentId(AssignmentId assignmentId) {
-        return jpaRepository.findByAssignmentId(assignmentId.getValue())
+        return jpaRepository.findByAssignmentIdWithDocuments(assignmentId.getValue())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -53,7 +55,7 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
 
     @Override
     public List<Submission> findByStudentId(UserId studentId) {
-        return jpaRepository.findByStudentId(studentId.getValue())
+        return jpaRepository.findByStudentIdWithDocuments(studentId.getValue())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -61,7 +63,10 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
 
     @Override
     public List<Submission> findByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId) {
-        return jpaRepository.findByAssignmentIdAndStudentId(assignmentId.getValue(), studentId.getValue())
+        return jpaRepository.findByAssignmentIdAndStudentIdWithDocuments(
+                        assignmentId.getValue(),
+                        studentId.getValue()
+                )
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -69,7 +74,7 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
 
     @Override
     public Optional<Submission> findLatestByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId) {
-        return jpaRepository.findFirstByAssignmentIdAndStudentIdOrderBySubmittedAtDesc(
+        return jpaRepository.findFirstByAssignmentIdAndStudentIdWithDocumentsOrderBySubmittedAtDesc(
                 assignmentId.getValue(),
                 studentId.getValue()
         ).map(mapper::toDomain);
@@ -77,7 +82,7 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
 
     @Override
     public List<Submission> findByStatus(SubmissionStatus status) {
-        return jpaRepository.findByStatus(status.name())
+        return jpaRepository.findByStatusWithDocuments(status.name())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -85,9 +90,14 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
 
     @Override
     public List<Submission> findLateSubmissions(AssignmentId assignmentId, LocalDateTime dueDate) {
-        return jpaRepository.findByAssignmentIdAndSubmittedAtAfter(assignmentId.getValue(), dueDate)
+        return jpaRepository.findByAssignmentIdAndSubmittedAtAfterWithDocuments(
+                        assignmentId.getValue(),
+                        dueDate
+                )
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+
 }

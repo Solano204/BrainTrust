@@ -1,5 +1,4 @@
 package com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.entities;
-// 📍 aidetection/infrastructure/persistence/entities/AnalysisRequestJpaEntity.java
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -32,6 +31,13 @@ public class AnalysisRequestJpaEntity {
     @Column(name = "model_used", length = 50)
     private String modelUsed;
 
+    @Column(name = "confidence_level", length = 20)
+    private String confidenceLevel;
+
+    // ✅ NEW: Store AI-detected segments as JSON
+    @Column(name = "detected_segments", columnDefinition = "TEXT")
+    private String detectedSegmentsJson;
+
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
 
@@ -46,6 +52,7 @@ public class AnalysisRequestJpaEntity {
 
     public AnalysisRequestJpaEntity(String id, String submissionId, String contentToAnalyze,
                                     String status, BigDecimal probability, String modelUsed,
+                                    String confidenceLevel, String detectedSegmentsJson,
                                     String errorMessage, LocalDateTime createdAt, LocalDateTime analyzedAt) {
         this.id = id;
         this.submissionId = submissionId;
@@ -53,6 +60,8 @@ public class AnalysisRequestJpaEntity {
         this.status = status;
         this.probability = probability;
         this.modelUsed = modelUsed;
+        this.confidenceLevel = confidenceLevel;
+        this.detectedSegmentsJson = detectedSegmentsJson;
         this.errorMessage = errorMessage;
         this.createdAt = createdAt;
         this.analyzedAt = analyzedAt;
@@ -76,6 +85,12 @@ public class AnalysisRequestJpaEntity {
 
     public String getModelUsed() { return modelUsed; }
     public void setModelUsed(String modelUsed) { this.modelUsed = modelUsed; }
+
+    public String getConfidenceLevel() { return confidenceLevel; }
+    public void setConfidenceLevel(String confidenceLevel) { this.confidenceLevel = confidenceLevel; }
+
+    public String getDetectedSegmentsJson() { return detectedSegmentsJson; }
+    public void setDetectedSegmentsJson(String detectedSegmentsJson) { this.detectedSegmentsJson = detectedSegmentsJson; }
 
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
