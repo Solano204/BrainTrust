@@ -4,6 +4,8 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.rep
 import com.braintrust.education.application.ports.out.AssignmentRepository;
 import com.braintrust.education.domain.model.Assignment;
 import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.AssignmentEntityMapper;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -12,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
+
 public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
     private final AssignmentJpaRepository jpaRepository;
@@ -24,6 +27,8 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
     }
+
+
 
     @Override
     public Assignment save(Assignment assignment) {
@@ -39,13 +44,12 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
     @Override
     public Optional<Assignment> findById(AssignmentId assignmentId) {
-        return jpaRepository.findById(assignmentId.getValue())
+        return jpaRepository.findByIdWithDocuments(assignmentId.getValue())
                 .map(mapper::toDomain);
     }
-
     @Override
     public List<Assignment> findByCourseId(CourseId courseId) {
-        return jpaRepository.findByCourseId(courseId.getValue())
+        return jpaRepository.findByCourseIdWithDocuments(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

@@ -1,20 +1,22 @@
 package com.braintrust.aidetectition.application.dtos.dtos;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 public record AnalysisResultDTO(
         String id,
         String submissionId,
-        String probability,     // BigDecimal as String (0.0 - 1.0)
-        String percentage,      // e.g., "87.50%"
-        String modelUsed,       // GPT_DETECTOR, BERT_CLASSIFIER, ENSEMBLE
-        String confidenceLevel, // HIGH, MEDIUM, LOW
+        String probability,
+        String percentage,
+        String modelUsed,
+        String confidenceLevel,
         boolean isLikelyAI,
         boolean isUncertain,
         boolean isLikelyHuman,
-        String status,          // PENDING, COMPLETED, FAILED
+        String status,
         LocalDateTime analyzedAt,
         String errorMessage,
+        List<DetectedSegmentDTO> detectedSegments, // ✅ NEW
         Map<String, Object> metadata
 ) {}

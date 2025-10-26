@@ -1,5 +1,4 @@
 package com.braintrust.education.domain.model;
-
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.EnrollmentId;
 import com.braintrust.education.domain.valueobjects.Grade;
@@ -8,7 +7,6 @@ import com.braintrust.shared.domain.Entity;
 
 import java.time.LocalDate;
 
-// 📍 education/domain/model/Enrollment.java - ENTITY
 public class Enrollment extends Entity<EnrollmentId> {
     private CourseId courseId;
     private UserId studentId;
@@ -24,12 +22,23 @@ public class Enrollment extends Entity<EnrollmentId> {
         this.status = EnrollmentStatus.ACTIVE;
     }
 
+    // ✅ Factory Method para NUEVO enrollment
     public static Enrollment create(CourseId courseId, UserId studentId) {
         EnrollmentId id = EnrollmentId.generate();
         return new Enrollment(id, courseId, studentId);
     }
 
-    // Comportamiento de dominio
+    // ✅ Factory Method para RECONSTITUIR desde base de datos
+    public static Enrollment reconstitute(EnrollmentId id, CourseId courseId, UserId studentId,
+                                          LocalDate enrollmentDate, EnrollmentStatus status,
+                                          Grade finalGrade) {
+        Enrollment enrollment = new Enrollment(id, courseId, studentId);
+        enrollment.enrollmentDate = enrollmentDate;
+        enrollment.status = status;
+        enrollment.finalGrade = finalGrade;
+        return enrollment;
+    }
+
     public void complete(Grade finalGrade) {
         if (this.status != EnrollmentStatus.ACTIVE) {
             throw new IllegalStateException("Only active enrollments can be completed");

@@ -1,9 +1,9 @@
 package com.braintrust.education.application.dtos.commands;
 
-// 📍 education/application/dtos/commands/UpdateUnitCommand.java
-public record UpdateUnitCommand(
-        String unitId,
+public record CreateUnitCommand(
+        String courseId,
         String name,
+        int numUnity,
         String description,
         String urlImage
 ) {}

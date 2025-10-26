@@ -31,9 +31,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
     private final String issuer = "BrainTrust-Platform"; // Best practice: use a fixed issuer
 
     public JwtAuthenticationProvider(
-            // Key must be long enough (256 bits for HS256 = 32 chars)
             @Value("${jwt.secret:my-secret-key-that-should-be-in-env-variables-minimum-256-bits-long}") String secret,
-            // Using Duration for clarity (86400000ms = 24 hours)
             @Value("${jwt.expiration.millis:86400000}") long expirationTimeMillis
     ) {
         // Use Keys.hmacShaKeyFor for modern key creation

@@ -4,16 +4,17 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.rep
 
 // 📍 education/infrastructure/persistence/JpaCourseRepositoryAdapter.java
 
+import com.braintrust.education.application.Maps.CourseEntityMapper;
 import com.braintrust.education.application.ports.out.CourseRepository;
 import com.braintrust.education.domain.model.Course;
 import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 @Repository
 public class JpaCourseRepositoryAdapter implements CourseRepository {
 
@@ -80,5 +81,10 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
     public boolean existsByCode(CourseCode code) {
         return jpaRepository.existsByCode(code.getValue());
     }
-}
 
+    @Override
+    public Optional<Course> findByUnitId(UnitId unitId) {
+        return jpaRepository.findById(unitId.getValue())
+                .map(mapper::toDomain);
+    }
+}
