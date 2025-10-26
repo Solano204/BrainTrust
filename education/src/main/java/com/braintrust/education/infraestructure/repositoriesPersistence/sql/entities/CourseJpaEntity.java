@@ -3,6 +3,17 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.ent
 
 import jakarta.persistence.*;
         import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "courses", indexes = {
@@ -41,6 +52,16 @@ public class CourseJpaEntity {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    // ✅ CRITICAL: These relationships make Enrollment and Unit part of the aggregate
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Set<EnrollmentJpaEntity> enrollments = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    @OrderBy("numUnity ASC")
+    private List<CourseUnitJpaEntity> units = new ArrayList<>();
 
     // Constructors
     public CourseJpaEntity() {}
@@ -90,4 +111,10 @@ public class CourseJpaEntity {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Set<EnrollmentJpaEntity> getEnrollments() { return enrollments; }
+    public void setEnrollments(Set<EnrollmentJpaEntity> enrollments) { this.enrollments = enrollments; }
+
+    public List<CourseUnitJpaEntity> getUnits() { return units; }
+    public void setUnits(List<CourseUnitJpaEntity> units) { this.units = units; }
 }

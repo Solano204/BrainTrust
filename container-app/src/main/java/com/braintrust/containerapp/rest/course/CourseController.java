@@ -1,7 +1,6 @@
 package com.braintrust.containerapp.rest.course;
 
 // 📍 education/infrastructure/rest/CourseController.java
-
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.CourseDTO;
 import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
@@ -27,7 +26,9 @@ public class CourseController {
         this.courseService = courseService;
     }
 
+    // ========================================
     // ✅ COURSE COMMANDS
+    // ========================================
 
     @PostMapping
     public ResponseEntity<SuccessResponseDTO> createCourse(@RequestBody CreateCourseCommand command) {
@@ -73,13 +74,19 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course deactivated successfully", null));
     }
 
+    // ========================================
     // ✅ ENROLLMENT COMMANDS
+    // ========================================
+
+
+
 
     @PostMapping("/{courseId}/enrollments")
     public ResponseEntity<SuccessResponseDTO> enrollStudent(
             @PathVariable String courseId,
-            @RequestBody EnrollStudentCommand command
+            @RequestBody EnrollStudentRequest request
     ) {
+        EnrollStudentCommand command = new EnrollStudentCommand(courseId, request.studentId());
         EnrollmentId enrollmentId = courseService.enrollStudent(command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponseDTO(true, "Student enrolled successfully", enrollmentId.getValue()));
@@ -94,13 +101,21 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Student unenrolled successfully", null));
     }
 
+    // ========================================
     // ✅ UNIT COMMANDS
+    // ========================================
 
     @PostMapping("/{courseId}/units")
     public ResponseEntity<SuccessResponseDTO> addUnit(
             @PathVariable String courseId,
-            @RequestBody AddUnitCommand command
+            @RequestBody AddUnitRequest request
     ) {
+        AddUnitCommand command = new AddUnitCommand(
+                courseId,
+                request.name(),
+                request.order(),
+                request.description()
+        );
         UnitId unitId = courseService.addUnit(command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponseDTO(true, "Unit added successfully", unitId.getValue()));
@@ -109,8 +124,15 @@ public class CourseController {
     @PostMapping("/{courseId}/units/with-image")
     public ResponseEntity<SuccessResponseDTO> addUnitWithImage(
             @PathVariable String courseId,
-            @RequestBody AddUnitWithImageCommand command
+            @RequestBody AddUnitWithImageRequest request
     ) {
+        AddUnitWithImageCommand command = new AddUnitWithImageCommand(
+                courseId,
+                request.name(),
+                request.order(),
+                request.description(),
+                request.imageUrl()
+        );
         UnitId unitId = courseService.addUnitWithImage(command);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponseDTO(true, "Unit added successfully with image", unitId.getValue()));
@@ -119,8 +141,14 @@ public class CourseController {
     @PutMapping("/units/{unitId}")
     public ResponseEntity<SuccessResponseDTO> updateUnit(
             @PathVariable String unitId,
-            @RequestBody UpdateUnitCommand command
+            @RequestBody UpdateUnitRequest request
     ) {
+        UpdateUnitCommand command = new UpdateUnitCommand(
+                unitId,
+                request.name(),
+                request.description() ,
+                request.urlImage()
+        );
         courseService.updateUnit(command);
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Unit updated successfully", null));
     }
@@ -134,7 +162,15 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Unit image updated successfully", null));
     }
 
+    // ========================================
     // ✅ COURSE QUERIES
+    // ========================================
+
+    @GetMapping
+    public ResponseEntity<List<CourseDTO>> getAllCourses() {
+        List<CourseDTO> courses = courseService.getActiveCourses();
+        return ResponseEntity.ok(courses);
+    }
 
     @GetMapping("/{courseId}")
     public ResponseEntity<CourseDTO> getCourseById(@PathVariable String courseId) {
@@ -199,6 +235,3 @@ public class CourseController {
         return ResponseEntity.ok(available);
     }
 }
-
-// Helper DTO for image updates
-record UpdateImageRequest(String imageUrl) {}

@@ -1,7 +1,9 @@
-package com.braintrust.containerapp.rest.course;
+package com.braintrust.containerapp.rest;
+
 
 // 📍 education/infrastructure/rest/AssignmentController.java
 
+import com.braintrust.containerapp.rest.course.ExtendDueDateRequest;
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.AssignmentDTO;
 import com.braintrust.education.application.ports.in.AssignmentService;

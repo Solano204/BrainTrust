@@ -13,12 +13,11 @@ import com.braintrust.education.infraestructure.repositoriesPersistence.sql.enti
 import com.braintrust.identity.domain.valueobjects.UserId;
 import org.springframework.stereotype.Component;
 
-import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
 @Component
-public class CourseEntityMapper {
+public class CourseMapper {
 
     public CourseJpaEntity toEntity(Course course) {
         return new CourseJpaEntity(

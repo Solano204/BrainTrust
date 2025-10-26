@@ -2,7 +2,12 @@ package com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql
 
 import com.braintrust.aidetectition.application.ports.out.AnalysisRequestRepository;
 import com.braintrust.aidetectition.domain.model.AnalysisRequest;
+import com.braintrust.aidetectition.domain.model.AnalysisStatus;
+import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
+import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.Mapper.AnalysisEntityMapper;
+import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.entities.AnalysisRequestJpaEntity;
 import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -15,18 +20,18 @@ import java.util.stream.Collectors;
 public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepository {
 
     private final AnalysisRequestJpaRepository jpaRepository;
-    private final AnalysisRequestEntityMapper mapper;
+    private final AnalysisEntityMapper mapper;
 
     public JpaAnalysisRequestRepositoryAdapter(
             AnalysisRequestJpaRepository jpaRepository,
-            AnalysisRequestEntityMapper mapper
+            AnalysisEntityMapper mapper
     ) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
     }
 
     @Override
-    public AnalysisRequest save(AnalysisRequest analysisRequest) {
+    public AnalysisRequest save(AnalysisRequest analysisRequest) throws JsonProcessingException {
         AnalysisRequestJpaEntity entity = mapper.toEntity(analysisRequest);
         AnalysisRequestJpaEntity savedEntity = jpaRepository.save(entity);
         return mapper.toDomain(savedEntity);

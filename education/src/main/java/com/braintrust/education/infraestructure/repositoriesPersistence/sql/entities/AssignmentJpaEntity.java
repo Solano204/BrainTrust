@@ -3,12 +3,16 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.ent
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "assignments", indexes = {
         @Index(name = "idx_assignment_course", columnList = "course_id"),
         @Index(name = "idx_assignment_due_date", columnList = "due_date")
 })
+
+// VERY POITN IMPORTANT HERE I DONT HAVE THE LIST OF ENTITIIES (" SUBMISSION " ) DUE TO I NEED FOLLOW AND RESPÉCT THE LIMITS OF THE DDD
 public class AssignmentJpaEntity {
 
     @Id
@@ -38,6 +42,12 @@ public class AssignmentJpaEntity {
 
     @Column(name = "active", nullable = false)
     private boolean active;
+
+    // THAT WILL ALLOW ME TO SAVE AUTOMATILCALLY THE DOCUMENTS WHEN I SAVE THE ENTIIY FATHER
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignment_id")
+    private List<DocumentJpaEntity> documents = new ArrayList<>();
+
 
     // Constructors
     public AssignmentJpaEntity() {}
@@ -83,4 +93,10 @@ public class AssignmentJpaEntity {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public List<DocumentJpaEntity> getDocuments() { return documents; }
+    public void setDocuments(List<DocumentJpaEntity> documents) { this.documents = documents; }
+
+
+
 }
