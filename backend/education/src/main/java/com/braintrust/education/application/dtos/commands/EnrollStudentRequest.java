@@ -1,2 +1,8 @@
 package com.braintrust.education.application.dtos.commands;
-public record EnrollStudentRequest(String studentId) {}
+
+import jakarta.validation.constraints.NotBlank;
+
+public record EnrollStudentRequest(
+        @NotBlank(message = "Student ID is required")
+        String studentId
+) {}

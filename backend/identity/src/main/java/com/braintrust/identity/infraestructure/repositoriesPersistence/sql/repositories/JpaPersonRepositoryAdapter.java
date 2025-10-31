@@ -7,6 +7,7 @@ import com.braintrust.identity.domain.model.Person;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.Mapper.PersonEntityMapper;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.PersonJpaEntity;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
+@Slf4j // ⬅️ Enable the 'log' variable
 public class JpaPersonRepositoryAdapter implements PersonRepository {
 
     private final PersonJpaRepository jpaRepository;
@@ -25,28 +27,45 @@ public class JpaPersonRepositoryAdapter implements PersonRepository {
     ) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
+        log.info("Initialized JpaPersonRepositoryAdapter.");
     }
+
+    // ------------------------------------------------------------------
+    // ✅ COMMANDS (Mutating Operations)
+    // ------------------------------------------------------------------
 
     @Override
     public Person save(Person person) {
+        log.info("Saving Person ID {} (Name: {}).", person.getId().getValue(), person.getFullName());
+
         PersonJpaEntity entity = mapper.toEntity(person);
         PersonJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.debug("Person saved/updated successfully.");
         return mapper.toDomain(savedEntity);
     }
 
     @Override
     public void delete(Person person) {
+        log.warn("Deleting Person ID: {}", person.getId().getValue());
         jpaRepository.deleteById(person.getId().getValue());
+        log.info("Person ID {} deleted successfully.", person.getId().getValue());
     }
+
+    // ------------------------------------------------------------------
+    // ✅ QUERIES (Read Operations)
+    // ------------------------------------------------------------------
 
     @Override
     public Optional<Person> findById(PersonId personId) {
+        log.debug("Querying database for Person ID: {}", personId.getValue());
         return jpaRepository.findById(personId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public List<Person> findAll() {
+        log.debug("Fetching all Person records from the database.");
         return jpaRepository.findAll()
                 .stream()
                 .map(mapper::toDomain)

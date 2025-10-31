@@ -1,0 +1,301 @@
+javapublic synchronized boolean allowRequest() {
+    refill();  // ← ¿Recarga tokens?
+
+    if (tokens >= 1.0) {
+        tokens -= 1.0;  // ← ¿Pero aquí los reduce?
+        return true;
+    }
+    return false;
+}
+```
+
+**Piensas:** *"Si `refill()` recarga los tokens, ¿por qué inmediatamente los quito? ¡No tiene sentido!"*
+
+---
+
+# 💡 **LA CLAVE: `refill()` NO siempre recarga**
+
+`refill()` **NO recarga tokens cada vez que se llama**. Solo recarga si **ha pasado suficiente tiempo**.
+
+---
+
+# 🎬 **EJEMPLO VISUAL COMPLETO**
+
+Vamos a seguir a Juan haciendo 3 peticiones:
+
+---
+
+## **🕐 14:30:00 - PETICIÓN #1**
+
+### **Estado inicial del bucket:**
+```
+tokens = 60.0
+lastRefill = 14:30:00
+lastAccess = 14:30:00
+Juan hace petición:
+javaallowRequest() se llama
+
+1) refill() se ejecuta:
+
+   now = 14:30:00
+   lastRefill = 14:30:00
+
+   timePassed = 14:30:00 - 14:30:00 = 0 segundos
+
+   secondsPassed = 0
+   tokensToAdd = 0 * 1.0 = 0
+
+   if (0 > 0) {  // ❌ FALSE
+       // Este código NO se ejecuta
+       tokens = ...
+   }
+
+   // refill() termina SIN HACER NADA
+   // tokens sigue siendo 60.0
+
+2) Actualiza lastAccess:
+   lastAccess = 14:30:00
+
+3) Verifica tokens:
+   if (60.0 >= 1.0) {  // ✅ TRUE
+       tokens = 60.0 - 1.0 = 59.0
+       return true;
+   }
+```
+
+### **Estado final:**
+```
+tokens = 59.0  ← Disminuyó
+lastRefill = 14:30:00
+lastAccess = 14:30:00
+```
+
+---
+
+## **🕐 14:30:00.5 - PETICIÓN #2 (medio segundo después)**
+
+### **Estado inicial:**
+```
+tokens = 59.0
+lastRefill = 14:30:00
+lastAccess = 14:30:00
+Juan hace otra petición inmediatamente:
+javaallowRequest() se llama
+
+1) refill() se ejecuta:
+
+   now = 14:30:00.5
+   lastRefill = 14:30:00
+
+   timePassed = 14:30:00.5 - 14:30:00 = 0.5 segundos
+
+   secondsPassed = 0.5
+   tokensToAdd = 0.5 * 1.0 = 0.5
+
+   if (0.5 > 0) {  // ✅ TRUE (¡Ahora sí recarga!)
+       tokens = Math.min(60, 59.0 + 0.5)
+              = Math.min(60, 59.5)
+              = 59.5  ← ¡RECARGÓ 0.5 tokens!
+
+       lastRefill = 14:30:00.5
+   }
+
+   // tokens ahora es 59.5
+
+2) Actualiza lastAccess:
+   lastAccess = 14:30:00.5
+
+3) Verifica tokens:
+   if (59.5 >= 1.0) {  // ✅ TRUE
+       tokens = 59.5 - 1.0 = 58.5
+       return true;
+   }
+```
+
+### **Estado final:**
+```
+tokens = 58.5  ← Recargó 0.5 y consumió 1.0
+lastRefill = 14:30:00.5
+lastAccess = 14:30:00.5
+```
+
+---
+
+## **🕐 14:31:00 - PETICIÓN #3 (60 segundos después)**
+
+### **Estado inicial:**
+```
+tokens = 58.5
+lastRefill = 14:30:00.5
+lastAccess = 14:30:00.5
+Juan espera 1 minuto y hace petición:
+javaallowRequest() se llama
+
+1) refill() se ejecuta:
+
+   now = 14:31:00
+   lastRefill = 14:30:00.5
+
+   timePassed = 14:31:00 - 14:30:00.5 = 59.5 segundos
+
+   secondsPassed = 59.5
+   tokensToAdd = 59.5 * 1.0 = 59.5
+
+   if (59.5 > 0) {  // ✅ TRUE
+       tokens = Math.min(60, 58.5 + 59.5)
+              = Math.min(60, 118)
+              = 60  ← ¡Alcanzó el máximo!
+
+       lastRefill = 14:31:00
+   }
+
+   // tokens ahora es 60.0
+
+2) Actualiza lastAccess:
+   lastAccess = 14:31:00
+
+3) Verifica tokens:
+   if (60.0 >= 1.0) {  // ✅ TRUE
+       tokens = 60.0 - 1.0 = 59.0
+       return true;
+   }
+```
+
+### **Estado final:**
+```
+tokens = 59.0  ← Recargó 59.5 (tope 60) y consumió 1.0
+lastRefill = 14:31:00
+lastAccess = 14:31:00
+```
+
+---
+
+# 🎯 **RESUMEN: ¿Cuándo recarga y cuándo no?**
+```
+┌──────────────────────────────────────────────┐
+│  refill() SOLO recarga si:                   │
+│  - Ha pasado tiempo desde lastRefill         │
+│  - tokensToAdd > 0                           │
+│                                              │
+│  refill() NO hace nada si:                   │
+│  - Acabas de hacer una petición              │
+│  - No ha pasado tiempo suficiente            │
+└──────────────────────────────────────────────┘
+```
+
+---
+
+# 🔥 **ANALOGÍA DEL MUNDO REAL**
+
+Imagina un **dispensador de agua**:
+```
+🚰 Dispensador de agua:
+├─ Capacidad máxima: 60 vasos
+├─ Se rellena: 1 vaso por segundo (automático)
+└─ Tú tomas: 1 vaso cuando presionas el botón
+
+Escenario 1: Presionas el botón inmediatamente después:
+─────────────────────────────────────────────────
+14:30:00 → Tomas 1 vaso → Quedan 59 vasos
+14:30:00 → Presionas otra vez
+           ├─ ¿Se rellenó? NO (0 segundos = 0 vasos nuevos)
+           └─ Tomas 1 vaso → Quedan 58 vasos
+
+Escenario 2: Esperas 10 segundos:
+─────────────────────────────────────────────────
+14:30:00 → Tomas 1 vaso → Quedan 59 vasos
+[Esperas 10 segundos]
+14:30:10 → Presionas otra vez
+           ├─ ¿Se rellenó? SÍ (10 segundos = 10 vasos nuevos)
+           ├─ 59 + 10 = 60 vasos (tope máximo)
+           └─ Tomas 1 vaso → Quedan 59 vasos
+
+Escenario 3: Haces spam (61 veces en 1 segundo):
+─────────────────────────────────────────────────
+14:30:00.0 → Tomas vaso #1 → 60 - 1 = 59
+14:30:00.1 → Tomas vaso #2 → 59 - 1 = 58
+14:30:00.2 → Tomas vaso #3 → 58 - 1 = 57
+...
+14:30:00.9 → Tomas vaso #60 → 1 - 1 = 0
+14:30:01.0 → Intentas tomar vaso #61
+             ├─ ¿Se rellenó? SÍ (1 segundo = 1 vaso)
+             ├─ 0 + 1 = 1 vaso
+             └─ Tomas 1 vaso → Quedan 0 vasos
+14:30:01.1 → Intentas tomar vaso #62
+             ├─ ¿Se rellenó? SÍ (0.1 segundos = 0.1 vasos)
+             ├─ 0 + 0.1 = 0.1 vasos
+             └─ NO puedes tomar (necesitas 1.0 vaso) ❌ BLOQUEADO
+
+📊 TABLA COMPARATIVA
+TiempoPeticiónTiempo pasadoTokens antes refill()Tokens añadidosTokens después refill()Token consumidoTokens finales¿Permitido?14:30:00#10s60.0060.01.059.0✅14:30:01#21s59.01.060.01.059.0✅14:30:02#31s59.01.060.01.059.0✅14:30:03#41s59.01.060.01.059.0✅
+Patrón: Si haces 1 petición por segundo, siempre tendrás 59-60 tokens disponibles.
+
+TiempoPeticiónTiempo pasadoTokens antes refill()Tokens añadidosTokens después refill()Token consumidoTokens finales¿Permitido?14:30:00.0#10s60.0060.01.059.0✅14:30:00.1#20.1s59.00.159.11.058.1✅14:30:00.2#30.1s58.10.158.21.057.2✅...........................14:30:06.0#610.1s0.10.10.21.0-0.8❌
+Patrón: Si haces 10 peticiones por segundo, te quedas sin tokens rápido.
+
+🧪 CÓDIGO DE PRUEBA PARA QUE LO VEAS TÚ MISMO
+javapublic class RateLimitTest {
+    public static void main(String[] args) throws InterruptedException {
+        RateLimitBucket bucket = new RateLimitBucket();
+
+        System.out.println("=== PRUEBA 1: Peticiones inmediatas ===");
+        for (int i = 1; i <= 3; i++) {
+            boolean allowed = bucket.allowRequest();
+            System.out.printf("Petición %d: %s (tokens: %.2f)%n",
+                i, allowed ? "✅" : "❌", bucket.getTokens());
+        }
+
+        System.out.println("\n=== PRUEBA 2: Esperar 2 segundos ===");
+        Thread.sleep(2000);
+        boolean allowed = bucket.allowRequest();
+        System.out.printf("Después de 2s: %s (tokens: %.2f)%n",
+            allowed ? "✅" : "❌", bucket.getTokens());
+
+        System.out.println("\n=== PRUEBA 3: Agotar todos los tokens ===");
+        for (int i = 1; i <= 62; i++) {
+            allowed = bucket.allowRequest();
+            if (i % 10 == 0 || !allowed) {
+                System.out.printf("Petición %d: %s (tokens: %.2f)%n",
+                    i, allowed ? "✅" : "❌", bucket.getTokens());
+            }
+        }
+    }
+}
+```
+
+**Salida esperada:**
+```
+=== PRUEBA 1: Peticiones inmediatas ===
+Petición 1: ✅ (tokens: 59.00)
+Petición 2: ✅ (tokens: 58.00)
+Petición 3: ✅ (tokens: 57.00)
+
+=== PRUEBA 2: Esperar 2 segundos ===
+Después de 2s: ✅ (tokens: 58.00)  ← ¡Recargó 2 tokens!
+
+=== PRUEBA 3: Agotar todos los tokens ===
+Petición 10: ✅ (tokens: 48.00)
+Petición 20: ✅ (tokens: 38.00)
+Petición 30: ✅ (tokens: 28.00)
+Petición 40: ✅ (tokens: 18.00)
+Petición 50: ✅ (tokens: 8.00)
+Petición 58: ✅ (tokens: 0.00)
+Petición 59: ❌ (tokens: 0.00)  ← ¡BLOQUEADO!
+Petición 60: ❌ (tokens: 0.00)
+
+✅ CONCLUSIÓN
+javarefill() {
+    // NO es: "Siempre recarga 60 tokens"
+    // ES: "Si ha pasado tiempo, calcula cuántos tokens añadir"
+
+    if (ha_pasado_tiempo) {
+        tokens += tokens_proporcionales_al_tiempo;
+    } else {
+        // NO hace nada
+    }
+}
+Por eso:
+
+Peticiones rápidas: refill() no recarga → tokens disminuyen
+Peticiones espaciadas: refill() recarga → tokens se mantienen
+Sin peticiones por mucho tiempo: refill() recarga al máximo → tokens = 60

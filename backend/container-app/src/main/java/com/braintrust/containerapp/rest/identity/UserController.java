@@ -1,6 +1,5 @@
 package com.braintrust.containerapp.rest.identity;
 
-
 import com.braintrust.identity.application.dtos.commands.*;
 import com.braintrust.identity.application.dtos.dtos.AuthenticationResult;
 import com.braintrust.identity.application.dtos.dtos.UserDTO;
@@ -9,8 +8,16 @@ import com.braintrust.identity.domain.model.Role;
 import com.braintrust.identity.domain.valueobjects.Email;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import com.braintrust.shared.application.dtos.dtos.ErrorResponseDTO;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
+import com.braintrust.shared.domain.exception.ErrorResponseDTO;
+import io.swagger.v3.oas.annotations.Operation; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.Parameter; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.media.Content; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.media.Schema; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.responses.ApiResponse; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.tags.Tag; // ⬅️ OpenAPI Import
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +27,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
+@Slf4j
+// ⬅️ TAG: Groups all endpoints in the documentation
+@Tag(name = "User Management (Identity)", description = "APIs for user registration, authentication, and core profile management.")
 public class UserController {
 
     private final UserService userService;
@@ -28,115 +38,224 @@ public class UserController {
         this.userService = userService;
     }
 
+    // ------------------------------------------------------------------
     // ✅ REGISTRATION ENDPOINTS
+    // ------------------------------------------------------------------
 
+    @Operation(summary = "Register a new Teacher user", description = "Creates a new user with TEACHER role and associated person record.")
+    @ApiResponse(responseCode = "201", description = "Teacher created successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid input or email already registered",
+            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
     @PostMapping("/register/teacher")
     public ResponseEntity<SuccessResponseDTO> registerTeacher(@RequestBody RegisterTeacherCommand command) {
+        log.info("Request received to register new TEACHER. Email: {}", command.email());
         UserId userId = userService.registerTeacher(command);
+        log.info("Teacher registered successfully with ID: {}", userId.getValue());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponseDTO(true, "Teacher registered successfully", userId.getValue()));
     }
 
+    @Operation(summary = "Register a new Student user", description = "Creates a new user with STUDENT role and associated person record.")
+    @ApiResponse(responseCode = "201", description = "Student created successfully")
     @PostMapping("/register/student")
     public ResponseEntity<SuccessResponseDTO> registerStudent(@RequestBody RegisterStudentCommand command) {
+        log.info("Request received to register new STUDENT. Email: {}", command.email());
         UserId userId = userService.registerStudent(command);
+        log.info("Student registered successfully with ID: {}", userId.getValue());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponseDTO(true, "Student registered successfully", userId.getValue()));
     }
 
+    @Operation(summary = "Register a new Admin user (RESTRICTED)", description = "Creates a new user with ADMIN role. Requires existing ADMIN privileges.")
+    @ApiResponse(responseCode = "201", description = "Admin created successfully")
+    @ApiResponse(responseCode = "403", description = "Forbidden: Caller does not have ADMIN role")
     @PostMapping("/register/admin")
     public ResponseEntity<SuccessResponseDTO> registerAdmin(@RequestBody RegisterAdminCommand command) {
+        log.warn("ADMIN registration attempt received. This endpoint requires elevated security.");
         UserId userId = userService.registerAdmin(command);
+        log.warn("ADMIN registered successfully with ID: {}", userId.getValue());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new SuccessResponseDTO(true, "Admin registered successfully", userId.getValue()));
     }
 
-    // ✅ AUTHENTICATION ENDPOINT
+    // ------------------------------------------------------------------
+    // ✅ AUTHENTICATION ENDPOINTS
+    // ------------------------------------------------------------------
 
+    @Operation(summary = "Authenticate user and get access tokens", description = "Exchanges email and password for a short-lived Access Token and a long-lived Refresh Token.")
+    @ApiResponse(responseCode = "200", description = "Authentication successful",
+            content = @Content(schema = @Schema(implementation = AuthenticationResult.class)))
+    @ApiResponse(responseCode = "401", description = "Invalid credentials or account inactive",
+            content = @Content(schema = @Schema(implementation = AuthenticationResult.class)))
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticate(@RequestBody AuthenticateUserCommand command) {
+    public ResponseEntity<AuthenticationResult> authenticate(
+            @RequestBody @Valid AuthenticateUserCommand command) {
+
+        log.debug("Authentication attempt for email: {}", command.email());
+
         AuthenticationResult result = userService.authenticate(command);
 
         if (result.success()) {
+            log.info("Authentication successful for user: {}", command.email());
             return ResponseEntity.ok(result);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponseDTO(
-                            java.time.Instant.now().toString(),
-                            401,
-                            "Unauthorized",
-                            result.failureReason(),
-                            "/api/users/authenticate"
-                    ));
+            log.warn("Authentication failed for email: {}. Reason: Invalid credentials or account state.", command.email());
+            return ResponseEntity.status(401).body(result);
         }
     }
 
-    // ✅ UPDATE ENDPOINTS
+    @Operation(summary = "Refresh access token", description = "Uses a valid Refresh Token to generate a new Access Token without re-authenticating.")
+    @ApiResponse(responseCode = "200", description = "Token refresh successful",
+            content = @Content(schema = @Schema(implementation = AuthenticationResult.class)))
+    @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token",
+            content = @Content(schema = @Schema(implementation = AuthenticationResult.class)))
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthenticationResult> refreshToken(
+            @RequestBody @Valid RefreshTokenCommand command) {
 
+        log.debug("Refresh token request received for token starting with: {}...",
+                command.refreshToken().substring(0, 10));
+
+        AuthenticationResult result = userService.refreshToken(command);
+
+        if (result.success()) {
+            log.info("Token refresh successful. New token issued.");
+            return ResponseEntity.ok(result);
+        } else {
+            log.warn("Token refresh failed. Old token likely expired or invalid.");
+            return ResponseEntity.status(401).body(result);
+        }
+    }
+
+    @Operation(summary = "Client-side logout (informational)", description = "Informs the backend of a client-side logout. No server-side session change in stateless JWT (optional token blacklisting).")
+    @ApiResponse(responseCode = "200", description = "Logout acknowledged")
+    @PostMapping("/logout")
+    public ResponseEntity<SuccessResponseDTO> logout() {
+        log.info("Logout request received. Token presumed invalidated client-side.");
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Logged out successfully", null)
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ UPDATE ENDPOINTS
+    // ------------------------------------------------------------------
+
+    @Operation(summary = "Update user's personal information (PII)", description = "Updates first name, last name, gender, and phone number for the associated person record.")
+    @ApiResponse(responseCode = "200", description = "Information updated successfully")
     @PutMapping("/personal-info")
     public ResponseEntity<SuccessResponseDTO> updatePersonalInfo(@RequestBody UpdateUserInfoCommand command) {
+        log.info("Updating personal info for User ID: {}", command.userId());
         userService.updateUserPersonalInfo(command);
+        log.debug("Personal information updated successfully for ID: {}", command.userId());
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Personal information updated successfully", null));
     }
 
+    @Operation(summary = "Change user's login email address", description = "Updates the user's primary login email address.")
+    @ApiResponse(responseCode = "200", description = "Email changed successfully")
+    @ApiResponse(responseCode = "400", description = "New email is already in use")
     @PutMapping("/email")
     public ResponseEntity<SuccessResponseDTO> changeEmail(@RequestBody ChangeEmailCommand command) {
+        log.info("Attempting email change for User ID: {}", command.userId());
         userService.changeUserEmail(command);
+        log.info("Email successfully changed for ID: {}", command.userId());
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Email changed successfully", null));
     }
 
+    @Operation(summary = "Change user's password", description = "Requires the current password to be verified before setting a new password.")
+    @ApiResponse(responseCode = "200", description = "Password changed successfully")
+    @ApiResponse(responseCode = "400", description = "Current password was incorrect")
     @PutMapping("/password")
     public ResponseEntity<SuccessResponseDTO> changePassword(@RequestBody ChangePasswordCommand command) {
+        log.warn("Attempting password change for User ID: {}", command.userId());
         userService.changeUserPassword(command);
+        log.info("Password successfully changed for ID: {}", command.userId());
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Password changed successfully", null));
     }
 
+    @Operation(summary = "Deactivate user account (Admin/Self)", description = "Sets the user's active status to FALSE, preventing future logins.")
+    @ApiResponse(responseCode = "200", description = "User deactivated successfully")
+    @Parameter(name = "userId", description = "The ID of the user to deactivate", required = true)
     @PutMapping("/{userId}/deactivate")
     public ResponseEntity<SuccessResponseDTO> deactivateUser(@PathVariable String userId) {
+        log.warn("Deactivation request received for User ID: {}", userId);
         userService.deactivateUser(UserId.fromString(userId));
+        log.info("User ID {} deactivated successfully.", userId);
         return ResponseEntity.ok(new SuccessResponseDTO(true, "User deactivated successfully", null));
     }
 
+    @Operation(summary = "Activate user account (Admin)", description = "Sets the user's active status to TRUE.")
+    @ApiResponse(responseCode = "200", description = "User activated successfully")
+    @Parameter(name = "userId", description = "The ID of the user to activate", required = true)
     @PutMapping("/{userId}/activate")
     public ResponseEntity<SuccessResponseDTO> activateUser(@PathVariable String userId) {
+        log.info("Activation request received for User ID: {}", userId);
         userService.activateUser(UserId.fromString(userId));
+        log.info("User ID {} activated successfully.", userId);
         return ResponseEntity.ok(new SuccessResponseDTO(true, "User activated successfully", null));
     }
 
+    // ------------------------------------------------------------------
     // ✅ QUERY ENDPOINTS
+    // ------------------------------------------------------------------
 
+    @Operation(summary = "Get user by ID", description = "Retrieves complete user and person information by UserId.")
+    @ApiResponse(responseCode = "200", description = "User data retrieved")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @Parameter(name = "userId", description = "The ID of the user", required = true)
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String userId) {
+        log.debug("Fetching user details for User ID: {}", userId);
         UserDTO user = userService.getUserById(UserId.fromString(userId));
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Get user by email", description = "Retrieves complete user and person information by email address.")
+    @ApiResponse(responseCode = "200", description = "User data retrieved")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @Parameter(name = "email", description = "The user's email address", required = true)
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
+        log.debug("Fetching user details by email: {}", email);
         UserDTO user = userService.getUserByEmail(new Email(email));
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Get user by Person ID", description = "Retrieves user data using the associated PersonId.")
+    @ApiResponse(responseCode = "200", description = "User data retrieved")
+    @Parameter(name = "personId", description = "The ID of the associated person record", required = true)
     @GetMapping("/person/{personId}")
     public ResponseEntity<UserDTO> getUserByPersonId(@PathVariable String personId) {
+        log.debug("Fetching user details by Person ID: {}", personId);
         UserDTO user = userService.getUserByPersonId(PersonId.fromString(personId));
         return ResponseEntity.ok(user);
     }
 
+    @Operation(summary = "Get users by role", description = "Retrieves a list of all users filtered by their primary role (e.g., ADMIN, STUDENT).")
+    @ApiResponse(responseCode = "200", description = "List of users retrieved")
+    @Parameter(name = "role", description = "The role name (e.g., STUDENT)", required = true)
     @GetMapping("/role/{role}")
     public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable String role) {
+        log.debug("Fetching all users with role: {}", role.toUpperCase());
         List<UserDTO> users = userService.getUsersByRole(Role.valueOf(role.toUpperCase()));
         return ResponseEntity.ok(users);
     }
 
+    @Operation(summary = "Get all active users", description = "Retrieves a list of all users whose accounts are currently active.")
+    @ApiResponse(responseCode = "200", description = "List of active users retrieved")
     @GetMapping("/active")
     public ResponseEntity<List<UserDTO>> getActiveUsers() {
+        log.debug("Fetching list of all active users.");
         List<UserDTO> users = userService.getActiveUsers();
         return ResponseEntity.ok(users);
     }
 
+    @Operation(summary = "Check email availability", description = "Checks if an email address is already registered in the system.")
+    @ApiResponse(responseCode = "200", description = "Returns true if available, false if in use")
+    @Parameter(name = "email", description = "The email address to check", required = true)
     @GetMapping("/email-available/{email}")
     public ResponseEntity<Boolean> isEmailAvailable(@PathVariable String email) {
+        log.debug("Checking availability for email: {}", email);
         boolean available = userService.isEmailAvailable(new Email(email));
         return ResponseEntity.ok(available);
     }

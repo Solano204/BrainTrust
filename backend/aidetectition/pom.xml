@@ -21,10 +21,7 @@
             <groupId>com.braintrust</groupId>
             <artifactId>shared</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.braintrust</groupId>
-            <artifactId>education</artifactId>
-        </dependency>
+     
         <!-- Jackson for JSON serialization/deserialization -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

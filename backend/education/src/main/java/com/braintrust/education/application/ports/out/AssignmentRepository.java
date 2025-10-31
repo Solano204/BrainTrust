@@ -3,6 +3,7 @@ package com.braintrust.education.application.ports.out;
 import com.braintrust.education.domain.model.Assignment;
 import com.braintrust.education.domain.valueobjects.AssignmentId;
 import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.identity.domain.valueobjects.UserId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,12 @@ public interface AssignmentRepository {
     void delete(Assignment assignment);
 
     // Queries
+    // ✅ NEW: Calendar queries for students
+    List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd);
+
+    // ✅ NEW: Calendar queries for teachers
+    List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd);
+    // ✅ NEW: Calendar queries for teachers
     Optional<Assignment> findById(AssignmentId assignmentId);
     List<Assignment> findByCourseId(CourseId courseId);
     List<Assignment> findActiveAssignmentsByCourse(CourseId courseId);

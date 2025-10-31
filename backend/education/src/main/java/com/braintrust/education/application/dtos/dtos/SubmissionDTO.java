@@ -1,7 +1,6 @@
 package com.braintrust.education.application.dtos.dtos;
 
 
-import com.braintrust.aidetectition.application.dtos.dtos.AIDetectionResultDTO;
 
 import java.util.List;
 

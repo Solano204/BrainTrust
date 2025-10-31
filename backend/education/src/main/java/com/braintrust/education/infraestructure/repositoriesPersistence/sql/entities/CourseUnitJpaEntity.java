@@ -13,7 +13,7 @@ public class CourseUnitJpaEntity {
     @Column(name = "id", length = 50)
     private String id;
 
-    @Column(name = "course_id", length = 50, nullable = false)
+    @Column(name = "course_id", length = 50, nullable = false, insertable = false, updatable = false)
     private String courseId;
 
     @Column(name = "name", length = 255, nullable = false)

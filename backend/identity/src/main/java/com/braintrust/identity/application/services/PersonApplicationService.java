@@ -1,8 +1,10 @@
 // 📍 identity/application/services/PersonApplicationService.java
 package com.braintrust.identity.application.services;
 
-import com.braintrust.identity.application.dtos.*;
-import com.braintrust.identity.application.dtos.commands.*;
+import com.braintrust.identity.application.dtos.commands.CreatePersonCommand;
+import com.braintrust.identity.application.dtos.commands.UpdateImageCommand;
+import com.braintrust.identity.application.dtos.commands.UpdatePersonAddressCommand;
+import com.braintrust.identity.application.dtos.commands.UpdatePersonInfoCommand;
 import com.braintrust.identity.application.dtos.dtos.AddressDTO;
 import com.braintrust.identity.application.dtos.dtos.PersonDTO;
 import com.braintrust.identity.application.ports.in.PersonService;
@@ -10,6 +12,8 @@ import com.braintrust.identity.application.ports.out.PersonRepository;
 import com.braintrust.identity.domain.exceptions.PersonNotFoundException;
 import com.braintrust.identity.domain.model.Person;
 import com.braintrust.identity.domain.valueobjects.*;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j // ⬅️ Enable the 'log' variable
 public class PersonApplicationService implements PersonService {
 
     private final PersonRepository personRepository;
@@ -28,6 +33,8 @@ public class PersonApplicationService implements PersonService {
 
     @Override
     public PersonId createPerson(CreatePersonCommand command) {
+        log.info("Creating new Person for: {} {}", command.firstName(), command.lastName());
+
         Person person = Person.create(command.firstName(), command.lastName());
         person.updatePersonalInfo(
                 command.firstName(),
@@ -37,6 +44,7 @@ public class PersonApplicationService implements PersonService {
         );
 
         Person savedPerson = personRepository.save(person);
+        log.info("Person record created and saved. ID: {}", savedPerson.getId().getValue());
         return savedPerson.getId();
     }
 
@@ -44,7 +52,10 @@ public class PersonApplicationService implements PersonService {
 
     @Override
     public void updatePersonalInfo(UpdatePersonInfoCommand command) {
-        Person person = findPersonByIdOrThrow(PersonId.fromString(command.personId()));
+        PersonId personId = PersonId.fromString(command.personId());
+        log.warn("Updating sensitive PII for Person ID: {}", personId.getValue()); // PII update is high-level event
+
+        Person person = findPersonByIdOrThrow(personId);
 
         person.updatePersonalInfo(
                 command.firstName(),
@@ -54,11 +65,15 @@ public class PersonApplicationService implements PersonService {
         );
 
         personRepository.save(person);
+        log.debug("PII updated successfully for Person ID {}.", personId.getValue());
     }
 
     @Override
     public void updateAddress(UpdatePersonAddressCommand command) {
-        Person person = findPersonByIdOrThrow(PersonId.fromString(String.valueOf(command.personId())));
+        PersonId personId = PersonId.fromString(command.personId());
+        log.info("Updating address for Person ID: {}", personId.getValue());
+
+        Person person = findPersonByIdOrThrow(personId);
 
         Address address = new Address(
                 command.street(),
@@ -70,18 +85,24 @@ public class PersonApplicationService implements PersonService {
 
         person.updateAddress(address);
         personRepository.save(person);
+        log.debug("Address updated for Person ID {}.", personId.getValue());
     }
 
     @Override
     public void updateImage(UpdateImageCommand command) {
-        Person person = findPersonByIdOrThrow(PersonId.fromString(command.personId()));
+        PersonId personId = PersonId.fromString(command.personId());
+        log.info("Updating profile image for Person ID: {}", personId.getValue());
+
+        Person person = findPersonByIdOrThrow(personId);
         person.updateImage(command.imagePath());
         personRepository.save(person);
+        log.debug("Image path updated for Person ID {}.", personId.getValue());
     }
 
     @Override
     @Transactional(readOnly = true)
     public PersonDTO getPersonById(PersonId personId) {
+        log.debug("Fetching DTO for Person ID: {}", personId.getValue());
         Person person = findPersonByIdOrThrow(personId);
         return mapToPersonDTO(person);
     }
@@ -89,13 +110,14 @@ public class PersonApplicationService implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public PersonDTO getPersonByUserId(UserId userId) {
-        // This would require UserRepository to find person
+        log.error("Method 'getPersonByUserId' invoked, but is UNUSABLE. Use UserService.");
         throw new UnsupportedOperationException("Use UserService.getUserById instead");
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PersonDTO> getAllPersons() {
+        log.debug("Fetching list of all person records.");
         List<Person> persons = personRepository.findAll();
         return persons.stream()
                 .map(this::mapToPersonDTO)
@@ -103,11 +125,16 @@ public class PersonApplicationService implements PersonService {
     }
 
     private Person findPersonByIdOrThrow(PersonId personId) {
+        log.trace("Attempting to retrieve Person ID: {}", personId.getValue());
         return personRepository.findById(personId)
-                .orElseThrow(() -> new PersonNotFoundException("Person not found: " + personId.getValue()));
+                .orElseThrow(() -> {
+                    log.warn("Person not found with ID: {}", personId.getValue());
+                    return new PersonNotFoundException("Person not found: " + personId.getValue());
+                });
     }
 
     private PersonDTO mapToPersonDTO(Person person) {
+        // Mapping logic (no logging required here)
         AddressDTO addressDTO = person.getAddress() != null
                 ? new AddressDTO(
                 person.getAddress().getStreet(),
