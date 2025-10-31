@@ -8,6 +8,7 @@ import com.braintrust.education.application.dtos.dtos.AssignmentDTO;
 import com.braintrust.education.domain.valueobjects.AssignmentId;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.Document;
+import com.braintrust.identity.domain.valueobjects.UserId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,4 +34,7 @@ public interface AssignmentService {
     List<AssignmentDTO> getAssignmentsDueSoon(CourseId courseId, int daysAhead);
     boolean canAcceptSubmissions(AssignmentId assignmentId);
     int getAttachmentCount(AssignmentId assignmentId);
+    List<AssignmentDTO> getAssignmentsForStudentWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd);
+    List<AssignmentDTO> getAssignmentsForTeacherWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd);
+
 }

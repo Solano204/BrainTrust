@@ -1,4 +1,4 @@
-package com.braintrust.aidetectition.application.dtos.dtos;
+package com.braintrust.aidetectition.application.dtos.dtosResponse;
 
 public record DetectedSegmentDTO(
         String text,

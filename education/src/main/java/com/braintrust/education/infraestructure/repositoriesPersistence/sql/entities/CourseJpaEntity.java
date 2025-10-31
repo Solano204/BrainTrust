@@ -2,7 +2,7 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.ent
 
 
 import jakarta.persistence.*;
-        import java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +54,7 @@ public class CourseJpaEntity {
     private LocalDateTime createdAt;
 
     // ✅ CRITICAL: These relationships make Enrollment and Unit part of the aggregate
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "course_id", nullable = false)
     private Set<EnrollmentJpaEntity> enrollments = new HashSet<>();
 

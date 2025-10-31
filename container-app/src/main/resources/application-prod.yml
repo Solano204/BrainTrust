@@ -1,0 +1,179 @@
+spring:
+  application:
+    name: braintrust-api
+
+  # File upload settings
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+      file-size-threshold: 2KB
+
+  # Active profile (change this to switch implementations)
+  profiles:
+    active: production  # Options: production, development, test
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:braintrust_db}?sslmode=require
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: BrainTrustHikariPool
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Use 'validate' in production, 'update' in dev
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+    tagsSorter: alpha
+    doc-expansion: none
+    display-request-duration: true
+    filter: false
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+
+  # SSL Configuration (disabled by default for development)
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEYSTORE_PATH:classpath:keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: ${SSL_KEY_ALIAS:braintrust}
+
+  # Error Handling
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+    whitelabel:
+      enabled: false
+
+  # Compression
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:86400000}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
+  issuer: ${JWT_ISSUER:https://api.braintrust.com}
+
+# Security Configuration
+security:
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    requests-per-minute: ${RATE_LIMIT_RPM:60}
+  ip-whitelist:
+    enabled: ${IP_WHITELIST_ENABLED:false}
+    admin-ips: ${ADMIN_IPS:}
+
+# Python AI Detection Service URLs
+ai:
+  python:
+    analyze:
+      url: http://localhost:8001/analyze
+    extract:
+      url: http://localhost:8000/extract
+  model-default-type: ENSEMBLE
+
+
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.braintrust: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.springframework.web: INFO
+    org.hibernate: WARN
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+    org.springframework.boot.autoconfigure.orm.jpa.JpaBaseConfiguration: ERROR
+
+  # File logging (optional, comment out if not needed)
+  file:
+    name: ${LOG_FILE_PATH:/var/log/braintrust/application.log}
+    max-size: 10MB
+    max-history: 30
+    total-size-cap: 1GB
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: ${PROMETHEUS_ENABLED:true}
+# Document Storage Configuration
+document:
+  storage:
+    strategy: before  # Options: before, after, parallel
+    local:
+      base-path: ./storage/documents
+    s3:
+      bucket-name: braintrust-submissions
+      region: us-east-1
+
+# Application Info
+info:
+  app:
+    name: ${spring.application.name}
+    description: BrainTrust Container Application
+    version: 1.0.0
+    encoding: UTF-8
+    java:
+      version: ${java.version}

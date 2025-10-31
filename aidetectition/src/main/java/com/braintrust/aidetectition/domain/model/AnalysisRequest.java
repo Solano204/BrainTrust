@@ -2,7 +2,7 @@ package com.braintrust.aidetectition.domain.model;
 
 import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
 import com.braintrust.aidetectition.domain.valueobjects.DetectionResult;
-import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.aidetectition.domain.valueobjects.SubmissionId;
 import com.braintrust.shared.domain.AggregateRoot;
 
 import java.time.LocalDateTime;

@@ -6,7 +6,6 @@ import com.braintrust.education.domain.valueobjects.Grade;
 import com.braintrust.education.domain.valueobjects.SubmissionId;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.domain.AggregateRoot;
-import com.braintrust.shared.domain.Entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,15 +32,26 @@ public class Submission extends AggregateRoot<SubmissionId> {
         this.status = SubmissionStatus.SUBMITTED;
     }
 
+    private Submission(SubmissionId id, AssignmentId assignmentId, UserId studentId, String content,SubmissionStatus status) {
+        this.id = id;
+        this.assignmentId = assignmentId;
+        this.studentId = studentId;
+        this.content = validateContent(content);
+        this.attachments = new ArrayList<>();
+        this.submittedAt = LocalDateTime.now();
+        this.status = status;
+    }
+
     // Factory Method
     public static Submission create(AssignmentId assignmentId, UserId studentId,
-                                    String content, List<Document> attachments) {
+                                    String content, List<Document> attachments, SubmissionStatus status) {
         SubmissionId id = SubmissionId.generate();
-        Submission submission = new Submission(id, assignmentId, studentId, content);
+        Submission submission = new Submission(id, assignmentId, studentId, content,status);
 
         if (attachments != null) {
             submission.attachments.addAll(attachments);
         }
+
 
         return submission;
     }

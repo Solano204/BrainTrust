@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface AnalysisRequestJpaRepository extends JpaRepository<AnalysisRequestJpaEntity, String> {
 
-    Optional<AnalysisRequestJpaEntity> findBySubmissionId(String submissionId);
+    List<AnalysisRequestJpaEntity> findBySubmissionId(String submissionId);
     List<AnalysisRequestJpaEntity> findByStatus(String status);
     List<AnalysisRequestJpaEntity> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     List<AnalysisRequestJpaEntity> findByProbabilityGreaterThan(BigDecimal threshold);
