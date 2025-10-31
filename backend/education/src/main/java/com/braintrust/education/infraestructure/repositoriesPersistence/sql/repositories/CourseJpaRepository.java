@@ -3,6 +3,8 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.rep
 
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,4 +18,8 @@ public interface CourseJpaRepository extends JpaRepository<CourseJpaEntity, Stri
     List<CourseJpaEntity> findByActiveTrue();
     List<CourseJpaEntity> findByGradeAndGroup(String grade, String group);
     boolean existsByCode(String code);
+    // ⬅️ NEW METHOD: Find the Course (Aggregate Root) that owns a specific Unit ID
+    @Query("SELECT c FROM CourseJpaEntity c JOIN c.units u WHERE u.id = :unitId")
+    Optional<CourseJpaEntity> findByUnitId(@Param("unitId") String unitId);
+
 }

@@ -11,6 +11,7 @@
       <set>
         <option value="$PROJECT_DIR$/aidetection/pom.xml" />
         <option value="$PROJECT_DIR$/container-main/pom.xml" />
+        <option value="$PROJECT_DIR$/security/pom.xml" />
         <option value="$PROJECT_DIR$/untitled/pom.xml" />
       </set>
     </option>

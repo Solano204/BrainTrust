@@ -33,5 +33,7 @@ public interface UserService {
     boolean isEmailAvailable(Email email);
 
     // Authentication
+    // ✅ AUTHENTICATION
     AuthenticationResult authenticate(AuthenticateUserCommand command);
+    AuthenticationResult refreshToken(RefreshTokenCommand command);
 }

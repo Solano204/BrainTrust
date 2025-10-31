@@ -1,17 +1,27 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.Mapper;
 
-
 import com.braintrust.identity.domain.model.Person;
 import com.braintrust.identity.domain.valueobjects.Address;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.PersonJpaEntity;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j // ⬅️ Enable the 'log' variable
 public class PersonEntityMapper {
 
+    /**
+     * Converts a Person Domain Model to a JPA Entity.
+     */
     public PersonJpaEntity toEntity(Person person) {
+        log.debug("Mapping Person Domain ID {} to JPA Entity.", person.getId().getValue());
+
         Address address = person.getAddress();
+
+        // Use trace level to log potentially sensitive PII data fields being mapped
+        log.trace("Mapping PII: Name={}, Phone={}, Address={}",
+                person.getFullName(), person.getPhone(), address != null ? address.getStreet() : "N/A");
 
         return new PersonJpaEntity(
                 person.getId().getValue(),
@@ -29,7 +39,12 @@ public class PersonEntityMapper {
         );
     }
 
+    /**
+     * Converts a Person JPA Entity back to a Domain Person model.
+     */
     public Person toDomain(PersonJpaEntity entity) {
+        log.debug("Mapping Person JPA Entity {} back to Domain Model.", entity.getId());
+
         PersonId id = PersonId.fromString(entity.getId());
 
         Address address = null;
@@ -41,6 +56,7 @@ public class PersonEntityMapper {
                     entity.getAddressState(),
                     entity.getAddressPostalCode()
             );
+            log.trace("Address reconstituted for Person ID {}.", id.getValue());
         }
 
         return Person.reconstitute(

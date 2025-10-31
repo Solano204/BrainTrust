@@ -26,7 +26,7 @@ public class UserJpaEntity {
 
     @Column(name = "role", length = 20, nullable = false)
     @Enumerated(EnumType.STRING)
-    private String role;
+    private Role role;
 
     @Column(name = "active", nullable = false)
     private boolean active;
@@ -46,7 +46,7 @@ public class UserJpaEntity {
         this.personId = personId;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.role = role;
+        this.role = Role.valueOf(role);
         this.active = active;
         this.studentId = studentId;
         this.createdAt = createdAt;
@@ -65,8 +65,8 @@ public class UserJpaEntity {
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public Role getRole() { return role; }
+    public void setRole(String role) { this.role = Role.valueOf(role); }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

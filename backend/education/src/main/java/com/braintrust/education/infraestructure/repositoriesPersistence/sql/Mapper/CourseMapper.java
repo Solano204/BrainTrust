@@ -11,15 +11,22 @@ import com.braintrust.education.domain.valueobjects.CourseCode;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 
 @Component
+@Slf4j // ⬅️ Enable the 'log' variable
 public class CourseMapper {
 
+    /**
+     * Converts a Domain Course model to a JPA Entity.
+     */
     public CourseJpaEntity toEntity(Course course) {
+        log.debug("Mapping Course Domain {} to JPA Entity.", course.getId().getValue());
+
         return new CourseJpaEntity(
                 course.getId().getValue(),
                 course.getCode().getValue(),
@@ -30,17 +37,23 @@ public class CourseMapper {
                 course.getGroup(),
                 course.getTeacherId().getValue(),
                 course.isActive(),
-                LocalDateTime.now() // ✅ FIXED
+                LocalDateTime.now() // Creation/Update timestamp
         );
     }
 
+    /**
+     * Converts a Course JPA Entity back to a Domain Course model.
+     */
     public Course toDomain(CourseJpaEntity entity) {
+        log.debug("Mapping Course JPA Entity {} back to Domain Model.", entity.getId());
+
         CourseId courseId = CourseId.fromString(entity.getId());
         CourseCode courseCode = new CourseCode(entity.getCode());
         UserId teacherId = UserId.fromString(entity.getTeacherId());
 
         // For now, we'll use empty collections for enrollments and units
-        // You'll need to implement proper relationships in JPA for these
+        log.warn("Course reconstruction: Enrollments and Units are empty collections and must be loaded separately.");
+
         return Course.reconstitute(
                 courseId,
                 courseCode,
@@ -51,13 +64,22 @@ public class CourseMapper {
                 entity.getGroup(),
                 teacherId,
                 entity.isActive(),
-                Collections.emptySet(), // TODO: Load enrollments from separate table
-                Collections.emptyList() // TODO: Load units from separate table
+                Collections.emptySet(), // Submissions/Enrollments
+                Collections.emptyList() // Units
         );
     }
 
-    // ✅ STATIC METHODS
+    // ------------------------------------------------------------------
+    // ✅ STATIC DTO MAPPING HELPERS
+    // ------------------------------------------------------------------
+
+    /**
+     * Maps the Course Domain Model to the public CourseDTO.
+     */
     public static CourseDTO mapToCourseDTO(Course course) {
+        // Logging trace level for frequent DTO operations
+        log.trace("Mapping Course {} to DTO.", course.getId().getValue());
+
         return new CourseDTO(
                 course.getId().getValue(),
                 course.getCode().getValue(),
@@ -76,6 +98,9 @@ public class CourseMapper {
         );
     }
 
+    /**
+     * Maps the Enrollment Domain Model to the public EnrollmentDTO.
+     */
     public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment) {
         GradeDTO gradeDTO = enrollment.getFinalGrade() != null
                 ? new GradeDTO(
@@ -97,6 +122,9 @@ public class CourseMapper {
         );
     }
 
+    /**
+     * Maps the CourseUnit Domain Model to the public CourseUnitDTO.
+     */
     public static CourseUnitDTO mapToUnitDTO(CourseUnit unit) {
         return new CourseUnitDTO(
                 unit.getId().getValue(),
@@ -107,6 +135,4 @@ public class CourseMapper {
                 unit.getDescription()
         );
     }
-
-
 }

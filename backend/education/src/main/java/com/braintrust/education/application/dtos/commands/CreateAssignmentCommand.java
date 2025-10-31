@@ -1,11 +1,29 @@
 package com.braintrust.education.application.dtos.commands;
 
-// 📍 education/application/dtos/commands/CreateAssignmentCommand.java
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public record CreateAssignmentCommand(
+        @NotBlank(message = "Course ID is required")
         String courseId,
+
+        @NotBlank(message = "Title is required")
+        @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
         String title,
+
+        @NotBlank(message = "Description is required")
+        @Size(min = 10, max = 1000, message = "Description must be between 10 and 1000 characters")
         String description,
-        String dueDate, // ISO-8601 format
+
+        @NotBlank(message = "Due date is required")
+        String dueDate, // Should be ISO-8601 format, validated at service layer
+
+        @Min(value = 1, message = "Max points must be at least 1")
         int maxPoints,
+
+        @NotBlank(message = "Instructions are required")
+        @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions
 ) {}

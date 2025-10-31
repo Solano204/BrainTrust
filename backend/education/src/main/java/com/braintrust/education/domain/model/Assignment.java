@@ -150,22 +150,59 @@ public class Assignment extends AggregateRoot<AssignmentId> {
 
     // Comportamiento de dominio - sin events
     public Submission submitWork(UserId studentId, String content, List<Document> submissionAttachments) {
-        if (!this.active) {
-            throw new IllegalStateException("Cannot submit to inactive assignment");
+        // Rule 1: If inactive AND past due date -> REJECT
+        if (!this.active && dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
+            throw new IllegalStateException("Assignment is closed and cannot accept submissions");
         }
 
-        if (dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
-            throw new IllegalStateException("Cannot submit after due date");
+        // Rule 2: If inactive BUT before due date -> Still allow (edge case)
+        if (!this.active && (dueDate == null || LocalDateTime.now().isBefore(dueDate))) {
         }
 
-        Submission submission = Submission.create(this.id, studentId, content, submissionAttachments);
+        // Determine submission status based on timing and assignment state
+        SubmissionStatus status = determineSubmissionStatus();
+
+        // Create submission with appropriate status
+        Submission submission = Submission.create(
+                this.id,
+                studentId,
+                content,
+                submissionAttachments,
+                status
+        );
+
         submissions.add(submission);
 
         return submission;
     }
 
+    // Helper method to determine submission status
+    private SubmissionStatus determineSubmissionStatus() {
+        // If active, check if it's past due date
+        if (this.active) {
+            if (dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
+                return SubmissionStatus.LATE_SUBMITTED; // Active but late
+            }
+            return SubmissionStatus.SUBMITTED; // Active and on time
+        }
+
+        // If inactive but before due date (shouldn't normally happen, but handle it)
+        if (dueDate == null || LocalDateTime.now().isBefore(dueDate)) {
+            return SubmissionStatus.SUBMITTED; // Inactive but on time
+        }
+
+        // This shouldn't be reached due to validation above, but just in case
+        throw new IllegalStateException("Invalid assignment state for submission");
+    }
+
     public boolean canAcceptSubmissions() {
-        return active && (dueDate == null || LocalDateTime.now().isBefore(dueDate));
+        // If active = true, always accept submissions (regardless of due date)
+        if (active) {
+            return true;
+        }
+
+        // If active = false, only accept if due date hasn't passed yet
+        return dueDate == null || LocalDateTime.now().isBefore(dueDate);
     }
 
     public void extendDueDate(LocalDateTime newDueDate) {
