@@ -1,10 +1,10 @@
 package com.braintrust.identity.application.ports.out;
 
-import com.braintrust.identity.domain.model.Role;
 import com.braintrust.identity.domain.model.User;
 import com.braintrust.identity.domain.valueobjects.Email;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.braintrust.aidetectition.application.dtos.dtos;
+package com.braintrust.aidetectition.application.dtos.dtosResponse;
 
 // 📍 aidetection/application/dtos/DetectionSummaryDTO.java
 public record DetectionSummaryDTO(

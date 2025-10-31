@@ -1,9 +1,9 @@
 // 📍 shared/infrastructure/security/SecurityConfig.java
-package com.braintrust.security.infraestructure.security;
+package com.braintrust.identity.infraestructure.security;
 
-import com.braintrust.security.infraestructure.security.filters.JwtAuthenticationEntryPoint;
-import com.braintrust.security.infraestructure.security.filters.JwtAuthenticationFilter;
-import com.braintrust.security.infraestructure.security.filters.RateLimitFilter;
+import com.braintrust.identity.infraestructure.security.filters.JwtAuthenticationEntryPoint;
+import com.braintrust.identity.infraestructure.security.filters.JwtAuthenticationFilter;
+import com.braintrust.identity.infraestructure.security.filters.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,15 +53,19 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/users/register/**",
                                 "/api/users/authenticate",
+
                                 "/api/users/refresh-token",
                                 "/api/users/email-available/**"
                         ).permitAll()
 
-                        // Public endpoints - Documentation
+                        // ✅ FIXED: Public endpoints - Documentation (Swagger UI)
                         .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/v3/api-docs/**",           // OpenAPI JSON/YAML
+                                "/swagger-ui/**",            // Swagger UI resources
+                                "/swagger-ui.html",          // Swagger UI entry point
+                                "/swagger-resources/**",     // Swagger resources
+                                "/webjars/**",               // Webjars (used by Swagger UI)
+                                "/configuration/**"          // Swagger configuration
                         ).permitAll()
 
                         // Public endpoints - Health
@@ -93,19 +97,12 @@ public class SecurityConfig {
 
                 // Security headers
                 .headers(headers -> headers
-                        // Evita que el navegador "adivine" el tipo de contenido.
                         .contentTypeOptions(contentTypeOptions -> {})
-                        //Activa la protección contra Cross-Site Scripting (XSS) en navegadores antiguos.
                         .xssProtection(xss -> {})
-
-                        //Evita que información sensible se guarde en caché del navegador.
                         .cacheControl(cache -> {})
-
-                        // Fuerza al navegador a SIEMPRE usar HTTPS (nunca HTTP) durante 1 año.
                         .httpStrictTransportSecurity(hsts ->
                                 hsts.includeSubDomains(true)
                                         .maxAgeInSeconds(31536000))
-                        // Con DENY: Tu sitio NO se puede cargar en ningún iframe.
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
                 );
 

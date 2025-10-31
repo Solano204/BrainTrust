@@ -4,19 +4,22 @@ import com.braintrust.aidetectition.application.ports.out.AnalysisRequestReposit
 import com.braintrust.aidetectition.domain.model.AnalysisRequest;
 import com.braintrust.aidetectition.domain.model.AnalysisStatus;
 import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
+import com.braintrust.aidetectition.domain.valueobjects.SubmissionId;
 import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.Mapper.AnalysisEntityMapper;
 import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.entities.AnalysisRequestJpaEntity;
-import com.braintrust.education.domain.valueobjects.SubmissionId;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
+@Slf4j // ⬅️ Enable the 'log' variable
 public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepository {
 
     private final AnalysisRequestJpaRepository jpaRepository;
@@ -28,34 +31,94 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
     ) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
+        log.info("Initialized JpaAnalysisRequestRepositoryAdapter.");
     }
 
     @Override
     public AnalysisRequest save(AnalysisRequest analysisRequest) throws JsonProcessingException {
+        log.debug("Saving AnalysisRequest {} to database.", analysisRequest.getId().getValue());
+
         AnalysisRequestJpaEntity entity = mapper.toEntity(analysisRequest);
         AnalysisRequestJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.trace("Entity saved. Mapping back to domain model.");
         return mapper.toDomain(savedEntity);
     }
 
+
+
     @Override
     public void delete(AnalysisRequest analysisRequest) {
+        log.warn("Deleting AnalysisRequest ID: {}", analysisRequest.getId().getValue());
         jpaRepository.deleteById(analysisRequest.getId().getValue());
+        log.debug("AnalysisRequest ID {} deleted from persistence.", analysisRequest.getId().getValue());
+    }
+
+    @Override
+    public List<AnalysisRequest> saveAll(List<AnalysisRequest> analysisRequests) {
+        log.debug("Batch saving {} AnalysisRequests to database.", analysisRequests.size());
+
+        if (analysisRequests.isEmpty()) {
+            log.trace("Empty list provided to saveAll, returning empty list.");
+            return List.of();
+        }
+
+        try {
+            // Convert all domain objects to entities
+            List<AnalysisRequestJpaEntity> entities = new ArrayList<>();
+            for (AnalysisRequest analysisRequest : analysisRequests) {
+                log.trace("Mapping AnalysisRequest {} to entity.", analysisRequest.getId().getValue());
+                AnalysisRequestJpaEntity entity = mapper.toEntity(analysisRequest);
+                entities.add(entity);
+            }
+
+            // Batch save all entities
+            log.debug("Persisting {} entities in batch operation.", entities.size());
+            List<AnalysisRequestJpaEntity> savedEntities = jpaRepository.saveAll(entities);
+
+            // Convert saved entities back to domain objects
+            List<AnalysisRequest> savedAnalysisRequests = savedEntities.stream()
+                    .map(entity -> {
+                        log.trace("Mapping saved entity {} back to domain.", entity.getId());
+                        return mapper.toDomain(entity);
+                    })
+                    .collect(Collectors.toList());
+
+            log.info("✅ Successfully batch saved {} AnalysisRequests.", savedAnalysisRequests.size());
+            return savedAnalysisRequests;
+
+        } catch (JsonProcessingException e) {
+            log.error("❌ JsonProcessingException during batch save operation.", e);
+            throw new RuntimeException("JsonProcessingException during batch save operation", e);
+
+        } catch (Exception e) {
+            log.error("❌ Unexpected error during batch save operation.", e);
+            throw new RuntimeException("Failed to batch save AnalysisRequests", e);
+        }
     }
 
     @Override
     public Optional<AnalysisRequest> findById(AnalysisId analysisId) {
+        log.debug("Querying database for Analysis ID: {}", analysisId.getValue());
         return jpaRepository.findById(analysisId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
-    public Optional<AnalysisRequest> findBySubmissionId(SubmissionId submissionId) {
-        return jpaRepository.findBySubmissionId(submissionId.getValue())
-                .map(mapper::toDomain);
+    public List<AnalysisRequest> findBySubmissionId(SubmissionId submissionId) {
+        log.debug("Querying database by Submission ID: {}", submissionId.getValue());
+        // 1. Call the JPA repository method, which returns List<AnalysisRequestJpaEntity>
+        List<AnalysisRequestJpaEntity> entities = jpaRepository.findBySubmissionId(submissionId.getValue());
+
+        // 2. Stream the list, map each entity to the domain model, and collect as a List.
+        return entities.stream()
+                .map(mapper::toDomain) // Use the mapper to convert each entity
+                .collect(Collectors.toList()); // Collect the results into the required List
     }
 
     @Override
     public List<AnalysisRequest> findByStatus(AnalysisStatus status) {
+        log.debug("Querying database for all analyses with status: {}", status.name());
         return jpaRepository.findByStatus(status.name())
                 .stream()
                 .map(mapper::toDomain)
@@ -64,6 +127,7 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
 
     @Override
     public List<AnalysisRequest> findPendingAnalyses() {
+        log.debug("Querying database for PENDING analyses.");
         return jpaRepository.findByStatus(AnalysisStatus.PENDING.name())
                 .stream()
                 .map(mapper::toDomain)
@@ -72,6 +136,7 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
 
     @Override
     public List<AnalysisRequest> findByDateRange(LocalDateTime start, LocalDateTime end) {
+        log.debug("Querying database by date range: {} to {}", start, end);
         return jpaRepository.findByCreatedAtBetween(start, end)
                 .stream()
                 .map(mapper::toDomain)
@@ -80,6 +145,7 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
 
     @Override
     public List<AnalysisRequest> findByProbabilityAbove(BigDecimal threshold) {
+        log.debug("Querying database for completed analyses with probability > {}", threshold);
         return jpaRepository.findByProbabilityGreaterThan(threshold)
                 .stream()
                 .map(mapper::toDomain)

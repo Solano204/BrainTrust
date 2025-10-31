@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -16,6 +17,7 @@
     <bytecodeTargetLevel>
       <module name="aidetection" target="22" />
       <module name="container-main" target="22" />
+      <module name="security" target="22" />
       <module name="untitled" target="22" />
     </bytecodeTargetLevel>
   </component>
@@ -26,6 +28,7 @@
       <module name="container-app" options="-parameters" />
       <module name="education" options="-parameters" />
       <module name="identity" options="-parameters" />
+      <module name="security" options="-parameters" />
       <module name="shared" options="-parameters" />
       <module name="untitled" options="-parameters" />
     </option>

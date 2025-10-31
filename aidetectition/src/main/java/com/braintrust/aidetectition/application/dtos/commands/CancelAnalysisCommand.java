@@ -1,6 +1,8 @@
 package com.braintrust.aidetectition.application.dtos.commands;
 
-// 📍 aidetection/application/dtos/commands/CancelAnalysisCommand.java
+import jakarta.validation.constraints.NotBlank;
+
 public record CancelAnalysisCommand(
+        @NotBlank(message = "Analysis ID is required")
         String analysisId
 ) {}

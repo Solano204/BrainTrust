@@ -1,4 +1,4 @@
-package com.braintrust.aidetectition.application.dtos.dtos;
+package com.braintrust.aidetectition.application.dtos.dtosResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;

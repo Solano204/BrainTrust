@@ -7,6 +7,7 @@ import com.braintrust.education.domain.valueobjects.EnrollmentId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.EnrollmentEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.EnrollmentJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @Transactional(readOnly = true)
+@Slf4j // ⬅️ Enable the 'log' variable
 public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     private final EnrollmentJpaRepository jpaRepository;
@@ -25,36 +27,47 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
                                        EnrollmentEntityMapper mapper) {
         this.jpaRepository = jpaRepository;
         this.mapper = mapper;
+        log.info("Initialized EnrollmentRepositoryAdapter.");
     }
 
     @Override
     @Transactional
     public Enrollment save(Enrollment enrollment) {
+        log.info("Saving Enrollment ID {} (Student: {}, Course: {}).",
+                enrollment.getId().getValue(), enrollment.getStudentId().getValue(), enrollment.getCourseId().getValue());
+
         EnrollmentJpaEntity entity = mapper.toEntity(enrollment);
         EnrollmentJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.debug("Enrollment saved to persistence. Status: {}", savedEntity.getStatus());
         return mapper.toDomain(savedEntity);
     }
 
     @Override
     @Transactional
     public void delete(Enrollment enrollment) {
+        log.warn("Deleting Enrollment ID: {}", enrollment.getId().getValue());
         jpaRepository.deleteById(enrollment.getId().getValue());
+        log.info("Enrollment ID {} deleted successfully.", enrollment.getId().getValue());
     }
 
     @Override
     public Optional<Enrollment> findById(EnrollmentId enrollmentId) {
+        log.debug("Querying database for Enrollment ID: {}", enrollmentId.getValue());
         return jpaRepository.findById(enrollmentId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public Optional<Enrollment> findByCourseAndStudent(CourseId courseId, UserId studentId) {
+        log.debug("Querying by Course ID {} and Student ID {}.", courseId.getValue(), studentId.getValue());
         return jpaRepository.findByCourseIdAndStudentId(courseId.getValue(), studentId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public List<Enrollment> findByCourseId(CourseId courseId) {
+        log.debug("Fetching all enrollments for Course ID: {}.", courseId.getValue());
         return jpaRepository.findByCourseId(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -63,6 +76,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     @Override
     public List<Enrollment> findByStudentId(UserId studentId) {
+        log.debug("Fetching all courses enrolled by Student ID: {}.", studentId.getValue());
         return jpaRepository.findByStudentId(studentId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -71,6 +85,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     @Override
     public List<Enrollment> findActiveEnrollments(CourseId courseId) {
+        log.debug("Fetching ACTIVE enrollments for Course ID: {}.", courseId.getValue());
         return jpaRepository.findActiveByCourseId(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -79,6 +94,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     @Override
     public boolean existsByCourseAndStudent(CourseId courseId, UserId studentId) {
+        log.trace("Checking existence of enrollment for Course ID {} and Student ID {}.", courseId.getValue(), studentId.getValue());
         return jpaRepository.existsByCourseIdAndStudentId(courseId.getValue(), studentId.getValue());
     }
 }
