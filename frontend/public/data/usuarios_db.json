@@ -1,0 +1,159 @@
+{
+    "usuarios": [
+        {
+            "id": 1,
+            "usuario": "Rosalia",
+            "password": "cha30lia1025*",
+            "rol": "administrador",
+            "nombre_completo": "Rosalia",
+            "email": "admin@braintrust.com",
+            "activo": false,
+            "fecha_Ini": "2025-10-31",
+            "fecha_Ven": "2025-11-01",
+            "ultimo_acceso": "2025-10-25T14:30:00Z"
+        },
+        {
+            "id": 2,
+            "usuario": "Rosario",
+            "password": "cha31ris1025*",
+            "rol": "subdirector",
+            "nombre_completo": "Rosario",
+            "email": "juan.perez@braintrust.com",
+            "activo": true,
+            "fecha_Ini": "2025-11-02",
+            "fecha_Ven": "2025-11-05",
+            "ultimo_acceso": "2025-10-26T09:15:00Z",
+            "materias": [
+                "",
+                ""
+            ]
+        },
+        {
+            "id": 3,
+            "usuario": "Guadalupe",
+            "password": "gua01da1125*",
+            "rol": "administrador",
+            "nombre_completo": "Guadalupe",
+            "email": "maria.lopez@braintrust.com",
+            "activo": true,
+            "fecha_Ini": "2025-11-02",
+            "fecha_Ven": "2025-11-03",
+            "ultimo_acceso": "2025-10-24T16:45:00Z",
+            "materias": [
+                "",
+                ""
+            ]
+        },
+        {
+            "id": 4,
+            "usuario": "coordinador",
+            "password": "coord2024",
+            "rol": "coordinador",
+            "nombre_completo": "Carlos Ramírez Torres",
+            "email": "carlos.ramirez@braintrust.com",
+            "activo": true,
+            "fecha_creacion": "2024-01-20",
+            "ultimo_acceso": "2025-10-26T08:00:00Z",
+            "departamento": "Académico"
+        },
+        {
+            "id": 5,
+            "usuario": "secretaria",
+            "password": "secret123",
+            "rol": "secretaria",
+            "nombre_completo": "Ana Martínez Sánchez",
+            "email": "ana.martinez@braintrust.com",
+            "activo": true,
+            "fecha_creacion": "2024-02-05",
+            "ultimo_acceso": "2025-10-25T17:30:00Z",
+            "area": "Administrativa"
+        }
+    ],
+    "estadisticas": {
+        "total_alumnos": 500,
+        "total_profesores": 20,
+        "total_cursos_activos": 10,
+        "ciclo_actual": "2025",
+        "ultima_actualizacion": "2025-10-26"
+    },
+    "alumnos": [
+        {
+            "id": 1,
+            "nombre": "Pedro Hernández",
+            "grado": "6to",
+            "grupo": "A",
+            "estatus": "activo"
+        },
+        {
+            "id": 2,
+            "nombre": "Laura Sánchez",
+            "grado": "5to",
+            "grupo": "B",
+            "estatus": "activo"
+        }
+    ],
+    "cursos": [
+        {
+            "id": 1,
+            "nombre": "Matemáticas Avanzadas",
+            "profesor_id": 2,
+            "alumnos_inscritos": 30,
+            "activo": true
+        },
+        {
+            "id": 2,
+            "nombre": "Historia Universal",
+            "profesor_id": 3,
+            "alumnos_inscritos": 25,
+            "activo": true
+        }
+    ],
+    "roles_disponibles": [
+        {
+            "nombre": "administrador",
+            "permisos": [
+                "todos"
+            ],
+            "descripcion": "Acceso completo al sistema"
+        },
+        {
+            "nombre": "profesor",
+            "permisos": [
+                "ver_estudiantes",
+                "calificar",
+                "asistencia",
+                "tareas"
+            ],
+            "descripcion": "Gestión de clases y estudiantes"
+        },
+        {
+            "nombre": "coordinador",
+            "permisos": [
+                "ver_estudiantes",
+                "reportes",
+                "horarios",
+                "profesores"
+            ],
+            "descripcion": "Supervisión académica"
+        },
+        {
+            "nombre": "secretaria",
+            "permisos": [
+                "inscripciones",
+                "documentos",
+                "pagos"
+            ],
+            "descripcion": "Gestión administrativa"
+        }
+    ],
+    "configuracion_sistema": {
+        "max_intentos_login": 3,
+        "tiempo_sesion_minutos": 60,
+        "requiere_cambio_password": false,
+        "longitud_minima_password": 6,
+        "nombre_institucion": "BrainTrust Academy",
+        "descripcion_sistema": "Sistema integral de gestión educativa para el control académico y administrativo"
+    }
+}
+
+
