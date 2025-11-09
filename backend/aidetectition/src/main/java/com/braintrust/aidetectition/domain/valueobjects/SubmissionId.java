@@ -24,6 +24,10 @@ public class SubmissionId extends ValueObject {
     public String getValue() {
         return value;
     }
+    @Override
+    public String toString() {
+        return value;
+    }
 
     @Override
     protected Object[] getEqualityComponents() {

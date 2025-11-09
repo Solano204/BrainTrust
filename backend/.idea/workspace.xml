@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.github/workflows/backend-ci-feature.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../.github/workflows/backend-ci-feature.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/src/test/java/com/braintrust/iadetectition/unit/domain/valueobjects/IDValueObjectsTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/test/java/com/braintrust/iadetectition/unit/domain/valueobjects/IDValueObjectsTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/target/test-classes/com/braintrust/iadetectition/unit/domain/valueobjects/IDValueObjectsTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/test-classes/com/braintrust/iadetectition/unit/domain/valueobjects/IDValueObjectsTest.class" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="34qBHQAtB1zsUO9CKKZd6dp6ms2" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.BrainTrustApplication.executor": "Run",
+    "Docker.docker-compose.yml: Compose Deployment.executor": "Run",
+    "JUnit.AIProbabilityTest.executor": "Run",
+    "JUnit.AnalysisApplicationServiceTest,shouldAnalyzeSubmissionSuccessfullyWhenNoPendingAnalysisExists and 3 more.executor": "Run",
+    "JUnit.AnalysisEntityMapperTest.executor": "Run",
+    "JUnit.AnalysisRequestRepositoryIntegrationTest.executor": "Run",
+    "JUnit.AssignmentRepositoryIntegrationTest.executor": "Run",
+    "JUnit.AssignmentTest.shouldCreateAssignmentWithValidData.executor": "Run",
+    "JUnit.AuthenticationIntegrationTest.executor": "Run",
+    "JUnit.CourseApplicationServiceTest.executor": "Run",
+    "JUnit.CourseRepositoryIntegrationTest.executor": "Run",
+    "JUnit.DetectionResultTest.executor": "Run",
+    "JUnit.EmailTest.executor": "Run",
+    "JUnit.EmailTest.shouldThrowExceptionForInvalidEmailFormats.executor": "Run",
+    "JUnit.EmailTest.shouldTrimWhitespace.executor": "Run",
+    "JUnit.EnrollmentRepositoryIntegrationTest.executor": "Run",
+    "JUnit.EnrollmentTest.shouldCreateEnrollmentWithValidData.executor": "Run",
+    "JUnit.IDValueObjectsTest.executor": "Run",
+    "JUnit.JwtServiceTest.executor": "Run",
+    "JUnit.LocalFileStorageServiceTest.executor": "Run",
+    "JUnit.ModelTypeTest.executor": "Run",
+    "JUnit.PersonApplicationServiceTest.executor": "Run",
+    "JUnit.PersonRepositoryIntegrationTest.executor": "Run",
+    "JUnit.PythonAIDetectionProviderTest.executor": "Run",
+    "JUnit.RateLimitServiceTest.executor": "Run",
+    "JUnit.SubmissionRepositoryIntegrationTest.executor": "Run",
+    "JUnit.SubmissionRepositoryIntegrationTest.shouldFindLatestSubmissionByAssignmentAndStudent.executor": "Run",
+    "JUnit.UnitRepositoryIntegrationTest,shouldSaveUnitWithImageUrl and 1 more.executor": "Run",
+    "JUnit.UnitRepositoryIntegrationTest.executor": "Run",
+    "JUnit.UserApplicationServiceTest.executor": "Run",
+    "JUnit.UserRepositoryIntegrationTest.executor": "Run",
+    "JUnit.UserTest,shouldThrowExceptionWhenCreatingStudentWithBlankStudentId and 6 more.executor": "Run",
+    "JUnit.UserTest.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "feature/virtual-threads-testing-workflows",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/GAMER/Music/BrainTrust/backend",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.general"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src\test\java\com\braintrust\iadetectition" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src\test\java\com\braintrust\identity\integration" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src\test\java\com\braintrust\identity\unit" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\education\src\test\java\com\braintrust" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\education\src\test\java\com" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\education\src\test\java" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.IDValueObjectsTest">
+    <configuration name="BrainTrustApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="envFilePaths">
+        <option value="$PROJECT_DIR$/container-app/.env" />
+      </option>
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.containerapp.BrainTrustApplication" />
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.containerapp.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <extension name="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AnalysisRequestRepositoryIntegrationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.iadetectition.integration.repository.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.iadetectition.integration.repository" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.iadetectition.integration.repository.AnalysisRequestRepositoryIntegrationTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthenticationIntegrationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.identity.integration.security.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.identity.integration.security" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.identity.integration.security.AuthenticationIntegrationTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="IDValueObjectsTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.iadetectition.unit.domain.valueobjects.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.iadetectition.unit.domain.valueobjects" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.iadetectition.unit.domain.valueobjects.IDValueObjectsTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="backend" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="backend" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration name="docker-compose.yml: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="envFilePath" value="" />
+          <option name="sourceFilePath" value="docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Application.BrainTrustApplication" />
+      <item itemvalue="Docker.docker-compose.yml: Compose Deployment" />
+      <item itemvalue="JUnit.IDValueObjectsTest" />
+      <item itemvalue="JUnit.AnalysisRequestRepositoryIntegrationTest" />
+      <item itemvalue="JUnit.AuthenticationIntegrationTest" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.IDValueObjectsTest" />
+        <item itemvalue="Application.BrainTrustApplication" />
+        <item itemvalue="Docker.docker-compose.yml: Compose Deployment" />
+        <item itemvalue="JUnit.AnalysisRequestRepositoryIntegrationTest" />
+        <item itemvalue="JUnit.AuthenticationIntegrationTest" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="" />
+      <created>1761931133603</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1761931133603</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-field">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/PersonJpaEntity.java</url>
+          <line>21</line>
+          <properties field="gender" class="com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.PersonJpaEntity" />
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

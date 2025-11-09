@@ -1,0 +1,62 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  postgres:
+    # We use a minor version to ensure stability, e.g., 15-alpine for smaller size
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: brainTrust
+      POSTGRES_USER: postgres
+      # Use a stronger, unique password for reliability and security.
+      POSTGRES_PASSWORD: SecureP@ss2025!
+
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d brainTrust"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  braintrust-backend:
+    # Build context points to the directory containing the Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Database Connection (using service names inside Docker network)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: brainTrust
+      DB_USERNAME: postgres
+      DB_PASSWORD: SecureP@ss2025! # MUST MATCH POSTGRES_PASSWORD!
+
+      DDL_AUTO: update
+
+      # Security & Application (Pulled from your configuration)
+      JWT_SECRET: R2Y3NkwzQ3dYdE56TFNWZFQ0Q1R2R21HNDc1QkJYVlZqYnRCczk3Yg==
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      # ... Include other necessary env vars from your .env file explicitly here
+      # or manage them via a custom .env file per environment in a more robust manner
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      # Ensures Postgres is fully ready and authenticated before starting the app
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./storage:/app/storage
+      - ./logs:/app/logs
+
+volumes:
+  # Define the named volume
+  postgres_data:

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testname="GET Submission - Endurance Test">
+      <stringProp name="TestPlan.comments">
+🎯 ENDURANCE TEST - GET /api/submissions/{submissionId}
+
+Objetivo: Detectar memory leaks y problemas de estabilidad
+Duración: 8 horas (o 2 horas para prueba rápida)
+Usuarios: 200 constantes
+
+¿Qué buscar?
+- Memory usage creciente = MEMORY LEAK 🚨
+- Response time degradándose = RESOURCE LEAK 🚨
+- Error rate incrementándose = BUG 🚨
+      </stringProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="DURATION" elementType="Argument">
+            <stringProp name="Argument.name">DURATION</stringProp>
+            <stringProp name="Argument.value">28800</stringProp> <!-- 8 horas -->
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV - Submission IDs" enabled="true">
+        <stringProp name="filename">test-data/submission-ids.csv</stringProp>
+        <stringProp name="variableNames">submissionId</stringProp>
+        <boolProp name="recycle">true</boolProp>
+      </CSVDataSet>
+      <hashTree/>
+
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Endurance Test - 200 Users" enabled="true">
+        <stringProp name="ThreadGroup.num_threads">200</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">300</stringProp>
+        <stringProp name="ThreadGroup.duration">${DURATION}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET Submission" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/submissions/${submissionId}</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think Time" enabled="true">
+          <stringProp name="ConstantTimer.delay">1000</stringProp>
+          <stringProp name="RandomTimer.range">2000</stringProp>
+        </UniformRandomTimer>
+        <hashTree/>
+      </hashTree>
+
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Endurance Test Summary" enabled="true">
+        <stringProp name="filename">results/get-submission-endurance-results.csv</stringProp>
+      </ResultCollector>
+      <hashTree/>
+
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
