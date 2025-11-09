@@ -54,6 +54,9 @@ public class AnalysisRequest extends AggregateRoot<AnalysisId> {
 
     // Domain behavior
     public void completeAnalysis(DetectionResult result) {
+        if (result == null) {
+            throw new IllegalArgumentException("Detection result cannot be null");
+        }
         if (this.status != AnalysisStatus.PENDING) {
             throw new IllegalStateException("Only pending analyses can be completed");
         }

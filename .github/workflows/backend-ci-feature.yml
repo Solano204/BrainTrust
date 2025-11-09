@@ -1,0 +1,86 @@
+name: Backend CI - Feature Branches
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'hotfix/**'
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+
+jobs:
+  build-and-test:
+    name: Build & Test Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      # ============================================
+      # CHECKOUT CODE
+      # ============================================
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # ============================================
+      # SETUP JAVA 21
+      # ============================================
+      - name: ☕ Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+          cache-dependency-path: 'backend/pom.xml'
+
+      # ============================================
+      # VERIFY CODE COMPILES
+      # ============================================
+      - name: 🔨 Compile Code
+        run: ./mvnw clean compile -B
+
+      # ============================================
+      # RUN UNIT TESTS (with -pl container-app)
+      # ============================================
+      - name: 🧪 Run Unit Tests
+        run: ./mvnw test -pl container-app -Dtest="**/unit/**/*Test" -B
+
+      # ============================================
+      # RUN INTEGRATION TESTS (with -pl container-app)
+      # ============================================
+      - name: 🧪 Run Integration Tests
+        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -B
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: false
+
+      # ============================================
+      # PACKAGE APPLICATION
+      # ============================================
+      - name: 📦 Package Application
+        run: ./mvnw package -DskipTests -B
+
+      # ============================================
+      # UPLOAD ARTIFACTS
+      # ============================================
+      - name: 📤 Upload JAR Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: braintrust-backend-jar
+          path: backend/container-app/target/*.jar
+          retention-days: 5
+
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: ✅ Build Summary
+        if: always()
+        run: |
+          echo "## 🎯 Backend Feature Branch CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

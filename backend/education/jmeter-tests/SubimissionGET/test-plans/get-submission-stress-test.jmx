@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testname="GET Submission - Stress Test">
+      <stringProp name="TestPlan.comments">
+🎯 STRESS TEST - GET /api/submissions/{submissionId}
+
+Objetivo: Encontrar el punto de quiebre del endpoint
+Estrategia: Incremento gradual hasta que falle
+Inicio: 100 usuarios
+Incremento: +100 usuarios cada 2 minutos
+Máximo: 2000 usuarios o hasta crash
+
+¿Qué medir?
+- ¿En qué punto falla? (usuarios/throughput)
+- ¿Qué tipo de error? (timeout, 5xx, etc.)
+- ¿Se recupera automáticamente?
+      </stringProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="BASE_URL" elementType="Argument">
+            <stringProp name="Argument.name">BASE_URL</stringProp>
+            <stringProp name="Argument.value">http://localhost:8080</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+
+      <!-- CSV Data Set -->
+      <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV - Submission IDs" enabled="true">
+        <stringProp name="filename">test-data/submission-ids.csv</stringProp>
+        <stringProp name="variableNames">submissionId</stringProp>
+        <boolProp name="recycle">true</boolProp>
+      </CSVDataSet>
+      <hashTree/>
+
+      <!-- Stepping Thread Group para Stress Test -->
+      <kg.apc.jmeter.threads.SteppingThreadGroup guiclass="kg.apc.jmeter.threads.SteppingThreadGroupGui" testclass="kg.apc.jmeter.threads.SteppingThreadGroup" testname="Stepping Thread Group - Stress Test" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">-1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">100</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">120</stringProp>
+        <stringProp name="ThreadGroup.initial_delay">0</stringProp>
+        <stringProp name="ThreadGroup.starting_users">100</stringProp>
+        <stringProp name="ThreadGroup.increment_users">100</stringProp>
+        <stringProp name="ThreadGroup.increment_time">120</stringProp>
+        <stringProp name="ThreadGroup.increment_count">19</stringProp>
+        <stringProp name="ThreadGroup.steady_state_time">0</stringProp>
+        <stringProp name="ThreadGroup.tear_down_users">0</stringProp>
+        <stringProp name="ThreadGroup.tear_down_time">1</stringProp>
+      </kg.apc.jmeter.threads.SteppingThreadGroup>
+      <hashTree>
+
+        <!-- GET Submission Request -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET Submission by ID" enabled="true">
+          <stringProp name="HTTPSampler.path">/api/submissions/${submissionId}</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Short Think Time for Stress Test -->
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Short Think Time" enabled="true">
+          <stringProp name="ConstantTimer.delay">500</stringProp>
+          <stringProp name="RandomTimer.range">500</stringProp>
+        </UniformRandomTimer>
+        <hashTree/>
+      </hashTree>
+
+      <!-- Results -->
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Stress Test Summary" enabled="true">
+        <stringProp name="filename">results/get-submission-stress-results.csv</stringProp>
+      </ResultCollector>
+      <hashTree/>
+
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

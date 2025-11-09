@@ -23,7 +23,12 @@ public class RateLimitService {
     private static final int MAX_REQUESTS_PER_MINUTE = 60;
 
     public boolean allowRequest(String clientIdentifier) {
-
+// ✅ CORRECCIÓN CLAVE: Interceptar null o vacío para manejarlo elegantemente.
+        if (clientIdentifier == null || clientIdentifier.trim().isEmpty()) {
+            log.warn("Rate limit check skipped: Client identifier is null or empty.");
+            // Permitimos el request ya que no podemos rate-limitar a un cliente sin ID.
+            return true;
+        }
         /*
         // Primera petición de juan@mail.com:
 clientIdentifier = "user:juan@mail.com"

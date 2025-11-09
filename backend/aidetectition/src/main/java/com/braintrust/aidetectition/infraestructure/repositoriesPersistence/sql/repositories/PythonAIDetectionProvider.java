@@ -19,8 +19,19 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+/**
+ * ⚠️ VERSIÓN OPCIONAL CON PROCESAMIENTO PARALELO DE PDFs
+ *
+ * Diferencias vs versión original:
+ * - Procesa múltiples PDFs EN PARALELO usando CompletableFuture
+ * - Más rápido cuando hay muchos archivos
+ * - Usa más recursos (más requests concurrentes al Python service)
+ *
+ * ✅ La versión ORIGINAL (secuencial) también funciona perfectamente con VTs
+ */
 @Component("pythonAIProvider")
 @Slf4j
 @Primary
@@ -35,21 +46,23 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    // ✅ Virtual Thread executor para operaciones concurrentes
+    private final ExecutorService virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+    // ✅ Rate limiter para no sobrecargar el Python service
+    private final Semaphore rateLimiter = new Semaphore(10); // Max 10 concurrent
+
     public PythonAIDetectionProvider() {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
+        log.info("✅ PythonAIDetectionProvider initialized with PARALLEL processing support");
     }
-
-    // ------------------------------------------------------------------
-    // ✅ CORE ANALYSIS (Text Input)
-    // ------------------------------------------------------------------
 
     @Override
     public DetectionResult analyzeContent(String content, ModelType modelType) {
         log.info("Starting Python AI analysis for content of length: {}", content.length());
 
         try {
-            // Prepare request body
             Map<String, String> requestBody = new HashMap<>();
             requestBody.put("text", content);
 
@@ -58,7 +71,6 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
 
             HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
 
-            // Call Python analyze API
             log.debug("Calling Python API at: {}", analyzeApiUrl);
             ResponseEntity<String> response = restTemplate.exchange(
                     analyzeApiUrl,
@@ -80,16 +92,11 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
         }
     }
 
-    // ------------------------------------------------------------------
-    // ✅ FILE EXTRACTION (Single File)
-    // ------------------------------------------------------------------
-
     @Override
     public String extractTextFromPdf(MultipartFile pdfFile) {
         log.info("Extracting text from PDF file: {}", pdfFile.getOriginalFilename());
 
         try {
-            // Prepare multipart request
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -103,7 +110,6 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
 
             HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
 
-            // Call Python extract API
             log.debug("Calling Python extract API at: {}", extractApiUrl);
             ResponseEntity<String> response = restTemplate.exchange(
                     extractApiUrl,
@@ -114,17 +120,11 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonNode jsonNode = objectMapper.readTree(response.getBody());
-
                 String extractedText = jsonNode.get("text").asText();
-
                 int wordCount = jsonNode.get("word_count").asInt();
-
                 String method = jsonNode.get("method").asText();
 
-
-
                 log.info("Text extracted successfully. Words: {}, Method: {}", wordCount, method);
-
                 return extractedText;
             } else {
                 log.error("Python extract API returned non-OK status: {}", response.getStatusCode());
@@ -137,64 +137,85 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
         }
     }
 
-    // ------------------------------------------------------------------
-    // ✅ FILE ANALYSIS (Multiple Files - NEW LOGIC)
-    // ------------------------------------------------------------------
-
     /**
-     * Analyzes a list of PDF files by extracting text and then analyzing content.
+     * ✅ VERSIÓN PARALELA - Procesa múltiples PDFs concurrentemente
+     *
+     * Diferencia clave: Usa CompletableFuture.supplyAsync() con Virtual Threads
      */
     @Override
     public List<DetectionResult> analyzePdfFile(List<MultipartFile> pdfFiles, ModelType modelType) {
-        List<DetectionResult> combinedResults = new ArrayList<>();
-        log.info("Starting analysis for {} attached PDF files.", pdfFiles.size());
+        long startTime = System.currentTimeMillis();
+        log.info("📄 Starting PARALLEL analysis for {} PDF files", pdfFiles.size());
 
-        for (MultipartFile pdfFile : pdfFiles) {
-            try {
-                if (pdfFile == null || pdfFile.isEmpty()) {
-                    log.warn("Skipping empty or null file in the list.");
-                    continue;
-                }
+        try {
+            // ✅ Crear CompletableFutures para procesar cada PDF en paralelo
+            List<CompletableFuture<DetectionResult>> futures = pdfFiles.stream()
+                    .filter(pdfFile -> pdfFile != null && !pdfFile.isEmpty())
+                    .map(pdfFile -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            // ✅ Rate limiting para no saturar el Python service
+                            rateLimiter.acquire();
+                            try {
+                                log.debug("Processing file: {}", pdfFile.getOriginalFilename());
 
-                log.debug("Processing file: {}", pdfFile.getOriginalFilename());
+                                // 1. Extract text (bloqueante - parkea el VT)
+                                String extractedText = extractTextFromPdf(pdfFile);
 
+                                // 2. Analyze content (bloqueante - parkea el VT)
+                                DetectionResult result = analyzeContent(extractedText, modelType);
 
-                // 1. Extract text from the current PDF
-                String extractedText = extractTextFromPdf(pdfFile);
-                DetectionResult result = analyzeContent(extractedText, modelType);
-                // 2. Analyze the extracted text
-                // 3. FIX: Create a MUTABLE copy of the existing metadata map
-                Map<String, Object> mutableMetadata = new HashMap<>(result.getMetadata());
+                                // 3. Add metadata
+                                Map<String, Object> mutableMetadata = new HashMap<>(result.getMetadata());
+                                mutableMetadata.put("original_file_name", pdfFile.getOriginalFilename());
 
-// 4. Modify the mutable copy
-                mutableMetadata.put("original_file_name", pdfFile.getOriginalFilename());
+                                return new DetectionResult(
+                                        result.getProbability(),
+                                        result.getModelUsed(),
+                                        result.getAnalyzedContent(),
+                                        result.getDetectedSegments(),
+                                        mutableMetadata
+                                );
 
-// 5. CRITICAL: Replace the existing immutable result object with a NEW one
-// We must create a new DetectionResult instance with the new metadata.
-                result = new DetectionResult(
-                        result.getProbability(),
-                        result.getModelUsed(),
-                        result.getAnalyzedContent(),
-                        result.getDetectedSegments(),
-                        mutableMetadata // ⬅️ Pass the new, modified map
-                );
+                            } finally {
+                                rateLimiter.release();
+                            }
 
-                combinedResults.add(result);
+                        } catch (Exception e) {
+                            log.error("Failed to analyze PDF file: {}",
+                                    pdfFile.getOriginalFilename(), e);
+                            throw new CompletionException(e);
+                        }
+                    }, virtualExecutor))
+                    .collect(Collectors.toList());
 
-            } catch (Exception e) {
-                log.error("Failed to analyze PDF file {}. Skipping analysis for this file.",
-                        pdfFile != null ? pdfFile.getOriginalFilename() : "Unknown", e);
-                // Optionally: Add a failed/empty result for tracking
-            }
+            // ✅ Esperar a que TODOS completen y colectar resultados
+            List<DetectionResult> results = futures.stream()
+                    .map(future -> {
+                        try {
+                            return future.get(); // Bloquea hasta que complete
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            log.error("Analysis interrupted", e);
+                            return null;
+                        } catch (ExecutionException e) {
+                            log.error("Analysis failed", e.getCause());
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ PARALLEL analysis completed in {}ms. Processed {} of {} files",
+                    duration, results.size(), pdfFiles.size());
+
+            return results;
+
+        } catch (Exception e) {
+            log.error("❌ Parallel PDF analysis failed", e);
+            throw new RuntimeException("Failed to analyze PDF files in parallel", e);
         }
-
-        log.info("Analysis complete. Processed {} files.", combinedResults.size());
-        return combinedResults;
     }
-
-    // ------------------------------------------------------------------
-    // ✅ MISC METHODS
-    // ------------------------------------------------------------------
 
     @Override
     public List<ModelType> getAvailableModels() {
@@ -205,7 +226,6 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
     @Override
     public ModelPerformance getModelPerformance(ModelType modelType) {
         log.debug("Getting performance metrics for model: {}", modelType);
-
         return new ModelPerformance(
                 modelType,
                 "1.0",
@@ -234,21 +254,10 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
 
     @Override
     public BigDecimal getServiceHealth() {
-        if (isServiceAvailable()) {
-            log.trace("Service health check: HEALTHY");
-            return new BigDecimal("1.0");
-        } else {
-            log.trace("Service health check: UNHEALTHY");
-            return BigDecimal.ZERO;
-        }
+        return isServiceAvailable() ? new BigDecimal("1.0") : BigDecimal.ZERO;
     }
 
-    // ------------------------------------------------------------------
-    // ✅ PRIVATE HELPER METHODS (Unchanged)
-    // ------------------------------------------------------------------
-
     private DetectionResult parseAnalysisResponse(String responseBody, String content, ModelType modelType) {
-        // ... (Parsing logic remains the same) ...
         try {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
 
@@ -319,7 +328,7 @@ public class PythonAIDetectionProvider implements AIDetectionProvider {
         return switch (pythonConfidence.toUpperCase()) {
             case "VERY_HIGH" -> "VERY_HIGH";
             case "HIGH" -> "HIGH";
-            case "MEDIUM" -> "MEDIUN";
+            case "MEDIUM" -> "MEDIUM";
             case "LOW" -> "LOW";
             default -> "MEDIUM";
         };

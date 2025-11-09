@@ -73,6 +73,9 @@ public class User extends AggregateRoot<UserId> {
 
     // Comportamiento de dominio rico - sin events
     public void changePassword(Password newPassword) {
+        if (newPassword == null) { // VALIDACIÓN AGREGADA
+            throw new IllegalArgumentException("Password cannot be null");
+        }
         if (!this.active) {
             throw new IllegalStateException("Cannot change password for inactive user");
         }
@@ -80,6 +83,9 @@ public class User extends AggregateRoot<UserId> {
     }
 
     public void changeEmail(Email newEmail) {
+        if (newEmail == null) { // VALIDACIÓN AGREGADA
+            throw new IllegalArgumentException("Email cannot be null");
+        }
         if (!this.active) {
             throw new IllegalStateException("Cannot change email for inactive user");
         }
