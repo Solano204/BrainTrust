@@ -34,7 +34,7 @@ src/
 npm install
 
 # Copiar variables de entorno
-cp .env.example .env.development
+cp .env.prod.example .env.prod.development
 
 # Iniciar servidor de desarrollo
 npm run dev

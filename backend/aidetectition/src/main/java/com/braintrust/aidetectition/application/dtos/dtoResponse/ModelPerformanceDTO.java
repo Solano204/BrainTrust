@@ -1,4 +1,4 @@
-package com.braintrust.aidetectition.application.dtos.dtosResponse;
+package com.braintrust.aidetectition.application.dtos.dtoResponse;
 
 // 📍 aidetection/application/dtos/ModelPerformanceDTO.java
 public record ModelPerformanceDTO(
@@ -9,4 +9,5 @@ public record ModelPerformanceDTO(
         String recall,
         String f1Score,
         boolean isAvailable
-) {}
+) {
+}

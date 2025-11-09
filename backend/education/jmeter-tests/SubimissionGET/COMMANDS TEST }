@@ -1,0 +1,6 @@
+ls -la test-data/submission-ids.csv
+py scripts/generate-uuid-submission-ids.py
+jmeter -n -t test-plans/get-submission-load-test.jmx -l results/get-submission-load-results.csv -e -o results/load-html-report
+jmeter -n -t test-plans/get-submission-stress-test.jmx -l results/get-submission-stress-results.csv
+jmeter -n -t test-plans/get-submission-spike-test.jmx -l results/get-submission-spike-results.csv
+jmeter -n -t test-plans/get-submission-endurance-test.jmx -JDURATION=7200 -l results/get-submission-endurance-results.csv

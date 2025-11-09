@@ -36,7 +36,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    private final RateLimitFilter rateLimitFilter;
+ // private final RateLimitFilter rateLimitFilter;
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
@@ -92,7 +92,7 @@ public class SecurityConfig {
                         exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 
                 // Add custom filters
-                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                // .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // Security headers

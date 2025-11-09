@@ -1,0 +1,196 @@
+name: Backend CI/CD - Production
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-*.yml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  build-and-test:
+    name: Build & Test Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      # ============================================
+      # CHECKOUT CODE
+      # ============================================
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ============================================
+      # SETUP JAVA 21
+      # ============================================
+      - name: ☕ Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+          cache-dependency-path: 'backend/pom.xml'
+
+      # ============================================
+      # RUN UNIT TESTS (with -pl container-app)
+      # ============================================
+      - name: 🧪 Run Unit Tests
+        run: ./mvnw test -pl container-app -Dtest="**/unit/**/*Test" -B
+
+      # ============================================
+      # RUN INTEGRATION TESTS (with -pl container-app)
+      # ============================================
+      - name: 🧪 Run Integration Tests
+        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -B
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: false
+
+      # ============================================
+      # BUILD APPLICATION
+      # ============================================
+      - name: 📦 Build Application
+        run: ./mvnw clean package -DskipTests -B
+
+      # ============================================
+      # UPLOAD JAR FOR NEXT JOB
+      # ============================================
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: braintrust-backend-artifacts
+          path: |
+            backend/container-app/target/*.jar
+            backend/pom.xml
+          retention-days: 30
+
+  docker-and-release:
+    name: Docker Build & GitHub Release
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      # ============================================
+      # CHECKOUT CODE
+      # ============================================
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ============================================
+      # DOWNLOAD BUILD ARTIFACTS
+      # ============================================
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: braintrust-backend-artifacts
+          path: backend
+
+      # ============================================
+      # GENERATE VERSION TAG
+      # ============================================
+      - name: 🏷️ Generate Version Tag
+        id: version
+        working-directory: backend
+        run: |
+          VERSION=$(grep -oP '<version>\K[^<]+' pom.xml | head -1)
+          VERSION=${VERSION%-SNAPSHOT}
+          VERSION="${VERSION}-build.${{ github.run_number }}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "📌 Version: ${VERSION}"
+
+      # ============================================
+      # SETUP DOCKER BUILDX
+      # ============================================
+      - name: 🐳 Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ============================================
+      # LOGIN TO GITHUB CONTAINER REGISTRY
+      # ============================================
+      - name: 🔐 Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ============================================
+      # EXTRACT DOCKER METADATA
+      # ============================================
+      - name: 🏷️ Extract Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=sha,prefix=prod-,format=short
+
+      # ============================================
+      # BUILD AND PUSH DOCKER IMAGE
+      # ============================================
+      - name: 🚀 Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      # ============================================
+      # CREATE GITHUB RELEASE
+      # ============================================
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: backend-v${{ steps.version.outputs.version }}
+          name: Backend Release v${{ steps.version.outputs.version }}
+          body: |
+            ## 🚀 BrainTrust Backend - Production Release
+            
+            **Version:** v${{ steps.version.outputs.version }}
+            **Commit:** ${{ github.sha }}
+            **Build:** #${{ github.run_number }}
+            
+            ### 🐳 Docker Images
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ```
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+      # ============================================
+      # SUMMARY
+      # ============================================
+      - name: ✅ Production Deployment Summary
+        run: |
+          echo "## 🎉 Backend Production Release Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Version: v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🐳 Docker Images:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

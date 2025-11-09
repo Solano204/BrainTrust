@@ -1,0 +1,4361 @@
+package com.braintrust.education.domain.exceptions;
+
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+import java.util.Map;
+
+// Course-related exceptions
+public class AssignmentNotFoundException extends DomainException {
+    public AssignmentNotFoundException(String message) {
+        super(message, "COURSE_CODE_ALREADY_EXISTS");
+    }
+
+    public AssignmentNotFoundException(String message, Map<String, Object> details) {
+        super(message, "COURSE_CODE_ALREADY_EXISTS", details);
+    }
+}
+
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+import java.util.Map;
+
+// Course-related exceptions
+public class CourseCodeAlreadyExistsException extends DomainException {
+    public CourseCodeAlreadyExistsException(String message) {
+        super(message, "COURSE_CODE_ALREADY_EXISTS");
+    }
+
+    public CourseCodeAlreadyExistsException(String message, Map<String, Object> details) {
+        super(message, "COURSE_CODE_ALREADY_EXISTS", details);
+    }
+}
+
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+public class CourseNotActiveException extends DomainException {
+    public CourseNotActiveException(String message) {
+        super(message, "COURSE_NOT_ACTIVE");
+    }
+}
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+public class EnrollmentNotFoundException extends DomainException {
+    public EnrollmentNotFoundException(String message) {
+        super(message, "ENROLLMENT_NOT_FOUND");
+    }
+}
+
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+
+public class InvalidDocumentTypeException extends DomainException {
+    public InvalidDocumentTypeException(String message) {
+        super(message, "ENROLLMENT_NOT_FOUND");
+    }
+}
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+public class InvalidGradeException extends DomainException {
+    public InvalidGradeException(String message) {
+        super(message, "INVALID_GRADE");
+    }
+}
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+public class MaxEnrollmentReachedException extends DomainException {
+    public MaxEnrollmentReachedException(String message) {
+        super(message, "MAX_ENROLLMENT_REACHED");
+    }
+}
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+public class MaxEnrollmentReachedException extends DomainException {
+    public MaxEnrollmentReachedException(String message) {
+        super(message, "MAX_ENROLLMENT_REACHED");
+    }
+}
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+
+public class SubmissionNotFoundException extends DomainException {
+    public SubmissionNotFoundException(String message) {
+        super(message, "ENROLLMENT_NOT_FOUND");
+    }
+}
+
+package com.braintrust.education.domain.exceptions;
+
+import com.braintrust.shared.domain.exception.DomainException;
+
+import java.util.Map;
+
+public class UnitNotFoundException extends DomainException {
+    public UnitNotFoundException(String message) {
+        super(message, "UNIT_NOT_FOUND");
+    }
+
+    public UnitNotFoundException(String message, Map<String, Object> details) {
+        super(message, "UNIT_NOT_FOUND", details);
+    }
+}
+
+
+
+// ENTITITES
+package com.braintrust.education.domain.model;
+
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.Document;
+import com.braintrust.education.domain.valueobjects.Score;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import com.braintrust.shared.domain.AggregateRoot;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+// 📍 education/domain/model/Assignment.java - AGGREGATE ROOT
+public class Assignment extends AggregateRoot<AssignmentId> {
+    private CourseId courseId;
+    private String title;
+    private String description;
+    private LocalDateTime createdAt;
+    private final List<Document> attachments;
+    private LocalDateTime dueDate;
+    private Score maxScore;
+    private String instructions;
+    private final List<Submission> submissions;
+    private boolean active;
+
+    private static final int MAX_ATTACHMENTS = 10;
+
+    private Assignment(AssignmentId id, CourseId courseId, String title) {
+        this.id = id;
+        this.courseId = courseId;
+        this.title = validateTitle(title);
+        this.createdAt = LocalDateTime.now();
+        this.attachments = new ArrayList<>();
+        this.submissions = new ArrayList<>();
+        this.active = true;
+    }
+
+    //  Factory Method for NEW Assignment (without attachments)
+    public static Assignment create(CourseId courseId, String title, String description,
+                                    LocalDateTime dueDate, int maxPoints, String instructions) {
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+        return assignment;
+    }
+
+    //  Factory Method for NEW Assignment (with attachments)
+    public static Assignment createWithAttachments(CourseId courseId, String title, String description,
+                                                   LocalDateTime dueDate, int maxPoints, String instructions,
+                                                   List<Document> attachments) {
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+
+        if (attachments != null && !attachments.isEmpty()) {
+            assignment.addAttachments(attachments);
+        }
+
+        return assignment;
+    }
+
+    // Reconstitute method for EXISTING Assignment (from database)
+    public static Assignment reconstitute(AssignmentId id, CourseId courseId, String title,
+                                          String description, LocalDateTime createdAt,
+                                          List<Document> attachments, LocalDateTime dueDate,
+                                          Score maxScore, String instructions,
+                                          List<Submission> submissions, boolean active) {
+        Assignment assignment = new Assignment(id, courseId, title);
+        assignment.description = description;
+        assignment.createdAt = createdAt;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = maxScore;
+        assignment.instructions = instructions;
+        assignment.active = active;
+
+        if (attachments != null) {
+            assignment.attachments.addAll(attachments);
+        }
+        if (submissions != null) {
+            assignment.submissions.addAll(submissions);
+        }
+
+        return assignment;
+    }
+
+    private String validateTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Assignment title cannot be null or empty");
+        }
+        if (title.length() > 255) {
+            throw new IllegalArgumentException("Assignment title cannot exceed 255 characters");
+        }
+        return title.trim();
+    }
+
+    public void addAttachment(Document document) {
+        if (document == null) {
+            throw new IllegalArgumentException("Document cannot be null");
+        }
+
+        if (attachments.size() >= MAX_ATTACHMENTS) {
+            throw new IllegalStateException("Cannot add more than " + MAX_ATTACHMENTS + " attachments");
+        }
+
+        attachments.add(document);
+    }
+
+    public void addAttachments(List<Document> documents) {
+        if (documents == null || documents.isEmpty()) {
+            return;
+        }
+
+        if (attachments.size() + documents.size() > MAX_ATTACHMENTS) {
+            throw new IllegalStateException("Cannot add more than " + MAX_ATTACHMENTS + " attachments in total");
+        }
+
+        attachments.addAll(documents);
+    }
+
+    public void removeAttachment(Document document) {
+        if (document == null) {
+            throw new IllegalArgumentException("Document cannot be null");
+        }
+
+        boolean removed = attachments.remove(document);
+        if (!removed) {
+            throw new IllegalArgumentException("Document not found in attachments");
+        }
+    }
+
+    public void clearAttachments() {
+        attachments.clear();
+    }
+
+    public int getAttachmentCount() {
+        return attachments.size();
+    }
+
+    public boolean hasAttachments() {
+        return !attachments.isEmpty();
+    }
+
+    // Comportamiento de dominio - sin events
+    public Submission submitWork(UserId studentId, String content, List<Document> submissionAttachments) {
+        // Rule 1: If inactive AND past due date -> REJECT
+        if (!this.active && dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
+            throw new IllegalStateException("Assignment is closed and cannot accept submissions");
+        }
+
+        // Rule 2: If inactive BUT before due date -> Still allow (edge case)
+        if (!this.active && (dueDate == null || LocalDateTime.now().isBefore(dueDate))) {
+        }
+
+        // Determine submission status based on timing and assignment state
+        SubmissionStatus status = determineSubmissionStatus();
+
+        // Create submission with appropriate status
+        Submission submission = Submission.create(
+                this.id,
+                studentId,
+                content,
+                submissionAttachments,
+                status
+        );
+
+        submissions.add(submission);
+
+        return submission;
+    }
+
+    // Helper method to determine submission status
+    private SubmissionStatus determineSubmissionStatus() {
+        // If active, check if it's past due date
+        if (this.active) {
+            if (dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
+                return SubmissionStatus.LATE_SUBMITTED; // Active but late
+            }
+            return SubmissionStatus.SUBMITTED; // Active and on time
+        }
+
+        // If inactive but before due date (shouldn't normally happen, but handle it)
+        if (dueDate == null || LocalDateTime.now().isBefore(dueDate)) {
+            return SubmissionStatus.SUBMITTED; // Inactive but on time
+        }
+
+        // This shouldn't be reached due to validation above, but just in case
+        throw new IllegalStateException("Invalid assignment state for submission");
+    }
+
+    public boolean canAcceptSubmissions() {
+        // If active = true, always accept submissions (regardless of due date)
+        if (active) {
+            return true;
+        }
+
+        // If active = false, only accept if due date hasn't passed yet
+        return dueDate == null || LocalDateTime.now().isBefore(dueDate);
+    }
+
+    public void extendDueDate(LocalDateTime newDueDate) {
+        if (newDueDate == null || newDueDate.isBefore(createdAt)) {
+            throw new IllegalArgumentException("Due date must be after creation date");
+        }
+        this.dueDate = newDueDate;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public void activate() {
+        this.active = true;
+    }
+
+    public void updateDetails(String title, String description, String instructions) {
+        this.title = validateTitle(title);
+        this.description = description;
+        this.instructions = instructions;
+    }
+
+    // Getters
+    public CourseId getCourseId() { return courseId; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public List<Document> getAttachments() { return Collections.unmodifiableList(attachments); }
+    public LocalDateTime getDueDate() { return dueDate; }
+    public Score getMaxScore() { return maxScore; }
+    public String getInstructions() { return instructions; }
+    public List<Submission> getSubmissions() { return List.copyOf(submissions); }
+    public boolean isActive() { return active; }
+}
+
+package com.braintrust.education.domain.model;
+
+import com.braintrust.education.domain.valueobjects.CourseCode;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import com.braintrust.shared.domain.AggregateRoot;
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+// 📍 education/domain/model/Course.java - AGGREGATE ROOT
+public class Course extends AggregateRoot<CourseId> {
+    private CourseCode code;
+    private String name;
+    private String description;
+    private String urlImage;
+    private String grade;
+    private String group;
+    private UserId teacherId;
+    private boolean active;
+    private final Set<Enrollment> enrollments;
+    private final List<CourseUnit> units;
+
+    private Course(CourseId id, CourseCode code, String name, UserId teacherId) {
+        this.id = id;
+        this.code = code;
+        this.name = validateName(name);
+        this.teacherId = teacherId;
+        this.active = true;
+        this.enrollments = new HashSet<>();
+        this.units = new ArrayList<>();
+    }
+
+    //  Factory Method for NEW Course (without image)
+    public static Course create(CourseCode code, String name, String description,
+                                String grade, String group, UserId teacherId) {
+        CourseId courseId = CourseId.generate();
+        Course course = new Course(courseId, code, name, teacherId);
+        course.description = description;
+        course.grade = grade;
+        course.group = group;
+        course.urlImage = null; // Can be set later
+        return course;
+    }
+
+    // Factory Method for NEW Course (with image)
+    public static Course createWithImage(CourseCode code, String name, String description,
+                                         String grade, String group, UserId teacherId, String urlImage) {
+        CourseId courseId = CourseId.generate();
+        Course course = new Course(courseId, code, name, teacherId);
+        course.description = description;
+        course.grade = grade;
+        course.group = group;
+        course.urlImage = urlImage;
+        return course;
+    }
+
+    public static Course reconstitute(CourseId id, CourseCode code, String name, String description,
+                                      String urlImage, String grade, String group, UserId teacherId,
+                                      boolean active, Set<Enrollment> enrollments, List<CourseUnit> units) {
+        Course course = new Course(id, code, name, teacherId);
+        course.description = description;
+        course.urlImage = urlImage;
+        course.grade = grade;
+        course.group = group;
+        course.active = active;
+
+        if (enrollments != null) {
+            course.enrollments.addAll(enrollments);
+        }
+        if (units != null) {
+            course.units.addAll(units);
+        }
+
+        return course;
+    }
+
+    private String validateName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Course name cannot be null or empty");
+        }
+        if (name.length() > 255) {
+            throw new IllegalArgumentException("Course name cannot exceed 255 characters");
+        }
+        return name.trim();
+    }
+
+    public void setUrlImage(String urlImage) {
+        if (urlImage != null && urlImage.trim().isEmpty()) {
+            throw new IllegalArgumentException("URL image cannot be empty string");
+        }
+        this.urlImage = urlImage != null ? urlImage.trim() : null;
+    }
+
+    public void updateDetails(String name, String description, String grade, String group) {
+        this.name = validateName(name);
+        this.description = description;
+        this.grade = grade;
+        this.group = group;
+    }
+
+    public Enrollment enrollStudent(UserId studentId) {
+        if (!this.active) {
+            throw new IllegalStateException("Cannot enroll students in inactive course");
+        }
+
+        boolean alreadyEnrolled = enrollments.stream()
+                .anyMatch(enrollment -> enrollment.getStudentId().equals(studentId));
+
+        if (alreadyEnrolled) {
+            throw new IllegalArgumentException("Student is already enrolled in this course");
+        }
+
+        Enrollment enrollment = Enrollment.create(this.id, studentId);
+        enrollments.add(enrollment);
+
+        return enrollment;
+    }
+
+    public void unenrollStudent(UserId studentId) {
+        Enrollment enrollment = findEnrollment(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student is not enrolled in this course"));
+
+        enrollment.cancel();
+        enrollments.remove(enrollment);
+    }
+
+    public Assignment createAssignment(String title, String description,
+                                       LocalDateTime dueDate, int maxPoints, String instructions) {
+        if (!this.active) {
+            throw new IllegalStateException("Cannot create assignments for inactive course");
+        }
+
+        return Assignment.create(this.id, title, description, dueDate, maxPoints, instructions);
+    }
+
+    public CourseUnit addUnit(String name, int order, String description) {
+        CourseUnit unit = CourseUnit.create(this.id, name, order, description);
+        units.add(unit);
+        return unit;
+    }
+
+    public CourseUnit addUnitWithImage(String name, int order, String description, String urlImage) {
+        CourseUnit unit = CourseUnit.createWithImage(this.id, name, order, description, urlImage);
+        units.add(unit);
+        return unit;
+    }
+
+    public void activate() {
+        this.active = true;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
+
+    private Optional<Enrollment> findEnrollment(UserId studentId) {
+        return enrollments.stream()
+                .filter(enrollment -> enrollment.getStudentId().equals(studentId))
+                .findFirst();
+    }
+
+    // Getters
+    public CourseCode getCode() { return code; }
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public String getUrlImage() { return urlImage; }
+    public String getGrade() { return grade; }
+    public String getGroup() { return group; }
+    public UserId getTeacherId() { return teacherId; }
+    public boolean isActive() { return active; }
+    public Set<Enrollment> getEnrollments() { return Set.copyOf(enrollments); }
+    public List<CourseUnit> getUnits() { return List.copyOf(units); }
+}
+
+package com.braintrust.education.domain.model;
+
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
+import com.braintrust.shared.domain.Entity;
+
+// 📍 education/domain/model/CourseUnit.java - ENTITY
+public class CourseUnit extends Entity<UnitId> {
+    private CourseId courseId;
+    private String name;
+    private String urlImage;
+    private int numUnity;
+    private String description;
+
+    private CourseUnit(UnitId id, CourseId courseId, String name, int numUnity) {
+        this.id = id;
+        this.courseId = courseId;
+        this.name = validateName(name);
+        this.numUnity = validateNumUnity(numUnity);
+    }
+
+    // ✅ Factory Method for NEW CourseUnit
+    public static CourseUnit create(CourseId courseId, String name, int numUnity, String description) {
+        UnitId id = UnitId.generate();
+        CourseUnit unit = new CourseUnit(id, courseId, name, numUnity);
+        unit.description = description;
+        unit.urlImage = null; // Will be set later via setUrlImage()
+        return unit;
+    }
+
+    // ✅ Factory Method with urlImage for NEW CourseUnit
+    public static CourseUnit createWithImage(CourseId courseId, String name, int numUnity,
+                                             String description, String urlImage) {
+        UnitId id = UnitId.generate();
+        CourseUnit unit = new CourseUnit(id, courseId, name, numUnity);
+        unit.description = description;
+        unit.urlImage = urlImage;
+        return unit;
+    }
+
+    // ✅ Reconstitute method for EXISTING CourseUnit (from database)
+    public static CourseUnit reconstitute(UnitId id, CourseId courseId, String name,
+                                          int numUnity, String description, String urlImage) {
+        CourseUnit unit = new CourseUnit(id, courseId, name, numUnity);
+        unit.description = description;
+        unit.urlImage = urlImage;
+        return unit;
+    }
+
+    // ✅ Domain behavior - Update image URL
+    public void setUrlImage(String urlImage) {
+        if (urlImage != null && urlImage.trim().isEmpty()) {
+            throw new IllegalArgumentException("URL image cannot be empty string");
+        }
+        this.urlImage = urlImage != null ? urlImage.trim() : null;
+    }
+
+    // ✅ Domain behavior - Update unit details
+    public void updateDetails(String name, String description) {
+        this.name = validateName(name);
+        this.description = description;
+    }
+
+    private String validateName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Unit name cannot be null or empty");
+        }
+        return name.trim();
+    }
+
+    private int validateNumUnity(int numUnity) {
+        if (numUnity < 0) {
+            throw new IllegalArgumentException("Unit numUnity cannot be negative");
+        }
+        return numUnity;
+    }
+
+    // Getters
+    public CourseId getCourseId() { return courseId; }
+    public String getName() { return name; }
+    public String getUrlImage() { return urlImage; }
+    public int getNumUnity() { return numUnity; }
+    public String getDescription() { return description; }
+}
+
+
+package com.braintrust.education.domain.model;
+
+import java.util.Arrays;
+
+public enum DocumentType {
+    INSTRUCTION, SUBMISSION, MATERIAL;
+
+    // ✅ Add safe parsing method to the enum itself
+    public static DocumentType fromString(String value) {
+        if (value == null) {
+            throw new IllegalArgumentException("Document type cannot be null");
+        }
+        try {
+            return DocumentType.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid document type: " + value +
+                    ". Valid values: " + Arrays.toString(values()));
+        }
+    }
+}
+
+
+package com.braintrust.education.domain.model;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.EnrollmentId;
+import com.braintrust.education.domain.valueobjects.Grade;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import com.braintrust.shared.domain.Entity;
+
+import java.time.LocalDate;
+
+public class Enrollment extends Entity<EnrollmentId> {
+    private CourseId courseId;
+    private UserId studentId;
+    private LocalDate enrollmentDate;
+    private EnrollmentStatus status;
+    private Grade finalGrade;
+
+    private Enrollment(EnrollmentId id, CourseId courseId, UserId studentId) {
+        this.id = id;
+        this.courseId = courseId;
+        this.studentId = studentId;
+        this.enrollmentDate = LocalDate.now();
+        this.status = EnrollmentStatus.ACTIVE;
+    }
+
+    // ✅ Factory Method para NUEVO enrollment
+    public static Enrollment create(CourseId courseId, UserId studentId) {
+        EnrollmentId id = EnrollmentId.generate();
+        return new Enrollment(id, courseId, studentId);
+    }
+
+    // ✅ Factory Method para RECONSTITUIR desde base de datos
+    public static Enrollment reconstitute(EnrollmentId id, CourseId courseId, UserId studentId,
+                                          LocalDate enrollmentDate, EnrollmentStatus status,
+                                          Grade finalGrade) {
+        Enrollment enrollment = new Enrollment(id, courseId, studentId);
+        enrollment.enrollmentDate = enrollmentDate;
+        enrollment.status = status;
+        enrollment.finalGrade = finalGrade;
+        return enrollment;
+    }
+
+    public void complete(Grade finalGrade) {
+        if (this.status != EnrollmentStatus.ACTIVE) {
+            throw new IllegalStateException("Only active enrollments can be completed");
+        }
+        this.finalGrade = finalGrade;
+        this.status = EnrollmentStatus.COMPLETED;
+    }
+
+    public void cancel() {
+        if (this.status == EnrollmentStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot cancel completed enrollment");
+        }
+        this.status = EnrollmentStatus.CANCELLED;
+    }
+
+    public boolean isActive() {
+        return this.status == EnrollmentStatus.ACTIVE;
+    }
+
+    // Getters
+    public CourseId getCourseId() { return courseId; }
+    public UserId getStudentId() { return studentId; }
+    public LocalDate getEnrollmentDate() { return enrollmentDate; }
+    public EnrollmentStatus getStatus() { return status; }
+    public Grade getFinalGrade() { return finalGrade; }
+}
+
+
+package com.braintrust.education.domain.model;
+
+public enum EnrollmentStatus {
+    ACTIVE, COMPLETED, CANCELLED
+}
+
+
+package com.braintrust.education.domain.model;
+
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.Document;
+import com.braintrust.education.domain.valueobjects.Grade;
+import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import com.braintrust.shared.domain.AggregateRoot;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+// 📍 education/domain/model/Submission.java - AGGREGATE ROOT
+public class Submission extends AggregateRoot<SubmissionId> {
+    private AssignmentId assignmentId;
+    private UserId studentId;
+    private String content;
+    private final List<Document> attachments;
+    private LocalDateTime submittedAt;
+    private SubmissionStatus status;
+    private Grade grade;
+    private String teacherFeedback;
+
+    private Submission(SubmissionId id, AssignmentId assignmentId, UserId studentId, String content) {
+        this.id = id;
+        this.assignmentId = assignmentId;
+        this.studentId = studentId;
+        this.content = validateContent(content);
+        this.attachments = new ArrayList<>();
+        this.submittedAt = LocalDateTime.now();
+        this.status = SubmissionStatus.SUBMITTED;
+    }
+
+    private Submission(SubmissionId id, AssignmentId assignmentId, UserId studentId, String content,SubmissionStatus status) {
+        this.id = id;
+        this.assignmentId = assignmentId;
+        this.studentId = studentId;
+        this.content = validateContent(content);
+        this.attachments = new ArrayList<>();
+        this.submittedAt = LocalDateTime.now();
+        this.status = status;
+    }
+
+    // Factory Method
+    public static Submission create(AssignmentId assignmentId, UserId studentId,
+                                    String content, List<Document> attachments, SubmissionStatus status) {
+        SubmissionId id = SubmissionId.generate();
+        Submission submission = new Submission(id, assignmentId, studentId, content,status);
+
+        if (attachments != null) {
+            submission.attachments.addAll(attachments);
+        }
+
+
+        return submission;
+    }
+
+    private String validateContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Submission content cannot be null or empty");
+        }
+        return content.trim();
+    }
+
+
+
+    // ✅ Factory Method para RECONSTITUIR desde base de datos
+    public static Submission reconstitute(SubmissionId id, AssignmentId assignmentId,
+                                          UserId studentId, String content,
+                                          List<Document> attachments, LocalDateTime submittedAt,
+                                          SubmissionStatus status, Grade grade,
+                                          String teacherFeedback) {
+        Submission submission = new Submission(id, assignmentId, studentId, content);
+
+        // Sobrescribir valores del constructor con los de la BD
+        submission.submittedAt = submittedAt;
+        submission.status = status;
+        submission.grade = grade;
+        submission.teacherFeedback = teacherFeedback;
+
+        if (attachments != null) {
+            submission.attachments.addAll(attachments);
+        }
+
+        return submission;
+    }
+
+
+    // Comportamiento de dominio - sin events
+    public void grade(Grade grade, String feedback) {
+        if (this.status != SubmissionStatus.SUBMITTED) {
+            throw new IllegalStateException("Only submitted assignments can be graded");
+        }
+
+        this.grade = grade;
+        this.teacherFeedback = feedback;
+        this.status = SubmissionStatus.GRADED;
+    }
+
+    public void returnForRevision(String feedback) {
+        if (this.status != SubmissionStatus.SUBMITTED) {
+            throw new IllegalStateException("Only submitted assignments can be returned for revision");
+        }
+
+        this.teacherFeedback = feedback;
+        this.status = SubmissionStatus.RETURNED;
+    }
+
+    public boolean isGraded() {
+        return this.status == SubmissionStatus.GRADED;
+    }
+
+    public boolean isLate(LocalDateTime dueDate) {
+        return dueDate != null && submittedAt.isAfter(dueDate);
+    }
+
+    // Método para solicitar análisis IA (será llamado desde el Application Service)
+    public void markForAIAnalysis() {
+    }
+
+    // Getters
+    public AssignmentId getAssignmentId() { return assignmentId; }
+    public UserId getStudentId() { return studentId; }
+    public String getContent() { return content; }
+    public List<Document> getAttachments() { return List.copyOf(attachments); }
+    public LocalDateTime getSubmittedAt() { return submittedAt; }
+    public SubmissionStatus getStatus() { return status; }
+    public Grade getGrade() { return grade; }
+    public String getTeacherFeedback() { return teacherFeedback; }
+}
+
+
+package com.braintrust.education.domain.model;
+
+public enum SubmissionStatus {
+    DRAFT,          // Work in progress, not submitted yet
+    SUBMITTED,      // Submitted on time
+    LATE_SUBMITTED, // Submitted after due date (but assignment was still active)
+    GRADED,         // Teacher has graded the submission
+    RETURNED,       // Graded work returned to student
+    REJECTED        // Submission rejected (inactive + past due)
+}
+
+
+
+
+/// VALUE OBJECTS
+
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+import java.util.Objects;
+import java.util.UUID;
+
+// 📍 education/domain/valueobjects/AssignmentId.java
+public class AssignmentId extends ValueObject {
+    private final String value;
+
+    private AssignmentId(String value) {
+        this.value = Objects.requireNonNull(value, "Assignment ID cannot be null");
+    }
+
+    public static AssignmentId generate() {
+        return new AssignmentId("ASSIGN-" + UUID.randomUUID().toString());
+    }
+
+    public static AssignmentId fromString(String value) {
+        return new AssignmentId(value);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value};
+    }
+}
+
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+// 📍 education/domain/valueobjects/CourseCode.java
+public class CourseCode extends ValueObject {
+    private final String value;
+
+    public CourseCode(String value) {
+        validate(value);
+        this.value = value.toUpperCase().trim();
+    }
+
+    private void validate(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("Course code cannot be null or empty");
+        }
+        if (!code.matches("[A-Z0-9-]+")) {
+            throw new IllegalArgumentException("Course code can only contain letters, numbers and hyphens");
+        }
+        if (code.length() > 50) {
+            throw new IllegalArgumentException("Course code cannot exceed 50 characters");
+        }
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value};
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+}
+
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+import java.util.Objects;
+import java.util.UUID;
+
+// 📍 education/domain/valueobjects/CourseId.java
+public class CourseId extends ValueObject {
+    private final String value;
+
+    private CourseId(String value) {
+        this.value = Objects.requireNonNull(value, "Course ID cannot be null");
+    }
+
+    public static CourseId generate() {
+        return new CourseId("COURSE-" + UUID.randomUUID().toString());
+    }
+
+    public static CourseId fromString(String value) {
+        return new CourseId(value);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value};
+    }
+}
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.education.domain.model.DocumentType;
+import com.braintrust.shared.domain.ValueObject;
+
+import java.time.LocalDateTime;
+
+// 📍 education/domain/model/Document.java - VALUE OBJECT
+public class Document extends ValueObject {
+    private final String name;
+    private final String storagePath;
+    private final LocalDateTime createdAt;
+
+    public Document(String name,  String storagePath) {
+        this.name = validateName(name);
+        this.storagePath = storagePath;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    private String validateName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Document name cannot be null or empty");
+        }
+        return name.trim();
+    }
+
+    // Getters
+    public String getName() { return name; }
+    public String getStoragePath() { return storagePath; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{name,  storagePath};
+    }
+}
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+import java.util.Objects;
+import java.util.UUID;
+
+// 📍 education/domain/valueobjects/EnrollmentId.java
+public class EnrollmentId extends ValueObject {
+    private final String value;
+
+    private EnrollmentId(String value) {
+        this.value = Objects.requireNonNull(value, "Enrollment ID cannot be null");
+    }
+
+    public static EnrollmentId generate() {
+        return new EnrollmentId("ENROLL-" + UUID.randomUUID());
+    }
+
+    public static EnrollmentId fromString(String value) {
+        return new EnrollmentId(value);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value};
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+}
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+// 📍 education/domain/valueobjects/Grade.java
+public class Grade extends ValueObject {
+    private final BigDecimal value;
+    private final BigDecimal maxScore;
+
+    public Grade(BigDecimal value, BigDecimal maxScore) {
+        validate(value, maxScore);
+        this.value = value.setScale(2, RoundingMode.HALF_UP);
+        this.maxScore = maxScore.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private void validate(BigDecimal value, BigDecimal maxScore) {
+        if (value == null || maxScore == null) {
+            throw new IllegalArgumentException("Grade value and max score cannot be null");
+        }
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Grade cannot be negative");
+        }
+        if (maxScore.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Max score must be positive");
+        }
+        if (value.compareTo(maxScore) > 0) {
+            throw new IllegalArgumentException("Grade cannot exceed max score");
+        }
+    }
+
+    public BigDecimal getValue() {
+        return value;
+    }
+
+    public BigDecimal getMaxScore() {
+        return maxScore;
+    }
+
+    public BigDecimal getPercentage() {
+        return value.divide(maxScore, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+    }
+
+    public boolean isPassing(BigDecimal passingGrade) {
+        return getPercentage().compareTo(passingGrade) >= 0;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value, maxScore};
+    }
+}
+
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+// 📍 education/domain/valueobjects/Score.java
+public class Score extends ValueObject {
+    private final int value;
+    private final int maxPoints;
+
+    public Score(int value, int maxPoints) {
+        validate(value, maxPoints);
+        this.value = value;
+        this.maxPoints = maxPoints;
+    }
+
+    private void validate(int value, int maxPoints) {
+        if (value < 0) {
+            throw new IllegalArgumentException("Score cannot be negative");
+        }
+        if (maxPoints <= 0) {
+            throw new IllegalArgumentException("Max points must be positive");
+        }
+        if (value > maxPoints) {
+            throw new IllegalArgumentException("Score cannot exceed max points");
+        }
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public int getMaxPoints() {
+        return maxPoints;
+    }
+
+    public double getPercentage() {
+        return (double) value / maxPoints * 100;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value, maxPoints};
+    }
+}
+
+package com.braintrust.education.domain.valueobjects;
+
+import com.braintrust.shared.domain.ValueObject;
+
+import java.util.Objects;
+import java.util.UUID;
+
+// 📍 education/domain/valueobjects/SubmissionId.java
+public class SubmissionId extends ValueObject {
+    private final String value;
+
+    private SubmissionId(String value) {
+        this.value = Objects.requireNonNull(value, "Submission ID cannot be null");
+    }
+
+    public static SubmissionId generate() {
+        return new SubmissionId("SUBM-" + UUID.randomUUID().toString());
+    }
+
+    public static SubmissionId fromString(String value) {
+        return new SubmissionId(value);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value};
+    }
+}
+
+package com.braintrust.education.domain.valueobjects;
+import com.braintrust.shared.domain.ValueObject;
+
+import java.util.Objects;
+import java.util.UUID;
+
+// 📍 education/domain/valueobjects/UnitId.java
+public class UnitId extends ValueObject {
+    private final String value;
+
+    private UnitId(String value) {
+        this.value = Objects.requireNonNull(value, "Unit ID cannot be null");
+    }
+
+    public static UnitId generate() {
+        return new UnitId("UNIT-" + UUID.randomUUID());
+    }
+
+    public static UnitId fromString(String value) {
+        return new UnitId(value);
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    protected Object[] getEqualityComponents() {
+        return new Object[]{value};
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+}
+
+
+// PORTS
+package com.braintrust.education.application.ports.in;
+
+
+import com.braintrust.education.application.dtos.commands.CreateAssignmentCommand;
+import com.braintrust.education.application.dtos.commands.CreateAssignmentWithAttachmentsCommand;
+import com.braintrust.education.application.dtos.commands.UpdateAssignmentCommand;
+import com.braintrust.education.application.dtos.dtos.AssignmentDTO;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.Document;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+// 📍 education/application/ports/in/AssignmentService.java
+public interface AssignmentService {
+
+    // Commands
+    AssignmentId createAssignment(CreateAssignmentCommand command);
+    AssignmentId createAssignmentWithAttachments(CreateAssignmentWithAttachmentsCommand command);
+    void updateAssignmentDetails(UpdateAssignmentCommand command);
+    void addAttachment(AssignmentId assignmentId, Document document);
+    void removeAttachment(AssignmentId assignmentId, Document document);
+    void clearAttachments(AssignmentId assignmentId);
+    void extendDueDate(AssignmentId assignmentId, LocalDateTime newDueDate);
+    void activateAssignment(AssignmentId assignmentId);
+    void deactivateAssignment(AssignmentId assignmentId);
+
+    // Queries
+    AssignmentDTO getAssignmentById(AssignmentId assignmentId);
+    List<AssignmentDTO> getAssignmentsByCourse(CourseId courseId);
+    List<AssignmentDTO> getActiveAssignmentsByCourse(CourseId courseId);
+    List<AssignmentDTO> getAssignmentsDueSoon(CourseId courseId, int daysAhead);
+    boolean canAcceptSubmissions(AssignmentId assignmentId);
+    int getAttachmentCount(AssignmentId assignmentId);
+    List<AssignmentDTO> getAssignmentsForStudentWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd);
+    List<AssignmentDTO> getAssignmentsForTeacherWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd);
+
+}
+
+
+package com.braintrust.education.application.ports.in;
+
+import com.braintrust.education.application.dtos.commands.*;
+import com.braintrust.education.application.dtos.dtos.CourseDTO;
+import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
+import com.braintrust.education.application.dtos.dtos.EnrollmentDTO;
+import com.braintrust.education.domain.valueobjects.CourseCode;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.EnrollmentId;
+import com.braintrust.education.domain.valueobjects.UnitId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.util.List;
+
+// 📍 education/application/ports/in/CourseService.java
+public interface CourseService {
+
+    // Commands
+    CourseId createCourse(CreateCourseCommand command);
+    CourseId createCourseWithImage(CreateCourseWithImageCommand command);
+    void updateCourseDetails(UpdateCourseCommand command);
+    void updateCourseImage(CourseId courseId, String imageUrl);
+    void activateCourse(CourseId courseId);
+    void deactivateCourse(CourseId courseId);
+
+    EnrollmentId enrollStudent(EnrollStudentCommand command);
+    void unenrollStudent(UnenrollStudentCommand command);
+
+    UnitId addUnit(AddUnitCommand command);
+    UnitId addUnitWithImage(AddUnitWithImageCommand command);
+    void updateUnit(UpdateUnitCommand command);
+    void updateUnitImage(UnitId unitId, String imageUrl);
+
+    // Queries
+    CourseDTO getCourseById(CourseId courseId);
+    CourseDTO getCourseByCode(CourseCode code);
+    List<CourseDTO> getCoursesByTeacher(UserId teacherId);
+    List<CourseDTO> getActiveCourses();
+    List<CourseDTO> getCoursesByGradeAndGroup(String grade, String group);
+    List<EnrollmentDTO> getCourseEnrollments(CourseId courseId);
+    List<CourseUnitDTO> getCourseUnits(CourseId courseId);
+    boolean isStudentEnrolled(CourseId courseId, UserId studentId);
+    boolean isCourseCodeAvailable(CourseCode code);
+}
+
+package com.braintrust.education.application.ports.in;
+
+import com.braintrust.education.application.dtos.commands.GradeSubmissionCommand;
+import com.braintrust.education.application.dtos.commands.ReturnSubmissionCommand;
+import com.braintrust.education.application.dtos.commands.SubmitAssignmentCommand;
+import com.braintrust.education.application.dtos.dtos.SubmissionAnalyticsDTO;
+import com.braintrust.education.application.dtos.dtos.SubmissionDTO;
+import com.braintrust.education.domain.model.SubmissionStatus;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.util.List;
+import java.util.Optional;
+
+// 📍 education/application/ports/in/SubmissionService.java
+public interface SubmissionService {
+
+    // Commands
+    SubmissionId submitAssignment(SubmitAssignmentCommand command);
+    void gradeSubmission(GradeSubmissionCommand command);
+    void returnSubmissionForRevision(ReturnSubmissionCommand command);
+    void requestAIAnalysis(SubmissionId submissionId);
+
+    // Queries
+    SubmissionDTO getSubmissionById(SubmissionId submissionId);
+    List<SubmissionDTO> getSubmissionsByAssignment(AssignmentId assignmentId);
+    List<SubmissionDTO> getSubmissionsByStudent(UserId studentId);
+    Optional<SubmissionDTO> getLatestSubmission(AssignmentId assignmentId, UserId studentId);
+    List<SubmissionDTO> getSubmissionsByStatus(SubmissionStatus status);
+    List<SubmissionDTO> getLateSubmissions(AssignmentId assignmentId);
+    SubmissionAnalyticsDTO getSubmissionAnalytics(AssignmentId assignmentId);
+    boolean hasStudentSubmitted(AssignmentId assignmentId, UserId studentId);
+}
+
+package com.braintrust.education.application.ports.out;
+
+import com.braintrust.education.domain.model.Assignment;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+// 📍 education/application/ports/out/AssignmentRepository.java
+public interface AssignmentRepository {
+
+    // Commands
+    Assignment save(Assignment assignment);
+    void delete(Assignment assignment);
+
+    // Queries
+    // ✅ NEW: Calendar queries for students
+    List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd);
+
+    // ✅ NEW: Calendar queries for teachers
+    List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd);
+    // ✅ NEW: Calendar queries for teachers
+    Optional<Assignment> findById(AssignmentId assignmentId);
+    List<Assignment> findByCourseId(CourseId courseId);
+    List<Assignment> findActiveAssignmentsByCourse(CourseId courseId);
+    List<Assignment> findAssignmentsDueBetween(CourseId courseId, LocalDateTime start, LocalDateTime end);
+}
+
+package com.braintrust.education.application.ports.out;
+
+import com.braintrust.education.domain.model.Course;
+import com.braintrust.education.domain.valueobjects.CourseCode;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.util.List;
+import java.util.Optional;
+
+// 📍 education/application/ports/out/CourseRepository.java
+public interface CourseRepository {
+    Course save(Course course);
+    void delete(Course course);
+    Optional<Course> findById(CourseId courseId);
+    Optional<Course> findByCode(CourseCode code);
+    List<Course> findByTeacherId(UserId teacherId);
+    List<Course> findActiveCourses();
+    List<Course> findByGradeAndGroup(String grade, String group);
+    boolean existsByCode(CourseCode code);
+
+    // ✅ NEW: Find course by unit ID
+    Optional<Course> findByUnitId(UnitId unitId);
+}
+
+
+package com.braintrust.education.application.ports.out;
+
+import com.braintrust.education.domain.model.Enrollment;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.EnrollmentId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.util.List;
+import java.util.Optional;
+
+// 📍 education/application/ports/out/EnrollmentRepository.java
+public interface EnrollmentRepository {
+
+    // Commands
+    Enrollment save(Enrollment enrollment);
+    void delete(Enrollment enrollment);
+
+    // Queries
+    Optional<Enrollment> findById(EnrollmentId enrollmentId);
+    Optional<Enrollment> findByCourseAndStudent(CourseId courseId, UserId studentId);
+    List<Enrollment> findByCourseId(CourseId courseId);
+    List<Enrollment> findByStudentId(UserId studentId);
+    List<Enrollment> findActiveEnrollments(CourseId courseId);
+    boolean existsByCourseAndStudent(CourseId courseId, UserId studentId);
+}
+
+
+package com.braintrust.education.application.ports.out;
+
+
+import com.braintrust.education.domain.model.Submission;
+import com.braintrust.education.domain.model.SubmissionStatus;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.identity.domain.valueobjects.UserId;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+// 📍 education/application/ports/out/SubmissionRepository.java
+public interface SubmissionRepository {
+
+    // Commands
+    Submission save(Submission submission);
+    void delete(Submission submission);
+
+    // Queries
+    Optional<Submission> findById(SubmissionId submissionId);
+    List<Submission> findByAssignmentId(AssignmentId assignmentId);
+    List<Submission> findByStudentId(UserId studentId);
+    List<Submission> findByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId);
+    Optional<Submission> findLatestByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId);
+    List<Submission> findByStatus(SubmissionStatus status);
+    List<Submission> findLateSubmissions(AssignmentId assignmentId, LocalDateTime dueDate);
+}
+
+
+package com.braintrust.education.application.ports.out;
+
+
+import com.braintrust.education.domain.model.CourseUnit;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
+
+import java.util.List;
+import java.util.Optional;
+
+// 📍 education/application/ports/out/UnitRepository.java
+public interface UnitRepository {
+
+    // Commands
+    CourseUnit save(CourseUnit unit);
+    void delete(CourseUnit unit);
+
+    // Queries
+    Optional<CourseUnit> findById(UnitId unitId);
+    List<CourseUnit> findByCourseId(CourseId courseId);
+    List<CourseUnit> findByCourseIdOrderByNumber(CourseId courseId);
+}
+
+// SERVICES
+
+package com.braintrust.education.application.service;
+
+// 📍 education/application/services/AssignmentApplicationService.java
+
+import com.braintrust.aidetectition.application.ports.out.DocumentStorageService;
+import com.braintrust.aidetectition.domain.model.DocumentMetadata;
+import com.braintrust.education.application.dtos.commands.*;
+import com.braintrust.education.application.dtos.dtos.AssignmentDTO;
+import com.braintrust.education.application.dtos.dtos.DocumentDTO;
+import com.braintrust.education.application.ports.in.AssignmentService;
+import com.braintrust.education.application.ports.out.AssignmentRepository;
+import com.braintrust.education.application.ports.out.CourseRepository;
+import com.braintrust.education.domain.exceptions.AssignmentNotFoundException;
+import com.braintrust.education.domain.exceptions.CourseNotFoundException;
+import com.braintrust.education.domain.exceptions.InvalidDocumentTypeException;
+import com.braintrust.education.domain.model.*;
+import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+@Slf4j // ⬅️ Enable the 'log' variable
+public class AssignmentApplicationService implements AssignmentService {
+
+    private final AssignmentRepository assignmentRepository;
+    private final CourseRepository courseRepository;
+    private final DocumentStorageService documentStorageService;
+
+
+    public AssignmentApplicationService(
+            AssignmentRepository assignmentRepository,
+            CourseRepository courseRepository, DocumentStorageService documentStorageService
+    ) {
+        this.assignmentRepository = assignmentRepository;
+        this.courseRepository = courseRepository;
+        this.documentStorageService = documentStorageService;
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ ASSIGNMENT COMMANDS (Creation and Update)
+    // ------------------------------------------------------------------
+
+    @Override
+    public AssignmentId createAssignment(CreateAssignmentCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+        log.info("Attempting to create new assignment '{}' for Course ID: {}", command.title(), courseId.getValue());
+
+        // Verify course exists
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> {
+                    log.warn("Course not found with ID: {}", courseId.getValue());
+                    return new CourseNotFoundException("Course not found");
+                });
+
+        Assignment assignment = Assignment.create(
+                courseId,
+                command.title(),
+                command.description(),
+                LocalDateTime.parse(command.dueDate()),
+                command.maxPoints(),
+                command.instructions()
+        );
+
+        Assignment savedAssignment = assignmentRepository.save(assignment);
+        log.info("Assignment created and saved. ID: {}", savedAssignment.getId().getValue());
+        return savedAssignment.getId();
+    }
+
+    @Override
+    public AssignmentId createAssignmentWithAttachments(CreateAssignmentWithAttachmentsCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+        log.info("Attempting to create assignment with {} attachments for Course ID: {}",
+                command.attachments().size(), courseId.getValue());
+
+        // Verify course exists
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> {
+                    log.warn("Course not found with ID: {}", courseId.getValue());
+                    return new CourseNotFoundException("Course not found");
+                });
+
+        // Generate a temporary ID for storage (before assignment is created)
+        AssignmentId tempAssignmentId = AssignmentId.generate();
+
+        // 1. STORE DOCUMENTS and GET METADATA LIST
+        log.debug("Storing {} attachment files for assignment.", command.attachments().size());
+        List<DocumentMetadata> metadataList = documentStorageService.storeDocument(
+                tempAssignmentId.getValue(), // Use temporary assignment ID as container
+                command.attachments()
+        );
+        log.info("✅ {} documents stored successfully.", metadataList.size());
+
+        // 2. CONVERT METADATA LIST TO DOMAIN DOCUMENT LIST
+        List<Document> documents = metadataList.stream()
+                .map(metadata -> new Document(
+                        metadata.getOriginalFilename(),
+                        metadata.getStoragePath()
+                ))
+                .collect(Collectors.toList());
+
+        log.debug("✅ {} documents mapped to domain objects.", documents.size());
+
+        // 3. CREATE ASSIGNMENT WITH DOCUMENTS
+        Assignment assignment = Assignment.createWithAttachments(
+                courseId,
+                command.title(),
+                command.description(),
+                LocalDateTime.parse(command.dueDate()),
+                command.maxPoints(),
+                command.instructions(),
+                documents
+        );
+
+        // Override the generated ID with the one used for storage
+        // OR update storage paths if needed (depends on your implementation)
+
+        // 4. SAVE ASSIGNMENT
+        Assignment savedAssignment = assignmentRepository.save(assignment);
+        log.info("✅ Assignment with attachments created. ID: {}", savedAssignment.getId().getValue());
+
+        return savedAssignment.getId();
+    }
+    @Override
+    public void updateAssignmentDetails(UpdateAssignmentCommand command) {
+        AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
+        log.info("Updating details for Assignment ID: {}", assignmentId.getValue());
+
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+
+        assignment.updateDetails(
+                command.title(),
+                command.description(),
+                command.instructions()
+        );
+
+        assignmentRepository.save(assignment);
+        log.debug("Assignment ID {} details updated and saved.", assignmentId.getValue());
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsForStudentWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+        log.info("Fetching all assignments for Student ID {} for week {} to {}",
+                studentId.getValue(), weekStart.toLocalDate(), weekEnd.toLocalDate());
+
+        List<Assignment> assignments = assignmentRepository.findAssignmentsByStudentForWeek(
+                studentId,
+                weekStart,
+                weekEnd
+        );
+
+        log.info("Found {} assignments for student", assignments.size());
+
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsForTeacherWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+        log.info("Fetching all assignments for Teacher ID {} for week {} to {}",
+                teacherId.getValue(), weekStart.toLocalDate(), weekEnd.toLocalDate());
+
+        List<Assignment> assignments = assignmentRepository.findAssignmentsByTeacherForWeek(
+                teacherId,
+                weekStart,
+                weekEnd
+        );
+
+        log.info("Found {} assignments for teacher", assignments.size());
+
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void addAttachment(AssignmentId assignmentId, Document document) {
+        log.info("Adding attachment to Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.addAttachment(document);
+        assignmentRepository.save(assignment);
+        log.debug("Attachment added to Assignment ID {}.", assignmentId.getValue());
+    }
+
+    @Override
+    public void removeAttachment(AssignmentId assignmentId, Document document) {
+        log.warn("Removing attachment from Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.removeAttachment(document);
+        assignmentRepository.save(assignment);
+        log.debug("Attachment removed from Assignment ID {}.", assignmentId.getValue());
+    }
+
+    @Override
+    public void clearAttachments(AssignmentId assignmentId) {
+        log.warn("Clearing all attachments for Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.clearAttachments();
+        assignmentRepository.save(assignment);
+        log.info("All attachments cleared for Assignment ID {}.", assignmentId.getValue());
+    }
+
+    @Override
+    public void extendDueDate(AssignmentId assignmentId, LocalDateTime newDueDate) {
+        log.warn("Extending due date for Assignment ID {} to {}", assignmentId.getValue(), newDueDate);
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.extendDueDate(newDueDate);
+        assignmentRepository.save(assignment);
+        log.info("Due date successfully extended for Assignment ID {}.", assignmentId.getValue());
+    }
+
+    @Override
+    public void activateAssignment(AssignmentId assignmentId) {
+        log.info("Activating Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.activate();
+        assignmentRepository.save(assignment);
+        log.info("Assignment ID {} is now active.", assignmentId.getValue());
+    }
+
+    @Override
+    public void deactivateAssignment(AssignmentId assignmentId) {
+        log.warn("Deactivating Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.deactivate();
+        assignmentRepository.save(assignment);
+        log.warn("Assignment ID {} is now inactive.", assignmentId.getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ ASSIGNMENT QUERIES
+    // ------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public AssignmentDTO getAssignmentById(AssignmentId assignmentId) {
+        log.debug("Querying Assignment DTO by ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        return mapToAssignmentDTO(assignment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsByCourse(CourseId courseId) {
+        log.debug("Fetching all assignments for Course ID: {}", courseId.getValue());
+        List<Assignment> assignments = assignmentRepository.findByCourseId(courseId);
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDTO> getActiveAssignmentsByCourse(CourseId courseId) {
+        log.debug("Fetching active assignments for Course ID: {}", courseId.getValue());
+        List<Assignment> assignments = assignmentRepository.findActiveAssignmentsByCourse(courseId);
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsDueSoon(CourseId courseId, int daysAhead) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime future = now.plusDays(daysAhead);
+
+        log.debug("Querying assignments for Course ID {} due between {} and {}",
+                courseId.getValue(), now.toLocalDate(), future.toLocalDate());
+
+        List<Assignment> assignments = assignmentRepository.findAssignmentsDueBetween(courseId, now, future);
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean canAcceptSubmissions(AssignmentId assignmentId) {
+        log.trace("Checking submission acceptance status for Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        return assignment.canAcceptSubmissions();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getAttachmentCount(AssignmentId assignmentId) {
+        log.trace("Counting attachments for Assignment ID: {}", assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        return assignment.getAttachmentCount();
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ PRIVATE HELPER METHODS
+    // ------------------------------------------------------------------
+
+    private Assignment findAssignmentByIdOrThrow(AssignmentId assignmentId) {
+        log.trace("Attempting to retrieve Assignment ID: {}", assignmentId.getValue());
+        return assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> {
+                    log.warn("Assignment not found with ID: {}", assignmentId.getValue());
+                    return new AssignmentNotFoundException("Assignment not found: " + assignmentId.getValue());
+                });
+    }
+
+    private AssignmentDTO mapToAssignmentDTO(Assignment assignment) {
+        // MAPPING LOGIC (no logging required here, as it's a pure transformation)
+        List<DocumentDTO> attachmentDTOs = assignment.getAttachments().stream()
+                .map(doc -> new DocumentDTO(
+                        doc.getName(),
+                        doc.getStoragePath()
+                ))
+                .collect(Collectors.toList());
+
+        return new AssignmentDTO(
+                assignment.getId().getValue(),
+                assignment.getCourseId().getValue(),
+                "Course Name", // TODO: Get from Course
+                assignment.getTitle(),
+                assignment.getDescription(),
+                assignment.getCreatedAt().toString(),
+                assignment.getDueDate() != null ? assignment.getDueDate().toString() : null,
+                assignment.getMaxScore().getValue(),
+                assignment.getInstructions(),
+                assignment.isActive(),
+                assignment.getSubmissions().size(),
+                assignment.getAttachmentCount(),
+                assignment.canAcceptSubmissions(),
+                attachmentDTOs
+        );
+    }
+}
+
+package com.braintrust.education.application.service;
+
+// 📍 education/infrastructure/persistence/JpaCourseRepositoryAdapter.java
+
+import com.braintrust.education.application.dtos.commands.*;
+import com.braintrust.education.application.dtos.dtos.CourseDTO;
+import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
+import com.braintrust.education.application.dtos.dtos.EnrollmentDTO;
+import com.braintrust.education.application.ports.in.CourseService;
+import com.braintrust.education.application.ports.out.CourseRepository;
+import com.braintrust.education.domain.exceptions.CourseCodeAlreadyExistsException;
+import com.braintrust.education.domain.exceptions.CourseNotFoundException;
+import com.braintrust.education.domain.model.*;
+import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.CourseMapper;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+@Slf4j // ⬅️ Enable the 'log' variable
+public class CourseApplicationService implements CourseService {
+
+    private final CourseRepository courseRepository;
+
+    public CourseApplicationService(CourseRepository courseRepository) {
+        this.courseRepository = courseRepository;
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ COURSE COMMANDS
+    // ------------------------------------------------------------------
+
+    @Override
+    public CourseId createCourse(CreateCourseCommand command) {
+        CourseCode code = new CourseCode(command.code());
+
+        if (courseRepository.existsByCode(code)) {
+            log.warn("Attempted to create course with duplicate code: {}", command.code());
+            throw new CourseCodeAlreadyExistsException("Course code already exists: " + command.code());
+        }
+
+        UserId teacherId = UserId.fromString(command.teacherId());
+        log.info("Creating new course '{}' for Teacher ID: {}", command.name(), teacherId.getValue());
+
+        Course course = Course.create(
+                code,
+                command.name(),
+                command.description(),
+                command.grade(),
+                command.group(),
+                teacherId
+        );
+
+        Course savedCourse = courseRepository.save(course);
+        log.info("Course created and saved. ID: {}", savedCourse.getId().getValue());
+        return savedCourse.getId();
+    }
+
+    @Override
+    public CourseId createCourseWithImage(CreateCourseWithImageCommand command) {
+        CourseCode code = new CourseCode(command.code());
+
+        if (courseRepository.existsByCode(code)) {
+            log.warn("Attempted to create course with image and duplicate code: {}", command.code());
+            throw new CourseCodeAlreadyExistsException("Course code already exists");
+        }
+
+        UserId teacherId = UserId.fromString(command.teacherId());
+        log.info("Creating course '{}' with image for Teacher ID: {}", command.name(), teacherId.getValue());
+
+        Course course = Course.createWithImage(
+                code,
+                command.name(),
+                command.description(),
+                command.grade(),
+                command.group(),
+                teacherId,
+                command.imageUrl()
+        );
+
+        Course savedCourse = courseRepository.save(course);
+        log.info("Course with image created and saved. ID: {}", savedCourse.getId().getValue());
+        return savedCourse.getId();
+    }
+
+    @Override
+    public void updateCourseDetails(UpdateCourseCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+        log.info("Updating details for Course ID: {}", courseId.getValue());
+
+        Course course = findCourseByIdOrThrow(courseId);
+
+        course.updateDetails(
+                command.name(),
+                command.description(),
+                command.grade(),
+                command.group()
+        );
+
+        courseRepository.save(course);
+        log.debug("Course ID {} details updated and saved.", courseId.getValue());
+    }
+
+    @Override
+    public void updateCourseImage(CourseId courseId, String imageUrl) {
+        log.info("Updating image URL for Course ID: {}", courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+        course.setUrlImage(imageUrl);
+        courseRepository.save(course);
+        log.debug("Course ID {} image URL updated.", courseId.getValue());
+    }
+
+    @Override
+    public void activateCourse(CourseId courseId) {
+        log.info("Activating Course ID: {}", courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+        course.activate();
+        courseRepository.save(course);
+        log.info("Course ID {} status set to active.", courseId.getValue());
+    }
+
+    @Override
+    public void deactivateCourse(CourseId courseId) {
+        log.warn("Deactivating Course ID: {}", courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+        course.deactivate();
+        courseRepository.save(course);
+        log.warn("Course ID {} status set to inactive.", courseId.getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ ENROLLMENT COMMANDS
+    // ------------------------------------------------------------------
+
+    @Override
+    public EnrollmentId enrollStudent(EnrollStudentCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+        UserId studentId = UserId.fromString(command.studentId());
+
+        log.info("Enrolling Student ID {} into Course ID {}", studentId.getValue(), courseId.getValue());
+
+        Course course = findCourseByIdOrThrow(courseId);
+        Enrollment enrollment = course.enrollStudent(studentId);
+
+        // ✅ ONLY save the aggregate root - JPA cascades to enrollments
+        courseRepository.save(course);
+        log.info("Student ID {} successfully enrolled. Enrollment ID: {}", studentId.getValue(), enrollment.getId().getValue());
+
+        return enrollment.getId();
+    }
+
+    @Override
+    public void unenrollStudent(UnenrollStudentCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+        UserId studentId = UserId.fromString(command.studentId());
+
+        log.warn("Unenrolling Student ID {} from Course ID {}", studentId.getValue(), courseId.getValue());
+
+        Course course = findCourseByIdOrThrow(courseId);
+        course.unenrollStudent(studentId);
+
+        courseRepository.save(course);
+        log.info("Student ID {} successfully unenrolled.", studentId.getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ UNIT COMMANDS
+    // ------------------------------------------------------------------
+
+    @Override
+    public UnitId addUnit(AddUnitCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+
+        log.info("Adding Unit '{}' to Course ID {}", command.name(), courseId.getValue());
+
+        Course course = findCourseByIdOrThrow(courseId);
+
+        CourseUnit unit = course.addUnit(
+                command.name(),
+                command.order(),
+                command.description()
+        );
+
+        // ✅ ONLY save the aggregate root - JPA cascades to units
+        courseRepository.save(course);
+        log.info("Unit ID {} added successfully.", unit.getId().getValue());
+
+        return unit.getId();
+    }
+
+    @Override
+    public UnitId addUnitWithImage(AddUnitWithImageCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+
+        log.info("Adding Unit '{}' with image to Course ID {}", command.name(), courseId.getValue());
+
+        Course course = findCourseByIdOrThrow(courseId);
+
+        CourseUnit unit = course.addUnitWithImage(
+                command.name(),
+                command.order(),
+                command.description(),
+                command.imageUrl()
+        );
+
+        courseRepository.save(course);
+        log.info("Unit ID {} (with image) added successfully.", unit.getId().getValue());
+
+        return unit.getId();
+    }
+
+    @Override
+    public void updateUnit(UpdateUnitCommand command) {
+        UnitId unitId = UnitId.fromString(command.unitId());
+        log.info("Updating Unit ID: {}", unitId.getValue());
+
+        Course course = findCourseByUnitIdOrThrow(unitId);
+
+        CourseUnit unit = course.getUnits().stream()
+                .filter(u -> u.getId().equals(unitId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.error("Attempted to update Unit ID {} but it was not found in the course aggregate.", unitId.getValue());
+                    return new IllegalStateException("Unit not found in course");
+                });
+
+        unit.updateDetails(command.name(), command.description());
+
+        courseRepository.save(course);
+        log.debug("Unit ID {} details updated.", unitId.getValue());
+    }
+
+    @Override
+    public void updateUnitImage(UnitId unitId, String imageUrl) {
+        log.info("Updating image for Unit ID: {}", unitId.getValue());
+        Course course = findCourseByUnitIdOrThrow(unitId);
+
+        CourseUnit unit = course.getUnits().stream()
+                .filter(u -> u.getId().equals(unitId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.error("Attempted to update image for Unit ID {} but it was not found in the course aggregate.", unitId.getValue());
+                    return new IllegalStateException("Unit not found in course");
+                });
+
+        unit.setUrlImage(imageUrl);
+
+        courseRepository.save(course);
+        log.debug("Unit ID {} image updated.", unitId.getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ COURSE QUERIES
+    // ------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public CourseDTO getCourseById(CourseId courseId) {
+        log.debug("Fetching Course DTO by ID: {}", courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+        return CourseMapper.mapToCourseDTO(course);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CourseDTO getCourseByCode(CourseCode code) {
+        log.debug("Fetching Course DTO by Code: {}", code.getValue());
+        Course course = courseRepository.findByCode(code)
+                .orElseThrow(() -> {
+                    log.warn("Course not found with code: {}", code.getValue());
+                    return new CourseNotFoundException("Course not found with code: " + code.getValue());
+                });
+        return CourseMapper.mapToCourseDTO(course);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseDTO> getCoursesByTeacher(UserId teacherId) {
+        log.debug("Fetching courses taught by Teacher ID: {}", teacherId.getValue());
+        List<Course> courses = courseRepository.findByTeacherId(teacherId);
+        return courses.stream()
+                .map(CourseMapper::mapToCourseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseDTO> getActiveCourses() {
+        log.debug("Fetching all active courses.");
+        List<Course> courses = courseRepository.findActiveCourses();
+        return courses.stream()
+                .map(CourseMapper::mapToCourseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseDTO> getCoursesByGradeAndGroup(String grade, String group) {
+        log.debug("Fetching courses by Grade {} and Group {}", grade, group);
+        List<Course> courses = courseRepository.findByGradeAndGroup(grade, group);
+        return courses.stream()
+                .map(CourseMapper::mapToCourseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentDTO> getCourseEnrollments(CourseId courseId) {
+        log.debug("Fetching enrollment list for Course ID: {}", courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+
+        return course.getEnrollments().stream()
+                .map(CourseMapper::mapToEnrollmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CourseUnitDTO> getCourseUnits(CourseId courseId) {
+        log.debug("Fetching unit list for Course ID: {}", courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+
+        return course.getUnits().stream()
+                .map(CourseMapper::mapToUnitDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isStudentEnrolled(CourseId courseId, UserId studentId) {
+        log.trace("Checking enrollment status for Student ID {} in Course ID {}", studentId.getValue(), courseId.getValue());
+        Course course = findCourseByIdOrThrow(courseId);
+
+        return course.getEnrollments().stream()
+                .anyMatch(enrollment -> enrollment.getStudentId().equals(studentId)
+                        && enrollment.isActive());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isCourseCodeAvailable(CourseCode code) {
+        log.trace("Checking availability of Course Code: {}", code.getValue());
+        return !courseRepository.existsByCode(code);
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ PRIVATE HELPER METHODS
+    // ------------------------------------------------------------------
+
+    private Course findCourseByIdOrThrow(CourseId courseId) {
+        log.trace("Attempting to retrieve Course ID: {}", courseId.getValue());
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> {
+                    log.warn("Course not found with ID: {}", courseId.getValue());
+                    return new CourseNotFoundException("Course not found: " + courseId.getValue());
+                });
+    }
+
+    private Course findCourseByUnitIdOrThrow(UnitId unitId) {
+        log.trace("Attempting to find Course containing Unit ID: {}", unitId.getValue());
+        return courseRepository.findByUnitId(unitId)
+                .orElseThrow(() -> {
+                    log.warn("Course not found containing Unit ID: {}", unitId.getValue());
+                    return new CourseNotFoundException("Course not found for unit: " + unitId.getValue());
+                });
+    }
+}
+
+package com.braintrust.education.application.service;
+
+// 📍 education/application/services/SubmissionApplicationService.java
+
+import com.braintrust.aidetectition.application.dtos.commands.AnalyzePdfSubmissionCommand;
+import com.braintrust.aidetectition.application.ports.out.DocumentStorageService;
+import com.braintrust.aidetectition.application.services.AnalysisApplicationService;
+import com.braintrust.aidetectition.domain.model.DocumentMetadata;
+import com.braintrust.aidetectition.domain.valueobjects.ModelType;
+import com.braintrust.education.application.dtos.commands.*;
+import com.braintrust.education.application.dtos.dtos.*;
+import com.braintrust.education.application.ports.in.SubmissionService;
+import com.braintrust.education.application.ports.out.AssignmentRepository;
+import com.braintrust.education.application.ports.out.SubmissionRepository;
+import com.braintrust.education.domain.exceptions.AssignmentNotFoundException;
+import com.braintrust.education.domain.exceptions.SubmissionNotFoundException;
+import com.braintrust.education.domain.model.*;
+import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+@Slf4j // ⬅️ Enable the 'log' variable
+public class SubmissionApplicationService implements SubmissionService {
+
+    private final SubmissionRepository submissionRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final DocumentStorageService documentStorageService;
+    private final AnalysisApplicationService analysisApplicationService;
+    @Value("${ai.model-default-type:ENSEMBLE}")
+    private String MODEL_IA;
+
+    public SubmissionApplicationService(
+            SubmissionRepository submissionRepository,
+            AssignmentRepository assignmentRepository, DocumentStorageService documentStorageService, AnalysisApplicationService analysisApplicationService
+
+    ) {
+        this.submissionRepository = submissionRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.documentStorageService = documentStorageService;
+        this.analysisApplicationService = analysisApplicationService;
+    }
+
+
+    @Override
+    public SubmissionId submitAssignment(SubmitAssignmentCommand command) {
+        AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
+        UserId studentId = UserId.fromString(command.studentId());
+        log.info("Student ID {} attempting to submit work for Assignment ID: {}",
+                studentId.getValue(), assignmentId.getValue());
+
+        // Verify assignment exists
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> {
+                    log.warn("Submission failed: Assignment not found with ID {}", assignmentId.getValue());
+                    return new AssignmentNotFoundException("Assignment not found");
+                });
+
+        // Check if assignment can accept submissions
+        if (!assignment.canAcceptSubmissions()) {
+            log.warn("Submission rejected for Assignment ID {} - inactive and past due date.",
+                    assignmentId.getValue());
+            throw new IllegalStateException("Assignment is closed and cannot accept submissions");
+        }
+
+
+
+        // 1. STORE DOCUMENTS and GET METADATA LIST (Required Logic)
+        // We pass the newly generated submissionId as the target container ID.
+        List<DocumentMetadata> metadataList = documentStorageService.storeDocument(
+                assignmentId.getValue(),
+                command.attachments() // ⬅️ Assuming this field now contains List<MultipartFile>
+        );
+
+        // 2. CONVERT METADATA LIST TO DOMAIN DOCUMENT LIST
+        List<Document> documents = metadataList.stream()
+                // Map the storage result (metadata) directly to the domain value object (Document)
+                .map(metadata -> new Document(
+                        metadata.getOriginalFilename(), // Use the original filename as the Document name
+                        metadata.getStoragePath()      // Use the returned unique storage path
+                ))
+                .collect(Collectors.toList());
+
+        log.info("✅ {} documents mapped and ready for domain submission.", documents.size());
+
+        Submission submission = assignment.submitWork(studentId, command.content(), documents);
+
+        assignmentRepository.save(assignment);
+        Submission savedSubmission = submissionRepository.save(submission);
+
+        analysisApplicationService.analyzePdfSubmission(new AnalyzePdfSubmissionCommand(savedSubmission.getId().getValue(),
+                command.attachments(), MODEL_IA));
+
+        log.info("Submission ID {} created for Student ID {} (Assignment {}).",
+                savedSubmission.getId().getValue(), studentId.getValue(), assignmentId.getValue());
+
+        return savedSubmission.getId();
+    }
+
+    @Override
+    public void gradeSubmission(GradeSubmissionCommand command) {
+        SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
+        log.info("Grading Submission ID: {} with score: {}", submissionId.getValue(), command.gradeValue());
+
+        Submission submission = findSubmissionByIdOrThrow(submissionId);
+
+        Grade grade = new Grade(
+                new BigDecimal(command.gradeValue()),
+                new BigDecimal(command.maxScore())
+        );
+
+        submission.grade(grade, command.feedback());
+        submissionRepository.save(submission);
+        log.info("Submission ID {} successfully graded.", submissionId.getValue());
+    }
+
+    @Override
+    public void returnSubmissionForRevision(ReturnSubmissionCommand command) {
+        SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
+        log.warn("Returning Submission ID {} for revision. Feedback length: {}", submissionId.getValue(), command.feedback().length());
+
+        Submission submission = findSubmissionByIdOrThrow(submissionId);
+        submission.returnForRevision(command.feedback());
+        submissionRepository.save(submission);
+        log.info("Submission ID {} returned.", submissionId.getValue());
+    }
+
+    @Override
+    public void requestAIAnalysis(SubmissionId submissionId) {
+        log.info("Marking Submission ID {} for AI Analysis.", submissionId.getValue());
+
+        Submission submission = findSubmissionByIdOrThrow(submissionId);
+        submission.markForAIAnalysis();
+        submissionRepository.save(submission);
+
+        // TODO: Publish event or call AI Detection Context
+        log.debug("Event published/call made for AI analysis of Submission ID {}.", submissionId.getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ SUBMISSION QUERIES
+    // ------------------------------------------------------------------
+
+    @Override
+    @Transactional(readOnly = true)
+    public SubmissionDTO getSubmissionById(SubmissionId submissionId) {
+        log.debug("Fetching DTO for Submission ID: {}", submissionId.getValue());
+        Submission submission = findSubmissionByIdOrThrow(submissionId);
+        return mapToSubmissionDTO(submission);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionDTO> getSubmissionsByAssignment(AssignmentId assignmentId) {
+        log.debug("Fetching all submissions for Assignment ID: {}", assignmentId.getValue());
+        List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId);
+        return submissions.stream()
+                .map(this::mapToSubmissionDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionDTO> getSubmissionsByStudent(UserId studentId) {
+        log.debug("Fetching all submissions by Student ID: {}", studentId.getValue());
+        List<Submission> submissions = submissionRepository.findByStudentId(studentId);
+        return submissions.stream()
+                .map(this::mapToSubmissionDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<SubmissionDTO> getLatestSubmission(AssignmentId assignmentId, UserId studentId) {
+        log.debug("Fetching latest submission for Assignment {} by Student {}", assignmentId.getValue(), studentId.getValue());
+        return submissionRepository.findLatestByAssignmentAndStudent(assignmentId, studentId)
+                .map(this::mapToSubmissionDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionDTO> getSubmissionsByStatus(SubmissionStatus status) {
+        log.debug("Fetching submissions with status: {}", status.name());
+        List<Submission> submissions = submissionRepository.findByStatus(status);
+        return submissions.stream()
+                .map(this::mapToSubmissionDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionDTO> getLateSubmissions(AssignmentId assignmentId) {
+        log.debug("Calculating and fetching late submissions for Assignment ID: {}", assignmentId.getValue());
+
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new AssignmentNotFoundException("Assignment not found"));
+
+        if (assignment.getDueDate() == null) {
+            log.warn("Cannot determine late submissions for Assignment ID {} (no due date).", assignmentId.getValue());
+            return List.of();
+        }
+
+        List<Submission> submissions = submissionRepository.findLateSubmissions(
+                assignmentId,
+                assignment.getDueDate()
+        );
+
+        return submissions.stream()
+                .map(this::mapToSubmissionDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SubmissionAnalyticsDTO getSubmissionAnalytics(AssignmentId assignmentId) {
+        log.debug("Calculating analytics for Assignment ID: {}", assignmentId.getValue());
+
+        List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId);
+
+        int total = submissions.size();
+        int graded = (int) submissions.stream().filter(Submission::isGraded).count();
+        int pending = (int) submissions.stream().filter(s -> s.getStatus() == SubmissionStatus.SUBMITTED).count();
+        int returned = (int) submissions.stream().filter(s -> s.getStatus() == SubmissionStatus.RETURNED).count();
+
+        // Safe division for average grade
+        BigDecimal avgGrade = submissions.stream()
+                .filter(Submission::isGraded)
+                .map(s -> s.getGrade().getValue())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        avgGrade = avgGrade.divide(BigDecimal.valueOf(graded > 0 ? graded : 1), 2, BigDecimal.ROUND_HALF_UP);
+
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new AssignmentNotFoundException("Assignment not found"));
+
+        int late = assignment.getDueDate() != null
+                ? (int) submissions.stream().filter(s -> s.isLate(assignment.getDueDate())).count()
+                : 0;
+
+        int onTime = total - late;
+
+        StatusDistributionDTO statusDist = new StatusDistributionDTO(
+                (int) submissions.stream().filter(s -> s.getStatus() == SubmissionStatus.DRAFT).count(),
+                (int) submissions.stream().filter(s -> s.getStatus() == SubmissionStatus.SUBMITTED).count(),
+                (int) submissions.stream().filter(s -> s.getStatus() == SubmissionStatus.GRADED).count(),
+                (int) submissions.stream().filter(s -> s.getStatus() == SubmissionStatus.RETURNED).count()
+        );
+
+        log.info("Analytics for Assignment {}: Total={}, Graded={}, AvgGrade={}", assignmentId.getValue(), total, graded, avgGrade);
+
+        return new SubmissionAnalyticsDTO(
+                assignmentId.getValue(),
+                total,
+                graded,
+                pending,
+                returned,
+                avgGrade.toString(),
+                late,
+                onTime,
+                statusDist
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasStudentSubmitted(AssignmentId assignmentId, UserId studentId) {
+        log.trace("Checking submission existence for Assignment {} by Student {}", assignmentId.getValue(), studentId.getValue());
+        List<Submission> submissions = submissionRepository.findByAssignmentAndStudent(assignmentId, studentId);
+        return !submissions.isEmpty();
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ PRIVATE HELPER METHODS
+    // ------------------------------------------------------------------
+
+    private Submission findSubmissionByIdOrThrow(SubmissionId submissionId) {
+        log.trace("Attempting to retrieve Submission ID: {}", submissionId.getValue());
+        return submissionRepository.findById(submissionId)
+                .orElseThrow(() -> {
+                    log.warn("Submission not found with ID: {}", submissionId.getValue());
+                    return new SubmissionNotFoundException("Submission not found: " + submissionId.getValue());
+                });
+    }
+
+    private SubmissionDTO mapToSubmissionDTO(Submission submission) {
+        // MAPPING LOGIC (no logging required here, as it's a pure transformation)
+        GradeDTO gradeDTO = submission.getGrade() != null
+                ? new GradeDTO(
+                submission.getGrade().getValue().toString(),
+                submission.getGrade().getMaxScore().toString(),
+                submission.getGrade().getPercentage().toString()
+        )
+                : null;
+
+        List<DocumentDTO> attachmentDTOs = submission.getAttachments().stream()
+                .map(doc -> new DocumentDTO(
+                        doc.getName(),
+                        doc.getStoragePath()
+                ))
+                .collect(Collectors.toList());
+
+        // Get assignment to check if late
+        Assignment assignment = assignmentRepository.findById(submission.getAssignmentId())
+                .orElse(null);
+
+        boolean isLate = assignment != null && assignment.getDueDate() != null
+                ? submission.isLate(assignment.getDueDate())
+                : false;
+
+        return new SubmissionDTO(
+                submission.getId().getValue(),
+                submission.getAssignmentId().getValue(),
+                "HI ", // TODO: Get from Assignment
+                submission.getStudentId().getValue(),
+                "Student", // TODO: Get from UserQueryPort
+                submission.getContent(),
+                submission.getStatus().name(),
+                gradeDTO,
+                submission.getTeacherFeedback(),
+                submission.getSubmittedAt().toString(),
+                isLate,
+                attachmentDTOs,
+                null // TODO: Get AI analysis if available
+        );
+    }
+}
+
+
+// INFRAESTRUCYTUIRE
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+import com.braintrust.education.application.ports.out.UnitRepository;
+import com.braintrust.education.domain.model.CourseUnit;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.CourseUnitEntityMapper;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseUnitJpaEntity;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Repository
+@Transactional(readOnly = true)
+@Slf4j // ⬅️ Enable the 'log' variable
+public class CourseUnitRepositoryAdapter implements UnitRepository {
+
+    private final CourseUnitJpaRepository jpaRepository;
+    private final CourseUnitEntityMapper mapper;
+
+    public CourseUnitRepositoryAdapter(CourseUnitJpaRepository jpaRepository,
+                                       CourseUnitEntityMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+        log.info("Initialized CourseUnitRepositoryAdapter.");
+    }
+
+    @Override
+    @Transactional
+    public CourseUnit save(CourseUnit unit) {
+        log.debug("Saving CourseUnit ID {} to persistence.", unit.getId().getValue());
+
+        CourseUnitJpaEntity entity = mapper.toEntity(unit);
+        CourseUnitJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.trace("Unit saved. Mapping entity back to domain model.");
+        return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public void delete(CourseUnit unit) {
+        log.warn("Deleting CourseUnit ID: {}", unit.getId().getValue());
+        jpaRepository.deleteById(unit.getId().getValue());
+        log.info("CourseUnit ID {} deleted successfully.", unit.getId().getValue());
+    }
+
+    @Override
+    public Optional<CourseUnit> findById(UnitId unitId) {
+        log.debug("Querying database for CourseUnit ID: {}", unitId.getValue());
+        return jpaRepository.findById(unitId.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<CourseUnit> findByCourseId(CourseId courseId) {
+        log.debug("Fetching all units for Course ID: {}", courseId.getValue());
+        return jpaRepository.findByCourseId(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CourseUnit> findByCourseIdOrderByNumber(CourseId courseId) {
+        log.debug("Fetching units for Course ID {} (ordered by number).", courseId.getValue());
+        return jpaRepository.findByCourseIdOrderByNumUnity(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+import com.braintrust.education.application.ports.out.EnrollmentRepository;
+import com.braintrust.education.domain.model.Enrollment;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.EnrollmentId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.EnrollmentEntityMapper;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.EnrollmentJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Repository
+@Transactional(readOnly = true)
+@Slf4j // ⬅️ Enable the 'log' variable
+public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
+
+    private final EnrollmentJpaRepository jpaRepository;
+    private final EnrollmentEntityMapper mapper;
+
+    public EnrollmentRepositoryAdapter(EnrollmentJpaRepository jpaRepository,
+                                       EnrollmentEntityMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+        log.info("Initialized EnrollmentRepositoryAdapter.");
+    }
+
+    @Override
+    @Transactional
+    public Enrollment save(Enrollment enrollment) {
+        log.info("Saving Enrollment ID {} (Student: {}, Course: {}).",
+                enrollment.getId().getValue(), enrollment.getStudentId().getValue(), enrollment.getCourseId().getValue());
+
+        EnrollmentJpaEntity entity = mapper.toEntity(enrollment);
+        EnrollmentJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.debug("Enrollment saved to persistence. Status: {}", savedEntity.getStatus());
+        return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Enrollment enrollment) {
+        log.warn("Deleting Enrollment ID: {}", enrollment.getId().getValue());
+        jpaRepository.deleteById(enrollment.getId().getValue());
+        log.info("Enrollment ID {} deleted successfully.", enrollment.getId().getValue());
+    }
+
+    @Override
+    public Optional<Enrollment> findById(EnrollmentId enrollmentId) {
+        log.debug("Querying database for Enrollment ID: {}", enrollmentId.getValue());
+        return jpaRepository.findById(enrollmentId.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Enrollment> findByCourseAndStudent(CourseId courseId, UserId studentId) {
+        log.debug("Querying by Course ID {} and Student ID {}.", courseId.getValue(), studentId.getValue());
+        return jpaRepository.findByCourseIdAndStudentId(courseId.getValue(), studentId.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Enrollment> findByCourseId(CourseId courseId) {
+        log.debug("Fetching all enrollments for Course ID: {}.", courseId.getValue());
+        return jpaRepository.findByCourseId(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Enrollment> findByStudentId(UserId studentId) {
+        log.debug("Fetching all courses enrolled by Student ID: {}.", studentId.getValue());
+        return jpaRepository.findByStudentId(studentId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Enrollment> findActiveEnrollments(CourseId courseId) {
+        log.debug("Fetching ACTIVE enrollments for Course ID: {}.", courseId.getValue());
+        return jpaRepository.findActiveByCourseId(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByCourseAndStudent(CourseId courseId, UserId studentId) {
+        log.trace("Checking existence of enrollment for Course ID {} and Student ID {}.", courseId.getValue(), studentId.getValue());
+        return jpaRepository.existsByCourseIdAndStudentId(courseId.getValue(), studentId.getValue());
+    }
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+import com.braintrust.education.application.ports.out.AssignmentRepository;
+import com.braintrust.education.domain.model.Assignment;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.AssignmentEntityMapper;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Repository
+@Slf4j
+public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
+
+    private final AssignmentJpaRepository jpaRepository;
+    private final AssignmentEntityMapper mapper;
+
+    public JpaAssignmentRepositoryAdapter(
+            AssignmentJpaRepository jpaRepository,
+            AssignmentEntityMapper mapper
+    ) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+        log.info("Initialized JpaAssignmentRepositoryAdapter.");
+    }
+
+    @Override
+    public Assignment save(Assignment assignment) {
+        log.info("Saving Assignment ID {} to database (Course ID: {}).",
+                assignment.getId().getValue(), assignment.getCourseId().getValue());
+        AssignmentJpaEntity entity = mapper.toEntity(assignment);
+        AssignmentJpaEntity savedEntity = jpaRepository.save(entity);
+        log.debug("Assignment saved/updated. Mapping entity back to domain model.");
+        return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public void delete(Assignment assignment) {
+        log.warn("Deleting Assignment ID: {}", assignment.getId().getValue());
+        jpaRepository.deleteById(assignment.getId().getValue());
+        log.info("Assignment ID {} deleted successfully.", assignment.getId().getValue());
+    }
+
+    @Override
+    public Optional<Assignment> findById(AssignmentId assignmentId) {
+        log.debug("Querying database for Assignment ID: {}", assignmentId.getValue());
+        return jpaRepository.findByIdWithDocuments(assignmentId.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Assignment> findByCourseId(CourseId courseId) {
+        log.debug("Fetching all assignments for Course ID: {}", courseId.getValue());
+        return jpaRepository.findByCourseIdWithDocuments(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Assignment> findActiveAssignmentsByCourse(CourseId courseId) {
+        log.debug("Fetching ACTIVE assignments only for Course ID: {}", courseId.getValue());
+        return jpaRepository.findByCourseIdAndActiveTrue(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Assignment> findAssignmentsDueBetween(CourseId courseId, LocalDateTime start, LocalDateTime end) {
+        log.debug("Fetching assignments due between {} and {} for Course ID: {}", start, end, courseId.getValue());
+        return jpaRepository.findByCourseIdAndDueDateBetween(courseId.getValue(), start, end)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    // ✅ NEW: Get all assignments for a student across all their courses for a week
+    @Override
+    public List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+        log.info("Fetching assignments for Student ID {} for week {} to {}",
+                studentId.getValue(), weekStart, weekEnd);
+        return jpaRepository.findAssignmentsByStudentForWeek(
+                        studentId.getValue(),
+                        weekStart,
+                        weekEnd
+                )
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    // ✅ NEW: Get all assignments for a teacher across all their courses for a week
+    @Override
+    public List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd) {
+        log.info("Fetching assignments for Teacher ID {} for week {} to {}",
+                teacherId.getValue(), weekStart, weekEnd);
+        return jpaRepository.findAssignmentsByTeacherForWeek(
+                        teacherId.getValue(),
+                        weekStart,
+                        weekEnd
+                )
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+}
+
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+import com.braintrust.education.application.Maps.CourseEntityMapper;
+import com.braintrust.education.application.ports.out.CourseRepository;
+import com.braintrust.education.domain.model.Course;
+import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Repository
+@Slf4j // ⬅️ Enable the 'log' variable
+public class JpaCourseRepositoryAdapter implements CourseRepository {
+
+    private final CourseJpaRepository jpaRepository;
+    private final CourseEntityMapper mapper;
+
+    public JpaCourseRepositoryAdapter(
+            CourseJpaRepository jpaRepository,
+            CourseEntityMapper mapper
+    ) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+        log.info("Initialized JpaCourseRepositoryAdapter.");
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ COMMANDS (Mutating Operations)
+    // ------------------------------------------------------------------
+
+    @Override
+    public Course save(Course course) {
+        log.info("Saving Course ID {} (Code: {}).", course.getId().getValue(), course.getCode().getValue());
+
+        CourseJpaEntity entity = mapper.toEntity(course);
+        CourseJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.debug("Course saved/updated successfully.");
+        return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public void delete(Course course) {
+        log.warn("Deleting Course ID: {}", course.getId().getValue());
+        jpaRepository.deleteById(course.getId().getValue());
+        log.info("Course ID {} deleted successfully.", course.getId().getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ QUERIES (Read Operations)
+    // ------------------------------------------------------------------
+
+    @Override
+    public Optional<Course> findById(CourseId courseId) {
+        log.debug("Querying database for Course ID: {}", courseId.getValue());
+        return jpaRepository.findById(courseId.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Course> findByCode(CourseCode code) {
+        log.debug("Querying database for Course Code: {}", code.getValue());
+        return jpaRepository.findByCode(code.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Course> findByTeacherId(UserId teacherId) {
+        log.debug("Fetching courses taught by Teacher ID: {}", teacherId.getValue());
+        return jpaRepository.findByTeacherId(teacherId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Course> findActiveCourses() {
+        log.debug("Fetching all active courses.");
+        return jpaRepository.findByActiveTrue()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Course> findByGradeAndGroup(String grade, String group) {
+        log.debug("Fetching courses by Grade {} and Group {}.", grade, group);
+        return jpaRepository.findByGradeAndGroup(grade, group)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByCode(CourseCode code) {
+        log.trace("Checking existence of Course Code: {}", code.getValue());
+        return jpaRepository.existsByCode(code.getValue());
+    }
+
+    @Override
+    public Optional<Course> findByUnitId(UnitId unitId) {
+        // NOTE: This repository query looks incorrect as written (finds Course by CourseId value,
+        // not by UnitId), but we log the attempt.
+        log.warn("Querying by Unit ID: {}. (Note: Repository implementation may need review).", unitId.getValue());
+        return jpaRepository.findByUnitId(unitId.getValue()) // Assuming the JPA method needs to be implemented to correctly search by UnitId
+                .map(mapper::toDomain);
+    }
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+import com.braintrust.education.application.ports.out.SubmissionRepository;
+import com.braintrust.education.domain.model.Submission;
+import com.braintrust.education.domain.model.SubmissionStatus;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.SubmissionEntityMapper;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.SubmissionJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Repository
+@Slf4j // ⬅️ Enable the 'log' variable
+public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
+
+    private final SubmissionJpaRepository jpaRepository;
+    private final SubmissionEntityMapper mapper;
+
+    public JpaSubmissionRepositoryAdapter(
+            SubmissionJpaRepository jpaRepository,
+            SubmissionEntityMapper mapper
+    ) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+        log.info("Initialized JpaSubmissionRepositoryAdapter.");
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ COMMANDS (Mutating Operations)
+    // ------------------------------------------------------------------
+
+    @Override
+    public Submission save(Submission submission) {
+        log.info("Saving Submission ID {} (Student: {}).",
+                submission.getId().getValue(), submission.getStudentId().getValue());
+
+        SubmissionJpaEntity entity = mapper.toEntity(submission);
+        SubmissionJpaEntity savedEntity = jpaRepository.save(entity);
+
+        log.debug("Submission saved/updated. Status: {}", savedEntity.getStatus());
+        return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public void delete(Submission submission) {
+        log.warn("Deleting Submission ID: {}", submission.getId().getValue());
+        jpaRepository.deleteById(submission.getId().getValue());
+        log.info("Submission ID {} deleted successfully.", submission.getId().getValue());
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ QUERIES (Read Operations)
+    // ------------------------------------------------------------------
+
+    @Override
+    public Optional<Submission> findById(SubmissionId submissionId) {
+        log.debug("Querying database for Submission ID: {}", submissionId.getValue());
+        return jpaRepository.findByIdWithDocuments(submissionId.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Submission> findByAssignmentId(AssignmentId assignmentId) {
+        log.debug("Fetching all submissions for Assignment ID: {}", assignmentId.getValue());
+        return jpaRepository.findByAssignmentIdWithDocuments(assignmentId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Submission> findByStudentId(UserId studentId) {
+        log.debug("Fetching all submissions by Student ID: {}", studentId.getValue());
+        return jpaRepository.findByStudentIdWithDocuments(studentId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Submission> findByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId) {
+        log.debug("Fetching submissions by Assignment ID {} and Student ID {}", assignmentId.getValue(), studentId.getValue());
+        return jpaRepository.findByAssignmentIdAndStudentIdWithDocuments(
+                        assignmentId.getValue(),
+                        studentId.getValue()
+                )
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Submission> findLatestByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId) {
+        log.debug("Fetching LATEST submission for Assignment {} by Student {}", assignmentId.getValue(), studentId.getValue());
+        return jpaRepository.findFirstByAssignmentIdAndStudentIdWithDocumentsOrderBySubmittedAtDesc(
+                assignmentId.getValue(),
+                studentId.getValue()
+        ).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Submission> findByStatus(SubmissionStatus status) {
+        log.debug("Fetching submissions with Status: {}", status.name());
+        return jpaRepository.findByStatusWithDocuments(status.name())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Submission> findLateSubmissions(AssignmentId assignmentId, LocalDateTime dueDate) {
+        log.warn("Querying for LATE submissions for Assignment ID {} (Due: {}).", assignmentId.getValue(), dueDate);
+        return jpaRepository.findByAssignmentIdAndSubmittedAtAfterWithDocuments(
+                        assignmentId.getValue(),
+                        dueDate
+                )
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+}
+
+
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEntity, String> {
+
+    List<AssignmentJpaEntity> findByCourseId(String courseId);
+    List<AssignmentJpaEntity> findByCourseIdAndActiveTrue(String courseId);
+    List<AssignmentJpaEntity> findByCourseIdAndDueDateBetween(String courseId, LocalDateTime start, LocalDateTime end);
+    // ✅ Query personalizada que carga documentos explícitamente
+    @Query("SELECT a FROM AssignmentJpaEntity a LEFT JOIN FETCH a.documents WHERE a.id = :id")
+    Optional<AssignmentJpaEntity> findByIdWithDocuments(@Param("id") String id);
+
+    @Query("SELECT a FROM AssignmentJpaEntity a LEFT JOIN FETCH a.documents WHERE a.courseId = :courseId")
+    List<AssignmentJpaEntity> findByCourseIdWithDocuments(@Param("courseId") String courseId);
+
+
+
+    // ✅ NEW: Find assignments for a student across all their enrolled courses for a specific week
+    @Query("""
+        SELECT DISTINCT a FROM AssignmentJpaEntity a
+        LEFT JOIN FETCH a.documents
+        WHERE a.courseId IN (
+            SELECT e.courseId FROM EnrollmentJpaEntity e
+            WHERE e.studentId = :studentId
+            AND e.status = 'ACTIVE'
+        )
+        AND a.dueDate >= :weekStart
+        AND a.dueDate < :weekEnd
+        AND a.active = true
+        ORDER BY a.dueDate ASC
+    """)
+    List<AssignmentJpaEntity> findAssignmentsByStudentForWeek(
+            @Param("studentId") String studentId,
+            @Param("weekStart") LocalDateTime weekStart,
+            @Param("weekEnd") LocalDateTime weekEnd
+    );
+
+    // ✅ NEW: Find assignments for a teacher across all their courses for a specific week
+    @Query("""
+        SELECT DISTINCT a FROM AssignmentJpaEntity a
+        LEFT JOIN FETCH a.documents
+        WHERE a.courseId IN (
+            SELECT c.id FROM CourseJpaEntity c
+            WHERE c.teacherId = :teacherId
+        )
+        AND a.dueDate >= :weekStart
+        AND a.dueDate < :weekEnd
+        AND a.active = true
+        ORDER BY a.dueDate ASC
+    """)
+    List<AssignmentJpaEntity> findAssignmentsByTeacherForWeek(
+            @Param("teacherId") String teacherId,
+            @Param("weekStart") LocalDateTime weekStart,
+            @Param("weekEnd") LocalDateTime weekEnd
+    );
+
+}
+
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface CourseJpaRepository extends JpaRepository<CourseJpaEntity, String> {
+
+    Optional<CourseJpaEntity> findByCode(String code);
+    List<CourseJpaEntity> findByTeacherId(String teacherId);
+    List<CourseJpaEntity> findByActiveTrue();
+    List<CourseJpaEntity> findByGradeAndGroup(String grade, String group);
+    boolean existsByCode(String code);
+    // ⬅️ NEW METHOD: Find the Course (Aggregate Root) that owns a specific Unit ID
+    @Query("SELECT c FROM CourseJpaEntity c JOIN c.units u WHERE u.id = :unitId")
+    Optional<CourseJpaEntity> findByUnitId(@Param("unitId") String unitId);
+
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseUnitJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CourseUnitJpaRepository extends JpaRepository<CourseUnitJpaEntity, String> {
+
+    List<CourseUnitJpaEntity> findByCourseId(String courseId);
+
+    List<CourseUnitJpaEntity> findByCourseIdOrderByNumUnity(String courseId);
+}
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.EnrollmentJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface EnrollmentJpaRepository extends JpaRepository<EnrollmentJpaEntity, String> {
+
+    Optional<EnrollmentJpaEntity> findByCourseIdAndStudentId(String courseId, String studentId);
+
+    List<EnrollmentJpaEntity> findByCourseId(String courseId);
+
+    List<EnrollmentJpaEntity> findByStudentId(String studentId);
+
+    @Query("SELECT e FROM EnrollmentJpaEntity e WHERE e.courseId = :courseId AND e.status = 'ACTIVE'")
+    List<EnrollmentJpaEntity> findActiveByCourseId(@Param("courseId") String courseId);
+
+    boolean existsByCourseIdAndStudentId(String courseId, String studentId);
+}
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
+
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.SubmissionJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface SubmissionJpaRepository extends JpaRepository<SubmissionJpaEntity, String> {
+
+    List<SubmissionJpaEntity> findByAssignmentId(String assignmentId);
+    List<SubmissionJpaEntity> findByStudentId(String studentId);
+    List<SubmissionJpaEntity> findByAssignmentIdAndStudentId(String assignmentId, String studentId);
+    Optional<SubmissionJpaEntity> findFirstByAssignmentIdAndStudentIdOrderBySubmittedAtDesc(String assignmentId, String studentId);
+    List<SubmissionJpaEntity> findByStatus(String status);
+    List<SubmissionJpaEntity> findByAssignmentIdAndSubmittedAtAfter(String assignmentId, LocalDateTime dueDate);
+
+
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.id = :id")
+    Optional<SubmissionJpaEntity> findByIdWithDocuments(@Param("id") String id);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.assignmentId = :assignmentId")
+    List<SubmissionJpaEntity> findByAssignmentIdWithDocuments(@Param("assignmentId") String assignmentId);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.studentId = :studentId")
+    List<SubmissionJpaEntity> findByStudentIdWithDocuments(@Param("studentId") String studentId);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.assignmentId = :assignmentId AND s.studentId = :studentId")
+    List<SubmissionJpaEntity> findByAssignmentIdAndStudentIdWithDocuments(
+            @Param("assignmentId") String assignmentId,
+            @Param("studentId") String studentId);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.assignmentId = :assignmentId AND s.studentId = :studentId " +
+            "ORDER BY s.submittedAt DESC")
+    Optional<SubmissionJpaEntity> findFirstByAssignmentIdAndStudentIdWithDocumentsOrderBySubmittedAtDesc(
+            @Param("assignmentId") String assignmentId,
+            @Param("studentId") String studentId);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.status = :status")
+    List<SubmissionJpaEntity> findByStatusWithDocuments(@Param("status") String status);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.assignmentId = :assignmentId AND s.submittedAt > :dueDate")
+    List<SubmissionJpaEntity> findByAssignmentIdAndSubmittedAtAfterWithDocuments(
+            @Param("assignmentId") String assignmentId,
+            @Param("dueDate") LocalDateTime dueDate);
+
+
+
+}
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper;
+
+import com.braintrust.education.domain.model.Assignment;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.Document;
+import com.braintrust.education.domain.valueobjects.Score;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.DocumentJpaEntity;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@Slf4j // ⬅️ Enable the 'log' variable
+public class AssignmentEntityMapper {
+
+    /**
+     * Converts a Domain Assignment model to a JPA Entity.
+     */
+    public AssignmentJpaEntity toEntity(Assignment assignment) {
+        log.debug("Mapping Assignment Domain ID {} to JPA Entity.", assignment.getId().getValue());
+
+        AssignmentJpaEntity entity = new AssignmentJpaEntity(
+                assignment.getId().getValue(),
+                assignment.getCourseId().getValue(),
+                assignment.getTitle(),
+                assignment.getDescription(),
+                assignment.getCreatedAt(),
+                assignment.getDueDate(),
+                assignment.getMaxScore().getMaxPoints(),
+                assignment.getInstructions(),
+                assignment.isActive()
+        );
+
+        // Map attachments
+        if (assignment.getAttachments() != null && !assignment.getAttachments().isEmpty()) {
+            log.trace("Mapping {} attachments for Assignment ID {}.",
+                    assignment.getAttachmentCount(), assignment.getId().getValue());
+
+            List<DocumentJpaEntity> documentEntities = assignment.getAttachments().stream()
+                    .map(this::toDocumentEntity)  // Map attachments (without manual IDs)
+                    .collect(Collectors.toList());
+            entity.setDocuments(documentEntities);
+        } else {
+            entity.setDocuments(new ArrayList<>());
+            log.trace("No attachments found for Assignment ID {}.", assignment.getId().getValue());
+        }
+
+        return entity;
+    }
+
+    /**
+     * Converts an Assignment JPA Entity back to a Domain Assignment model.
+     */
+    public Assignment toDomain(AssignmentJpaEntity entity) {
+        log.debug("Mapping Assignment JPA Entity ID {} to Domain Model.", entity.getId());
+
+        AssignmentId id = AssignmentId.fromString(entity.getId());
+        CourseId courseId = CourseId.fromString(entity.getCourseId());
+        Score maxScore = new Score(0, entity.getMaxPoints());
+
+        // Map documents list from entity to domain
+        List<Document> documents = new ArrayList<>();
+        if (entity.getDocuments() != null && !entity.getDocuments().isEmpty()) {
+            log.trace("Mapping {} attached documents from entity.", entity.getDocuments().size());
+            documents = entity.getDocuments().stream()
+                    .map(this::toDomainDocument)
+                    .collect(Collectors.toList());
+        }
+
+        // Reconstitute the domain aggregate root
+        return Assignment.reconstitute(
+                id,
+                courseId,
+                entity.getTitle(),
+                entity.getDescription(),
+                entity.getCreatedAt(),
+                documents,
+                entity.getDueDate(),
+                maxScore,
+                entity.getInstructions(),
+                Collections.emptyList(),  // Submissions are empty (lazy loaded/separate context)
+                entity.isActive()
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ DOCUMENT MAPPING HELPERS
+    // ------------------------------------------------------------------
+
+    private DocumentJpaEntity toDocumentEntity(Document doc) {
+        // Logging trace level since this is a high-frequency helper method
+        log.trace("Mapping Document: {}", doc.getName());
+
+        DocumentJpaEntity entity = new DocumentJpaEntity();
+        entity.setName(doc.getName());
+        entity.setStoragePath(doc.getStoragePath());
+        // JPA handles the foreign key (assignment_id) based on the cascade/relationship
+        return entity;
+    }
+
+    private Document toDomainDocument(DocumentJpaEntity entity) {
+        return new Document(
+                entity.getName(),
+                entity.getStoragePath()
+        );
+    }
+}
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper;
+
+import com.braintrust.education.application.dtos.dtos.CourseDTO;
+import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
+import com.braintrust.education.application.dtos.dtos.EnrollmentDTO;
+import com.braintrust.education.application.dtos.dtos.GradeDTO;
+import com.braintrust.education.domain.model.Course;
+import com.braintrust.education.domain.model.CourseUnit;
+import com.braintrust.education.domain.model.Enrollment;
+import com.braintrust.education.domain.valueobjects.CourseCode;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+
+@Component
+@Slf4j // ⬅️ Enable the 'log' variable
+public class CourseMapper {
+
+    /**
+     * Converts a Domain Course model to a JPA Entity.
+     */
+    public CourseJpaEntity toEntity(Course course) {
+        log.debug("Mapping Course Domain {} to JPA Entity.", course.getId().getValue());
+
+        return new CourseJpaEntity(
+                course.getId().getValue(),
+                course.getCode().getValue(),
+                course.getName(),
+                course.getDescription(),
+                course.getUrlImage(),
+                course.getGrade(),
+                course.getGroup(),
+                course.getTeacherId().getValue(),
+                course.isActive(),
+                LocalDateTime.now() // Creation/Update timestamp
+        );
+    }
+
+    /**
+     * Converts a Course JPA Entity back to a Domain Course model.
+     */
+    public Course toDomain(CourseJpaEntity entity) {
+        log.debug("Mapping Course JPA Entity {} back to Domain Model.", entity.getId());
+
+        CourseId courseId = CourseId.fromString(entity.getId());
+        CourseCode courseCode = new CourseCode(entity.getCode());
+        UserId teacherId = UserId.fromString(entity.getTeacherId());
+
+        // For now, we'll use empty collections for enrollments and units
+        log.warn("Course reconstruction: Enrollments and Units are empty collections and must be loaded separately.");
+
+        return Course.reconstitute(
+                courseId,
+                courseCode,
+                entity.getName(),
+                entity.getDescription(),
+                entity.getUrlImage(),
+                entity.getGrade(),
+                entity.getGroup(),
+                teacherId,
+                entity.isActive(),
+                Collections.emptySet(), // Submissions/Enrollments
+                Collections.emptyList() // Units
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ STATIC DTO MAPPING HELPERS
+    // ------------------------------------------------------------------
+
+    /**
+     * Maps the Course Domain Model to the public CourseDTO.
+     */
+    public static CourseDTO mapToCourseDTO(Course course) {
+        // Logging trace level for frequent DTO operations
+        log.trace("Mapping Course {} to DTO.", course.getId().getValue());
+
+        return new CourseDTO(
+                course.getId().getValue(),
+                course.getCode().getValue(),
+                course.getName(),
+                course.getDescription(),
+                course.getUrlImage(),
+                course.getGrade(),
+                course.getGroup(),
+                course.getTeacherId().getValue(),
+                "Teacher Name", // TODO: Get from UserQueryPort
+                course.isActive(),
+                course.getEnrollments().size(),
+                0, // TODO: Get assignment count
+                course.getUnits().size(),
+                java.time.LocalDateTime.now() // TODO: Add createdAt to Course entity
+        );
+    }
+
+    /**
+     * Maps the Enrollment Domain Model to the public EnrollmentDTO.
+     */
+    public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment) {
+        GradeDTO gradeDTO = enrollment.getFinalGrade() != null
+                ? new GradeDTO(
+                enrollment.getFinalGrade().getValue().toString(),
+                enrollment.getFinalGrade().getMaxScore().toString(),
+                enrollment.getFinalGrade().getPercentage().toString()
+        )
+                : null;
+
+        return new EnrollmentDTO(
+                enrollment.getId().getValue(),
+                enrollment.getCourseId().getValue(),
+                "Course Name", // TODO: Get from Course
+                enrollment.getStudentId().getValue(),
+                "Student Name", // TODO: Get from UserQueryPort
+                enrollment.getEnrollmentDate().toString(),
+                enrollment.getStatus().name(),
+                gradeDTO
+        );
+    }
+
+    /**
+     * Maps the CourseUnit Domain Model to the public CourseUnitDTO.
+     */
+    public static CourseUnitDTO mapToUnitDTO(CourseUnit unit) {
+        return new CourseUnitDTO(
+                unit.getId().getValue(),
+                unit.getCourseId().getValue(),
+                unit.getName(),
+                unit.getUrlImage(),
+                unit.getNumUnity(),
+                unit.getDescription()
+        );
+    }
+}
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper;
+
+import com.braintrust.education.domain.model.CourseUnit;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseUnitJpaEntity;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Component;
+
+@Component
+@Slf4j // ⬅️ Enable the 'log' variable
+public class CourseUnitEntityMapper {
+
+    /**
+     * Converts a CourseUnit domain model to a CourseUnitJpaEntity.
+     */
+    public CourseUnitJpaEntity toEntity(CourseUnit unit) {
+        log.debug("Mapping CourseUnit Domain ID {} to JPA Entity (Course ID: {}).",
+                unit.getId().getValue(), unit.getCourseId().getValue());
+
+        return new CourseUnitJpaEntity(
+                unit.getId().getValue(),
+                unit.getCourseId().getValue(),
+                unit.getName(),
+                unit.getUrlImage(),
+                unit.getNumUnity(),
+                unit.getDescription()
+        );
+    }
+
+    /**
+     * Converts a CourseUnitJpaEntity back to a CourseUnit domain model.
+     */
+    public CourseUnit toDomain(CourseUnitJpaEntity entity) {
+        log.debug("Mapping CourseUnit JPA Entity {} back to Domain Model (Course ID: {}).",
+                entity.getId(), entity.getCourseId());
+
+        UnitId id = UnitId.fromString(entity.getId());
+        CourseId courseId = CourseId.fromString(entity.getCourseId());
+
+        return CourseUnit.reconstitute(
+                id,
+                courseId,
+                entity.getName(),
+                entity.getNumUnity(),
+                entity.getDescription(),
+                entity.getUrlImage()
+        );
+    }
+}
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper;
+
+import com.braintrust.education.domain.model.Enrollment;
+import com.braintrust.education.domain.model.EnrollmentStatus;
+import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.EnrollmentId;
+import com.braintrust.education.domain.valueobjects.Grade;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.EnrollmentJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+
+@Component
+@Slf4j // ⬅️ Enable the 'log' variable
+public class EnrollmentEntityMapper {
+
+    /**
+     * Converts an Enrollment Domain Model to a JPA Entity.
+     */
+    public EnrollmentJpaEntity toEntity(Enrollment enrollment) {
+        log.debug("Mapping Enrollment Domain ID {} to JPA Entity.", enrollment.getId().getValue());
+
+        BigDecimal gradeValue = null;
+        BigDecimal gradeMaxScore = null;
+
+        if (enrollment.getFinalGrade() != null) {
+            gradeValue = enrollment.getFinalGrade().getValue();
+            gradeMaxScore = enrollment.getFinalGrade().getMaxScore();
+            log.trace("Mapping final grade: {}/{}", gradeValue, gradeMaxScore);
+        }
+
+        return new EnrollmentJpaEntity(
+                enrollment.getId().getValue(),
+                enrollment.getCourseId().getValue(),
+                enrollment.getStudentId().getValue(),
+                enrollment.getEnrollmentDate(),
+                enrollment.getStatus().name(),
+                gradeValue,
+                gradeMaxScore
+        );
+    }
+
+    /**
+     * Converts an Enrollment JPA Entity back to a Domain Enrollment model.
+     */
+    public Enrollment toDomain(EnrollmentJpaEntity entity) {
+        log.debug("Mapping Enrollment JPA Entity {} back to Domain Model.", entity.getId());
+
+        EnrollmentId id = EnrollmentId.fromString(entity.getId());
+        CourseId courseId = CourseId.fromString(entity.getCourseId());
+        UserId studentId = UserId.fromString(entity.getStudentId());
+        EnrollmentStatus status = EnrollmentStatus.valueOf(entity.getStatus());
+
+        Grade finalGrade = null;
+        if (entity.getFinalGradeValue() != null && entity.getFinalGradeMaxScore() != null) {
+            finalGrade = new Grade(entity.getFinalGradeValue(), entity.getFinalGradeMaxScore());
+            log.trace("Reconstituting final grade: {}/{}", finalGrade.getValue(), finalGrade.getMaxScore());
+        }
+
+        return Enrollment.reconstitute(
+                id,
+                courseId,
+                studentId,
+                entity.getEnrollmentDate(),
+                status,
+                finalGrade
+        );
+    }
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper;
+
+import com.braintrust.education.domain.model.Submission;
+import com.braintrust.education.domain.model.SubmissionStatus;
+import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.Document;
+import com.braintrust.education.domain.valueobjects.Grade;
+import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.DocumentJpaEntity;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.SubmissionJpaEntity;
+import com.braintrust.identity.domain.valueobjects.UserId;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@Slf4j // ⬅️ Enable the 'log' variable
+public class SubmissionEntityMapper {
+
+    /**
+     * Converts a Submission Domain Model to a JPA Entity.
+     */
+    public SubmissionJpaEntity toEntity(Submission submission) {
+        log.debug("Mapping Submission Domain ID {} (Status: {}) to JPA Entity.",
+                submission.getId().getValue(), submission.getStatus().name());
+
+        BigDecimal gradeValue = null;
+        BigDecimal gradeMaxScore = null;
+
+        if (submission.getGrade() != null) {
+            gradeValue = submission.getGrade().getValue();
+            gradeMaxScore = submission.getGrade().getMaxScore();
+            log.trace("Mapping grade: {}/{}", gradeValue, gradeMaxScore);
+        }
+
+        SubmissionJpaEntity entity = new SubmissionJpaEntity(
+                submission.getId().getValue(),
+                submission.getAssignmentId().getValue(),
+                submission.getStudentId().getValue(),
+                submission.getContent(),
+                submission.getSubmittedAt(),
+                submission.getStatus().name(),
+                gradeValue,
+                gradeMaxScore,
+                submission.getTeacherFeedback()
+        );
+
+        // Map attachments
+        if (submission.getAttachments() != null && !submission.getAttachments().isEmpty()) {
+            log.trace("Mapping {} attached documents.", submission.getAttachments().size());
+            List<DocumentJpaEntity> documentEntities = submission.getAttachments().stream()
+                    .map(this::toDocumentEntity)  // Without passing IDs
+                    .collect(Collectors.toList());
+            entity.setDocuments(documentEntities);
+        } else {
+            entity.setDocuments(new ArrayList<>());
+            log.trace("No attachments found for submission.");
+        }
+
+        return entity;
+    }
+
+    /**
+     * Converts a Submission JPA Entity back to a Domain Submission model.
+     */
+    public Submission toDomain(SubmissionJpaEntity entity) {
+        log.debug("Mapping Submission JPA Entity {} back to Domain Model.", entity.getId());
+
+        SubmissionId id = SubmissionId.fromString(entity.getId());
+        AssignmentId assignmentId = AssignmentId.fromString(entity.getAssignmentId());
+        UserId studentId = UserId.fromString(entity.getStudentId());
+
+        Grade grade = null;
+        if (entity.getGradeValue() != null && entity.getGradeMaxScore() != null) {
+            grade = new Grade(entity.getGradeValue(), entity.getGradeMaxScore());
+            log.trace("Reconstituting grade: {}/{}", grade.getValue(), grade.getMaxScore());
+        }
+
+        SubmissionStatus status = SubmissionStatus.valueOf(entity.getStatus());
+
+        // Map documents list from entity to domain
+        List<Document> documents = new ArrayList<>();
+        if (entity.getDocuments() != null && !entity.getDocuments().isEmpty()) {
+            log.trace("Mapping {} documents from entity.", entity.getDocuments().size());
+            documents = entity.getDocuments().stream()
+                    .map(this::toDomainDocument)
+                    .collect(Collectors.toList());
+        }
+
+        return Submission.reconstitute(
+                id,
+                assignmentId,
+                studentId,
+                entity.getContent(),
+                documents,
+                entity.getSubmittedAt(),
+                status,
+                grade,
+                entity.getTeacherFeedback()
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ DOCUMENT MAPPING HELPERS
+    // ------------------------------------------------------------------
+
+    private DocumentJpaEntity toDocumentEntity(Document doc) {
+        log.trace("Mapping Document entity for storage path: {}", doc.getStoragePath());
+        DocumentJpaEntity entity = new DocumentJpaEntity();
+        entity.setName(doc.getName());
+        entity.setStoragePath(doc.getStoragePath());
+        // JPA handles the foreign key (submission_id)
+        return entity;
+    }
+
+    private Document toDomainDocument(DocumentJpaEntity entity) {
+        return new Document(
+                entity.getName(),
+                entity.getStoragePath()
+        );
+    }
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "assignments", indexes = {
+        @Index(name = "idx_assignment_course", columnList = "course_id"),
+        @Index(name = "idx_assignment_due_date", columnList = "due_date")
+})
+
+// VERY POITN IMPORTANT HERE I DONT HAVE THE LIST OF ENTITIIES (" SUBMISSION " ) DUE TO I NEED FOLLOW AND RESPÉCT THE LIMITS OF THE DDD
+public class AssignmentJpaEntity {
+
+    @Id
+    @Column(name = "id", length = 50)
+    private String id;
+
+    @Column(name = "course_id", length = 50, nullable = false)
+    private String courseId;
+
+    @Column(name = "title", length = 255, nullable = false)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
+
+    @Column(name = "max_points", nullable = false)
+    private int maxPoints;
+
+    @Column(name = "instructions", columnDefinition = "TEXT")
+    private String instructions;
+
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
+    // THAT WILL ALLOW ME TO SAVE AUTOMATILCALLY THE DOCUMENTS WHEN I SAVE THE ENTIIY FATHER
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignment_id")
+    private List<DocumentJpaEntity> documents = new ArrayList<>();
+
+
+    // Constructors
+    public AssignmentJpaEntity() {}
+
+    public AssignmentJpaEntity(String id, String courseId, String title, String description,
+                               LocalDateTime createdAt, LocalDateTime dueDate, int maxPoints,
+                               String instructions, boolean active) {
+        this.id = id;
+        this.courseId = courseId;
+        this.title = title;
+        this.description = description;
+        this.createdAt = createdAt;
+        this.dueDate = dueDate;
+        this.maxPoints = maxPoints;
+        this.instructions = instructions;
+        this.active = active;
+    }
+
+    // Getters and setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getCourseId() { return courseId; }
+    public void setCourseId(String courseId) { this.courseId = courseId; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+    public int getMaxPoints() { return maxPoints; }
+    public void setMaxPoints(int maxPoints) { this.maxPoints = maxPoints; }
+
+    public String getInstructions() { return instructions; }
+    public void setInstructions(String instructions) { this.instructions = instructions; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
+    public List<DocumentJpaEntity> getDocuments() { return documents; }
+    public void setDocuments(List<DocumentJpaEntity> documents) { this.documents = documents; }
+
+
+
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+@Entity
+@Table(name = "courses", indexes = {
+        @Index(name = "idx_course_code", columnList = "code", unique = true),
+        @Index(name = "idx_course_teacher", columnList = "teacher_id")
+})
+public class CourseJpaEntity {
+
+    @Id
+    @Column(name = "id", length = 50)
+    private String id;
+
+    @Column(name = "code", length = 50, nullable = false, unique = true)
+    private String code;
+
+    @Column(name = "name", length = 255, nullable = false)
+    private String name;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "url_image", length = 500)
+    private String urlImage;
+
+    @Column(name = "grade", length = 50)
+    private String grade;
+
+    @Column(name = "group_name", length = 50)
+    private String group;
+
+    @Column(name = "teacher_id", length = 50, nullable = false)
+    private String teacherId;
+
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    // ✅ CRITICAL: These relationships make Enrollment and Unit part of the aggregate
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "course_id", nullable = false)
+    private Set<EnrollmentJpaEntity> enrollments = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", nullable = false)
+    @OrderBy("numUnity ASC")
+    private List<CourseUnitJpaEntity> units = new ArrayList<>();
+
+    // Constructors
+    public CourseJpaEntity() {}
+
+    public CourseJpaEntity(String id, String code, String name, String description,
+                           String urlImage, String grade, String group, String teacherId,
+                           boolean active, LocalDateTime createdAt) {
+        this.id = id;
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.urlImage = urlImage;
+        this.grade = grade;
+        this.group = group;
+        this.teacherId = teacherId;
+        this.active = active;
+        this.createdAt = createdAt;
+    }
+
+    // Getters and setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getUrlImage() { return urlImage; }
+    public void setUrlImage(String urlImage) { this.urlImage = urlImage; }
+
+    public String getGrade() { return grade; }
+    public void setGrade(String grade) { this.grade = grade; }
+
+    public String getGroup() { return group; }
+    public void setGroup(String group) { this.group = group; }
+
+    public String getTeacherId() { return teacherId; }
+    public void setTeacherId(String teacherId) { this.teacherId = teacherId; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Set<EnrollmentJpaEntity> getEnrollments() { return enrollments; }
+    public void setEnrollments(Set<EnrollmentJpaEntity> enrollments) { this.enrollments = enrollments; }
+
+    public List<CourseUnitJpaEntity> getUnits() { return units; }
+    public void setUnits(List<CourseUnitJpaEntity> units) { this.units = units; }
+}
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "course_units", indexes = {
+        @Index(name = "idx_unit_course", columnList = "course_id"),
+        @Index(name = "idx_unit_number", columnList = "num_unity")
+})
+public class CourseUnitJpaEntity {
+
+    @Id
+    @Column(name = "id", length = 50)
+    private String id;
+
+    @Column(name = "course_id", length = 50, nullable = false, insertable = false, updatable = false)
+    private String courseId;
+
+    @Column(name = "name", length = 255, nullable = false)
+    private String name;
+
+    @Column(name = "url_image", length = 500)
+    private String urlImage;
+
+    @Column(name = "num_unity", nullable = false)
+    private int numUnity;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    // Constructors
+    public CourseUnitJpaEntity() {}
+
+    public CourseUnitJpaEntity(String id, String courseId, String name,
+                               String urlImage, int numUnity, String description) {
+        this.id = id;
+        this.courseId = courseId;
+        this.name = name;
+        this.urlImage = urlImage;
+        this.numUnity = numUnity;
+        this.description = description;
+    }
+
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getCourseId() { return courseId; }
+    public void setCourseId(String courseId) { this.courseId = courseId; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getUrlImage() { return urlImage; }
+    public void setUrlImage(String urlImage) { this.urlImage = urlImage; }
+
+    public int getNumUnity() { return numUnity; }
+    public void setNumUnity(int numUnity) { this.numUnity = numUnity; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+}
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+@Entity
+@Table(name = "documents", indexes = {
+        @Index(name = "idx_document_assignment", columnList = "assignment_id"),
+        @Index(name = "idx_document_submission", columnList = "submission_id")
+})
+public class DocumentJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", length = 50)
+    private String id;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+
+    @Column(name = "storage_path", nullable = false)
+    private String storagePath;
+
+    // Foreign keys - one of these will be null
+    @Column(name = "assignment_id", length = 50)
+    private String assignmentId;
+
+    @Column(name = "submission_id", length = 50)
+    private String submissionId;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getSubmissionId() {
+        return submissionId;
+    }
+
+    public void setSubmissionId(String submissionId) {
+        this.submissionId = submissionId;
+    }
+
+    public String getAssignmentId() {
+        return assignmentId;
+    }
+
+    public void setAssignmentId(String assignmentId) {
+        this.assignmentId = assignmentId;
+    }
+
+
+
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public void setStoragePath(String storagePath) {
+        this.storagePath = storagePath;
+    }
+
+
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+// Constructors, getters, setters...
+}
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "enrollments", indexes = {
+        @Index(name = "idx_enrollment_course", columnList = "course_id"),
+        @Index(name = "idx_enrollment_student", columnList = "student_id"),
+        @Index(name = "idx_enrollment_status", columnList = "status"),
+        @Index(name = "idx_enrollment_course_student", columnList = "course_id,student_id", unique = true)
+})
+public class EnrollmentJpaEntity {
+
+    @Id
+    @Column(name = "id", length = 50)
+    private String id;
+
+    @Column(name = "course_id", length = 50, nullable = false, insertable = false, updatable = false)
+    private String courseId;
+
+    @Column(name = "student_id", length = 50, nullable = false)
+    private String studentId;
+
+    @Column(name = "enrollment_date", nullable = false)
+    private LocalDate enrollmentDate;
+
+    @Column(name = "status", length = 20, nullable = false)
+    private String status;
+
+    @Column(name = "final_grade_value", precision = 10, scale = 2)
+    private BigDecimal finalGradeValue;
+
+    @Column(name = "final_grade_max_score", precision = 10, scale = 2)
+    private BigDecimal finalGradeMaxScore;
+
+    // Constructors
+    public EnrollmentJpaEntity() {}
+
+    public EnrollmentJpaEntity(String id, String courseId, String studentId,
+                               LocalDate enrollmentDate, String status,
+                               BigDecimal finalGradeValue, BigDecimal finalGradeMaxScore) {
+        this.id = id;
+        this.courseId = courseId;
+        this.studentId = studentId;
+        this.enrollmentDate = enrollmentDate;
+        this.status = status;
+        this.finalGradeValue = finalGradeValue;
+        this.finalGradeMaxScore = finalGradeMaxScore;
+    }
+
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getCourseId() { return courseId; }
+    public void setCourseId(String courseId) { this.courseId = courseId; }
+
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+
+    public LocalDate getEnrollmentDate() { return enrollmentDate; }
+    public void setEnrollmentDate(LocalDate enrollmentDate) { this.enrollmentDate = enrollmentDate; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getFinalGradeValue() { return finalGradeValue; }
+    public void setFinalGradeValue(BigDecimal finalGradeValue) { this.finalGradeValue = finalGradeValue; }
+
+    public BigDecimal getFinalGradeMaxScore() { return finalGradeMaxScore; }
+    public void setFinalGradeMaxScore(BigDecimal finalGradeMaxScore) { this.finalGradeMaxScore = finalGradeMaxScore; }
+}
+
+
+package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "submissions", indexes = {
+        @Index(name = "idx_submission_assignment", columnList = "assignment_id"),
+        @Index(name = "idx_submission_student", columnList = "student_id"),
+        @Index(name = "idx_submission_status", columnList = "status")
+})
+public class SubmissionJpaEntity  {
+
+    @Id
+    @Column(name = "id", length = 50)
+    private String id;
+
+    @Column(name = "assignment_id", length = 50, nullable = false)
+    private String assignmentId;
+
+    @Column(name = "student_id", length = 50, nullable = false)
+    private String studentId;
+
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    private String content;
+
+    @Column(name = "submitted_at", nullable = false)
+    private LocalDateTime submittedAt;
+
+    @Column(name = "status", length = 20, nullable = false)
+    private String status;
+
+    @Column(name = "grade_value", precision = 10, scale = 2)
+    private BigDecimal gradeValue;
+
+    @Column(name = "grade_max_score", precision = 10, scale = 2)
+    private BigDecimal gradeMaxScore;
+
+    @Column(name = "teacher_feedback", columnDefinition = "TEXT")
+    private String teacherFeedback;
+
+
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "submission_id")
+    private List<DocumentJpaEntity> documents = new ArrayList<>();
+
+
+    // Constructors
+    public SubmissionJpaEntity() {}
+
+    public SubmissionJpaEntity(String id, String assignmentId, String studentId, String content,
+                               LocalDateTime submittedAt, String status, BigDecimal gradeValue,
+                               BigDecimal gradeMaxScore, String teacherFeedback) {
+        this.id = id;
+        this.assignmentId = assignmentId;
+        this.studentId = studentId;
+        this.content = content;
+        this.submittedAt = submittedAt;
+        this.status = status;
+        this.gradeValue = gradeValue;
+        this.gradeMaxScore = gradeMaxScore;
+        this.teacherFeedback = teacherFeedback;
+    }
+
+    // Getters and setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+
+    public String getAssignmentId() { return assignmentId; }
+    public void setAssignmentId(String assignmentId) { this.assignmentId = assignmentId; }
+
+
+
+    public List<DocumentJpaEntity> getDocuments() { return documents; }
+    public void setDocuments(List<DocumentJpaEntity> documents) { this.documents = documents; }
+
+
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public LocalDateTime getSubmittedAt() { return submittedAt; }
+    public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public BigDecimal getGradeValue() { return gradeValue; }
+    public void setGradeValue(BigDecimal gradeValue) { this.gradeValue = gradeValue; }
+
+    public BigDecimal getGradeMaxScore() { return gradeMaxScore; }
+    public void setGradeMaxScore(BigDecimal gradeMaxScore) { this.gradeMaxScore = gradeMaxScore; }
+
+    public String getTeacherFeedback() { return teacherFeedback; }
+    public void setTeacherFeedback(String teacherFeedback) { this.teacherFeedback = teacherFeedback; }
+}
