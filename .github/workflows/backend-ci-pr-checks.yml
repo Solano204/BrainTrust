@@ -41,30 +41,10 @@ jobs:
           cache-dependency-path: 'backend/pom.xml'
 
       # ============================================
-      # COMPILE CODE
+      # BUILD & TEST ALL MODULES (FIXED)
       # ============================================
-      - name: 🔨 Compile Code
-        run: ./mvnw clean compile -B
-
-      # ============================================
-      # RUN UNIT TESTS (with -pl container-app)
-      # ============================================
-      - name: 🧪 Run Unit Tests
-        run: ./mvnw test -pl container-app -Dtest="**/unit/**/*Test" -B
-
-      # ============================================
-      # RUN INTEGRATION TESTS (with -pl container-app)
-      # ============================================
-      - name: 🧪 Run Integration Tests
-        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -B
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: false
-
-      # ============================================
-      # BUILD APPLICATION
-      # ============================================
-      - name: 📦 Build Application
-        run: ./mvnw package -DskipTests -B
+      - name: 🔨 Build & Test All Modules
+        run: ./mvnw clean install -B
 
       # ============================================
       # CHECK FOR MERGE CONFLICTS
