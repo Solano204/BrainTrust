@@ -43,24 +43,18 @@ jobs:
           cache-dependency-path: 'backend/pom.xml'
 
       # ============================================
-      # RUN UNIT TESTS (with -pl container-app)
+      # BUILD ALL MODULES WITH TESTS (IMPROVED)
       # ============================================
-      - name: 🧪 Run Unit Tests
-        run: ./mvnw test -pl container-app -Dtest="**/unit/**/*Test" -B
+      - name: 🔨 Build All Modules with Tests
+        run: |
+          ./mvnw clean install -B -DskipTests=false
+          echo "✅ All modules built and tested successfully"
 
       # ============================================
-      # RUN INTEGRATION TESTS (with -pl container-app)
+      # PACKAGE APPLICATION
       # ============================================
-      - name: 🧪 Run Integration Tests
-        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -B
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: false
-
-      # ============================================
-      # BUILD APPLICATION
-      # ============================================
-      - name: 📦 Build Application
-        run: ./mvnw clean package -DskipTests -B
+      - name: 📦 Build Application Package
+        run: ./mvnw package -DskipTests -B
 
       # ============================================
       # SETUP DOCKER BUILDX
