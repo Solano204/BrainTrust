@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.braintrust.iadetectition.unit.domain.valueobjects.AIProbabilityTest
+-------------------------------------------------------------------------------
+Tests run: 65, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.101 s -- in com.braintrust.iadetectition.unit.domain.valueobjects.AIProbabilityTest

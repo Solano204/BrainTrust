@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.braintrust.iadetectition.unit.domain.valueobjects.ModelTypeTest
+-------------------------------------------------------------------------------
+Tests run: 31, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s -- in com.braintrust.iadetectition.unit.domain.valueobjects.ModelTypeTest
