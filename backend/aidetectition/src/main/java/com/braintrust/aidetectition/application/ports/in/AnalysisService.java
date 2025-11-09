@@ -2,9 +2,10 @@ package com.braintrust.aidetectition.application.ports.in;
 
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzePdfSubmissionCommand;
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzeSubmissionCommand;
-import com.braintrust.aidetectition.application.dtos.dtosResponse.AnalysisResultDTO;
-import com.braintrust.aidetectition.application.dtos.dtosResponse.AnalysisStatisticsDTO;
-import com.braintrust.aidetectition.application.dtos.dtosResponse.DetectionSummaryDTO;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.AnalysisResultDTO;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.ModelPerformanceDTO;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.AnalysisStatisticsDTO;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.DetectionSummaryDTO;
 import com.braintrust.aidetectition.domain.model.AnalysisStatus;
 import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
 import com.braintrust.aidetectition.domain.valueobjects.SubmissionId;
@@ -23,20 +24,12 @@ public interface AnalysisService {
 
     List<AnalysisId> analyzePdfSubmission(AnalyzePdfSubmissionCommand command) throws JsonProcessingException;
 
-    void retryAnalysis(AnalysisId analysisId) throws JsonProcessingException;
+    void retryAnalysis(AnalysisId analysisId) throws Exception;
 
     void cancelAnalysis(AnalysisId analysisId) throws JsonProcessingException;
 
-    // Queries
-    AnalysisResultDTO getAnalysisResult(AnalysisId analysisId);
 
     List<AnalysisResultDTO> getAnalysisBySubmission(SubmissionId submissionId);
 
-    List<AnalysisResultDTO> getAnalysesByStatus(AnalysisStatus status);
 
-    List<AnalysisResultDTO> getPendingAnalyses();
-
-    AnalysisStatisticsDTO getAnalysisStatistics(LocalDateTime start, LocalDateTime end);
-
-    List<DetectionSummaryDTO> getHighRiskSubmissions(BigDecimal threshold);
 }

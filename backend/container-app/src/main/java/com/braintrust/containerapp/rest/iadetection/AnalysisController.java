@@ -3,9 +3,7 @@ package com.braintrust.containerapp.rest.iadetection;
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzeSubmissionCommand;
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzeSubmissionRequest;
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzePdfSubmissionCommand;
-import com.braintrust.aidetectition.application.dtos.dtosResponse.AnalysisResultDTO;
-import com.braintrust.aidetectition.application.dtos.dtosResponse.AnalysisStatisticsDTO;
-import com.braintrust.aidetectition.application.dtos.dtosResponse.DetectionSummaryDTO;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.AnalysisResultDTO;
 import com.braintrust.aidetectition.application.ports.in.AnalysisService;
 import com.braintrust.aidetectition.domain.model.AnalysisStatus;
 import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
@@ -112,16 +110,16 @@ public class AnalysisController {
      * Retry a failed analysis
      * POST /api/ai-analysis/{analysisId}/retry
      */
-    @PostMapping("/{analysisId}/retry")
-    public ResponseEntity<SuccessResponseDTO> retryAnalysis(@PathVariable String analysisId)
-            throws JsonProcessingException {
-        log.warn("Request to retry FAILED analysis ID: {}", analysisId);
-        analysisService.retryAnalysis(AnalysisId.fromString(analysisId));
-        log.info("Analysis ID {} retry process initiated.", analysisId);
-        return ResponseEntity.ok(
-                new SuccessResponseDTO(true, "Analysis retry initiated", null)
-        );
-    }
+//    @PostMapping("/{analysisId}/retry")
+//    public ResponseEntity<SuccessResponseDTO> retryAnalysis(@PathVariable String analysisId)
+//            throws JsonProcessingException {
+//        log.warn("Request to retry FAILED analysis ID: {}", analysisId);
+//        analysisService.retryAnalysis(AnalysisId.fromString(analysisId));
+//        log.info("Analysis ID {} retry process initiated.", analysisId);
+//        return ResponseEntity.ok(
+//                new SuccessResponseDTO(true, "Analysis retry initiated", null)
+//        );
+//    }
 
     /**
      * Cancel a pending analysis
@@ -141,19 +139,6 @@ public class AnalysisController {
     // ========================================
     // ✅ ANALYSIS QUERIES
     // ========================================
-
-    /**
-     * Get analysis result by ID
-     * GET /api/ai-analysis/{analysisId}
-     */
-    @GetMapping("/{analysisId}")
-    public ResponseEntity<AnalysisResultDTO> getAnalysisResult(@PathVariable String analysisId) {
-        log.debug("Fetching result for Analysis ID: {}", analysisId);
-        AnalysisResultDTO result = analysisService.getAnalysisResult(
-                AnalysisId.fromString(analysisId)
-        );
-        return ResponseEntity.ok(result);
-    }
 
     /**
      * Get analysis by submission ID
@@ -180,120 +165,11 @@ public class AnalysisController {
         return ResponseEntity.ok(results);
     }
 
-    /**
-     * Get analyses by status
-     * GET /api/ai-analysis/status/{status}
-     */
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<AnalysisResultDTO>> getAnalysesByStatus(
-            @PathVariable String status
-    ) {
-        log.debug("Querying analyses by status: {}", status.toUpperCase());
-        AnalysisStatus analysisStatus = AnalysisStatus.valueOf(status.toUpperCase());
-        List<AnalysisResultDTO> analyses = analysisService.getAnalysesByStatus(analysisStatus);
-        return ResponseEntity.ok(analyses);
-    }
 
-    /**
-     * Get all pending analyses
-     * GET /api/ai-analysis/pending
-     */
-    @GetMapping("/pending")
-    public ResponseEntity<List<AnalysisResultDTO>> getPendingAnalyses() {
-        log.debug("Querying all PENDING analyses.");
-        List<AnalysisResultDTO> analyses = analysisService.getPendingAnalyses();
-        return ResponseEntity.ok(analyses);
-    }
 
-    /**
-     * Get all completed analyses
-     * GET /api/ai-analysis/completed
-     */
-    @GetMapping("/completed")
-    public ResponseEntity<List<AnalysisResultDTO>> getCompletedAnalyses() {
-        log.debug("Querying all COMPLETED analyses.");
-        List<AnalysisResultDTO> analyses = analysisService.getAnalysesByStatus(
-                AnalysisStatus.COMPLETED
-        );
-        return ResponseEntity.ok(analyses);
-    }
-
-    /**
-     * Get all failed analyses
-     * GET /api/ai-analysis/failed
-     */
-    @GetMapping("/failed")
-    public ResponseEntity<List<AnalysisResultDTO>> getFailedAnalyses() {
-        log.warn("Querying all FAILED analyses.");
-        List<AnalysisResultDTO> analyses = analysisService.getAnalysesByStatus(
-                AnalysisStatus.FAILED
-        );
-        return ResponseEntity.ok(analyses);
-    }
-
-    /**
-     * Get analysis statistics for a date range
-     * GET /api/ai-analysis/statistics?start=2025-01-01T00:00:00&end=2025-12-31T23:59:59
-     */
-    @GetMapping("/statistics")
-    public ResponseEntity<AnalysisStatisticsDTO> getAnalysisStatistics(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
-    ) {
-        log.debug("Fetching analysis statistics between {} and {}", start, end);
-        AnalysisStatisticsDTO statistics = analysisService.getAnalysisStatistics(start, end);
-        return ResponseEntity.ok(statistics);
-    }
 
     /**
      * Get high-risk submissions (likely AI-generated)
      * GET /api/ai-analysis/high-risk?threshold=0.7
      */
-    @GetMapping("/high-risk")
-    public ResponseEntity<List<DetectionSummaryDTO>> getHighRiskSubmissions(
-            @RequestParam(defaultValue = "0.7") BigDecimal threshold
-    ) {
-        log.info("Querying submissions with AI risk above threshold: {}", threshold);
-        List<DetectionSummaryDTO> highRisk = analysisService.getHighRiskSubmissions(threshold);
-        return ResponseEntity.ok(highRisk);
-    }
-
-    /**
-     * Get submissions with uncertain AI probability
-     * GET /api/ai-analysis/uncertain?minThreshold=0.4&maxThreshold=0.6
-     */
-    @GetMapping("/uncertain")
-    public ResponseEntity<List<DetectionSummaryDTO>> getUncertainSubmissions(
-            @RequestParam(defaultValue = "0.4") BigDecimal minThreshold,
-            @RequestParam(defaultValue = "0.6") BigDecimal maxThreshold
-    ) {
-        log.debug("Querying submissions in the uncertain range ({} - {})", minThreshold, maxThreshold);
-
-        List<DetectionSummaryDTO> uncertain = analysisService
-                .getHighRiskSubmissions(minThreshold)
-                .stream()
-                .filter(dto -> new BigDecimal(dto.probability()).compareTo(maxThreshold) <= 0)
-                .toList();
-
-        return ResponseEntity.ok(uncertain);
-    }
-
-    /**
-     * Get likely human submissions (low AI probability)
-     * GET /api/ai-analysis/likely-human?threshold=0.3
-     */
-    @GetMapping("/likely-human")
-    public ResponseEntity<List<DetectionSummaryDTO>> getLikelyHumanSubmissions(
-            @RequestParam(defaultValue = "0.3") BigDecimal threshold
-    ) {
-        log.debug("Querying submissions likely to be human (below threshold: {})", threshold);
-
-        List<DetectionSummaryDTO> likelyHuman = analysisService
-                .getHighRiskSubmissions(BigDecimal.ZERO)
-                .stream()
-                .filter(dto -> new BigDecimal(dto.probability()).compareTo(threshold) <= 0)
-                .toList();
-
-        return ResponseEntity.ok(likelyHuman);
-    }
 }

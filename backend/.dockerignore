@@ -1,0 +1,13 @@
+**/target/
+**/.git
+**/.github
+**/.idea
+**/*.iml
+**/node_modules
+Dockerfile
+.dockerignore
+**/logs/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+**/test-results/
