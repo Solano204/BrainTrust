@@ -38,10 +38,10 @@ jobs:
           cache-dependency-path: 'backend/pom.xml'
 
       # ============================================
-      # VERIFY CODE COMPILES
+      # INSTALL ALL MODULES (Multi-module project)
       # ============================================
-      - name: 🔨 Compile Code
-        run: ./mvnw clean compile -B
+      - name: 🔨 Install All Modules
+        run: ./mvnw clean install -DskipTests -B
 
       # ============================================
       # RUN UNIT TESTS (with -pl container-app)
