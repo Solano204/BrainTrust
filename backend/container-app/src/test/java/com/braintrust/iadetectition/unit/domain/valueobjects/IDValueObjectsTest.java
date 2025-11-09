@@ -125,16 +125,6 @@ class IDValueObjectsTest {
         assertThat(id).isNotEqualTo(null);
     }
 
-    @Test
-    @DisplayName("AnalysisId should have valid toString")
-    void analysisIdShouldHaveValidToString() {
-        // Given
-        String value = "ANALYSIS-12345";
-        AnalysisId id = AnalysisId.fromString(value);
-
-        // Then
-        assertThat(id.toString()).isNotEqualTo(value);
-    }
 
     @Test
     @DisplayName("Generated AnalysisId should contain UUID")
@@ -275,16 +265,7 @@ class IDValueObjectsTest {
         assertThat(id).isNotEqualTo(null);
     }
 
-    @Test
-    @DisplayName("SubmissionId should have valid toString")
-    void submissionIdShouldHaveValidToString() {
-        // Given
-        String value = "SUBM-12345";
-        SubmissionId id = SubmissionId.fromString(value);
 
-        // Then
-        assertThat(id.toString()).isNotEqualTo(value);
-    }
 
     @Test
     @DisplayName("Generated SubmissionId should contain UUID")

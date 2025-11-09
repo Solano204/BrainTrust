@@ -53,7 +53,7 @@ jobs:
       # RUN INTEGRATION TESTS (with -pl container-app)
       # ============================================
       - name: 🧪 Run Integration Tests
-        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -B
+        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -DforkCount=1 -DreuseForks=false -Dsurefire.fork.environmentVariables=TESTCONTAINERS_RYUK_DISABLED=false -B
         env:
           TESTCONTAINERS_RYUK_DISABLED: false
 
