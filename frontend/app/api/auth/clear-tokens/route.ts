@@ -1,0 +1,14 @@
+// app/api/auth/clear-tokens/route.ts
+
+import { clearTokens } from '@/app/utils/tokenManager';
+import { NextResponse } from 'next/server';
+
+export async function POST() {
+  try {
+    await clearTokens();
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Clear tokens error:', error);
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
+}

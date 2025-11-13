@@ -1,30 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardHeader } from "@/components/dashboard-header";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
-import { CourseOverview } from "@/components/course-overview";
-import { UnitDetail } from "@/components/unit-detail";
-import { CourseGradebook } from "@/components/course-gradebook";
-import { CourseTaskInventory } from "@/components/course-task-inventory";
-import { CourseStudents } from "@/components/course-students";
-import { CourseGroups } from "@/components/course-groups";
+import { DashboardHeader } from "@/components/layout/dashboard-header";
+import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { CourseOverview } from "@/components/teacher-student/course-overview-units-teacher-student";
+import { UnitDetail } from "@/components/teacher-student/unit-detail-student-teacher";
+import { CourseStudents } from "@/components/teacher-student/course-section-enrollment-teacher-student";
+import { CourseGroups } from "@/components/teacher-student/course-section-groups-student-teacher";
 import { useParams, useRouter } from "next/navigation";
-import { ResourceTypeSelector } from "@/components/submission-detail";
-import { CourseTaskOverview } from "@/components/CourseTaskOverview";
+import { useAuth } from "@/app/context/AuthContext"; // Add auth import
+import { CourseGradebook } from "@/components/teacher-student/gradebooks-overview-student-teacher";
+import { CourseTaskOverview } from "@/components/teacher-student/course-submission-student-teacher";
 
-type CourseView =
-  | "overview"
-  | "gradebook"
-  | "tasks"
-  | "students"
-  | "groups"
+type CourseView = "overview" | "gradebook" | "tasks" | "students" | "groups";
 
 export default function CoursePage() {
   const router = useRouter();
+  const { user } = useAuth(); // Get user from auth context
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedUnit, setSelectedUnit] = useState<string | null>(null); // Changed to string to match UnitId
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<CourseView>("overview");
   const [selectedSubmission, setSelectedSubmission] = useState<number | null>(
     null
@@ -51,7 +46,6 @@ export default function CoursePage() {
     setSelectedUnit(null);
   };
 
-
   const handleEnterCourse = () => {
     router.push(`/courses/`);
   };
@@ -61,6 +55,9 @@ export default function CoursePage() {
       <DashboardSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        activeView={currentView}
+        onNavigate={(view) => setCurrentView(view as CourseView)}
+        userRole={user?.role}
       />
 
       <div className="flex-1 flex flex-col lg:ml-64">
@@ -89,7 +86,7 @@ export default function CoursePage() {
               >
                 Overview
               </button>
-            
+
               <button
                 onClick={() => handleViewChange("gradebook")}
                 className={`px-4 sm:px-6 py-3 sm:py-4 font-medium whitespace-nowrap transition-colors border-b-2 text-sm sm:text-base min-w-[120px] sm:min-w-0 ${
@@ -136,7 +133,7 @@ export default function CoursePage() {
           {/* Conditional Rendering - Only ONE component renders at a time */}
           {selectedUnit !== null ? (
             <UnitDetail
-             key={`unit-${selectedUnit}`} // Add this key
+              key={`unit-${selectedUnit}`}
               idCourse={courseId}
               idUnit={selectedUnit}
               onBack={handleBackFromUnit}
@@ -150,10 +147,7 @@ export default function CoursePage() {
           ) : currentView === "gradebook" ? (
             <CourseGradebook courseId={courseId} />
           ) : currentView === "tasks" ? (
-            <CourseTaskOverview
-              courseId={courseId}
-              // onViewSubmission={(submissionId: string) => setSelectedSubmission(Number(submissionId))}
-            />
+            <CourseTaskOverview courseId={courseId} />
           ) : currentView === "students" ? (
             <CourseStudents courseId={courseId} />
           ) : currentView === "groups" ? (

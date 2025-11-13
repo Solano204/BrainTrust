@@ -4,7 +4,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { quizKeys } from "@/app/infraestructure/api/submission/quiz-keys";
 import {
-  fetchQuizzesByCourse,
   fetchQuizById,
   createQuiz,
   updateQuiz,
@@ -14,21 +13,24 @@ import {
   gradeQuizSubmission,
   autoGradeQuiz,
   getQuizStats,
-  SubmissionQuiz,
   fetchSubmissionQuizzes,
   fetchSubmissionQuizById,
   submitQuizAnswers,
   gradeSubmissionQuiz,
-  autoGradeSubmissionQuiz
+  autoGradeSubmissionQuiz,
+  fetchQuizzesByCourseWithoutDetails,
+  fetchQuizzesByCourse,
 } from "@/app/infraestructure/api/submission/quiz-api";
-import { Quiz, Question,  Submission } from "@/app/domain/entities/CourseEntities";
+import {
+  Quiz,
+  Question,
+  Submission,
+  SubmissionQuiz,
+  QuizInventoryItem,
+} from "@/app/domain/entities/CourseEntities";
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 import { QuestionId, QuizId } from "@/app/domain/valueObjects/CourseValues";
 import React from "react";
-
-
-
-
 
 /**
  * Custom hook for fetching SubmissionQuiz entries
@@ -67,7 +69,7 @@ export function useSubmissionQuizMutations() {
       quizId,
       studentId,
       answers,
-      timeSpent
+      timeSpent,
     }: {
       quizId: QuizId;
       studentId: UserId;
@@ -75,69 +77,77 @@ export function useSubmissionQuizMutations() {
       timeSpent?: number;
     }) => submitQuizAnswers(quizId, studentId, answers, timeSpent),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissionQuizzes(data.quizId) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissionQuizzes(data.quizId),
       });
     },
     onError: (error: Error) => {
       console.error("Error submitting quiz:", error.message);
-    }
+    },
   });
 
   const gradeSubmissionQuizMutation = useMutation({
     mutationFn: ({
       submissionId,
-      grades
+      grades,
     }: {
       submissionId: string;
       grades: { questionId: QuestionId; score: number; feedback?: string }[];
     }) => gradeSubmissionQuiz(submissionId, grades),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissionQuizzes(data.quizId) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissionQuizzes(data.quizId),
       });
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissionQuizDetail(data.id) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissionQuizDetail(data.id),
       });
     },
     onError: (error: Error) => {
       console.error("Error grading submission quiz:", error.message);
-    }
+    },
   });
 
   const autoGradeSubmissionQuizMutation = useMutation({
     mutationFn: autoGradeSubmissionQuiz,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissionQuizzes(data.quizId) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissionQuizzes(data.quizId),
       });
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissionQuizDetail(data.id) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissionQuizDetail(data.id),
       });
     },
     onError: (error: Error) => {
       console.error("Error auto-grading submission quiz:", error.message);
-    }
+    },
   });
 
   return {
     submitQuiz: submitQuizMutation,
     gradeSubmissionQuiz: gradeSubmissionQuizMutation,
-    autoGradeSubmissionQuiz: autoGradeSubmissionQuizMutation
+    autoGradeSubmissionQuiz: autoGradeSubmissionQuizMutation,
   };
 }
-
 
 /**
  * Custom hook for fetching quizzes by course
  */
-export function useQuizzesByCourse(courseId: CourseId | null) {
-  return useQuery<Quiz[]>({
+export function useQuizzesByCourseWithoutDetails(courseId: CourseId | null) {
+  return useQuery<QuizInventoryItem[]>({
     queryKey: quizKeys.list(courseId || ""),
-    queryFn: () => fetchQuizzesByCourse(courseId!),
+    queryFn: () => fetchQuizzesByCourseWithoutDetails(courseId!),
     enabled: !!courseId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
+  });
+}
+export function useQuizzesByCourse(courseId: CourseId | null) {
+  return useQuery<Quiz[]>({
+    queryKey: quizKeys.list(courseId + "completed"),
+    queryFn: () => fetchQuizzesByCourse(courseId!),
+    enabled: !!courseId,
+    staleTime: 300000, // 5 minutes
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -203,68 +213,78 @@ export function useQuizMutations() {
   const createQuizMutation = useMutation({
     mutationFn: createQuiz,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.list(data.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.list(data.courseId),
       });
     },
     onError: (error: Error) => {
       console.error("Error creating quiz:", error.message);
-    }
+    },
   });
 
   const updateQuizMutation = useMutation({
-    mutationFn: ({ quizId, quizData }: { quizId: QuizId, quizData: Partial<Omit<Quiz, "id">> }) =>
-      updateQuiz(quizId, quizData),
+    mutationFn: ({
+      quizId,
+      quizData,
+    }: {
+      quizId: QuizId;
+      quizData: Partial<Omit<Quiz, "id">>;
+    }) => updateQuiz(quizId, quizData),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.list(data.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.list(data.courseId),
       });
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.detail(variables.quizId) 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.detail(variables.quizId),
       });
     },
     onError: (error: Error) => {
       console.error("Error updating quiz:", error.message);
-    }
+    },
   });
 
   const deleteQuizMutation = useMutation({
     mutationFn: deleteQuiz,
     onSuccess: (_, quizId) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.lists() 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.lists(),
       });
     },
     onError: (error: Error) => {
       console.error("Error deleting quiz:", error.message);
-    }
+    },
   });
 
   const gradeSubmissionMutation = useMutation({
-    mutationFn: ({ submissionId, grades }: { 
-      submissionId: string; 
+    mutationFn: ({
+      submission, // Changed from submissionId
+      grades,
+    }: {
+      submission: SubmissionQuiz; // Now passing the full submission object
       grades: { questionId: QuestionId; score: number }[];
-    }) => gradeQuizSubmission(submissionId, grades),
+    }) => gradeQuizSubmission(submission, grades), // Pass the submission object
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissions() 
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissions(),
       });
     },
     onError: (error: Error) => {
       console.error("Error grading submission:", error.message);
-    }
+    },
   });
 
+  // In your quiz-hooks.ts
   const autoGradeMutation = useMutation({
-    mutationFn: autoGradeQuiz,
-    onSuccess: (data, submissionId) => {
-      queryClient.invalidateQueries({ 
-        queryKey: quizKeys.submissions() 
+    mutationFn: (submission: SubmissionQuiz) =>
+      autoGradeSubmissionQuiz(submission), // Pass full submission
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: quizKeys.submissions(),
       });
     },
     onError: (error: Error) => {
-      console.error("Error auto-grading quiz:", error.message);
-    }
+      console.error("Error auto-grading submission:", error.message);
+    },
   });
 
   return {
@@ -272,7 +292,7 @@ export function useQuizMutations() {
     updateQuiz: updateQuizMutation,
     deleteQuiz: deleteQuizMutation,
     gradeSubmission: gradeSubmissionMutation,
-    autoGrade: autoGradeMutation
+    autoGrade: autoGradeMutation,
   };
 }
 
@@ -321,30 +341,30 @@ export function useQuizForm(initialData?: Quiz) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value, type } = e.target;
-    setFormData((prev) => ({ 
-      ...prev, 
-      [id]: type === 'number' ? parseInt(value) || 0 : value 
+    setFormData((prev) => ({
+      ...prev,
+      [id]: type === "number" ? parseInt(value) || 0 : value,
     }));
   };
 
   const addQuestion = (question: Question) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      questions: [...prev.questions, question]
+      questions: [...prev.questions, question],
     }));
   };
 
   const updateQuestion = (index: number, question: Question) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      questions: prev.questions.map((q, i) => i === index ? question : q)
+      questions: prev.questions.map((q, i) => (i === index ? question : q)),
     }));
   };
 
   const removeQuestion = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      questions: prev.questions.filter((_, i) => i !== index)
+      questions: prev.questions.filter((_, i) => i !== index),
     }));
   };
 
@@ -368,6 +388,6 @@ export function useQuizForm(initialData?: Quiz) {
     updateQuestion,
     removeQuestion,
     resetForm,
-    setFormData
+    setFormData,
   };
 }

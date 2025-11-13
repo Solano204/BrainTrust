@@ -23,6 +23,7 @@ import {
   QuizId,
   Option,
   calificationId,
+  GradeEnrollment,
 } from "../valueObjects/CourseValues";
 import { ComponentType } from "react";
 
@@ -44,6 +45,7 @@ export interface Submission {
   studentId: UserId;
   content: string;
   attachments: Document[];
+  courseID:  CourseId;
   /** Java: LocalDateTime, serialized to ISO 8601 string */
   submittedAt: string;
   status: SubmissionStatus;
@@ -66,15 +68,14 @@ export interface calificationStudent {
     unitId: UnitId;
     unitName: string;
     CourseId: CourseId;
-    
-  }
+  };
   total: number | 0;
 }
 /** Represents com.braintrust.education.domain.model.Assignment (Aggregate Root) */
 export interface Assignment {
   id: AssignmentId;
   title: string;
-  courseId: CourseId; 
+  courseId: CourseId;
   unitId: CourseId;
   description: string;
   /** Java: LocalDateTime, serialized to ISO 8601 string */
@@ -116,7 +117,7 @@ export interface Enrollment {
   /** Java: LocalDate, serialized to ISO 8601 date string (YYYY-MM-DD) */
   enrollmentDate: string;
   status: EnrollmentStatus;
-  grade: Grade | null;
+  grade: GradeEnrollment | null;
 }
 
 /** * Represents com.braintrust.education.domain.model.Course (Aggregate Root)
@@ -133,19 +134,16 @@ export interface Course {
   teacherId: UserId;
   active: boolean;
   /** Set of Enrollments (Set on Java side, usually array on frontend) */
-  enrollments: Enrollment[] |  [];
+  enrollments: Enrollment[] | [];
   /** List of CourseUnits */
   units: CourseUnit[] | [];
 }
-
-
-
 
 export interface Team {
   courseId: CourseId;
   name: string;
   description: string;
-  leaderId: UserId | null;  // Team leader (optional)
+  leaderId: UserId | null; // Team leader (optional)
   members: Set<UserId>;
   maxMembers: number;
   active: boolean;
@@ -156,13 +154,11 @@ export interface TeamWithMembers {
   courseId: CourseId;
   name: string;
   description: string;
-  leaderId: UserId | null;  // Team leader (optional)
+  leaderId: UserId | null; // Team leader (optional)
   members: Set<string>;
   active: boolean;
   createdAt: Date;
 }
-
-
 
 /** Represents the instructional content page or lesson for a unit. */
 
@@ -182,11 +178,6 @@ export interface Question {
   correctAnswer?: number;
   points: number;
 
-  // --- Attributes specific to CLOSED_CHOICE ---
-  /** Array of choices (only required for CLOSED_CHOICE). */
-  /** ID(s) or index(es) of the correct option(s) (only required for CLOSED_CHOICE). */
-  // --- Attributes specific to OPEN_ENDED ---
-  /** A reference/model answer for manual or AI grading (only required for OPEN_ENDED). */
   expectedAnswer?: string;
 }
 
@@ -197,8 +188,7 @@ export interface Quiz {
   description: string;
   /** Link back to the parent course unit. */
   courseUnitId: UnitId;
-  courseId: CourseId; 
-
+  courseId: CourseId;
   /** Name of the quiz (e.g., "UCD Fundamentals Quiz"). */
   title: string;
   /** Maximum number of times a student can take the quiz. */
@@ -213,6 +203,8 @@ export interface Quiz {
   questions: Question[];
   acceptLateSubmissions: boolean;
 }
+
+
 
 // Define the TypeScript ENUM/Union Type for resource categories
 export type CourseResourceType = "ASSIGNMENT" | "QUIZ" | "PAGE"; // Added PAGE for general content
@@ -229,3 +221,110 @@ export interface ResourceItem {
 }
 
 export type UnitResource = Page | Assignment | Quiz;
+
+export interface QuizAnswers {
+  [questionId: string]: {
+    /** The student's answer - can be the option index (number) for multiple choice or text (string) for open-ended */
+    answer: string | number;
+    /** Type of question to determine how to validate/process the answer */
+    type: "multiple-choice" | "open-ended";
+    /** Optional: Time spent on this question in seconds */
+    timeSpent?: number;
+    /** Optional: Whether the question was flagged for review */
+    flagged?: boolean;
+  };
+}
+
+// Export the quiz-specific interfaces
+
+// File: src/app/domain/entities/QuizSubmission.ts
+export interface QuizAnswer {
+  questionId: string;
+  questionText: string;
+  questionType: "multiple-choice" | "open-ended";
+  studentAnswer: string | number;
+  correctAnswer?: string | number;
+  points: number;
+  maxPoints: number;
+  isCorrect?: boolean;
+  feedback?: string;
+}
+
+export interface SubmissionQuiz {
+  id: SubmissionId;
+  courseId: CourseId;
+  quizId: QuizId;
+  studentId: UserId;
+  studentName: string;
+  content: string;
+  submittedAt: string;
+  status: SubmissionStatus;
+  grade: { value: number; maxScore: number } | null;
+  teacherFeedback: string | null;
+  // Quiz-specific data
+  quizData?: {
+    answers: QuizAnswer[];
+    timeSpent: number;
+    totalScore: number;
+    maxScore: number;
+  };
+}
+
+export interface TaskInventoryItem {
+  id: SubmissionId; // Using Submission ID here to map directly to a detail record
+  taskId: AssignmentId; // Reference to the parent task
+  title: string;
+  courseId: CourseId;
+  studentId: UserId;
+  unit: string;
+  type: TaskType;
+  deadline: string;
+  isOverdue: boolean;
+}
+
+export interface QuizInventoryItem {
+  id: SubmissionId; // Using Submission ID here to map directly to a detail record
+  quizId: QuizId; // Reference to the parent task
+  title: string;
+  courseId: CourseId;
+  studentId: UserId;
+  unit: string;
+  type: TaskType;
+  deadline: string;
+  isOverdue: boolean;
+}
+
+
+// --- 2. Interface for the Detail View ---
+export interface SubmissionDetailData {
+  submission: {
+    id: SubmissionId;
+    content: string; // The text content of the submission
+    submittedAt: string;
+    status: SubmissionStatus;
+    attachments: Document[];
+    grade: Grade | null;
+    teacherFeedback: string | null;
+  };
+
+  // One query to get task (ASSIGNMENT) details
+  task: {
+    id: AssignmentId;
+    title: string;
+    maxPoints: number;
+    instructions: string;
+  };
+  // One query to get student details
+  student: {
+    id: UserId;
+    name: string;
+    avatarUrl: string;
+  };
+  
+  aiAnalysis: AnalysisRequest;
+}
+export type AnalysisRequest = {
+  status: "PENDING" | "COMPLETED" | "FAILED";
+  result: any | null;
+};
+export type TaskType = "ASSIGNMENT" | "QUIZ" | "FORUM";

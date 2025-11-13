@@ -33,7 +33,7 @@ export interface Quiz {
 const isMockEnabled = true;
 const MOCK_QUIZZES: Quiz[] = [
   {
-    id: "quiz-101",
+    id: "sub-quiz-1",
     title: "UX Design Fundamentals Quiz",
     description: "Test your knowledge of basic UX design principles and methodologies",
     courseUnitId: "UNIT-1",
@@ -295,7 +295,6 @@ export async function fetchQuizDetail(
   userType: 'teacher' | 'student'
 ): Promise<Quiz> {
   if (isMockEnabled) {
-    await simulateDelay(600);
     
     const quiz = MOCK_QUIZZES.find(q => q.id === quizId);
     

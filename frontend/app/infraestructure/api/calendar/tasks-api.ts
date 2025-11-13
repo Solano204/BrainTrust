@@ -35,7 +35,7 @@ const isMockEnabled = true;
 // Mock task data
 const MOCK_TASKS: Assignment[] = [
   {
-    id: "task-101",
+    id: "sub-task-1",
     title: "Wireframe Design Project",
     courseId: "COURSE-DES-401",
     unitId: "UNIT-3",
@@ -281,7 +281,7 @@ export async function fetchTasksByMonth(
 }
 
 /**
- * Fetch specific task details by ID
+ * Fetch specific task details by ID SS
  */
 export async function fetchTaskDetail(
   taskId: string,
