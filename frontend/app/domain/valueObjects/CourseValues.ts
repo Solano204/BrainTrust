@@ -42,6 +42,12 @@ export interface Score {
 /** Represents com.braintrust.education.domain.valueobjects.Grade (used for final grades) */
 export interface Grade {
   /** Java: BigDecimal, serialized as string or number (using string for precision) */
+  value: number; 
+  /** Java: BigDecimal, serialized as string or number */
+  maxScore: number; 
+}
+export interface GradeEnrollment {
+  /** Java: BigDecimal, serialized as string or number (using string for precision) */
   value: string; 
   /** Java: BigDecimal, serialized as string or number */
   maxScore: string; 

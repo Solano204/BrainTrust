@@ -1,10 +1,13 @@
-// File: src/app/features/courses/api/course-keys.ts
+// app/infraestructure/api/course/course-keys.ts
 export const courseKeys = {
   all: ["courses"] as const,
   
   // Courses by teacher
   lists: () => [...courseKeys.all, "list"] as const,
   list: (teacherId: string) => [...courseKeys.lists(), teacherId] as const,
+  
+  // Student courses
+  studentList: (studentId: string) => [...courseKeys.all, "student", studentId] as const,
   
   // Individual course
   details: () => [...courseKeys.all, "detail"] as const,

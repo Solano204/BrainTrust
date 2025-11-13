@@ -36,7 +36,7 @@ const handleApiError = (error: unknown) => {
 // Mock data for quizzes
 const MOCK_QUIZZES: Quiz[] = [
   {
-    id: "quiz-1",
+    id: "quiz-11",
     title: "JavaScript Basics Quiz",
     description: "Test your knowledge of JavaScript fundamentals",
     courseUnitId: "unit-1-1",

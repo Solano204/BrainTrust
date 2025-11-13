@@ -66,9 +66,9 @@ export interface Assignment {
 const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
   // Upcoming assignments
   {
-    id: "task-101",
-    title: "Wireframe Design Project",
-    courseId: "COURSE-DES-401",
+    id: "sub-task-1",
+    title: "Wireframe Design Projects",
+    courseId: "COURSE-DES-401s",
     unitId: "UNIT-3",
     description: "Create detailed wireframes for a mobile banking application focusing on user experience and accessibility",
     createdAt: "2025-11-01T10:00:00Z",
@@ -127,8 +127,8 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
   },
   // Upcoming quizzes
   {
-    id: "quiz-101",
-    title: "UX Design Fundamentals Quiz",
+    id: "sub-quiz-1",
+    title: "UX Design Fundamentals Quizss",
     description: "Test your knowledge of basic UX design principles and methodologies",
     courseUnitId: "UNIT-1",
     courseId: "COURSE-DES-401",

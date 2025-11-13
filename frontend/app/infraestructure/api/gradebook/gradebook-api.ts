@@ -3,7 +3,7 @@
 
 import axios from "axios";
 import { cookies } from "next/headers";
-import { GradebookData } from "@/app/domain/service/service";
+import { GradebookData } from "@/app/domain/services/service";
 import { AssignmentId, UserId } from "@/app/domain/valueObjects/CourseValues";
 import { calificationStudent } from "@/app/domain/entities/CourseEntities";
 

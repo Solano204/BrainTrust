@@ -9,12 +9,11 @@ import {
   updateSubmissionGrade,
   requestAIAnalysis,
   downloadSubmissionAttachment,
-  getTaskInventoryStats,
   bulkUpdateTaskDeadlines
 } from "@/app/infraestructure/api/task/task-inventory-api";
 import { CourseId, SubmissionId } from "@/app/domain/valueObjects";
-import { SubmissionDetailData, TaskInventoryItem } from "@/app/domain/service/serviceCourse";
 import React from "react";
+import { SubmissionDetailData, TaskInventoryItem } from "@/app/domain/entities/CourseEntities";
 
 /**
  * Custom hook for fetching task inventory by course
@@ -42,18 +41,6 @@ export function useSubmissionDetail(submissionId: SubmissionId | null) {
   });
 }
 
-/**
- * Custom hook for fetching task inventory statistics
- */
-export function useTaskInventoryStats(courseId: CourseId | null) {
-  return useQuery({
-    queryKey: taskInventoryKeys.statsByCourse(courseId || ""),
-    queryFn: () => getTaskInventoryStats(courseId!),
-    enabled: !!courseId,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
-}
 
 /**
  * Custom hook for task inventory mutations
@@ -171,12 +158,11 @@ export function useTaskInventoryManagement(courseId: CourseId | null) {
     error: detailError 
   } = useSubmissionDetail(selectedSubmissionId);
 
-  const { data: stats } = useTaskInventoryStats(courseId);
 
   // Filter tasks based on search and filter
   const filteredTasks = React.useMemo(() => {
     return tasks.filter((task) => {
-      const matchesSearch = task.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === "all" || task.type.toLowerCase() === filterType.toLowerCase();
       return matchesSearch && matchesType;
     });
@@ -208,7 +194,5 @@ export function useTaskInventoryManagement(courseId: CourseId | null) {
     handleViewSubmission,
     handleBackFromDetail,
     
-    // Statistics
-    stats
   };
 }

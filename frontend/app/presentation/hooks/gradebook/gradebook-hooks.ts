@@ -11,7 +11,7 @@ import {
   exportGradebookToCSV,
   getGradebookStats 
 } from "@/app/infraestructure/api/gradebook/gradebook-api";
-import {  GradebookData, transformCalifications } from "@/app/domain/service/service";
+import {  GradebookData, transformCalifications } from "@/app/domain/services/service";
 import { AssignmentId, UserId } from "@/app/domain/valueObjects/CourseValues";
 
 export function useGradebookData(courseId: string | null) {
