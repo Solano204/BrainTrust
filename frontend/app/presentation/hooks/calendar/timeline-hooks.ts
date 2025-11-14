@@ -1,0 +1,42 @@
+// File: src/app/features/timeline/hooks/timeline-hooks.ts
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { timelineKeys } from "@/app/infraestructure/api/calendar/timeline-keys";
+import { fetchTimelineResources, dismissTimelineItem } from "@/app/infraestructure/api/calendar/timeline-api";
+import { Assignment, Quiz } from "@/app/domain/entities/CourseEntities";
+
+export function useTimelineResources(
+  userId: string | null, 
+  weekStart: string, 
+  userType: 'teacher' | 'student' = 'teacher'
+) {
+  return useQuery<(Assignment | Quiz)[]>({
+    queryKey: timelineKeys.resources(userId || "", weekStart, userType),
+    queryFn: () => fetchTimelineResources(userId!, weekStart, userType),
+    enabled: !!userId && !!weekStart,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useTimelineMutations() {
+  const queryClient = useQueryClient();
+
+  const dismissItemMutation = useMutation({
+    mutationFn: (itemId: string) => dismissTimelineItem(itemId),
+    onSuccess: (_, itemId) => {
+      // Invalidate timeline queries
+      queryClient.invalidateQueries({ 
+        queryKey: timelineKeys.all 
+      });
+    },
+    onError: (error: Error) => {
+      console.error("Error dismissing timeline item:", error.message);
+    },
+  });
+
+  return {
+    dismissItem: dismissItemMutation,
+  };
+}
