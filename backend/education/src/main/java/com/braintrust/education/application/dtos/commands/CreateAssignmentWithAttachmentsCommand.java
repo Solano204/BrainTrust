@@ -1,19 +1,17 @@
 package com.braintrust.education.application.dtos.commands;
 
-import com.braintrust.shared.application.dtos.DocumentAttachmentDTO;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-
 public record CreateAssignmentWithAttachmentsCommand(
         @NotBlank(message = "Course ID is required")
         String courseId,
+@NotBlank(message = "Course ID is required")
+        String unitId,
 
         @NotBlank(message = "Title is required")
         @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
@@ -33,6 +31,10 @@ public record CreateAssignmentWithAttachmentsCommand(
         @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions,
 
-        @NotNull(message = "Attachments list is required")
-        List<MultipartFile> attachments
+        // ✅ Attachments
+        List<MultipartFile> attachments,
+
+        // ✅ NEW: Assignment target type
+        String targetType // "INDIVIDUAL" or "TEAM"
+
 ) {}

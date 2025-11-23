@@ -1,6 +1,7 @@
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\AuthenticateUserCommand.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\ChangeEmailCommand.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\ChangePasswordCommand.java
+C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\CreateCompleteUserCommand.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\CreatePersonCommand.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\RefreshTokenCommand.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\RegisterAdminCommand.java
@@ -13,6 +14,8 @@ C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\id
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\commands\UpdateUserInfoCommand.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\AddressDTO.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\AuthenticationResult.java
+C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\CompleteUserDTO.java
+C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\MinimalUserInfoDTO.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\PersonDTO.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\UserBasicInfoDTO.java
 C:\Users\GAMER\Music\BrainTrust\backend\identity\src\main\java\com\braintrust\identity\application\dtos\dtos\UserDTO.java

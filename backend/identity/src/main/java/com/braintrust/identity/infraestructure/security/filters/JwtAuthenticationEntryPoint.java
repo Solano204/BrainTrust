@@ -14,10 +14,17 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.security.web.AuthenticationEntryPoint;
+// other imports...
 
 @Component
-@Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

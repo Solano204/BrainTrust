@@ -28,6 +28,7 @@ com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\reposit
 com\braintrust\aidetectition\application\dtos\commands\AnalyzeSubmissionRequest.class
 com\braintrust\aidetectition\domain\model\DocumentMetadata.class
 com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\LocalFileStorageService.class
+com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\MockPythonAIDetectionProvider.class
 com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\PythonAIDetectionProvider$1.class
 com\braintrust\aidetectition\application\ports\out\AnalysisRequestRepository.class
 com\braintrust\aidetectition\domain\exceptions\AnalysisAlreadyExistsException.class

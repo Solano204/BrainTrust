@@ -5,15 +5,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 @Entity
 @Table(name = "submissions", indexes = {
         @Index(name = "idx_submission_assignment", columnList = "assignment_id"),
         @Index(name = "idx_submission_student", columnList = "student_id"),
-        @Index(name = "idx_submission_status", columnList = "status")
+        @Index(name = "idx_submission_status", columnList = "status"),
+        @Index(name = "idx_submission_team", columnList = "team_id") // ✅ ADD INDEX
 })
-public class SubmissionJpaEntity  {
-
+public class SubmissionJpaEntity {
     @Id
     @Column(name = "id", length = 50)
     private String id;
@@ -23,6 +22,9 @@ public class SubmissionJpaEntity  {
 
     @Column(name = "student_id", length = 50, nullable = false)
     private String studentId;
+
+    @Column(name = "team_id", length = 50) // ✅ ADD THIS - can be nullable
+    private String teamId;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
@@ -44,8 +46,7 @@ public class SubmissionJpaEntity  {
 
 
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "submission_id")
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DocumentJpaEntity> documents = new ArrayList<>();
 
 
@@ -54,7 +55,7 @@ public class SubmissionJpaEntity  {
 
     public SubmissionJpaEntity(String id, String assignmentId, String studentId, String content,
                                LocalDateTime submittedAt, String status, BigDecimal gradeValue,
-                               BigDecimal gradeMaxScore, String teacherFeedback) {
+                               BigDecimal gradeMaxScore, String teacherFeedback, String teamId) {
         this.id = id;
         this.assignmentId = assignmentId;
         this.studentId = studentId;
@@ -64,6 +65,7 @@ public class SubmissionJpaEntity  {
         this.gradeValue = gradeValue;
         this.gradeMaxScore = gradeMaxScore;
         this.teacherFeedback = teacherFeedback;
+        this.teamId = teamId; // ✅ ADD TEAM ID
     }
 
     // Getters and setters
@@ -96,7 +98,8 @@ public class SubmissionJpaEntity  {
 
     public BigDecimal getGradeMaxScore() { return gradeMaxScore; }
     public void setGradeMaxScore(BigDecimal gradeMaxScore) { this.gradeMaxScore = gradeMaxScore; }
-
+    public String getTeamId() { return teamId; }
+    public void setTeamId(String teamId) { this.teamId = teamId; }
     public String getTeacherFeedback() { return teacherFeedback; }
     public void setTeacherFeedback(String teacherFeedback) { this.teacherFeedback = teacherFeedback; }
 }

@@ -14,12 +14,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+// other imports...
 
 @RestController
 @RequestMapping("/api/persons")
 @CrossOrigin(origins = "*")
-@Slf4j // ⬅️ Enable the 'log' variable
 public class PersonController {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(PersonController.class);
 
     private final PersonService personService;
 
@@ -27,27 +35,27 @@ public class PersonController {
         this.personService = personService;
     }
 
+//
+//    /*delete */
+//    @PostMapping
+//    public ResponseEntity<SuccessResponseDTO> createPerson(@RequestBody CreatePersonCommand command) {
+//        log.info("Request received to create new person: {} {}", command.firstName(), command.lastName());
+//        PersonId personId = personService.createPerson(command);
+//        log.info("Person created successfully with ID: {}", personId.getValue());
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(new SuccessResponseDTO(true, "Person created successfully", personId.getValue()));
+//    }
 
-    /*delete */
-    @PostMapping
-    public ResponseEntity<SuccessResponseDTO> createPerson(@RequestBody CreatePersonCommand command) {
-        log.info("Request received to create new person: {} {}", command.firstName(), command.lastName());
-        PersonId personId = personService.createPerson(command);
-        log.info("Person created successfully with ID: {}", personId.getValue());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Person created successfully", personId.getValue()));
-    }
 
 
-
-    /*delete */
-    @PutMapping("/personal-info")
-    public ResponseEntity<SuccessResponseDTO> updatePersonInfo(@RequestBody UpdatePersonInfoCommand command) {
-        log.info("Updating personal info for Person ID: {}", command.personId());
-        personService.updatePersonalInfo(command);
-        log.debug("Person ID {} information updated.", command.personId());
-        return ResponseEntity.ok(new SuccessResponseDTO(true, "Person information updated successfully", null));
-    }
+//    /*delete */
+//    @PutMapping("/personal-info")
+//    public ResponseEntity<SuccessResponseDTO> updatePersonInfo(@RequestBody UpdatePersonInfoCommand command) {
+//        log.info("Updating personal info for Person ID: {}", command.personId());
+//        personService.updatePersonalInfo(command);
+//        log.debug("Person ID {} information updated.", command.personId());
+//        return ResponseEntity.ok(new SuccessResponseDTO(true, "Person information updated successfully", null));
+//    }
 
     @PutMapping("/contact-address")
     public ResponseEntity<SuccessResponseDTO> updateAddress(@RequestBody UpdatePersonAddressCommand command) {
@@ -66,13 +74,14 @@ public class PersonController {
     }
 
 
-    // delete
-    @GetMapping("/{personId}")
-    public ResponseEntity<PersonDTO> getPersonById(@PathVariable String personId) {
-        log.debug("Fetching details for Person ID: {}", personId);
-        PersonDTO person = personService.getPersonById(PersonId.fromString(personId));
-        return ResponseEntity.ok(person);
-    }
+//
+//    // delete
+//    @GetMapping("/{personId}")
+//    public ResponseEntity<PersonDTO> getPersonById(@PathVariable String personId) {
+//        log.debug("Fetching details for Person ID: {}", personId);
+//        PersonDTO person = personService.getPersonById(PersonId.fromString(personId));
+//        return ResponseEntity.ok(person);
+//    }
 
     @GetMapping
     public ResponseEntity<List<PersonDTO>> getAllPersons() {

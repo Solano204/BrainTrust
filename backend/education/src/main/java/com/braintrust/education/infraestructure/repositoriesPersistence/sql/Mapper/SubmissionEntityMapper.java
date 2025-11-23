@@ -2,10 +2,7 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.Map
 
 import com.braintrust.education.domain.model.Submission;
 import com.braintrust.education.domain.model.SubmissionStatus;
-import com.braintrust.education.domain.valueobjects.AssignmentId;
-import com.braintrust.education.domain.valueobjects.Document;
-import com.braintrust.education.domain.valueobjects.Grade;
-import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.DocumentJpaEntity;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.SubmissionJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -17,9 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+// other imports...
+
 @Component
-@Slf4j // ⬅️ Enable the 'log' variable
 public class SubmissionEntityMapper {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(SubmissionEntityMapper.class);
 
     /**
      * Converts a Submission Domain Model to a JPA Entity.
@@ -46,14 +50,15 @@ public class SubmissionEntityMapper {
                 submission.getStatus().name(),
                 gradeValue,
                 gradeMaxScore,
-                submission.getTeacherFeedback()
+                submission.getTeacherFeedback(),
+                submission.getTeamId() != null ? submission.getTeamId().getValue() : null // ✅ Added teamId
         );
 
         // Map attachments
         if (submission.getAttachments() != null && !submission.getAttachments().isEmpty()) {
             log.trace("Mapping {} attached documents.", submission.getAttachments().size());
             List<DocumentJpaEntity> documentEntities = submission.getAttachments().stream()
-                    .map(this::toDocumentEntity)  // Without passing IDs
+                    .map(this::toDocumentEntity)
                     .collect(Collectors.toList());
             entity.setDocuments(documentEntities);
         } else {
@@ -91,6 +96,19 @@ public class SubmissionEntityMapper {
                     .collect(Collectors.toList());
         }
 
+        if( entity.getTeamId() == null) {
+            return Submission.reconstitute(
+                    id,
+                    assignmentId,
+                    studentId,
+                    entity.getContent(),
+                    documents,
+                    entity.getSubmittedAt(),
+                    status,
+                    grade,
+                    entity.getTeacherFeedback()
+            );
+        }
         return Submission.reconstitute(
                 id,
                 assignmentId,
@@ -100,7 +118,9 @@ public class SubmissionEntityMapper {
                 entity.getSubmittedAt(),
                 status,
                 grade,
-                entity.getTeacherFeedback()
+                entity.getTeacherFeedback(),
+                StudentGroupId.fromString( entity.getTeamId())
+
         );
     }
 

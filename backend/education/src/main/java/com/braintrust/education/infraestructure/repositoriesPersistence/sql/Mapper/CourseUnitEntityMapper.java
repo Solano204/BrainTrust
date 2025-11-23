@@ -7,10 +7,16 @@ import com.braintrust.education.infraestructure.repositoriesPersistence.sql.enti
 import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+// other imports...
+
 @Component
-@Slf4j // ⬅️ Enable the 'log' variable
 public class CourseUnitEntityMapper {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(CourseUnitEntityMapper.class);
     /**
      * Converts a CourseUnit domain model to a CourseUnitJpaEntity.
      */

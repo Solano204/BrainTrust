@@ -6,10 +6,14 @@ import com.braintrust.aidetectition.application.services.AnalysisApplicationServ
 import com.braintrust.aidetectition.domain.model.DocumentMetadata;
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.*;
+import com.braintrust.education.application.ports.in.GradebookService;
 import com.braintrust.education.application.ports.in.SubmissionService;
+import com.braintrust.education.application.ports.in.UnitGradeService;
 import com.braintrust.education.application.ports.out.AssignmentRepository;
+import com.braintrust.education.application.ports.out.StudentGroupRepository;
 import com.braintrust.education.application.ports.out.SubmissionRepository;
 import com.braintrust.education.domain.exceptions.AssignmentNotFoundException;
+import com.braintrust.education.domain.exceptions.StudentGroupNotFoundException;
 import com.braintrust.education.domain.exceptions.SubmissionNotFoundException;
 import com.braintrust.education.domain.model.*;
 import com.braintrust.education.domain.valueobjects.*;
@@ -21,76 +25,238 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
-/**
- * ✅ PRODUCTION-READY Submission Service with Virtual Threads
- *
- * Key features:
- * 1. Submit assignment stores documents and triggers AI analysis
- * 2. AI analysis runs asynchronously on Virtual Thread
- * 3. Rate limiting for file storage operations
- * 4. Comprehensive error handling
- *
- * Performance:
- * - Handle 1000+ concurrent submissions
- * - AI analysis doesn't block submission response
- * - Document storage I/O parks VT automatically
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+// other imports...
+
 @Service
 @Transactional
-@Slf4j
 public class SubmissionApplicationService implements SubmissionService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(SubmissionApplicationService.class);
 
     private final SubmissionRepository submissionRepository;
     private final AssignmentRepository assignmentRepository;
     private final DocumentStorageService documentStorageService;
     private final AnalysisApplicationService analysisApplicationService;
+    private final GradebookService gradebookService;
+    private final StudentGroupRepository studentGroupRepository;
+    private final UnitGradeService unitGradeService; // NEW: For restarting unit grade
 
     @Value("${ai.model-default-type:ENSEMBLE}")
     private String MODEL_IA;
 
-    // ✅ Rate limiter for file storage
     private final Semaphore storageRateLimiter = new Semaphore(20);
 
     public SubmissionApplicationService(
             SubmissionRepository submissionRepository,
             AssignmentRepository assignmentRepository,
             DocumentStorageService documentStorageService,
-            AnalysisApplicationService analysisApplicationService
-    ) {
+            AnalysisApplicationService analysisApplicationService,
+            GradebookService gradebookService,
+            StudentGroupRepository studentGroupRepository,
+            UnitGradeService unitGradeService) { // NEW: Added UnitGradeService
         this.submissionRepository = submissionRepository;
         this.assignmentRepository = assignmentRepository;
         this.documentStorageService = documentStorageService;
         this.analysisApplicationService = analysisApplicationService;
-
-        log.info("✅ SubmissionApplicationService initialized with Virtual Threads support");
+        this.gradebookService = gradebookService;
+        this.studentGroupRepository = studentGroupRepository;
+        this.unitGradeService = unitGradeService; // NEW
     }
 
-    /**
-     * ✅ SUBMIT ASSIGNMENT WITH AI ANALYSIS
-     *
-     * Process flow:
-     * 1. Validate assignment exists and accepts submissions
-     * 2. Store documents (I/O - parks VT)
-     * 3. Create submission
-     * 4. Trigger AI analysis ASYNCHRONOUSLY (fire-and-forget)
-     * 5. Return immediately to user
-     */
+    // NEW: Get submissions by course with basic info
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionBasicDTO> getSubmissionsByCourseBasic(CourseId courseId) {
+        log.debug("Fetching submissions for Course: {} with basic info", courseId.getValue());
+
+        List<Submission> submissions = submissionRepository.findByCourseId(courseId);
+
+        return submissions.stream()
+                .map(this::mapToBasicDTO)
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public SubmissionId submitTeamAssignment(SubmitTeamAssignmentCommand command) {
+        AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
+        StudentGroupId teamId = StudentGroupId.fromString(command.groupId());
+
+        log.info("🚀 Team {} submitting work for Assignment {}",
+                teamId.getValue(), assignmentId.getValue());
+
+        try {
+            Assignment assignment = assignmentRepository.findById(assignmentId)
+                    .orElseThrow(() -> {
+                        log.warn("❌ Assignment not found: {}", assignmentId.getValue());
+                        return new AssignmentNotFoundException("Assignment not found");
+                    });
+
+            if (!assignment.isTeamAssignment()) {
+                throw new IllegalStateException("This assignment is not configured for teams");
+            }
+
+            StudentGroup team = studentGroupRepository.findById(teamId)
+                    .orElseThrow(() -> new StudentGroupNotFoundException("Team not found"));
+
+            List<Document> documents = new ArrayList<>();
+            if (command.attachments() != null && !command.attachments().isEmpty()) {
+                List<DocumentMetadata> metadataList = storeDocumentsWithRateLimit(
+                        assignmentId.getValue(),
+                        command.attachments()
+                );
+
+                documents = metadataList.stream()
+                        .map(metadata -> new Document(
+                                metadata.getOriginalFilename(),
+                                metadata.getStoragePath()
+                        ))
+                        .collect(Collectors.toList());
+
+                log.info("📁 {} documents stored for team submission", documents.size());
+            }
+
+            UserId firstMember = UserId.fromString(command.studentSenderId());
+
+            Submission submission = Submission.create(
+                    assignmentId,
+                    firstMember,
+                    command.content(),
+                    documents,
+                    SubmissionStatus.SUBMITTED,
+                    teamId
+            );
+
+            Submission savedSubmission = submissionRepository.save(submission);
+
+            log.info("✅ Team submission created for group: {} (Submitted by: {})",
+                    teamId.getValue(), firstMember.getValue());
+
+            createShadowSubmissionsForTeamMembers(team, assignmentId, savedSubmission, teamId);
+
+            if (!documents.isEmpty()) {
+                triggerAIAnalysisAsync(savedSubmission.getId(), command.attachments());
+            }
+
+            return savedSubmission.getId();
+
+        } catch (Exception e) {
+            log.error("❌ Failed to submit team assignment for Group {}: {}",
+                    command.groupId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to submit team assignment", e);
+        }
+    }
+
+    @Override
+    public void gradeTeamSubmission(GradeSubmissionCommand command) {
+        SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
+
+        log.info("🎯 Grading TEAM Submission {} with score: {}/{}",
+                submissionId.getValue(), command.gradeValue(), command.maxScore());
+
+        try {
+            Submission submission = findSubmissionByIdOrThrow(submissionId);
+
+            if (submission.getTeamId() == null) {
+                throw new IllegalStateException("This is not a team submission");
+            }
+
+            Grade grade = new Grade(
+                    new BigDecimal(command.gradeValue()),
+                    new BigDecimal(command.maxScore())
+            );
+
+            submission.grade(grade, command.feedback());
+            Submission savedSubmission = submissionRepository.save(submission);
+
+            gradebookService.applyTeamGradeToAllMembers(
+                    savedSubmission.getAssignmentId(),
+                    savedSubmission.getTeamId()
+            );
+
+            log.info("✅ Team grade applied to all members of group {} with gradebook & unit updates",
+                    savedSubmission.getTeamId().getValue());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to grade team submission {}: {}",
+                    submissionId.getValue(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /*
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionDTO> getSubmissionsByTeamAndAssignment(StudentGroupId teamId, AssignmentId assignmentId) {
+        log.debug("Fetching submissions for Team {} and Assignment {}", teamId.getValue(), assignmentId.getValue());
+
+        List<Submission> submissions = submissionRepository.findByAssignmentId(assignmentId)
+                .stream()
+                .filter(submission -> teamId.equals(submission.getTeamId()))
+                .collect(Collectors.toList());
+
+        return submissions.stream()
+                .map(this::mapToSubmissionDTO)
+                .collect(Collectors.toList());
+    }
+    */
+
+    private void createShadowSubmissionsForTeamMembers(StudentGroup team,
+                                                       AssignmentId assignmentId,
+                                                       Submission mainSubmission,
+                                                       StudentGroupId teamId) {
+        int shadowCount = 0;
+
+        for (UserId memberId : team.getMemberIds()) {
+            if (memberId.equals(mainSubmission.getStudentId())) {
+                continue;
+            }
+
+            try {
+                Submission shadowSubmission = Submission.create(
+                        assignmentId,
+                        memberId,
+                        mainSubmission.getContent() + " (Team Submission)",
+                        mainSubmission.getAttachments(),
+                        SubmissionStatus.SUBMITTED,
+                        teamId
+                );
+
+                submissionRepository.save(shadowSubmission);
+                shadowCount++;
+
+                log.debug("✅ Created shadow submission for team member: {}", memberId.getValue());
+
+            } catch (Exception e) {
+                log.error("❌ Failed to create shadow submission for team member {}: {}",
+                        memberId.getValue(), e.getMessage());
+            }
+        }
+
+        log.info("✅ Created {} shadow submissions for team {}", shadowCount, team.getId().getValue());
+    }
+
     @Override
     public SubmissionId submitAssignment(SubmitAssignmentCommand command) {
         AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
         UserId studentId = UserId.fromString(command.studentId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Student {} submitting work for Assignment {}",
-                studentId.getValue(), assignmentId.getValue());
+        log.info("🚀 Student {} submitting work for Assignment {} (Team: {})",
+                studentId.getValue(), assignmentId.getValue(), "Individual");
 
         try {
-            // ✅ PHASE 1: Verify assignment exists and accepts submissions
             Assignment assignment = assignmentRepository.findById(assignmentId)
                     .orElseThrow(() -> {
                         log.warn("❌ Assignment not found: {}", assignmentId.getValue());
@@ -102,43 +268,48 @@ public class SubmissionApplicationService implements SubmissionService {
                 throw new IllegalStateException("Assignment is closed and cannot accept submissions");
             }
 
-            // ✅ PHASE 2: Store documents (I/O operation - VT parks here)
-            long storageStart = System.currentTimeMillis();
+            List<Document> documents = new ArrayList<>();
+            if (command.attachments() != null && !command.attachments().isEmpty()) {
+                long storageStart = System.currentTimeMillis();
+                List<DocumentMetadata> metadataList = storeDocumentsWithRateLimit(
+                        assignmentId.getValue(),
+                        command.attachments()
+                );
+                long storageDuration = System.currentTimeMillis() - storageStart;
 
-            List<DocumentMetadata> metadataList = storeDocumentsWithRateLimit(
-                    assignmentId.getValue(),
-                    command.attachments()
-            );
+                documents = metadataList.stream()
+                        .map(metadata -> new Document(
+                                metadata.getOriginalFilename(),
+                                metadata.getStoragePath()
+                        ))
+                        .collect(Collectors.toList());
 
-            long storageDuration = System.currentTimeMillis() - storageStart;
-            log.info("📁 {} documents stored in {}ms", metadataList.size(), storageDuration);
+                log.info("📁 {} documents stored in {}ms", documents.size(), storageDuration);
+            } else {
+                log.info("📝 Submission without attachments");
+            }
 
-            // ✅ PHASE 3: Convert to domain objects
-            List<Document> documents = metadataList.stream()
-                    .map(metadata -> new Document(
-                            metadata.getOriginalFilename(),
-                            metadata.getStoragePath()
-                    ))
-                    .collect(Collectors.toList());
-
-            // ✅ PHASE 4: Create submission
-            Submission submission = assignment.submitWork(
+            Submission submission = Submission.create(
+                    assignmentId,
                     studentId,
                     command.content(),
-                    documents
+                    documents,
+                    SubmissionStatus.SUBMITTED
             );
 
-            // ✅ PHASE 5: Save (cascade to submission)
-            assignmentRepository.save(assignment);
             Submission savedSubmission = submissionRepository.save(submission);
 
             long totalDuration = System.currentTimeMillis() - startTime;
-            log.info("✅ Submission {} created in {}ms (storage: {}ms)",
-                    savedSubmission.getId().getValue(), totalDuration, storageDuration);
+            log.info("✅ Submission {} created in {}ms (Type: {}, Attachments: {})",
+                    savedSubmission.getId().getValue(), totalDuration,
+                    "Individual",
+                    documents.size());
 
-            // ✅ PHASE 6: Trigger AI analysis ASYNCHRONOUSLY
-            // This runs on a separate Virtual Thread and doesn't block the response
-            triggerAIAnalysisAsync(savedSubmission.getId(), command.attachments());
+            if (!documents.isEmpty()) {
+                triggerAIAnalysisAsync(savedSubmission.getId(), command.attachments());
+            } else {
+                log.info("⏭️  Skipping AI analysis - no documents to analyze");
+            }
 
             return savedSubmission.getId();
 
@@ -151,12 +322,6 @@ public class SubmissionApplicationService implements SubmissionService {
         }
     }
 
-    /**
-     * ✅ TRIGGER AI ANALYSIS ASYNCHRONOUSLY
-     *
-     * This method runs on a separate Virtual Thread.
-     * The @Async annotation uses the virtualTaskExecutor configured in VirtualThreadConfiguration.
-     */
     @Async("virtualTaskExecutor")
     public void triggerAIAnalysisAsync(
             SubmissionId submissionId,
@@ -166,7 +331,6 @@ public class SubmissionApplicationService implements SubmissionService {
         long startTime = System.currentTimeMillis();
 
         try {
-            // Call analysis service
             analysisApplicationService.analyzePdfSubmission(
                     new AnalyzePdfSubmissionCommand(
                             submissionId.getValue(),
@@ -182,16 +346,17 @@ public class SubmissionApplicationService implements SubmissionService {
         } catch (Exception e) {
             log.error("❌ AI analysis failed for Submission {}: {}",
                     submissionId.getValue(), e.getMessage(), e);
-            // Don't throw - this is fire-and-forget
         }
     }
+
+
 
     @Override
     public void gradeSubmission(GradeSubmissionCommand command) {
         SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
 
-        log.info("📝 Grading Submission {} with score: {}",
-                submissionId.getValue(), command.gradeValue());
+        log.info("📝 Grading Submission {} with score: {}/{}",
+                submissionId.getValue(), command.gradeValue(), command.maxScore());
 
         try {
             Submission submission = findSubmissionByIdOrThrow(submissionId);
@@ -202,9 +367,54 @@ public class SubmissionApplicationService implements SubmissionService {
             );
 
             submission.grade(grade, command.feedback());
-            submissionRepository.save(submission);
+            Submission savedSubmission = submissionRepository.save(submission);
 
-            log.info("✅ Submission {} graded successfully", submissionId.getValue());
+            Assignment assignment = assignmentRepository.findById(savedSubmission.getAssignmentId())
+                    .orElseThrow(() -> new AssignmentNotFoundException("Assignment not found"));
+
+            // ✅ FIXED: Use ADDITIVE approach instead of full recalculation
+            if (assignment.getUnitId() != null) {
+                log.info("➕ Adding assignment grade to Unit ID: {} for student {}",
+                        assignment.getUnitId().getValue(), savedSubmission.getStudentId().getValue());
+
+                // Use the new additive method instead of full recalculation
+                unitGradeService.addAssignmentGradeToUnit(
+                        assignment.getUnitId(),
+                        savedSubmission.getStudentId(),
+                        assignment.getId(),
+                        grade
+                );
+
+                // Still sync to gradebook
+                gradebookService.syncUnitGrade(
+                        assignment.getCourseId(),
+                        savedSubmission.getStudentId(),
+                        assignment.getUnitId()
+                );
+            }
+
+            if (savedSubmission.getTeamId() != null && assignment.isTeamAssignment()) {
+                log.info("🎯 Applying team grade to all members of group {}",
+                        savedSubmission.getTeamId().getValue());
+
+                gradebookService.applyTeamGradeToAllMembers(
+                        assignment.getId(),
+                        savedSubmission.getTeamId()
+                );
+
+                log.info("✅ Team grade applied to all {} group members",
+                        studentGroupRepository.findById(savedSubmission.getTeamId())
+                                .map(group -> group.getMemberCount())
+                                .orElse(0));
+            } else {
+                gradebookService.syncAssignmentGrade(
+                        assignment.getCourseId(),
+                        savedSubmission.getStudentId(),
+                        savedSubmission.getAssignmentId()
+                );
+            }
+
+            log.info("✅ Submission {} graded successfully and unit grade UPDATED (not replaced)", submissionId.getValue());
 
         } catch (Exception e) {
             log.error("❌ Failed to grade Submission {}: {}",
@@ -213,6 +423,7 @@ public class SubmissionApplicationService implements SubmissionService {
         }
     }
 
+    /*
     @Override
     public void returnSubmissionForRevision(ReturnSubmissionCommand command) {
         SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
@@ -232,7 +443,9 @@ public class SubmissionApplicationService implements SubmissionService {
             throw e;
         }
     }
+    */
 
+    /*
     @Override
     public void requestAIAnalysis(SubmissionId submissionId) {
         log.info("🤖 Marking Submission {} for AI Analysis", submissionId.getValue());
@@ -250,7 +463,41 @@ public class SubmissionApplicationService implements SubmissionService {
             throw e;
         }
     }
+    */
 
+    @Override
+    public void deleteSubmission(SubmissionId submissionId) {
+        log.warn("🗑️ Deleting submission ID: {}", submissionId.getValue());
+
+        Submission submission = findSubmissionByIdOrThrow(submissionId);
+        Assignment assignment = assignmentRepository.findById(submission.getAssignmentId())
+                .orElseThrow(() -> new AssignmentNotFoundException("Assignment not found"));
+
+        // Store info before deletion for grade removal
+        CourseId courseId = assignment.getCourseId();
+        UserId studentId = submission.getStudentId();
+        UnitId unitId = assignment.getUnitId();
+
+        // Check if the submission is graded and affects unit grade
+        boolean affectsUnitGrade = submission.isGraded() && unitId != null;
+
+        // ✅ FIXED: Remove the grade from unit BEFORE deleting the submission
+        if (affectsUnitGrade) {
+            log.info("➖ Removing assignment grade from Unit ID: {} for student {} before deletion",
+                    unitId.getValue(), studentId.getValue());
+
+            // Remove the assignment grade from unit
+            unitGradeService.removeAssignmentGradeFromUnit(unitId, studentId, assignment.getId());
+
+            // Also sync to gradebook to ensure course grade is updated
+            gradebookService.syncUnitGrade(courseId, studentId, unitId);
+        }
+
+        // Delete the submission AFTER removing the grade
+        submissionRepository.delete(submission);
+
+        log.info("✅ Submission deleted and grade REMOVED from unit grade");
+    }
     // ------------------------------------------------------------------
     // ✅ SUBMISSION QUERIES
     // ------------------------------------------------------------------
@@ -260,9 +507,10 @@ public class SubmissionApplicationService implements SubmissionService {
     public SubmissionDTO getSubmissionById(SubmissionId submissionId) {
         log.debug("📊 Fetching Submission DTO by ID: {}", submissionId.getValue());
         Submission submission = findSubmissionByIdOrThrow(submissionId);
-        return mapToSubmissionDTO(submission);
+        return mapToBasicSubmissionDTO(submission); // NEW: Use basic DTO mapping
     }
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public List<SubmissionDTO> getSubmissionsByAssignment(AssignmentId assignmentId) {
@@ -274,6 +522,7 @@ public class SubmissionApplicationService implements SubmissionService {
                 .map(this::mapToSubmissionDTO)
                 .collect(Collectors.toList());
     }
+    */
 
     @Override
     @Transactional(readOnly = true)
@@ -283,10 +532,24 @@ public class SubmissionApplicationService implements SubmissionService {
         List<Submission> submissions = submissionRepository.findByStudentId(studentId);
 
         return submissions.stream()
-                .map(this::mapToSubmissionDTO)
+                .map(this::mapToBasicSubmissionDTO) // NEW: Use basic DTO mapping
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<SubmissionDTO> getSubmissionsByStudentAndCourse(UserId studentId, CourseId courseId) {
+        log.debug("📊 Fetching submissions for Student: {} in Course: {}",
+                studentId.getValue(), courseId.getValue());
+
+        List<Submission> submissions = submissionRepository.findByCourseAndStudent(courseId, studentId);
+
+        return submissions.stream()
+                .map(this::mapToBasicSubmissionDTO) // NEW: Use basic DTO mapping
+                .collect(Collectors.toList());
+    }
+
+    /*
     @Override
     @Transactional(readOnly = true)
     public Optional<SubmissionDTO> getLatestSubmission(AssignmentId assignmentId, UserId studentId) {
@@ -296,7 +559,9 @@ public class SubmissionApplicationService implements SubmissionService {
         return submissionRepository.findLatestByAssignmentAndStudent(assignmentId, studentId)
                 .map(this::mapToSubmissionDTO);
     }
+    */
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public List<SubmissionDTO> getSubmissionsByStatus(SubmissionStatus status) {
@@ -308,7 +573,9 @@ public class SubmissionApplicationService implements SubmissionService {
                 .map(this::mapToSubmissionDTO)
                 .collect(Collectors.toList());
     }
+    */
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public List<SubmissionDTO> getLateSubmissions(AssignmentId assignmentId) {
@@ -332,7 +599,18 @@ public class SubmissionApplicationService implements SubmissionService {
                 .map(this::mapToSubmissionDTO)
                 .collect(Collectors.toList());
     }
+    */
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTeamSubmission(SubmissionId submissionId) {
+        Submission submission = findSubmissionByIdOrThrow(submissionId);
+        log.debug("📊 Calculating analytics for Assignment: {}", submission.getTeamId());
+
+        return submission.getTeamId() != null;
+    }
+
+    /*
     @Override
     @Transactional(readOnly = true)
     public SubmissionAnalyticsDTO getSubmissionAnalytics(AssignmentId assignmentId) {
@@ -394,7 +672,9 @@ public class SubmissionApplicationService implements SubmissionService {
                 statusDist
         );
     }
+    */
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public boolean hasStudentSubmitted(AssignmentId assignmentId, UserId studentId) {
@@ -402,6 +682,7 @@ public class SubmissionApplicationService implements SubmissionService {
                 assignmentId, studentId);
         return !submissions.isEmpty();
     }
+    */
 
     // ------------------------------------------------------------------
     // ✅ PRIVATE HELPER METHODS
@@ -433,6 +714,43 @@ public class SubmissionApplicationService implements SubmissionService {
                 });
     }
 
+    // NEW: Basic DTO mapping with only essential information
+    private SubmissionDTO mapToBasicSubmissionDTO(Submission submission) {
+        GradeDTO gradeDTO = submission.getGrade() != null
+                ? new GradeDTO(
+                submission.getGrade().getValue().toString(),
+                submission.getGrade().getMaxScore().toString(),
+                submission.getGrade().getPercentage().toString()
+        )
+                : null;
+
+        Assignment assignment = assignmentRepository.findById(submission.getAssignmentId())
+                .orElse(null);
+
+        boolean isLate = assignment != null && assignment.getDueDate() != null
+                ? submission.isLate(assignment.getDueDate())
+                : false;
+
+        return new SubmissionDTO(
+                submission.getId().getValue(),
+                submission.getAssignmentId().getValue(),
+                assignment != null ? assignment.getTitle() : "Unknown Assignment",
+                submission.getStudentId().getValue(),
+                "Student Name", // TODO: Get from UserQueryPort
+                submission.getContent(),
+                submission.getStatus().name(),
+                gradeDTO,
+                submission.getTeacherFeedback(),
+                submission.getSubmittedAt().toString(),
+                isLate,
+                List.of(), // No attachments in basic DTO
+                null, // No AI analysis in basic DTO
+                submission.getTeamId() != null ? submission.getTeamId().getValue() : null,
+                null, // No team name in basic DTO
+                submission.getTeamId() != null
+        );
+    }
+
     private SubmissionDTO mapToSubmissionDTO(Submission submission) {
         GradeDTO gradeDTO = submission.getGrade() != null
                 ? new GradeDTO(
@@ -456,10 +774,21 @@ public class SubmissionApplicationService implements SubmissionService {
                 ? submission.isLate(assignment.getDueDate())
                 : false;
 
+        boolean isTeamSubmission = submission.getTeamId() != null;
+        String teamId = isTeamSubmission ? submission.getTeamId().getValue() : null;
+        String teamName = null;
+
+        if (isTeamSubmission) {
+            teamName = studentGroupRepository.findById(submission.getTeamId())
+                    .map(group -> group.getName())
+                    .orElse("Unknown Team");
+            log.debug("📊 Mapping team submission - Team ID: {}, Team Name: {}", teamId, teamName);
+        }
+
         return new SubmissionDTO(
                 submission.getId().getValue(),
                 submission.getAssignmentId().getValue(),
-                "Assignment Title", // TODO: Get from Assignment
+                assignment != null ? assignment.getTitle() : "Unknown Assignment",
                 submission.getStudentId().getValue(),
                 "Student Name", // TODO: Get from UserQueryPort
                 submission.getContent(),
@@ -469,7 +798,37 @@ public class SubmissionApplicationService implements SubmissionService {
                 submission.getSubmittedAt().toString(),
                 isLate,
                 attachmentDTOs,
-                null // TODO: Get AI analysis if available
+                null, // TODO: Get AI analysis if available
+                teamId,
+                teamName,
+                isTeamSubmission
         );
     }
+
+    // Add this method for basic DTO mapping
+    private SubmissionBasicDTO mapToBasicDTO(Submission submission) {
+        Assignment assignment = assignmentRepository.findById(submission.getAssignmentId())
+                .orElse(null);
+
+        // Get student name from user service
+        String studentName = "Student Name"; // TODO: Get from UserService
+        // MinimalUserInfoDTO studentInfo = userService.getMinimalUserInfo(submission.getStudentId());
+        // String studentName = studentInfo != null ? studentInfo.fullName() : "Unknown Student";
+
+        return new SubmissionBasicDTO(
+                submission.getId().getValue(),
+                submission.getAssignmentId().getValue(),
+                assignment != null ? assignment.getTitle() : "Unknown Assignment",
+                submission.getStudentId().getValue(),
+                studentName,
+                submission.getStatus().name(),
+                submission.getSubmittedAt().toString(),
+                submission.getGrade() != null ? submission.getGrade().getValue().toString() : null,
+                submission.getGrade() != null ? submission.getGrade().getMaxScore().toString() : null,
+                submission.getTeamId() != null,
+                submission.getTeamId() != null ? submission.getTeamId().getValue() : null
+        );
+    }
+
+
 }

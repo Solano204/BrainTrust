@@ -1,4 +1,33 @@
 -------------------------------------------------------------------------------
 Test set: com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.424 s -- in com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest
+Tests run: 3, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 0.394 s <<< FAILURE! -- in com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest
+com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest.shouldGradeSubmissionSuccessfully -- Time elapsed: 0.014 s <<< ERROR!
+com.braintrust.education.domain.exceptions.AssignmentNotFoundException: Assignment not found
+	at com.braintrust.education.application.service.SubmissionApplicationService.lambda$gradeSubmission$0(SubmissionApplicationService.java:373)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at com.braintrust.education.application.service.SubmissionApplicationService.gradeSubmission(SubmissionApplicationService.java:373)
+	at com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest.shouldGradeSubmissionSuccessfully(SubmissionApplicationServiceTest.java:135)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest.shouldSubmitAssignmentSuccessfully -- Time elapsed: 0.026 s <<< FAILURE!
+Wanted but not invoked:
+assignmentRepository.save(
+    Mock for Assignment, hashCode: 792532736
+);
+-> at com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest.shouldSubmitAssignmentSuccessfully(SubmissionApplicationServiceTest.java:108)
+
+However, there was exactly 1 interaction with this mock:
+assignmentRepository.findById(
+    com.braintrust.education.domain.valueobjects.AssignmentId@5a069873
+);
+-> at com.braintrust.education.application.service.SubmissionApplicationService.submitAssignment(SubmissionApplicationService.java:260)
+
+
+	at com.braintrust.education.unit.application.service.SubmissionApplicationServiceTest.shouldSubmitAssignmentSuccessfully(SubmissionApplicationServiceTest.java:108)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+

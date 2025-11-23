@@ -11,6 +11,7 @@ import com.braintrust.education.application.ports.out.CourseRepository;
 import com.braintrust.education.domain.exceptions.AssignmentNotFoundException;
 import com.braintrust.education.domain.exceptions.CourseNotFoundException;
 import com.braintrust.education.domain.model.*;
+import com.braintrust.education.domain.model.AssignmentTargetType;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import lombok.extern.slf4j.Slf4j;
@@ -21,33 +22,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
-
-/**
- * ✅ PRODUCTION-READY Assignment Service with Virtual Threads
- *
- * Optimizations:
- * 1. All HTTP requests run on Virtual Threads (via Tomcat config)
- * 2. File storage operations park VT automatically during I/O
- * 3. Database operations park VT during query execution
- * 4. Semaphore rate limiting for document storage (when needed)
- *
- * Performance:
- * - Can handle 1000+ concurrent assignment creations
- * - Document storage I/O doesn't block carrier threads
- * - Simple, synchronous code style maintained
- */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Service
 @Transactional
-@Slf4j
+
+// other imports...
+
 public class AssignmentApplicationService implements AssignmentService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(AssignmentApplicationService.class);
 
     private final AssignmentRepository assignmentRepository;
     private final CourseRepository courseRepository;
     private final DocumentStorageService documentStorageService;
-
-    // ✅ Optional: Rate limiter for file storage operations
-    // Prevents overwhelming the filesystem with too many concurrent writes
-    private final Semaphore storageRateLimiter = new Semaphore(20); // Max 20 concurrent
+    private final Semaphore storageRateLimiter = new Semaphore(60);
 
     public AssignmentApplicationService(
             AssignmentRepository assignmentRepository,
@@ -57,7 +47,6 @@ public class AssignmentApplicationService implements AssignmentService {
         this.assignmentRepository = assignmentRepository;
         this.courseRepository = courseRepository;
         this.documentStorageService = documentStorageService;
-
         log.info("✅ AssignmentApplicationService initialized with Virtual Threads support");
     }
 
@@ -65,44 +54,35 @@ public class AssignmentApplicationService implements AssignmentService {
     // ✅ ASSIGNMENT COMMANDS (Creation and Update)
     // ------------------------------------------------------------------
 
-    /**
-     * ✅ CREATE SIMPLE ASSIGNMENT
-     *
-     * This method already runs on a Virtual Thread (via Tomcat).
-     * DB operations park the VT automatically.
-     */
     @Override
     public AssignmentId createAssignment(CreateAssignmentCommand command) {
         CourseId courseId = CourseId.fromString(command.courseId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating assignment '{}' for Course ID: {}",
-                command.title(), courseId.getValue());
+        log.info("🚀 Creating {} assignment '{}' for Course ID: {}",
+                command.targetType(), command.title(), courseId.getValue());
 
         try {
-            // ✅ Verify course exists (DB query parks VT)
-            Course course = courseRepository.findById(courseId)
-                    .orElseThrow(() -> {
-                        log.warn("❌ Course not found with ID: {}", courseId.getValue());
-                        return new CourseNotFoundException("Course not found");
-                    });
 
-            // ✅ Create assignment
+
+            AssignmentTargetType targetType = validateTargetType(command.targetType());
+
             Assignment assignment = Assignment.create(
                     courseId,
+                    UnitId.fromString(command.unitId()),
                     command.title(),
                     command.description(),
                     LocalDateTime.parse(command.dueDate()),
                     command.maxPoints(),
-                    command.instructions()
+                    command.instructions(),
+                    targetType
             );
 
-            // ✅ Save (DB write parks VT)
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Assignment {} created in {}ms",
-                    savedAssignment.getId().getValue(), duration);
+            log.info("✅ {} assignment {} created in {}ms",
+                    targetType, savedAssignment.getId().getValue(), duration);
 
             return savedAssignment.getId();
 
@@ -115,46 +95,34 @@ public class AssignmentApplicationService implements AssignmentService {
         }
     }
 
-    /**
-     * ✅ CREATE ASSIGNMENT WITH ATTACHMENTS
-     *
-     * This method benefits from Virtual Threads:
-     * - Document storage I/O parks the VT
-     * - DB operations park the VT
-     * - No blocking of carrier threads
-     */
     @Override
     public AssignmentId createAssignmentWithAttachments(CreateAssignmentWithAttachmentsCommand command) {
         CourseId courseId = CourseId.fromString(command.courseId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating assignment with {} attachments for Course ID: {}",
-                command.attachments().size(), courseId.getValue());
+        log.info("🚀 Creating {} assignment with {} attachments for Course ID: {}",
+                command.targetType(), command.attachments().size(), courseId.getValue());
 
         try {
-            // ✅ PHASE 1: Verify course exists
             Course course = courseRepository.findById(courseId)
                     .orElseThrow(() -> {
                         log.warn("❌ Course not found with ID: {}", courseId.getValue());
                         return new CourseNotFoundException("Course not found");
                     });
 
-            // ✅ PHASE 2: Generate temporary ID for storage
+            AssignmentTargetType targetType = validateTargetType(command.targetType());
+
             AssignmentId tempAssignmentId = AssignmentId.generate();
             log.debug("📝 Generated temp Assignment ID: {}", tempAssignmentId.getValue());
 
-            // ✅ PHASE 3: Store documents (I/O operation - VT parks here)
             long storageStart = System.currentTimeMillis();
-
             List<DocumentMetadata> metadataList = storeDocumentsWithRateLimit(
                     tempAssignmentId.getValue(),
                     command.attachments()
             );
-
             long storageDuration = System.currentTimeMillis() - storageStart;
             log.info("📁 {} documents stored in {}ms", metadataList.size(), storageDuration);
 
-            // ✅ PHASE 4: Convert to domain objects
             List<Document> documents = metadataList.stream()
                     .map(metadata -> new Document(
                             metadata.getOriginalFilename(),
@@ -164,23 +132,23 @@ public class AssignmentApplicationService implements AssignmentService {
 
             log.debug("✅ {} documents mapped to domain objects", documents.size());
 
-            // ✅ PHASE 5: Create assignment with documents
             Assignment assignment = Assignment.createWithAttachments(
                     courseId,
+                    UnitId.fromString(command.unitId()),
                     command.title(),
                     command.description(),
                     LocalDateTime.parse(command.dueDate()),
                     command.maxPoints(),
                     command.instructions(),
-                    documents
+                    documents,
+                    targetType
             );
 
-            // ✅ PHASE 6: Save (DB write parks VT)
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             long totalDuration = System.currentTimeMillis() - startTime;
-            log.info("✅ Assignment with attachments created in {}ms (storage: {}ms, total: {}ms)",
-                    totalDuration, storageDuration, totalDuration);
+            log.info("✅ {} assignment with attachments created in {}ms",
+                    targetType, totalDuration);
 
             return savedAssignment.getId();
 
@@ -190,6 +158,42 @@ public class AssignmentApplicationService implements AssignmentService {
             log.error("❌ Failed to create assignment with attachments for Course {}: {}",
                     courseId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to create assignment with attachments", e);
+        }
+    }
+
+    @Override
+    public AssignmentId createAssignmentForTeam(CreateTeamAssignmentCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+        long startTime = System.currentTimeMillis();
+
+        log.info("🚀 Creating TEAM assignment '{}' for Course {}",
+                command.title(), courseId.getValue());
+
+        try {
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new CourseNotFoundException("Course not found"));
+
+            Assignment assignment = Assignment.createForTeam(
+                    courseId,
+                    UnitId.fromString(command.unitId()),
+                    command.title(),
+                    command.description(),
+                    LocalDateTime.parse(command.dueDate()),
+                    command.maxPoints(),
+                    command.instructions()
+            );
+
+            Assignment savedAssignment = assignmentRepository.save(assignment);
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ TEAM assignment created in {}ms: {}",
+                    duration, savedAssignment.getId().getValue());
+
+            return savedAssignment.getId();
+
+        } catch (Exception e) {
+            log.error("❌ Failed to create team assignment: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to create team assignment", e);
         }
     }
 
@@ -326,10 +330,35 @@ public class AssignmentApplicationService implements AssignmentService {
         }
     }
 
+    @Override
+    public void deleteAssignment(AssignmentId assignmentId) {
+        log.info("🗑️ Deleting Assignment ID: {}", assignmentId.getValue());
+
+        try {
+            Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+
+            // Check if assignment has submissions
+            if (!assignment.getSubmissions().isEmpty()) {
+                log.error("❌ Cannot delete assignment {}: It has {} submissions",
+                        assignmentId.getValue(), assignment.getSubmissions().size());
+                throw new IllegalStateException("Cannot delete assignment with existing submissions");
+            }
+
+            assignmentRepository.delete(assignment);
+            log.info("✅ Assignment {} deleted successfully", assignmentId.getValue());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to delete Assignment {}: {}",
+                    assignmentId.getValue(), e.getMessage(), e);
+            throw e;
+        }
+    }
+
     // ------------------------------------------------------------------
     // ✅ ASSIGNMENT QUERIES
     // ------------------------------------------------------------------
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public AssignmentDTO getAssignmentById(AssignmentId assignmentId) {
@@ -337,6 +366,7 @@ public class AssignmentApplicationService implements AssignmentService {
         Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
         return mapToAssignmentDTO(assignment);
     }
+    */
 
     @Override
     @Transactional(readOnly = true)
@@ -352,6 +382,20 @@ public class AssignmentApplicationService implements AssignmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsByUnit(CourseId courseId, UnitId unitId) {
+        log.debug("📊 Fetching assignments for Course ID: {} and Unit ID: {}",
+                courseId.getValue(), unitId.getValue());
+
+        List<Assignment> assignments = assignmentRepository.findByCourseIdAndUnitId(courseId, unitId);
+
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    /*
+    @Override
+    @Transactional(readOnly = true)
     public List<AssignmentDTO> getActiveAssignmentsByCourse(CourseId courseId) {
         log.debug("📊 Fetching active assignments for Course ID: {}", courseId.getValue());
 
@@ -361,7 +405,9 @@ public class AssignmentApplicationService implements AssignmentService {
                 .map(this::mapToAssignmentDTO)
                 .collect(Collectors.toList());
     }
+    */
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public List<AssignmentDTO> getAssignmentsDueSoon(CourseId courseId, int daysAhead) {
@@ -378,6 +424,7 @@ public class AssignmentApplicationService implements AssignmentService {
                 .map(this::mapToAssignmentDTO)
                 .collect(Collectors.toList());
     }
+    */
 
     @Override
     @Transactional(readOnly = true)
@@ -421,28 +468,66 @@ public class AssignmentApplicationService implements AssignmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsForStudentMonth(
+            UserId studentId,
+            LocalDateTime monthStart,
+            LocalDateTime monthEnd) {
+
+        log.info("📅 Fetching assignments for Student {} for month {} to {}",
+                studentId.getValue(), monthStart.toLocalDate(), monthEnd.toLocalDate());
+
+        List<Assignment> assignments = assignmentRepository.findAssignmentsByStudentForMonth(
+                studentId, monthStart, monthEnd);
+
+        log.info("✅ Found {} assignments for student month view", assignments.size());
+
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AssignmentDTO> getAssignmentsForTeacherMonth(
+            UserId teacherId,
+            LocalDateTime monthStart,
+            LocalDateTime monthEnd) {
+
+        log.info("📅 Fetching assignments for Teacher {} for month {} to {}",
+                teacherId.getValue(), monthStart.toLocalDate(), monthEnd.toLocalDate());
+
+        List<Assignment> assignments = assignmentRepository.findAssignmentsByTeacherForMonth(
+                teacherId, monthStart, monthEnd);
+
+        log.info("✅ Found {} assignments for teacher month view", assignments.size());
+
+        return assignments.stream()
+                .map(this::mapToAssignmentDTO)
+                .collect(Collectors.toList());
+    }
+
+    /*
+    @Override
+    @Transactional(readOnly = true)
     public boolean canAcceptSubmissions(AssignmentId assignmentId) {
         Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
         return assignment.canAcceptSubmissions();
     }
+    */
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public int getAttachmentCount(AssignmentId assignmentId) {
         Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
         return assignment.getAttachmentCount();
     }
+    */
 
     // ------------------------------------------------------------------
     // ✅ PRIVATE HELPER METHODS
     // ------------------------------------------------------------------
 
-    /**
-     * ✅ Store documents with rate limiting
-     *
-     * Uses Semaphore to limit concurrent file writes.
-     * Virtual Thread parks when waiting for permit.
-     */
     private List<DocumentMetadata> storeDocumentsWithRateLimit(
             String targetId,
             List<org.springframework.web.multipart.MultipartFile> files) {
@@ -469,6 +554,18 @@ public class AssignmentApplicationService implements AssignmentService {
                 });
     }
 
+    private AssignmentTargetType validateTargetType(String targetType) {
+        if (targetType == null || targetType.trim().isEmpty()) {
+            return AssignmentTargetType.INDIVIDUAL;
+        }
+
+        try {
+            return AssignmentTargetType.valueOf(targetType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid target type. Must be INDIVIDUAL or TEAM");
+        }
+    }
+
     private AssignmentDTO mapToAssignmentDTO(Assignment assignment) {
         List<DocumentDTO> attachmentDTOs = assignment.getAttachments().stream()
                 .map(doc -> new DocumentDTO(
@@ -477,10 +574,15 @@ public class AssignmentApplicationService implements AssignmentService {
                 ))
                 .collect(Collectors.toList());
 
+        String targetType = assignment.getTargetType().name();
+        boolean isTeamAssignment = assignment.isTeamAssignment();
+
         return new AssignmentDTO(
                 assignment.getId().getValue(),
                 assignment.getCourseId().getValue(),
-                "Course Name", // TODO: Get from Course
+                assignment.getUnitId().getValue(),
+                "Course Name",
+                "Unit Name",
                 assignment.getTitle(),
                 assignment.getDescription(),
                 assignment.getCreatedAt().toString(),
@@ -491,7 +593,8 @@ public class AssignmentApplicationService implements AssignmentService {
                 assignment.getSubmissions().size(),
                 assignment.getAttachmentCount(),
                 assignment.canAcceptSubmissions(),
-                attachmentDTOs
-        );
+                targetType,
+                isTeamAssignment,
+                attachmentDTOs);
     }
 }

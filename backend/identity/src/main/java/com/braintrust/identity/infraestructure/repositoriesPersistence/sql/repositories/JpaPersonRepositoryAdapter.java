@@ -13,10 +13,16 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+// other imports...
 
 @Repository
-@Slf4j // ⬅️ Enable the 'log' variable
 public class JpaPersonRepositoryAdapter implements PersonRepository {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(JpaPersonRepositoryAdapter.class);
 
     private final PersonJpaRepository jpaRepository;
     private final PersonEntityMapper mapper;

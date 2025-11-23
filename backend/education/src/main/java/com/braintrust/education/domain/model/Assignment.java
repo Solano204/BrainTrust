@@ -1,9 +1,6 @@
 package com.braintrust.education.domain.model;
 
-import com.braintrust.education.domain.valueobjects.AssignmentId;
-import com.braintrust.education.domain.valueobjects.CourseId;
-import com.braintrust.education.domain.valueobjects.Document;
-import com.braintrust.education.domain.valueobjects.Score;
+import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.domain.AggregateRoot;
 
@@ -12,9 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-// 📍 education/domain/model/Assignment.java - AGGREGATE ROOT
 public class Assignment extends AggregateRoot<AssignmentId> {
     private CourseId courseId;
+    private UnitId unitId; // ✅ Now properly linked to a unit
     private String title;
     private String description;
     private LocalDateTime createdAt;
@@ -24,12 +21,13 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     private String instructions;
     private final List<Submission> submissions;
     private boolean active;
-
+    private AssignmentTargetType targetType;
     private static final int MAX_ATTACHMENTS = 10;
 
-    private Assignment(AssignmentId id, CourseId courseId, String title) {
+    private Assignment(AssignmentId id, CourseId courseId, UnitId unitId, String title) {
         this.id = id;
         this.courseId = courseId;
+        this.unitId = unitId; // ✅ UnitId is now required in constructor
         this.title = validateTitle(title);
         this.createdAt = LocalDateTime.now();
         this.attachments = new ArrayList<>();
@@ -37,11 +35,13 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         this.active = true;
     }
 
-    //  Factory Method for NEW Assignment (without attachments)
-    public static Assignment create(CourseId courseId, String title, String description,
-                                    LocalDateTime dueDate, int maxPoints, String instructions) {
+    // ✅ Factory Method for INDIVIDUAL Assignment with Unit
+    public static Assignment createForIndividual(CourseId courseId, UnitId unitId, String title,
+                                                 String description, LocalDateTime dueDate,
+                                                 int maxPoints, String instructions) {
         AssignmentId id = AssignmentId.generate();
-        Assignment assignment = new Assignment(id, courseId, title);
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.targetType = AssignmentTargetType.INDIVIDUAL;
         assignment.description = description;
         assignment.dueDate = dueDate;
         assignment.maxScore = new Score(maxPoints, maxPoints);
@@ -49,16 +49,48 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    //  Factory Method for NEW Assignment (with attachments)
-    public static Assignment createWithAttachments(CourseId courseId, String title, String description,
-                                                   LocalDateTime dueDate, int maxPoints, String instructions,
-                                                   List<Document> attachments) {
+    // ✅ Factory Method for TEAM Assignment with Unit
+    public static Assignment createForTeam(CourseId courseId, UnitId unitId, String title,
+                                           String description, LocalDateTime dueDate,
+                                           int maxPoints, String instructions) {
         AssignmentId id = AssignmentId.generate();
-        Assignment assignment = new Assignment(id, courseId, title);
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.targetType = AssignmentTargetType.TEAM;
         assignment.description = description;
         assignment.dueDate = dueDate;
         assignment.maxScore = new Score(maxPoints, maxPoints);
         assignment.instructions = instructions;
+        return assignment;
+    }
+
+    // ✅ Factory Method with target type selection and Unit
+    public static Assignment create(CourseId courseId, UnitId unitId, String title, String description,
+                                    LocalDateTime dueDate, int maxPoints, String instructions,
+                                    AssignmentTargetType targetType) {
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+        assignment.targetType = targetType;
+        return assignment;
+    }
+
+
+
+
+    // ✅ Factory Method with attachments, target type and Unit
+    public static Assignment createWithAttachments(CourseId courseId, UnitId unitId, String title, String description,
+                                                   LocalDateTime dueDate, int maxPoints, String instructions,
+                                                   List<Document> attachments, AssignmentTargetType targetType) {
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+        assignment.targetType = targetType;
 
         if (attachments != null && !attachments.isEmpty()) {
             assignment.addAttachments(attachments);
@@ -67,19 +99,21 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // Reconstitute method for EXISTING Assignment (from database)
-    public static Assignment reconstitute(AssignmentId id, CourseId courseId, String title,
+    // ✅ RECONSTITUTE METHOD - UnitId is now properly handled
+    public static Assignment reconstitute(AssignmentId id, CourseId courseId, UnitId unitId, String title,
                                           String description, LocalDateTime createdAt,
                                           List<Document> attachments, LocalDateTime dueDate,
                                           Score maxScore, String instructions,
-                                          List<Submission> submissions, boolean active) {
-        Assignment assignment = new Assignment(id, courseId, title);
+                                          List<Submission> submissions, boolean active,
+                                          AssignmentTargetType targetType) {
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
         assignment.description = description;
         assignment.createdAt = createdAt;
         assignment.dueDate = dueDate;
         assignment.maxScore = maxScore;
         assignment.instructions = instructions;
         assignment.active = active;
+        assignment.targetType = targetType;
 
         if (attachments != null) {
             assignment.attachments.addAll(attachments);
@@ -87,9 +121,10 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         if (submissions != null) {
             assignment.submissions.addAll(submissions);
         }
-
         return assignment;
     }
+
+    // ... (rest of your methods remain the same, just ensure they use the unitId)
 
     private String validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
@@ -148,21 +183,17 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return !attachments.isEmpty();
     }
 
-    // Comportamiento de dominio - sin events
     public Submission submitWork(UserId studentId, String content, List<Document> submissionAttachments) {
-        // Rule 1: If inactive AND past due date -> REJECT
         if (!this.active && dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
             throw new IllegalStateException("Assignment is closed and cannot accept submissions");
         }
 
-        // Rule 2: If inactive BUT before due date -> Still allow (edge case)
         if (!this.active && (dueDate == null || LocalDateTime.now().isBefore(dueDate))) {
+            // Allow submission but assignment remains inactive
         }
 
-        // Determine submission status based on timing and assignment state
         SubmissionStatus status = determineSubmissionStatus();
 
-        // Create submission with appropriate status
         Submission submission = Submission.create(
                 this.id,
                 studentId,
@@ -176,32 +207,26 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return submission;
     }
 
-    // Helper method to determine submission status
     private SubmissionStatus determineSubmissionStatus() {
-        // If active, check if it's past due date
         if (this.active) {
             if (dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
-                return SubmissionStatus.LATE_SUBMITTED; // Active but late
+                return SubmissionStatus.LATE_SUBMITTED;
             }
-            return SubmissionStatus.SUBMITTED; // Active and on time
+            return SubmissionStatus.SUBMITTED;
         }
 
-        // If inactive but before due date (shouldn't normally happen, but handle it)
         if (dueDate == null || LocalDateTime.now().isBefore(dueDate)) {
-            return SubmissionStatus.SUBMITTED; // Inactive but on time
+            return SubmissionStatus.SUBMITTED;
         }
 
-        // This shouldn't be reached due to validation above, but just in case
         throw new IllegalStateException("Invalid assignment state for submission");
     }
 
     public boolean canAcceptSubmissions() {
-        // If active = true, always accept submissions (regardless of due date)
         if (active) {
             return true;
         }
 
-        // If active = false, only accept if due date hasn't passed yet
         return dueDate == null || LocalDateTime.now().isBefore(dueDate);
     }
 
@@ -226,8 +251,13 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         this.instructions = instructions;
     }
 
+    public boolean isTeamAssignment() {
+        return targetType == AssignmentTargetType.TEAM;
+    }
+
     // Getters
     public CourseId getCourseId() { return courseId; }
+    public UnitId getUnitId() { return unitId; } // ✅ UnitId getter
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
@@ -237,4 +267,5 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     public String getInstructions() { return instructions; }
     public List<Submission> getSubmissions() { return List.copyOf(submissions); }
     public boolean isActive() { return active; }
+    public AssignmentTargetType getTargetType() { return targetType; }
 }

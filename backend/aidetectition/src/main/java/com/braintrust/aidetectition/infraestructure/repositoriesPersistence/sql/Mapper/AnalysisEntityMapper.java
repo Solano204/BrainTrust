@@ -17,10 +17,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 @Component
-@Slf4j // ⬅️ Enable the 'log' variable
 public class AnalysisEntityMapper {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(AnalysisEntityMapper.class);
     private final ObjectMapper objectMapper;
 
     // ✅ Spring will automatically inject ObjectMapper bean

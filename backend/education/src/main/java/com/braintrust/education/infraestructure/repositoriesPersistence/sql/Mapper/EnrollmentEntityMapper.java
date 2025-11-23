@@ -12,10 +12,16 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+// other imports...
+
 @Component
-@Slf4j // ⬅️ Enable the 'log' variable
 public class EnrollmentEntityMapper {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(EnrollmentEntityMapper.class);
     /**
      * Converts an Enrollment Domain Model to a JPA Entity.
      */

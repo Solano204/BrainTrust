@@ -34,5 +34,6 @@ C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintru
 C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\AnalysisRequestJpaRepository.java
 C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\JpaAnalysisRequestRepositoryAdapter.java
 C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\LocalFileStorageService.java
+C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\MockPythonAIDetectionProvider.java
 C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\ModelPerformance.java
 C:\Users\GAMER\Music\BrainTrust\backend\aidetectition\src\main\java\com\braintrust\aidetectition\infraestructure\repositoriesPersistence\sql\repositories\PythonAIDetectionProvider.java

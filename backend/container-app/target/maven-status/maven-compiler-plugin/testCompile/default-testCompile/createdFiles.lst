@@ -1,5 +1,4 @@
 com\braintrust\identity\unit\application\service\PersonApplicationServiceTest.class
-com\braintrust\iadetectition\integration\repository\AnalysisRequestRepositoryIntegrationTest.class
 com\braintrust\identity\unit\domain\model\RoleTest.class
 com\braintrust\education\integration\repository\SubmissionRepositoryIntegrationTest.class
 com\braintrust\education\unit\domain\model\CourseUnitTest.class
@@ -12,12 +11,9 @@ com\braintrust\identity\unit\application\service\UserApplicationServiceTest.clas
 com\braintrust\education\unit\application\service\SubmissionApplicationServiceTest.class
 com\braintrust\education\integration\repository\CourseRepositoryIntegrationTest.class
 com\braintrust\education\unit\application\mapper\EnrollmentEntityMapperTest.class
-com\braintrust\education\integration\repository\AssignmentRepositoryIntegrationTest.class
 com\braintrust\education\unit\domain\model\EnrollmentTest.class
 com\braintrust\education\unit\domain\valueobjects\SubmissionIdTest.class
 com\braintrust\education\unit\domain\model\CourseTest.class
-com\braintrust\iadetectition\integration\repository\AnalysisRequestRepositoryIntegrationTest$TestConfig.class
-com\braintrust\identity\unit\infraestructure\security\RateLimitServiceTest.class
 com\braintrust\identity\integration\config\BaseIntegrationTest.class
 com\braintrust\education\unit\domain\valueobjects\IdValueObjectsTest.class
 com\braintrust\identity\unit\domain\valueobjects\EmailTest.class
@@ -34,7 +30,6 @@ com\braintrust\iadetectition\unit\domain\model\DetectedSegmentTest.class
 com\braintrust\education\unit\application\service\AssignmentApplicationServiceTest.class
 com\braintrust\education\unit\application\mapper\CourseUnitEntityMapperTest.class
 com\braintrust\education\integration\repository\EnrollmentRepositoryIntegrationTest.class
-com\braintrust\education\unit\domain\model\AssignmentTest.class
 com\braintrust\education\unit\domain\valueobjects\ScoreTest.class
 com\braintrust\education\unit\domain\valueobjects\UnitIdTest.class
 com\braintrust\iadetectition\unit\domain\valueobjects\DetectionResultTest.class

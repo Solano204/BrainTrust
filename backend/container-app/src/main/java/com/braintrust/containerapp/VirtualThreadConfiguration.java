@@ -31,10 +31,17 @@ import java.util.concurrent.Executors;
  * @author BrainTrust Team
  * @since Java 21
  */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+
 @Configuration
 @EnableAsync
-@Slf4j
 public class VirtualThreadConfiguration {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(VirtualThreadConfiguration.class);
 
     /**
      * ✅ EXECUTOR FOR @Async METHODS
