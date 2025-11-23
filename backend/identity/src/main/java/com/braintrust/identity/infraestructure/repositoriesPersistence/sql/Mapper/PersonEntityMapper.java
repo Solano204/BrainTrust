@@ -1,5 +1,6 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.Mapper;
 
+import com.braintrust.identity.application.services.UserApplicationService;
 import com.braintrust.identity.domain.model.Person;
 import com.braintrust.identity.domain.valueobjects.Address;
 import com.braintrust.identity.domain.valueobjects.PersonId;
@@ -7,9 +8,14 @@ import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entit
 import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Component
-@Slf4j // ⬅️ Enable the 'log' variable
 public class PersonEntityMapper {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(PersonEntityMapper.class);
 
     /**
      * Converts a Person Domain Model to a JPA Entity.

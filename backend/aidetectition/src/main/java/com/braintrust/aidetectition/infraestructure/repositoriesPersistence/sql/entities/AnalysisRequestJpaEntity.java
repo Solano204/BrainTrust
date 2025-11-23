@@ -1,6 +1,9 @@
 package com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -20,7 +23,7 @@ public class AnalysisRequestJpaEntity {
     private String submissionId;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
-    private String contentToAnalyze;
+    private String content;
 
     @Column(name = "status", length = 20, nullable = false)
     private String status;
@@ -34,8 +37,7 @@ public class AnalysisRequestJpaEntity {
     @Column(name = "confidence_level", length = 20)
     private String confidenceLevel;
 
-    // ✅ NEW: Store AI-detected segments as JSON
-    @Column(name = "detected_segments", columnDefinition = "TEXT")
+    @Column(name = "detected_segments_json", columnDefinition = "jsonb")
     private String detectedSegmentsJson;
 
     @Column(name = "error_message", columnDefinition = "TEXT")
@@ -56,7 +58,7 @@ public class AnalysisRequestJpaEntity {
                                     String errorMessage, LocalDateTime createdAt, LocalDateTime analyzedAt) {
         this.id = id;
         this.submissionId = submissionId;
-        this.contentToAnalyze = contentToAnalyze;
+        this.content = contentToAnalyze;
         this.status = status;
         this.probability = probability;
         this.modelUsed = modelUsed;
@@ -74,8 +76,8 @@ public class AnalysisRequestJpaEntity {
     public String getSubmissionId() { return submissionId; }
     public void setSubmissionId(String submissionId) { this.submissionId = submissionId; }
 
-    public String getContentToAnalyze() { return contentToAnalyze; }
-    public void setContentToAnalyze(String contentToAnalyze) { this.contentToAnalyze = contentToAnalyze; }
+    public String getContentToAnalyze() { return content; }
+    public void setContentToAnalyze(String contentToAnalyze) { this.content = contentToAnalyze; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

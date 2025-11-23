@@ -20,7 +20,19 @@ public interface SubmissionJpaRepository extends JpaRepository<SubmissionJpaEnti
     List<SubmissionJpaEntity> findByStatus(String status);
     List<SubmissionJpaEntity> findByAssignmentIdAndSubmittedAtAfter(String assignmentId, LocalDateTime dueDate);
 
+    // ✅ NEW: Find submissions by course and student (requires JOIN with assignments)
+    @Query("SELECT s FROM SubmissionJpaEntity s " +
+            "JOIN AssignmentJpaEntity a ON s.assignmentId = a.id " +
+            "WHERE a.courseId = :courseId AND s.studentId = :studentId")
+    List<SubmissionJpaEntity> findByCourseIdAndStudentId(
+            @Param("courseId") String courseId,
+            @Param("studentId") String studentId);
 
+    // ✅ NEW: Find submissions by course (requires JOIN with assignments)
+    @Query("SELECT s FROM SubmissionJpaEntity s " +
+            "JOIN AssignmentJpaEntity a ON s.assignmentId = a.id " +
+            "WHERE a.courseId = :courseId")
+    List<SubmissionJpaEntity> findByCourseId(@Param("courseId") String courseId);
 
     @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
             "LEFT JOIN FETCH s.documents " +
@@ -63,6 +75,24 @@ public interface SubmissionJpaRepository extends JpaRepository<SubmissionJpaEnti
     List<SubmissionJpaEntity> findByAssignmentIdAndSubmittedAtAfterWithDocuments(
             @Param("assignmentId") String assignmentId,
             @Param("dueDate") LocalDateTime dueDate);
+
+
+    List<SubmissionJpaEntity> findByTeamId(String teamId);
+    List<SubmissionJpaEntity> findByTeamIdAndAssignmentId(String teamId, String assignmentId);
+    boolean existsByAssignmentIdAndTeamId(String assignmentId, String teamId);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.teamId = :teamId")
+    List<SubmissionJpaEntity> findByTeamIdWithDocuments(@Param("teamId") String teamId);
+
+    @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
+            "LEFT JOIN FETCH s.documents " +
+            "WHERE s.teamId = :teamId AND s.assignmentId = :assignmentId")
+    List<SubmissionJpaEntity> findByTeamIdAndAssignmentIdWithDocuments(
+            @Param("teamId") String teamId,
+            @Param("assignmentId") String assignmentId);
+
 
 
 

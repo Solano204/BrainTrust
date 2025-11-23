@@ -27,10 +27,19 @@ import java.util.stream.Collectors;
  * Local filesystem implementation of document storage
  * Use for development and small deployments
  */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+
+// other imports...
+
 @Service
-@Slf4j
 @Primary
 public class LocalFileStorageService implements DocumentStorageService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(LocalFileStorageService.class);
 
     @Value("${document.storage.local.base-path:./storage/documents}")
     private String baseStoragePath;

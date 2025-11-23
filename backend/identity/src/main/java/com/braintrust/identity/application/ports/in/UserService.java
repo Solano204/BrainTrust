@@ -2,6 +2,8 @@ package com.braintrust.identity.application.ports.in;
 
 import com.braintrust.identity.application.dtos.commands.*;
 import com.braintrust.identity.application.dtos.dtos.AuthenticationResult;
+import com.braintrust.identity.application.dtos.dtos.CompleteUserDTO;
+import com.braintrust.identity.application.dtos.dtos.MinimalUserInfoDTO;
 import com.braintrust.identity.application.dtos.dtos.UserDTO;
 import com.braintrust.identity.domain.model.Role;
 import com.braintrust.identity.domain.valueobjects.Email;
@@ -12,7 +14,11 @@ import java.util.List;
 
 // 📍 identity/application/ports/in/UserService.java
 public interface UserService {
-    
+
+
+    MinimalUserInfoDTO getMinimalUserInfo(UserId userId);
+
+
     // Commands
     UserId registerTeacher(RegisterTeacherCommand command);
     UserId registerStudent(RegisterStudentCommand command);
@@ -23,8 +29,11 @@ public interface UserService {
     void changeUserPassword(ChangePasswordCommand command);
     void deactivateUser(UserId userId);
     void activateUser(UserId userId);
+    CompleteUserDTO createCompleteUser(CreateCompleteUserCommand command);
+    List<UserDTO> getUsersByIds(List<String> userIds);
 
     // Queries
+    List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds);
     UserDTO getUserById(UserId userId);
     UserDTO getUserByEmail(Email email);
     UserDTO getUserByPersonId(PersonId personId);

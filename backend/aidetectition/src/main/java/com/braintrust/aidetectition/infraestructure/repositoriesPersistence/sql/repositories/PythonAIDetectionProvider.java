@@ -32,11 +32,17 @@ import java.util.stream.Collectors;
  *
  * ✅ La versión ORIGINAL (secuencial) también funciona perfectamente con VTs
  */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+// other imports...
+
 @Component("pythonAIProvider")
-@Slf4j
-@Primary
 public class PythonAIDetectionProvider implements AIDetectionProvider {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(PythonAIDetectionProvider.class);
     @Value("${ai.python.analyze.url:http://localhost:8001/analyze}")
     private String analyzeApiUrl;
 

@@ -2,6 +2,7 @@ package com.braintrust.education.domain.model;
 
 import com.braintrust.education.domain.valueobjects.CourseCode;
 import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.domain.AggregateRoot;
 
@@ -99,6 +100,14 @@ public class Course extends AggregateRoot<CourseId> {
         this.group = group;
     }
 
+
+    public boolean removeUnit(UnitId unitId) {
+        boolean removed = units.removeIf(unit -> unit.getId().equals(unitId));
+
+        return removed;
+    }
+
+
     public Enrollment enrollStudent(UserId studentId) {
         if (!this.active) {
             throw new IllegalStateException("Cannot enroll students in inactive course");
@@ -125,14 +134,7 @@ public class Course extends AggregateRoot<CourseId> {
         enrollments.remove(enrollment);
     }
 
-    public Assignment createAssignment(String title, String description,
-                                       LocalDateTime dueDate, int maxPoints, String instructions) {
-        if (!this.active) {
-            throw new IllegalStateException("Cannot create assignments for inactive course");
-        }
 
-        return Assignment.create(this.id, title, description, dueDate, maxPoints, instructions);
-    }
 
     public CourseUnit addUnit(String name, int order, String description) {
         CourseUnit unit = CourseUnit.create(this.id, name, order, description);

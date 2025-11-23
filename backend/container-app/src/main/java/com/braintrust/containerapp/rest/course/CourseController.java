@@ -8,18 +8,27 @@ import com.braintrust.education.application.ports.in.CourseService;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+// other imports...
 @RestController
 @RequestMapping("/api/courses")
 @CrossOrigin(origins = "*")
-@Slf4j // ⬅️ Enable the 'log' variable
+
 public class CourseController {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(CourseController.class);
+
+    // ...rest of the controller...
 
     private final CourseService courseService;
 
@@ -71,6 +80,7 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course image updated successfully", null));
     }
 
+    /*
     @PutMapping("/{courseId}/activate")
     public ResponseEntity<SuccessResponseDTO> activateCourse(@PathVariable String courseId) {
         log.info("Activating Course ID: {}", courseId);
@@ -78,13 +88,25 @@ public class CourseController {
         log.info("Course ID {} status set to active.", courseId);
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course activated successfully", null));
     }
+    */
 
+    /*
     @PutMapping("/{courseId}/deactivate")
     public ResponseEntity<SuccessResponseDTO> deactivateCourse(@PathVariable String courseId) {
         log.warn("Deactivating Course ID: {}", courseId);
         courseService.deactivateCourse(CourseId.fromString(courseId));
         log.warn("Course ID {} status set to inactive.", courseId);
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course deactivated successfully", null));
+    }
+    */
+
+    // NEW: Delete course with cascade
+    @DeleteMapping("/{courseId}")
+    public ResponseEntity<SuccessResponseDTO> deleteCourse(@PathVariable String courseId) {
+        log.warn("Deleting Course ID: {} with cascade", courseId);
+        courseService.deleteCourse(CourseId.fromString(courseId));
+        log.info("Course ID {} deleted successfully with cascade", courseId);
+        return ResponseEntity.ok(new SuccessResponseDTO(true, "Course deleted successfully", null));
     }
 
     // ========================================
@@ -165,7 +187,7 @@ public class CourseController {
         UpdateUnitCommand command = new UpdateUnitCommand(
                 unitId,
                 request.name(),
-                request.description() ,
+                request.description(),
                 request.urlImage()
         );
         courseService.updateUnit(command);
@@ -184,16 +206,27 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Unit image updated successfully", null));
     }
 
+    // NEW: Delete unit with cascade
+    @DeleteMapping("/units/{unitId}")
+    public ResponseEntity<SuccessResponseDTO> deleteUnit(@PathVariable String unitId) {
+        log.warn("Deleting Unit ID: {} with cascade", unitId);
+        courseService.deleteUnit(UnitId.fromString(unitId));
+        log.info("Unit ID {} deleted successfully with cascade", unitId);
+        return ResponseEntity.ok(new SuccessResponseDTO(true, "Unit deleted successfully", null));
+    }
+
     // ========================================
     // ✅ COURSE QUERIES
     // ========================================
 
+    /*
     @GetMapping
     public ResponseEntity<List<CourseDTO>> getAllCourses() {
         log.debug("Fetching all active courses.");
         List<CourseDTO> courses = courseService.getActiveCourses();
         return ResponseEntity.ok(courses);
     }
+    */
 
     @GetMapping("/{courseId}")
     public ResponseEntity<CourseDTO> getCourseById(@PathVariable String courseId) {
@@ -202,14 +235,14 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-
-    // delete
+    /*
     @GetMapping("/code/{code}")
     public ResponseEntity<CourseDTO> getCourseByCode(@PathVariable String code) {
         log.debug("Querying course by code: {}", code);
         CourseDTO course = courseService.getCourseByCode(new CourseCode(code));
         return ResponseEntity.ok(course);
     }
+    */
 
     @GetMapping("/teacher/{teacherId}")
     public ResponseEntity<List<CourseDTO>> getCoursesByTeacher(@PathVariable String teacherId) {
@@ -218,16 +251,24 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    // NEW: Get courses for student
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<CourseDTO>> getCoursesByStudent(@PathVariable String studentId) {
+        log.debug("Fetching courses for Student ID: {}", studentId);
+        List<CourseDTO> courses = courseService.getCoursesByStudent(UserId.fromString(studentId));
+        return ResponseEntity.ok(courses);
+    }
 
-    // delete
+    /*
     @GetMapping("/active")
     public ResponseEntity<List<CourseDTO>> getActiveCourses() {
         log.debug("Fetching all active courses (via dedicated endpoint).");
         List<CourseDTO> courses = courseService.getActiveCourses();
         return ResponseEntity.ok(courses);
     }
+    */
 
-    // delete
+    /*
     @GetMapping("/grade/{grade}/group/{group}")
     public ResponseEntity<List<CourseDTO>> getCoursesByGradeAndGroup(
             @PathVariable String grade,
@@ -237,6 +278,7 @@ public class CourseController {
         List<CourseDTO> courses = courseService.getCoursesByGradeAndGroup(grade, group);
         return ResponseEntity.ok(courses);
     }
+    */
 
     @GetMapping("/{courseId}/enrollments")
     public ResponseEntity<List<EnrollmentDTO>> getCourseEnrollments(@PathVariable String courseId) {
@@ -252,7 +294,7 @@ public class CourseController {
         return ResponseEntity.ok(units);
     }
 
-    /*delete */
+    /*
     @GetMapping("/{courseId}/enrollments/student/{studentId}/exists")
     public ResponseEntity<Boolean> isStudentEnrolled(
             @PathVariable String courseId,
@@ -265,12 +307,14 @@ public class CourseController {
         );
         return ResponseEntity.ok(enrolled);
     }
+    */
 
-    // delete
+    /*
     @GetMapping("/code/{code}/available")
     public ResponseEntity<Boolean> isCourseCodeAvailable(@PathVariable String code) {
         log.trace("Checking availability of course code: {}", code);
         boolean available = courseService.isCourseCodeAvailable(new CourseCode(code));
         return ResponseEntity.ok(available);
     }
+    */
 }

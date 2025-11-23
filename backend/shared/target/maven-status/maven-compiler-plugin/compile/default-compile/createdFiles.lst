@@ -6,12 +6,11 @@ com\braintrust\shared\application\dtos\dtos\SuccessResponseDTO.class
 com\braintrust\shared\domain\exception\BusinessRuleException.class
 com\braintrust\shared\application\dtos\dtos\DateRangeDTO.class
 com\braintrust\shared\application\dtos\DocumentAttachmentDTO.class
-com\braintrust\shared\domain\exception\ErrorResponseDTO$ErrorResponseDTOBuilder.class
 com\braintrust\shared\domain\exception\EmailAlreadyExistsException.class
 com\braintrust\shared\domain\ValueObject.class
+com\braintrust\shared\application\dtos\dtos\ErrorResponseDTO.class
 com\braintrust\shared\domain\exception\NotFoundException.class
 com\braintrust\shared\application\dtos\dtos\EmailNotificationDTO.class
 com\braintrust\shared\application\dtos\dtos\ValidationErrorDTO.class
 com\braintrust\shared\domain\Entity.class
-com\braintrust\shared\domain\exception\ErrorResponseDTO.class
 com\braintrust\shared\domain\exception\ValidationException.class

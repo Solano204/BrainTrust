@@ -19,9 +19,12 @@ com\braintrust\identity\application\services\PersonApplicationService.class
 com\braintrust\identity\application\dtos\dtos\UserDTO.class
 com\braintrust\identity\infraestructure\security\services\RateLimitService$RateLimitBucket.class
 com\braintrust\identity\application\ports\out\PersonRepository.class
+com\braintrust\identity\application\dtos\dtos\CompleteUserDTO.class
 com\braintrust\identity\infraestructure\security\filters\JwtAuthenticationFilter.class
+com\braintrust\identity\application\dtos\dtos\MinimalUserInfoDTO.class
 com\braintrust\identity\infraestructure\repositoriesPersistence\sql\Mapper\PersonEntityMapper.class
 com\braintrust\identity\application\ports\out\PasswordEncoder.class
+com\braintrust\identity\application\dtos\commands\CreateCompleteUserCommand.class
 com\braintrust\identity\infraestructure\repositoriesPersistence\sql\repositories\PersonJpaRepository.class
 com\braintrust\identity\application\dtos\commands\CreatePersonCommand.class
 com\braintrust\identity\domain\valueobjects\UserId.class
@@ -38,7 +41,9 @@ com\braintrust\identity\domain\valueobjects\Password.class
 com\braintrust\identity\infraestructure\security\services\CustomUserDetailsService.class
 com\braintrust\identity\domain\exceptions\InvalidCredentialsException.class
 com\braintrust\identity\domain\exceptions\UserNotActiveException.class
+com\braintrust\identity\application\dtos\commands\CreateCompleteUserCommand$UserRole.class
 com\braintrust\identity\application\dtos\commands\RefreshTokenCommand.class
+com\braintrust\identity\application\services\UserApplicationService$1.class
 com\braintrust\identity\application\dtos\commands\AuthenticateUserCommand.class
 com\braintrust\identity\application\dtos\commands\UpdatePersonAddressCommand.class
 com\braintrust\identity\application\dtos\dtos\AddressDTO.class

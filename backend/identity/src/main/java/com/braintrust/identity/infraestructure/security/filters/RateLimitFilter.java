@@ -16,10 +16,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 // @Component
-@RequiredArgsConstructor
-@Slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.filter.OncePerRequestFilter;
+// other imports...
+
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(RateLimitFilter.class);
     private final RateLimitService rateLimitService;
     private final JwtService jwtUtil;
 
@@ -29,6 +35,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
             "/v3/api-docs",
             "/swagger-ui"
     };
+
+    public RateLimitFilter(RateLimitService rateLimitService, JwtService jwtUtil) {
+        this.rateLimitService = rateLimitService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(

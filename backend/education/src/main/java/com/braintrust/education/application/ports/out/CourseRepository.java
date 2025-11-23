@@ -9,17 +9,32 @@ import com.braintrust.identity.domain.valueobjects.UserId;
 import java.util.List;
 import java.util.Optional;
 
-// 📍 education/application/ports/out/CourseRepository.java
 public interface CourseRepository {
+
+    // Commands
     Course save(Course course);
     void delete(Course course);
-    Optional<Course> findById(CourseId courseId);
-    Optional<Course> findByCode(CourseCode code);
-    List<Course> findByTeacherId(UserId teacherId);
-    List<Course> findActiveCourses();
-    List<Course> findByGradeAndGroup(String grade, String group);
-    boolean existsByCode(CourseCode code);
 
-    // ✅ NEW: Find course by unit ID
+    // Queries
+    Optional<Course> findById(CourseId courseId);
+
+    /*
+    Optional<Course> findByCode(CourseCode code);
+    */
+
+    List<Course> findByTeacherId(UserId teacherId);
+
+    // NEW: Find courses by student
+    List<Course> findByStudentId(UserId studentId);
+
+    /*
+    List<Course> findActiveCourses();
+    */
+
+    /*
+    List<Course> findByGradeAndGroup(String grade, String group);
+    */
+
+    boolean existsByCode(CourseCode code);
     Optional<Course> findByUnitId(UnitId unitId);
 }

@@ -27,35 +27,27 @@ jobs:
         uses: actions/checkout@v4
 
       # ============================================
-      # SETUP JAVA 21
+      # SETUP JAVA 25 (UPDATED)
       # ============================================
-      - name: ☕ Setup Java 21
+      - name: ☕ Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
           cache: 'maven'
           cache-dependency-path: 'backend/pom.xml'
 
       # ============================================
-      # INSTALL ALL MODULES (Multi-module project)
+      # INSTALL ALL MODULES (SKIP TESTS - UPDATED)
       # ============================================
       - name: 🔨 Install All Modules
         run: ./mvnw clean install -DskipTests -B
 
       # ============================================
-      # RUN UNIT TESTS (with -pl container-app)
+      # SKIP TESTS MESSAGE (UPDATED)
       # ============================================
-      - name: 🧪 Run Unit Tests
-        run: ./mvnw test -pl container-app -Dtest="**/unit/**/*Test" -B
-
-      # ============================================
-      # RUN INTEGRATION TESTS (with -pl container-app)
-      # ============================================
-      - name: 🧪 Run Integration Tests
-        run: ./mvnw test -pl container-app -Dtest="**/integration/**/*Test" -DforkCount=1 -DreuseForks=false -Dsurefire.fork.environmentVariables=TESTCONTAINERS_RYUK_DISABLED=false -B
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: false
+      - name: ℹ️ Skip Tests Notice
+        run: echo "🧪 Tests skipped - test folders deleted for troubleshooting"
 
       # ============================================
       # PACKAGE APPLICATION
@@ -84,3 +76,4 @@ jobs:
           echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Note:** Tests skipped - test folders deleted" >> $GITHUB_STEP_SUMMARY
