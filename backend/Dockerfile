@@ -1,19 +1,19 @@
 # ============================================
-# BUILD STAGE
+# BUILD STAGE - USE JAVA 25 MAVEN IMAGE
 # ============================================
 FROM maven:3.9.9-eclipse-temurin-25 AS builder
 
 WORKDIR /app
 COPY . .
 
-# Build with Java 25 compatibility
-RUN mvn clean package -DskipTests -pl container-app -am -Dmaven.compiler.source=25 -Dmaven.compiler.target=25
+# Build with Java 25
+RUN mvn clean package -DskipTests -pl container-app -am
 
 # Debug: Check generated JARs
 RUN echo "=== Generated JARs ===" && find /app -name "*.jar" -type f
 
 # ============================================
-# RUNTIME STAGE
+# RUNTIME STAGE - USE JAVA 25 JRE
 # ============================================
 FROM eclipse-temurin:25-jre
 
