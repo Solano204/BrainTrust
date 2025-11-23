@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 const MOCK_TASK_SUBMISSIONS: Submission[] = [
   {
     id: "sub-task-1",
+    courseID: "crs-101",
     assignmentId: "task-1",
     studentId: "student-001",
     content:

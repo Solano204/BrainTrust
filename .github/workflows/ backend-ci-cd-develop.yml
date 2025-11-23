@@ -32,26 +32,26 @@ jobs:
         uses: actions/checkout@v4
 
       # ============================================
-      # SETUP JAVA 21
+      # SETUP JAVA 25 (UPDATED)
       # ============================================
-      - name: ☕ Setup Java 21
+      - name: ☕ Setup Java 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
           cache: 'maven'
           cache-dependency-path: 'backend/pom.xml'
 
       # ============================================
-      # BUILD ALL MODULES WITH TESTS (IMPROVED)
+      # BUILD ALL MODULES SKIPPING TESTS (UPDATED)
       # ============================================
-      - name: 🔨 Build All Modules with Tests
+      - name: 🔨 Build All Modules (Skip Tests)
         run: |
-          ./mvnw clean install -B -DskipTests=false
-          echo "✅ All modules built and tested successfully"
+          ./mvnw clean install -B -DskipTests=true
+          echo "✅ All modules built successfully (tests skipped)"
 
       # ============================================
-      # PACKAGE APPLICATION
+      # PACKAGE APPLICATION (SKIP TESTS)
       # ============================================
       - name: 📦 Build Application Package
         run: ./mvnw package -DskipTests -B

@@ -1,10 +1,7 @@
 package com.braintrust.education.application.dtos.dtos;
 
-
-
 import java.util.List;
 
-// 📍 education/application/dtos/SubmissionDTO.java
 public record SubmissionDTO(
         String id,
         String assignmentId,
@@ -18,5 +15,9 @@ public record SubmissionDTO(
         String submittedAt,
         boolean isLate,
         List<DocumentDTO> attachments,
-        AIDetectionResultDTO aiAnalysis
+        AIDetectionResultDTO aiAnalysis,
+        // ✅ ADD TEAM INFORMATION
+        String teamId,           // Team ID if team submission
+        String teamName,         // Team name if team submission
+        boolean isTeamSubmission // Convenience flag
 ) {}

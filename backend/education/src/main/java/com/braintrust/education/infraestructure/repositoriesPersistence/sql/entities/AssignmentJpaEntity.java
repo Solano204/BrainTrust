@@ -1,6 +1,5 @@
 package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
 
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,18 +8,21 @@ import java.util.List;
 @Entity
 @Table(name = "assignments", indexes = {
         @Index(name = "idx_assignment_course", columnList = "course_id"),
-        @Index(name = "idx_assignment_due_date", columnList = "due_date")
+        @Index(name = "idx_assignment_unit", columnList = "unit_id"),
+        @Index(name = "idx_assignment_due_date", columnList = "due_date"),
+        @Index(name = "idx_assignment_target_type", columnList = "target_type")
 })
-
-// VERY POITN IMPORTANT HERE I DONT HAVE THE LIST OF ENTITIIES (" SUBMISSION " ) DUE TO I NEED FOLLOW AND RESPÉCT THE LIMITS OF THE DDD
 public class AssignmentJpaEntity {
-
     @Id
     @Column(name = "id", length = 50)
     private String id;
 
     @Column(name = "course_id", length = 50, nullable = false)
     private String courseId;
+
+    // ✅ FIXED: Proper ManyToOne relationship with CourseUnit
+    @Column(name = "unit_id", length = 50)
+    private String unit;
 
     @Column(name = "title", length = 255, nullable = false)
     private String title;
@@ -43,20 +45,21 @@ public class AssignmentJpaEntity {
     @Column(name = "active", nullable = false)
     private boolean active;
 
-    // THAT WILL ALLOW ME TO SAVE AUTOMATILCALLY THE DOCUMENTS WHEN I SAVE THE ENTIIY FATHER
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "assignment_id")
+    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DocumentJpaEntity> documents = new ArrayList<>();
 
+    @Column(name = "target_type", length = 20, nullable = false)
+    private String targetType = "INDIVIDUAL";
 
-    // Constructors
     public AssignmentJpaEntity() {}
 
-    public AssignmentJpaEntity(String id, String courseId, String title, String description,
-                               LocalDateTime createdAt, LocalDateTime dueDate, int maxPoints,
-                               String instructions, boolean active) {
+    public AssignmentJpaEntity(String id, String courseId, String unit, String title,
+                               String description, LocalDateTime createdAt, LocalDateTime dueDate,
+                               int maxPoints, String instructions, boolean active,
+                               String targetType) {
         this.id = id;
         this.courseId = courseId;
+        this.unit = unit;
         this.title = title;
         this.description = description;
         this.createdAt = createdAt;
@@ -64,6 +67,18 @@ public class AssignmentJpaEntity {
         this.maxPoints = maxPoints;
         this.instructions = instructions;
         this.active = active;
+        this.targetType = targetType != null ? targetType : "INDIVIDUAL";
+    }
+
+    // Helper method to add document and set bidirectional relationship
+    public void addDocument(DocumentJpaEntity document) {
+        documents.add(document);
+        document.setAssignment(this);
+    }
+
+    public void removeDocument(DocumentJpaEntity document) {
+        documents.remove(document);
+        document.setAssignment(null);
     }
 
     // Getters and setters
@@ -72,6 +87,9 @@ public class AssignmentJpaEntity {
 
     public String getCourseId() { return courseId; }
     public void setCourseId(String courseId) { this.courseId = courseId; }
+
+    public String getUnit() { return unit; }
+    public void setUnit(String unit) { this.unit = unit; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -95,8 +113,18 @@ public class AssignmentJpaEntity {
     public void setActive(boolean active) { this.active = active; }
 
     public List<DocumentJpaEntity> getDocuments() { return documents; }
-    public void setDocuments(List<DocumentJpaEntity> documents) { this.documents = documents; }
+    public void setDocuments(List<DocumentJpaEntity> documents) {
+        this.documents = documents;
+        // Set the bidirectional relationship
+        if (documents != null) {
+            for (DocumentJpaEntity document : documents) {
+                document.setAssignment(this);
+            }
+        }
+    }
 
-
-
+    public String getTargetType() { return targetType; }
+    public void setTargetType(String targetType) {
+        this.targetType = targetType != null ? targetType : "INDIVIDUAL";
+    }
 }

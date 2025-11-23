@@ -12,7 +12,6 @@ import com.braintrust.identity.domain.valueobjects.UserId;
 
 import java.util.List;
 
-// 📍 education/application/ports/in/CourseService.java
 public interface CourseService {
 
     // Commands
@@ -20,8 +19,17 @@ public interface CourseService {
     CourseId createCourseWithImage(CreateCourseWithImageCommand command);
     void updateCourseDetails(UpdateCourseCommand command);
     void updateCourseImage(CourseId courseId, String imageUrl);
+
+    /*
     void activateCourse(CourseId courseId);
+    */
+
+    /*
     void deactivateCourse(CourseId courseId);
+    */
+
+    // NEW: Delete course with cascade
+    void deleteCourse(CourseId courseId);
 
     EnrollmentId enrollStudent(EnrollStudentCommand command);
     void unenrollStudent(UnenrollStudentCommand command);
@@ -31,14 +39,37 @@ public interface CourseService {
     void updateUnit(UpdateUnitCommand command);
     void updateUnitImage(UnitId unitId, String imageUrl);
 
+    // NEW: Delete unit with cascade
+    void deleteUnit(UnitId unitId);
+
     // Queries
     CourseDTO getCourseById(CourseId courseId);
+
+    /*
     CourseDTO getCourseByCode(CourseCode code);
+    */
+
     List<CourseDTO> getCoursesByTeacher(UserId teacherId);
+
+    // NEW: Get courses for student
+    List<CourseDTO> getCoursesByStudent(UserId studentId);
+
+    /*
     List<CourseDTO> getActiveCourses();
+    */
+
+    /*
     List<CourseDTO> getCoursesByGradeAndGroup(String grade, String group);
+    */
+
     List<EnrollmentDTO> getCourseEnrollments(CourseId courseId);
     List<CourseUnitDTO> getCourseUnits(CourseId courseId);
+
+    /*
     boolean isStudentEnrolled(CourseId courseId, UserId studentId);
+    */
+
+    /*
     boolean isCourseCodeAvailable(CourseCode code);
+    */
 }

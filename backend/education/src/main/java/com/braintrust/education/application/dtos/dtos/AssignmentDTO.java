@@ -2,11 +2,12 @@ package com.braintrust.education.application.dtos.dtos;
 
 import java.util.List;
 
-// 📍 education/application/dtos/AssignmentDTO.java
 public record AssignmentDTO(
         String id,
         String courseId,
+        String unitId,
         String courseName,
+        String unitName,
         String title,
         String description,
         String createdAt,
@@ -17,5 +18,7 @@ public record AssignmentDTO(
         int submissionCount,
         int attachmentCount,
         boolean canAcceptSubmissions,
+        String targetType,
+        boolean isTeamAssignment,
         List<DocumentDTO> attachments
 ) {}

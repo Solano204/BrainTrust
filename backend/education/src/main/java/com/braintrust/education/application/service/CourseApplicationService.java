@@ -1,39 +1,51 @@
 package com.braintrust.education.application.service;
 
-// 📍 education/infrastructure/persistence/JpaCourseRepositoryAdapter.java
-
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.CourseDTO;
 import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
 import com.braintrust.education.application.dtos.dtos.EnrollmentDTO;
 import com.braintrust.education.application.ports.in.CourseService;
 import com.braintrust.education.application.ports.out.CourseRepository;
+import com.braintrust.education.application.ports.out.GradebookRepository;
 import com.braintrust.education.domain.exceptions.CourseCodeAlreadyExistsException;
 import com.braintrust.education.domain.exceptions.CourseNotFoundException;
 import com.braintrust.education.domain.model.*;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.CourseMapper;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+// other imports...
 
 @Service
 @Transactional
-@Slf4j // ⬅️ Enable the 'log' variable
 public class CourseApplicationService implements CourseService {
 
-    private final CourseRepository courseRepository;
+    private static final Logger log =
+            LoggerFactory.getLogger(CourseApplicationService.class);
 
-    public CourseApplicationService(CourseRepository courseRepository) {
+    private final CourseRepository courseRepository;
+    private final GradebookRepository gradebookRepository;
+
+    public CourseApplicationService(CourseRepository courseRepository,
+                                    GradebookRepository gradebookRepository) {
         this.courseRepository = courseRepository;
+        this.gradebookRepository = gradebookRepository;
     }
 
     // ------------------------------------------------------------------
-    // ✅ COURSE COMMANDS
+    // ✅ COURSE COMMANDS (SYNC)
     // ------------------------------------------------------------------
 
     @Override
@@ -116,6 +128,7 @@ public class CourseApplicationService implements CourseService {
         log.debug("Course ID {} image URL updated.", courseId.getValue());
     }
 
+    /*
     @Override
     public void activateCourse(CourseId courseId) {
         log.info("Activating Course ID: {}", courseId.getValue());
@@ -124,7 +137,9 @@ public class CourseApplicationService implements CourseService {
         courseRepository.save(course);
         log.info("Course ID {} status set to active.", courseId.getValue());
     }
+    */
 
+    /*
     @Override
     public void deactivateCourse(CourseId courseId) {
         log.warn("Deactivating Course ID: {}", courseId.getValue());
@@ -133,9 +148,41 @@ public class CourseApplicationService implements CourseService {
         courseRepository.save(course);
         log.warn("Course ID {} status set to inactive.", courseId.getValue());
     }
+    */
+
+    @Override
+    public void deleteCourse(CourseId courseId) {
+        log.warn("🗑️ Deleting Course ID: {} with cascade", courseId.getValue());
+
+        Course course = findCourseByIdOrThrow(courseId);
+
+        // Delete associated gradebooks first (if needed, depending on cascade configuration)
+        deleteCourseGradebooks(courseId);
+
+        // Delete the course (cascade should handle enrollments and units)
+        courseRepository.delete(course);
+
+        log.info("✅ Course ID {} deleted successfully with cascade", courseId.getValue());
+    }
+
+    private void deleteCourseGradebooks(CourseId courseId) {
+        try {
+            List<Gradebook> gradebooks = gradebookRepository.findByCourseId(courseId);
+            if (!gradebooks.isEmpty()) {
+                log.info("🗑️ Deleting {} gradebooks for Course ID: {}", gradebooks.size(), courseId.getValue());
+                for (Gradebook gradebook : gradebooks) {
+                    gradebookRepository.delete(gradebook);
+                }
+                log.info("✅ Gradebooks deleted for Course ID: {}", courseId.getValue());
+            }
+        } catch (Exception e) {
+            log.error("❌ Failed to delete gradebooks for Course ID {}: {}", courseId.getValue(), e.getMessage());
+            // Continue with course deletion even if gradebook deletion fails
+        }
+    }
 
     // ------------------------------------------------------------------
-    // ✅ ENROLLMENT COMMANDS
+    // ✅ ENROLLMENT COMMANDS (SYNC)
     // ------------------------------------------------------------------
 
     @Override
@@ -148,11 +195,36 @@ public class CourseApplicationService implements CourseService {
         Course course = findCourseByIdOrThrow(courseId);
         Enrollment enrollment = course.enrollStudent(studentId);
 
-        // ✅ ONLY save the aggregate root - JPA cascades to enrollments
         courseRepository.save(course);
         log.info("Student ID {} successfully enrolled. Enrollment ID: {}", studentId.getValue(), enrollment.getId().getValue());
 
+        createEmptyGradebook(courseId, studentId);
+
         return enrollment.getId();
+    }
+
+    private void createEmptyGradebook(CourseId courseId, UserId studentId) {
+        try {
+            boolean gradebookExists = gradebookRepository.existsByCourseAndStudent(courseId, studentId);
+
+            if (!gradebookExists) {
+                log.info("📚 Creating empty Gradebook for Student {} in Course {}",
+                        studentId.getValue(), courseId.getValue());
+
+                Gradebook emptyGradebook = Gradebook.create(courseId, studentId);
+                gradebookRepository.save(emptyGradebook);
+
+                log.info("✅ Empty Gradebook created for Student {} in Course {}",
+                        studentId.getValue(), courseId.getValue());
+            } else {
+                log.debug("📚 Gradebook already exists for Student {} in Course {}",
+                        studentId.getValue(), courseId.getValue());
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to create Gradebook for Student {} in Course {}: {}",
+                    studentId.getValue(), courseId.getValue(), e.getMessage(), e);
+        }
     }
 
     @Override
@@ -170,7 +242,7 @@ public class CourseApplicationService implements CourseService {
     }
 
     // ------------------------------------------------------------------
-    // ✅ UNIT COMMANDS
+    // ✅ UNIT COMMANDS (SYNC)
     // ------------------------------------------------------------------
 
     @Override
@@ -187,7 +259,6 @@ public class CourseApplicationService implements CourseService {
                 command.description()
         );
 
-        // ✅ ONLY save the aggregate root - JPA cascades to units
         courseRepository.save(course);
         log.info("Unit ID {} added successfully.", unit.getId().getValue());
 
@@ -255,8 +326,28 @@ public class CourseApplicationService implements CourseService {
         log.debug("Unit ID {} image updated.", unitId.getValue());
     }
 
+    @Override
+    public void deleteUnit(UnitId unitId) {
+        log.warn("🗑️ Deleting Unit ID: {} with cascade", unitId.getValue());
+
+        Course course = findCourseByUnitIdOrThrow(unitId);
+
+        // Remove unit from course (cascade should handle related entities)
+        boolean removed = course.removeUnit(unitId);
+
+        if (removed) {
+            courseRepository.save(course);
+            log.info("✅ Unit ID {} deleted successfully from Course ID {}",
+                    unitId.getValue(), course.getId().getValue());
+        } else {
+            log.error("❌ Unit ID {} not found in Course ID {}",
+                    unitId.getValue(), course.getId().getValue());
+            throw new IllegalStateException("Unit not found in course");
+        }
+    }
+
     // ------------------------------------------------------------------
-    // ✅ COURSE QUERIES
+    // ✅ COURSE QUERIES (SYNC)
     // ------------------------------------------------------------------
 
     @Override
@@ -267,6 +358,7 @@ public class CourseApplicationService implements CourseService {
         return CourseMapper.mapToCourseDTO(course);
     }
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public CourseDTO getCourseByCode(CourseCode code) {
@@ -278,6 +370,7 @@ public class CourseApplicationService implements CourseService {
                 });
         return CourseMapper.mapToCourseDTO(course);
     }
+    */
 
     @Override
     @Transactional(readOnly = true)
@@ -291,6 +384,17 @@ public class CourseApplicationService implements CourseService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<CourseDTO> getCoursesByStudent(UserId studentId) {
+        log.debug("Fetching courses for Student ID: {}", studentId.getValue());
+        List<Course> courses = courseRepository.findByStudentId(studentId);
+        return courses.stream()
+                .map(CourseMapper::mapToCourseDTO)
+                .collect(Collectors.toList());
+    }
+
+    /*
+    @Override
+    @Transactional(readOnly = true)
     public List<CourseDTO> getActiveCourses() {
         log.debug("Fetching all active courses.");
         List<Course> courses = courseRepository.findActiveCourses();
@@ -298,7 +402,9 @@ public class CourseApplicationService implements CourseService {
                 .map(CourseMapper::mapToCourseDTO)
                 .collect(Collectors.toList());
     }
+    */
 
+    /*
     @Override
     @Transactional(readOnly = true)
     public List<CourseDTO> getCoursesByGradeAndGroup(String grade, String group) {
@@ -308,6 +414,7 @@ public class CourseApplicationService implements CourseService {
                 .map(CourseMapper::mapToCourseDTO)
                 .collect(Collectors.toList());
     }
+    */
 
     @Override
     @Transactional(readOnly = true)
@@ -331,22 +438,41 @@ public class CourseApplicationService implements CourseService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isStudentEnrolled(CourseId courseId, UserId studentId) {
-        log.trace("Checking enrollment status for Student ID {} in Course ID {}", studentId.getValue(), courseId.getValue());
-        Course course = findCourseByIdOrThrow(courseId);
+    // ------------------------------------------------------------------
+    // ✅ ASYNC ENTRY POINTS USING VIRTUAL THREADS
+    // ------------------------------------------------------------------
+    // These rely on a bean named "virtualThreadExecutor"
+    // that wraps Executors.newVirtualThreadPerTaskExecutor(). [web:39][web:52]
 
-        return course.getEnrollments().stream()
-                .anyMatch(enrollment -> enrollment.getStudentId().equals(studentId)
-                        && enrollment.isActive());
+    @Async("virtualThreadExecutor")
+    public Future<CourseId> createCourseAsync(CreateCourseCommand command) {
+        return new AsyncResult<>(createCourse(command));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isCourseCodeAvailable(CourseCode code) {
-        log.trace("Checking availability of Course Code: {}", code.getValue());
-        return !courseRepository.existsByCode(code);
+    @Async("virtualThreadExecutor")
+    public Future<CourseId> createCourseWithImageAsync(CreateCourseWithImageCommand command) {
+        return new AsyncResult<>(createCourseWithImage(command));
+    }
+
+    @Async("virtualThreadExecutor")
+    public Future<EnrollmentId> enrollStudentAsync(EnrollStudentCommand command) {
+        return new AsyncResult<>(enrollStudent(command));
+    }
+
+    @Async("virtualThreadExecutor")
+    public Future<Void> deleteCourseAsync(CourseId courseId) {
+        deleteCourse(courseId);
+        return AsyncResult.forValue(null);
+    }
+
+    @Async("virtualThreadExecutor")
+    public Future<UnitId> addUnitAsync(AddUnitCommand command) {
+        return new AsyncResult<>(addUnit(command));
+    }
+
+    @Async("virtualThreadExecutor")
+    public Future<UnitId> addUnitWithImageAsync(AddUnitWithImageCommand command) {
+        return new AsyncResult<>(addUnitWithImage(command));
     }
 
     // ------------------------------------------------------------------

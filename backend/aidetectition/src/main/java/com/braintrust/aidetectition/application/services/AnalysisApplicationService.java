@@ -38,10 +38,19 @@ import java.util.stream.Collectors;
  * - Simple, synchronous code style
  * - Automatic thread management by JVM
  */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+// other imports...
+
 @Service
 @Transactional
-@Slf4j
 public class AnalysisApplicationService implements AnalysisService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(AnalysisApplicationService.class);
 
     private final AnalysisRequestRepository analysisRepository;
     private final AIDetectionProvider aiDetectionProvider;
