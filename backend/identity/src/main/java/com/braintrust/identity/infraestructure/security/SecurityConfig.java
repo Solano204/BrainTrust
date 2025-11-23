@@ -32,13 +32,18 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
  // private final RateLimitFilter rateLimitFilter;
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, UserDetailsService userDetailsService, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -60,6 +65,7 @@ public class SecurityConfig {
 
                         // ✅ FIXED: Public endpoints - Documentation (Swagger UI)
                         .requestMatchers(
+                                "/complete",
                                 "/v3/api-docs/**",           // OpenAPI JSON/YAML
                                 "/swagger-ui/**",            // Swagger UI resources
                                 "/swagger-ui.html",          // Swagger UI entry point
@@ -72,6 +78,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health").permitAll()
 
                         // Admin-only endpoints
+                        .requestMatchers("/api/users/register/admin").hasRole("ADMIN")
                         .requestMatchers("/api/users/register/admin").hasRole("ADMIN")
                         .requestMatchers("/api/users/*/activate").hasRole("ADMIN")
                         .requestMatchers("/api/users/*/deactivate").hasRole("ADMIN")

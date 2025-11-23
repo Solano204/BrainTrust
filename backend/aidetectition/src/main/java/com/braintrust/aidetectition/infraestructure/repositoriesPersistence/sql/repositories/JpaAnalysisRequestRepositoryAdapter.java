@@ -18,10 +18,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+
+// other imports...
+
 @Repository
-@Slf4j // ⬅️ Enable the 'log' variable
 public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepository {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(JpaAnalysisRequestRepositoryAdapter.class);
     private final AnalysisRequestJpaRepository jpaRepository;
     private final AnalysisEntityMapper mapper;
 

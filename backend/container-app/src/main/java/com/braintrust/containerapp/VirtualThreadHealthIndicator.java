@@ -18,9 +18,16 @@ import org.springframework.stereotype.Component;
  * - WARNING: 50,000 active VTs
  * - CRITICAL: 100,000 active VTs
  */
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.stereotype.Component;
+
 @Component("virtualThreads")
-@Slf4j
 public class VirtualThreadHealthIndicator implements HealthIndicator {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(VirtualThreadHealthIndicator.class);
 
     private static final long WARNING_THRESHOLD = 50_000;
     private static final long CRITICAL_THRESHOLD = 100_000;

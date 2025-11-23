@@ -4,6 +4,7 @@ import com.braintrust.education.application.ports.out.AssignmentRepository;
 import com.braintrust.education.domain.model.Assignment;
 import com.braintrust.education.domain.valueobjects.AssignmentId;
 import com.braintrust.education.domain.valueobjects.CourseId;
+import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.AssignmentEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -15,10 +16,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+// other imports...
+
 @Repository
-@Slf4j
 public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(JpaAssignmentRepositoryAdapter.class);
     private final AssignmentJpaRepository jpaRepository;
     private final AssignmentEntityMapper mapper;
 
@@ -65,6 +72,16 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     }
 
     @Override
+    public List<Assignment> findByCourseIdAndUnitId(CourseId courseId, UnitId unitId) {
+        log.debug("Fetching assignments for Course ID: {} and Unit ID: {}",
+                courseId.getValue(), unitId.getValue());
+        return jpaRepository.findByCourseIdAndUnit(courseId.getValue(), unitId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<Assignment> findActiveAssignmentsByCourse(CourseId courseId) {
         log.debug("Fetching ACTIVE assignments only for Course ID: {}", courseId.getValue());
         return jpaRepository.findByCourseIdAndActiveTrue(courseId.getValue())
@@ -82,7 +99,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
                 .collect(Collectors.toList());
     }
 
-    // ✅ NEW: Get all assignments for a student across all their courses for a week
     @Override
     public List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Student ID {} for week {} to {}",
@@ -97,7 +113,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
                 .collect(Collectors.toList());
     }
 
-    // ✅ NEW: Get all assignments for a teacher across all their courses for a week
     @Override
     public List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Teacher ID {} for week {} to {}",
@@ -106,6 +121,34 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
                         teacherId.getValue(),
                         weekStart,
                         weekEnd
+                )
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Assignment> findAssignmentsByStudentForMonth(UserId studentId, LocalDateTime monthStart, LocalDateTime monthEnd) {
+        log.info("Fetching assignments for Student ID {} for month {} to {}",
+                studentId.getValue(), monthStart, monthEnd);
+        return jpaRepository.findAssignmentsByStudentForMonth(
+                        studentId.getValue(),
+                        monthStart,
+                        monthEnd
+                )
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Assignment> findAssignmentsByTeacherForMonth(UserId teacherId, LocalDateTime monthStart, LocalDateTime monthEnd) {
+        log.info("Fetching assignments for Teacher ID {} for month {} to {}",
+                teacherId.getValue(), monthStart, monthEnd);
+        return jpaRepository.findAssignmentsByTeacherForMonth(
+                        teacherId.getValue(),
+                        monthStart,
+                        monthEnd
                 )
                 .stream()
                 .map(mapper::toDomain)

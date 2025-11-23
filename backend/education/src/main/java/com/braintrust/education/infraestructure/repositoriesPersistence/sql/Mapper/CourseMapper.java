@@ -16,10 +16,16 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+// other imports...
 
 @Component
-@Slf4j // ⬅️ Enable the 'log' variable
 public class CourseMapper {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(CourseMapper.class);
 
     /**
      * Converts a Domain Course model to a JPA Entity.

@@ -2,8 +2,8 @@ package com.braintrust.containerapp.rest;
 
 import com.braintrust.identity.domain.exceptions.InvalidPasswordException;
 import com.braintrust.identity.infraestructure.security.exception.JwtTokenException;
+import com.braintrust.shared.application.dtos.dtos.ErrorResponseDTO;
 import com.braintrust.shared.domain.exception.DomainException;
-import com.braintrust.shared.domain.exception.ErrorResponseDTO;
 import com.braintrust.shared.domain.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,9 +21,16 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+// other imports...
+
 @RestControllerAdvice
-@Slf4j
 public class GlobalExceptionHandler {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // ========================================
     // ✅ AUTHENTICATION & AUTHORIZATION EXCEPTIONS

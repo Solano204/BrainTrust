@@ -1,6 +1,8 @@
 package com.braintrust.identity.infraestructure.security.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 // A map for all users (Obvuius)
 // i break the rateLimiter ( the majority the time pass on second example to spam of 61 request that wont allow the refill to compasate the bucker will be get bliocked)
 @Service
-@Slf4j
 public class RateLimitService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(RateLimitService.class);
 
 
     // Here im usin the ConcurrentMap ("To handle the request in paralale without they step on each other")

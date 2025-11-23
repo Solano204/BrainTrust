@@ -2,6 +2,7 @@ package com.braintrust.containerapp.rest.identity;
 
 import com.braintrust.identity.application.dtos.commands.*;
 import com.braintrust.identity.application.dtos.dtos.AuthenticationResult;
+import com.braintrust.identity.application.dtos.dtos.CompleteUserDTO;
 import com.braintrust.identity.application.dtos.dtos.UserDTO;
 import com.braintrust.identity.application.ports.in.UserService;
 import com.braintrust.identity.domain.model.Role;
@@ -9,7 +10,6 @@ import com.braintrust.identity.domain.valueobjects.Email;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
-import com.braintrust.shared.domain.exception.ErrorResponseDTO;
 import io.swagger.v3.oas.annotations.Operation; // ⬅️ OpenAPI Import
 import io.swagger.v3.oas.annotations.Parameter; // ⬅️ OpenAPI Import
 import io.swagger.v3.oas.annotations.media.Content; // ⬅️ OpenAPI Import
@@ -24,13 +24,26 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
+// other imports...
+
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
-@Slf4j
 // ⬅️ TAG: Groups all endpoints in the documentation
-@Tag(name = "User Management (Identity)", description = "APIs for user registration, authentication, and core profile management.")
+@Tag(
+        name = "User Management (Identity)",
+        description = "APIs for user registration, authentication, and core profile management."
+)
 public class UserController {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
 
@@ -42,41 +55,64 @@ public class UserController {
     // ✅ REGISTRATION ENDPOINTS
     // ------------------------------------------------------------------
 
-    @Operation(summary = "Register a new Teacher user", description = "Creates a new user with TEACHER role and associated person record.")
-    @ApiResponse(responseCode = "201", description = "Teacher created successfully")
-    @ApiResponse(responseCode = "400", description = "Invalid input or email already registered",
-            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
-    @PostMapping("/register/teacher")
-    public ResponseEntity<SuccessResponseDTO> registerTeacher(@RequestBody RegisterTeacherCommand command) {
-        log.info("Request received to register new TEACHER. Email: {}", command.email());
-        UserId userId = userService.registerTeacher(command);
-        log.info("Teacher registered successfully with ID: {}", userId.getValue());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Teacher registered successfully", userId.getValue()));
+    @Operation(
+            summary = "Create complete user with all information",
+            description = "Creates a user with complete personal information, address, and account details in a single operation. Reduces multiple API calls into one efficient transaction."
+    )
+    @ApiResponse(responseCode = "201", description = "User created successfully with all information")
+    @ApiResponse(responseCode = "400", description = "Invalid input or email already registered")
+    @PostMapping("/register/complete")
+    public ResponseEntity<CompleteUserDTO> createCompleteUser(
+            @RequestBody @Valid CreateCompleteUserCommand command) {
+
+        log.info("🎯 Creating complete user: {} {} ({})",
+                command.firstName(), command.lastName(), command.role());
+
+        CompleteUserDTO result = userService.createCompleteUser(command);
+
+        log.info("✅ Complete user created successfully. User ID: {}, Person ID: {}",
+                result.userId(), result.personId());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @Operation(summary = "Register a new Student user", description = "Creates a new user with STUDENT role and associated person record.")
-    @ApiResponse(responseCode = "201", description = "Student created successfully")
-    @PostMapping("/register/student")
-    public ResponseEntity<SuccessResponseDTO> registerStudent(@RequestBody RegisterStudentCommand command) {
-        log.info("Request received to register new STUDENT. Email: {}", command.email());
-        UserId userId = userService.registerStudent(command);
-        log.info("Student registered successfully with ID: {}", userId.getValue());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Student registered successfully", userId.getValue()));
-    }
 
-    @Operation(summary = "Register a new Admin user (RESTRICTED)", description = "Creates a new user with ADMIN role. Requires existing ADMIN privileges.")
-    @ApiResponse(responseCode = "201", description = "Admin created successfully")
-    @ApiResponse(responseCode = "403", description = "Forbidden: Caller does not have ADMIN role")
-    @PostMapping("/register/admin")
-    public ResponseEntity<SuccessResponseDTO> registerAdmin(@RequestBody RegisterAdminCommand command) {
-        log.warn("ADMIN registration attempt received. This endpoint requires elevated security.");
-        UserId userId = userService.registerAdmin(command);
-        log.warn("ADMIN registered successfully with ID: {}", userId.getValue());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Admin registered successfully", userId.getValue()));
-    }
+//
+//    @Operation(summary = "Register a new Teacher user", description = "Creates a new user with TEACHER role and associated person record.")
+//    @ApiResponse(responseCode = "201", description = "Teacher created successfully")
+//    @ApiResponse(responseCode = "400", description = "Invalid input or email already registered",
+//            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+//    @PostMapping("/register/teacher")
+//    public ResponseEntity<SuccessResponseDTO> registerTeacher(@RequestBody RegisterTeacherCommand command) {
+//        log.info("Request received to register new TEACHER. Email: {}", command.email());
+//        UserId userId = userService.registerTeacher(command);
+//        log.info("Teacher registered successfully with ID: {}", userId.getValue());
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(new SuccessResponseDTO(true, "Teacher registered successfully", userId.getValue()));
+//    }
+//
+//    @Operation(summary = "Register a new Student user", description = "Creates a new user with STUDENT role and associated person record.")
+//    @ApiResponse(responseCode = "201", description = "Student created successfully")
+//    @PostMapping("/register/student")
+//    public ResponseEntity<SuccessResponseDTO> registerStudent(@RequestBody RegisterStudentCommand command) {
+//        log.info("Request received to register new STUDENT. Email: {}", command.email());
+//        UserId userId = userService.registerStudent(command);
+//        log.info("Student registered successfully with ID: {}", userId.getValue());
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(new SuccessResponseDTO(true, "Student registered successfully", userId.getValue()));
+//    }
+//
+//    @Operation(summary = "Register a new Admin user (RESTRICTED)", description = "Creates a new user with ADMIN role. Requires existing ADMIN privileges.")
+//    @ApiResponse(responseCode = "201", description = "Admin created successfully")
+//    @ApiResponse(responseCode = "403", description = "Forbidden: Caller does not have ADMIN role")
+//    @PostMapping("/register/admin")
+//    public ResponseEntity<SuccessResponseDTO> registerAdmin(@RequestBody RegisterAdminCommand command) {
+//        log.warn("ADMIN registration attempt received. This endpoint requires elevated security.");
+//        UserId userId = userService.registerAdmin(command);
+//        log.warn("ADMIN registered successfully with ID: {}", userId.getValue());
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(new SuccessResponseDTO(true, "Admin registered successfully", userId.getValue()));
+//    }
 
     // ------------------------------------------------------------------
     // ✅ AUTHENTICATION ENDPOINTS
@@ -210,53 +246,53 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @Operation(summary = "Get user by email", description = "Retrieves complete user and person information by email address.")
-    @ApiResponse(responseCode = "200", description = "User data retrieved")
-    @ApiResponse(responseCode = "404", description = "User not found")
-    @Parameter(name = "email", description = "The user's email address", required = true)
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
-        log.debug("Fetching user details by email: {}", email);
-        UserDTO user = userService.getUserByEmail(new Email(email));
-        return ResponseEntity.ok(user);
-    }
+//    @Operation(summary = "Get user by email", description = "Retrieves complete user and person information by email address.")
+//    @ApiResponse(responseCode = "200", description = "User data retrieved")
+//    @ApiResponse(responseCode = "404", description = "User not found")
+//    @Parameter(name = "email", description = "The user's email address", required = true)
+//    @GetMapping("/email/{email}")
+//    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
+//        log.debug("Fetching user details by email: {}", email);
+//        UserDTO user = userService.getUserByEmail(new Email(email));
+//        return ResponseEntity.ok(user);
+//    }
 
-    @Operation(summary = "Get user by Person ID", description = "Retrieves user data using the associated PersonId.")
-    @ApiResponse(responseCode = "200", description = "User data retrieved")
-    @Parameter(name = "personId", description = "The ID of the associated person record", required = true)
-    @GetMapping("/person/{personId}")
-    public ResponseEntity<UserDTO> getUserByPersonId(@PathVariable String personId) {
-        log.debug("Fetching user details by Person ID: {}", personId);
-        UserDTO user = userService.getUserByPersonId(PersonId.fromString(personId));
-        return ResponseEntity.ok(user);
-    }
+//    @Operation(summary = "Get user by Person ID", description = "Retrieves user data using the associated PersonId.")
+//    @ApiResponse(responseCode = "200", description = "User data retrieved")
+//    @Parameter(name = "personId", description = "The ID of the associated person record", required = true)
+//    @GetMapping("/person/{personId}")
+//    public ResponseEntity<UserDTO> getUserByPersonId(@PathVariable String personId) {
+//        log.debug("Fetching user details by Person ID: {}", personId);
+//        UserDTO user = userService.getUserByPersonId(PersonId.fromString(personId));
+//        return ResponseEntity.ok(user);
+//    }
 
-    @Operation(summary = "Get users by role", description = "Retrieves a list of all users filtered by their primary role (e.g., ADMIN, STUDENT).")
-    @ApiResponse(responseCode = "200", description = "List of users retrieved")
-    @Parameter(name = "role", description = "The role name (e.g., STUDENT)", required = true)
-    @GetMapping("/role/{role}")
-    public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable String role) {
-        log.debug("Fetching all users with role: {}", role.toUpperCase());
-        List<UserDTO> users = userService.getUsersByRole(Role.valueOf(role.toUpperCase()));
-        return ResponseEntity.ok(users);
-    }
+//    @Operation(summary = "Get users by role", description = "Retrieves a list of all users filtered by their primary role (e.g., ADMIN, STUDENT).")
+//    @ApiResponse(responseCode = "200", description = "List of users retrieved")
+//    @Parameter(name = "role", description = "The role name (e.g., STUDENT)", required = true)
+//    @GetMapping("/role/{role}")
+//    public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable String role) {
+//        log.debug("Fetching all users with role: {}", role.toUpperCase());
+//        List<UserDTO> users = userService.getUsersByRole(Role.valueOf(role.toUpperCase()));
+//        return ResponseEntity.ok(users);
+//    }
+//
+//    @Operation(summary = "Get all active users", description = "Retrieves a list of all users whose accounts are currently active.")
+//    @ApiResponse(responseCode = "200", description = "List of active users retrieved")
+//    @GetMapping("/active")
+//    public ResponseEntity<List<UserDTO>> getActiveUsers() {
+//        log.debug("Fetching list of all active users.");
+//        List<UserDTO> users = userService.getActiveUsers();
+//        return ResponseEntity.ok(users);
+//    }
 
-    @Operation(summary = "Get all active users", description = "Retrieves a list of all users whose accounts are currently active.")
-    @ApiResponse(responseCode = "200", description = "List of active users retrieved")
-    @GetMapping("/active")
-    public ResponseEntity<List<UserDTO>> getActiveUsers() {
-        log.debug("Fetching list of all active users.");
-        List<UserDTO> users = userService.getActiveUsers();
-        return ResponseEntity.ok(users);
-    }
-
-    @Operation(summary = "Check email availability", description = "Checks if an email address is already registered in the system.")
-    @ApiResponse(responseCode = "200", description = "Returns true if available, false if in use")
-    @Parameter(name = "email", description = "The email address to check", required = true)
-    @GetMapping("/email-available/{email}")
-    public ResponseEntity<Boolean> isEmailAvailable(@PathVariable String email) {
-        log.debug("Checking availability for email: {}", email);
-        boolean available = userService.isEmailAvailable(new Email(email));
-        return ResponseEntity.ok(available);
-    }
+//    @Operation(summary = "Check email availability", description = "Checks if an email address is already registered in the system.")
+//    @ApiResponse(responseCode = "200", description = "Returns true if available, false if in use")
+//    @Parameter(name = "email", description = "The email address to check", required = true)
+//    @GetMapping("/email-available/{email}")
+//    public ResponseEntity<Boolean> isEmailAvailable(@PathVariable String email) {
+//        log.debug("Checking availability for email: {}", email);
+//        boolean available = userService.isEmailAvailable(new Email(email));
+//        return ResponseEntity.ok(available);
+//    }
 }

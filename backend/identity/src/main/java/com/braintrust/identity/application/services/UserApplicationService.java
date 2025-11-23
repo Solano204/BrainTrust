@@ -1,8 +1,7 @@
 package com.braintrust.identity.application.services;
 
 import com.braintrust.identity.application.dtos.commands.*;
-import com.braintrust.identity.application.dtos.dtos.AuthenticationResult;
-import com.braintrust.identity.application.dtos.dtos.UserDTO;
+import com.braintrust.identity.application.dtos.dtos.*;
 import com.braintrust.identity.application.ports.in.UserService;
 import com.braintrust.identity.application.ports.out.PersonRepository;
 import com.braintrust.identity.application.ports.out.UserRepository;
@@ -13,6 +12,8 @@ import com.braintrust.identity.domain.valueobjects.*;
 import com.braintrust.identity.infraestructure.security.services.JwtService;
 import com.braintrust.shared.domain.exception.EmailAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.braintrust.identity.application.Maps.EntityMaps.toUserDTO;
@@ -48,8 +50,10 @@ import static com.braintrust.identity.application.Maps.RepositoryHelper.findUser
  */
 @Service
 @Transactional
-@Slf4j
 public class UserApplicationService implements UserService {
+
+    // 2. INSERT this line at the very top of the class
+    private static final Logger log = LoggerFactory.getLogger(UserApplicationService.class);
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
@@ -611,4 +615,277 @@ public class UserApplicationService implements UserService {
             return AuthenticationResult.failure("Token refresh failed: " + e.getMessage());
         }
     }
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public MinimalUserInfoDTO getMinimalUserInfo(UserId userId) {
+        log.debug("📊 Fetching minimal user info for User ID: {}", userId.getValue());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // ✅ Find user
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> {
+                        log.warn("❌ User not found for minimal info: {}", userId.getValue());
+                        return new UserNotFoundException("User not found: " + userId.getValue());
+                    });
+
+            // ✅ Find person
+            Person person = personRepository.findById(user.getPersonId())
+                    .orElseThrow(() -> {
+                        log.warn("❌ Person not found for user: {}", userId.getValue());
+                        return new UserNotFoundException("Person not found for user: " + userId.getValue());
+                    });
+
+            // ✅ Build minimal info DTO
+            MinimalUserInfoDTO result = new MinimalUserInfoDTO(
+                    user.getId().getValue(),
+                    person.getId().getValue(),
+                    person.getFirstName(),
+                    person.getLastName(),
+                    person.getFullName()
+            );
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.debug("✅ Minimal user info retrieved in {}ms for User ID: {}", duration, userId.getValue());
+
+            return result;
+
+        } catch (UserNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Failed to fetch minimal user info for User {}: {}",
+                    userId.getValue(), e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch minimal user info", e);
+        }
+    }
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds) {
+        log.debug("📊 Fetching minimal user info for {} user IDs", userIds.size());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            List<MinimalUserInfoDTO> result = userIds.stream()
+                    .map(userId -> {
+                        try {
+                            User user = userRepository.findById(UserId.fromString(userId))
+                                    .orElse(null);
+                            if (user == null) {
+                                return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
+                            }
+
+                            Person person = personRepository.findById(user.getPersonId())
+                                    .orElse(null);
+                            if (person == null) {
+                                return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
+                            }
+
+                            return new MinimalUserInfoDTO(
+                                    userId,
+                                    person.getId().getValue(),
+                                    person.getFirstName(),
+                                    person.getLastName(),
+                                    person.getFullName()
+                            );
+                        } catch (Exception e) {
+                            log.warn("Failed to fetch minimal info for user {}: {}", userId, e.getMessage());
+                            return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Retrieved minimal info for {} users in {}ms", result.size(), duration);
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("❌ Failed to fetch minimal user info: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch minimal user info", e);
+        }
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserDTO> getUsersByIds(List<String> userIds) {
+        log.debug("📊 Fetching {} users by IDs", userIds.size());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            List<UserDTO> users = userIds.stream()
+                    .map(userId -> {
+                        try {
+                            return getUserById(UserId.fromString(userId));
+                        } catch (Exception e) {
+                            log.warn("Failed to fetch user {}: {}", userId, e.getMessage());
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Retrieved {} users by IDs in {}ms", users.size(), duration);
+
+            return users;
+
+        } catch (Exception e) {
+            log.error("❌ Failed to fetch users by IDs: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch users by IDs", e);
+        }
+    }
+
+
+    @Override
+    public CompleteUserDTO createCompleteUser(CreateCompleteUserCommand command) {
+        long startTime = System.currentTimeMillis();
+        Email email = new Email(command.email());
+
+        log.info("🚀 Creating complete user: {} {} ({})",
+                command.firstName(), command.lastName(), command.role());
+
+        try {
+            // ✅ PHASE 1: Validate email availability
+            if (userRepository.existsByEmail(email)) {
+                log.warn("❌ Complete user creation failed: Email already exists ({})",
+                        command.email());
+                throw new EmailAlreadyExistsException("Email already registered: " + command.email());
+            }
+
+            // ✅ PHASE 2: Create person with address
+            Person person = createPersonWithAddress(command);
+            Person savedPerson = personRepository.save(person);
+
+            // ✅ PHASE 3: Hash password (bcrypt parks VT)
+            Password password = Password.create(command.password(), passwordEncoder);
+
+            // ✅ PHASE 4: Create user based on role
+            User user = createUserByRole(command, savedPerson, email, password);
+            User savedUser = userRepository.save(user);
+
+            // ✅ PHASE 5: Build complete response
+            CompleteUserDTO result = buildCompleteUserDTO(savedUser, savedPerson);
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Complete user created in {}ms. User ID: {}, Person ID: {}",
+                    duration, savedUser.getId().getValue(), savedPerson.getId().getValue());
+
+            return result;
+
+        } catch (EmailAlreadyExistsException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Failed to create complete user {}: {}",
+                    command.email(), e.getMessage(), e);
+            throw new RuntimeException("Failed to create complete user", e);
+        }
+    }
+
+    /**
+     * ✅ Create person with address information
+     */
+    private Person createPersonWithAddress(CreateCompleteUserCommand command) {
+        Person person = Person.create(command.firstName(), command.lastName());
+
+        // Update personal info
+        person.updatePersonalInfo(
+                command.firstName(),
+                command.lastName(),
+                command.gender(),
+                command.phone()
+        );
+
+        // Create and set address if provided
+        if (hasAddressInformation(command)) {
+            Address address = new Address(
+                    command.addressStreet(),
+                    command.addressColony(),
+                    command.addressMunicipality(),
+                    command.addressState(),
+                    command.addressPostalCode()
+            );
+            person.updateAddress(address);
+        }
+
+        return person;
+    }
+
+    /**
+     * ✅ Create user based on specific role
+     */
+    private User createUserByRole(CreateCompleteUserCommand command, Person person,
+                                  Email email, Password password) {
+        return switch (command.role()) {
+            case STUDENT -> {
+                if (command.userId() == null || command.userId().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Student ID is required for STUDENT role");
+                }
+                yield User.createStudent(person, email, password, command.userId());
+            }
+            case TEACHER -> User.createTeacher(person, email, password);
+            case ADMIN -> User.createAdmin(person, email, password);
+        };
+    }
+
+    /**
+     * ✅ Build complete user DTO with all information
+     */
+    private CompleteUserDTO buildCompleteUserDTO(User user, Person person) {
+        AddressDTO addressDTO = person.getAddress() != null
+                ? new AddressDTO(
+                person.getAddress().getStreet(),
+                person.getAddress().getColony(),
+                person.getAddress().getMunicipality(),
+                person.getAddress().getState(),
+                person.getAddress().getPostalCode()
+        )
+                : null;
+
+        return new CompleteUserDTO(
+                user.getId().getValue(),
+                person.getId().getValue(),
+                user.getEmail().getValue(),
+                user.getRole().name(),
+                user.isActive(),
+                user.getStudentId(),
+
+                // Personal information
+                person.getFirstName(),
+                person.getLastName(),
+                person.getGender(),
+                person.getPhone(),
+                person.getFullName(),
+                person.getRegistrationDate().toString(),
+                person.getPathImage(),
+
+                // Address
+                addressDTO,
+
+                // Timestamps
+                user.getCreatedAt().toString(),
+
+                // Success message
+                String.format("%s created successfully", user.getRole().name().toLowerCase())
+        );
+    }
+
+    /**
+     * ✅ Check if address information is provided
+     */
+    private boolean hasAddressInformation(CreateCompleteUserCommand command) {
+        return command.addressStreet() != null && !command.addressStreet().trim().isEmpty() &&
+                command.addressColony() != null && !command.addressColony().trim().isEmpty() &&
+                command.addressMunicipality() != null && !command.addressMunicipality().trim().isEmpty() &&
+                command.addressState() != null && !command.addressState().trim().isEmpty() &&
+                command.addressPostalCode() != null && !command.addressPostalCode().trim().isEmpty();
+    }
+
+
 }
