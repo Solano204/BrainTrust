@@ -70,7 +70,6 @@
         </dependency>
     </dependencies>
 
-    <!-- ✅ AGREGAR ESTA SECCIÓN CRÍTICA -->
     <build>
         <plugins>
             <plugin>
@@ -78,6 +77,13 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.braintrust.containerapp.BrainTrustApplication</mainClass>
+
+                    <!-- ❗ CRITICAL FIX: ENABLE LAYERED JAR SUPPORT FOR DOCKER -->
+                    <layers>
+                        <enabled>true</enabled>
+                    </layers>
+                    <!-- ❗ END CRITICAL FIX -->
+
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
