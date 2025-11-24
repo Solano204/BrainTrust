@@ -12,28 +12,13 @@ COPY education education/
 COPY aidetectition aidetectition/
 COPY container-app container-app/
 
-# Build arguments
-ARG ARTIFACT_NAME=container-app-0.0.1-SNAPSHOT.jar
-ARG JAR_PATH=container-app/target/${ARTIFACT_NAME}
-
 # Build all modules
-RUN mvn clean install -DskipTests
+RUN mvn clean install -DskipTests -B
 
-# Verify JAR was created and is executable
-RUN echo "--- Verifying built JAR ---" && \
-    ls -lh ${JAR_PATH} && \
-    java -Djarmode=layertools -jar ${JAR_PATH} list
-
-# Extract layers to a temporary directory
-RUN mkdir -p /app/extracted && \
-    cd /app/extracted && \
-    java -Djarmode=layertools -jar /app/${JAR_PATH} extract
-
-# Verify extraction worked
-RUN echo "--- Verifying extracted layers ---" && \
-    ls -la /app/extracted/ && \
-    echo "--- Spring Boot Loader contents ---" && \
-    ls -la /app/extracted/spring-boot-loader/ || echo "No spring-boot-loader directory"
+# Verify the JAR was created
+RUN echo "=== Verifying built JAR ===" && \
+    ls -lh container-app/target/container-app-*.jar && \
+    echo "=== JAR verified successfully ==="
 
 # ----------------------------------------------------------------------
 # STAGE 2: RUNTIME
@@ -45,24 +30,30 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy layers in correct order
-COPY --from=builder --chown=appuser:appgroup /app/extracted/dependencies/ ./
-COPY --from=builder --chown=appuser:appgroup /app/extracted/spring-boot-loader/ ./
-COPY --from=builder --chown=appuser:appgroup /app/extracted/snapshot-dependencies/ ./
-COPY --from=builder --chown=appuser:appgroup /app/extracted/application/ ./
+# Copy the complete executable JAR
+COPY --from=builder --chown=appuser:appgroup \
+    /app/container-app/target/container-app-0.0.1-SNAPSHOT.jar \
+    app.jar
+
+# Verify JAR was copied
+RUN ls -lh app.jar && \
+    echo "=== Application JAR ready ===" && \
+    echo "Size: $(du -h app.jar | cut -f1)"
 
 # Switch to non-root user
 USER appuser
 
-# Debug: Verify final structure
-RUN echo "--- Final app directory structure ---" && \
-    ls -laR /app && \
-    echo "--- Searching for JarLauncher class ---" && \
-    find /app -name "*.jar" -exec sh -c 'echo "Checking {}"; jar tf {} | grep JarLauncher || true' \;
-
-# Use explicit classpath with proper launcher
+# Run the application
 ENTRYPOINT ["java", \
+    "-Djava.security.egd=file:/dev/./urandom", \
     "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-default}", \
-    "org.springframework.boot.loader.launch.JarLauncher"]
+    "-XX:+UseContainerSupport", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-jar", \
+    "app.jar"]
 
 EXPOSE 8080
+
+# Health check (optional but recommended)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
