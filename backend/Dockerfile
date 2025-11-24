@@ -25,6 +25,9 @@ RUN echo "=== Verifying built JAR ===" && \
 # ----------------------------------------------------------------------
 FROM eclipse-temurin:25-jre-alpine
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
@@ -43,17 +46,23 @@ RUN ls -lh app.jar && \
 # Switch to non-root user
 USER appuser
 
+# Set default Spring profile (can be overridden at runtime)
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# JVM performance tuning for containers
+ENV JAVA_OPTS="\
+-Djava.security.egd=file:/dev/./urandom \
+-XX:+UseContainerSupport \
+-XX:MaxRAMPercentage=75.0 \
+-XX:+UseG1GC \
+-XX:+UseStringDeduplication \
+-Dfile.encoding=UTF-8"
+
 # Run the application
-ENTRYPOINT ["java", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-default}", \
-    "-XX:+UseContainerSupport", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-jar", \
-    "app.jar"]
+ENTRYPOINT sh -c "exec java $JAVA_OPTS -jar app.jar"
 
 EXPOSE 8080
 
-# Health check (optional but recommended)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
