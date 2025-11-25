@@ -3,8 +3,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { taskKeys } from "@/app/infraestructure/api/calendar/task-keys";
-import { fetchTasksByMonth, fetchTaskDetail, fetchThisWeekTasks } from "@/app/infraestructure/api/calendar/tasks-api";
 import { Assignment } from "@/app/domain/entities/CourseEntities";
+import { fetchTasksByMonth, fetchThisWeekTasks } from "@/components/teacher-student/api/task";
 
 export function useTasksByMonth(
   userId: string | null, 
@@ -32,17 +32,6 @@ export function useThisWeekTasks(
   });
 }
 
-export function useTaskDetail(
-  taskId: string | null, 
-  userType: 'teacher' | 'student' = 'teacher'
-) {
-  return useQuery<Assignment>({
-    queryKey: taskKeys.detailById(taskId || ""),
-    queryFn: () => fetchTaskDetail(taskId!, userType),
-    enabled: !!taskId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  });
-}
 
 export function useTaskMutations() {
   const queryClient = useQueryClient();

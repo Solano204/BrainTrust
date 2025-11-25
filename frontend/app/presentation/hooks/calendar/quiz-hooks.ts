@@ -2,9 +2,9 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchQuizzesByMonth, fetchQuizDetail, fetchThisWeekQuizzes } from "@/app/infraestructure/api/calendar/quiz-api";
 import { Quiz } from "@/app/domain/entities/CourseEntities";
 import { quizKeys } from "@/app/infraestructure/api/calendar/task-keys";
+import { fetchQuizDetail, fetchQuizzesByMonth, fetchThisWeekQuizzes } from "@/components/teacher-student/api/quiz";
 
 export function useQuizzesByMonth(
   userId: string | null, 

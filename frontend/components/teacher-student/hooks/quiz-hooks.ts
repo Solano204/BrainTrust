@@ -4,14 +4,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { quizKeys } from "@/app/infraestructure/api/course/units/resources/quiz-keys";
 import {
-  fetchQuizzesByUnit,
+  // fetchQuizzesByUnit,
   fetchQuizById,
-  createQuiz,
-  updateQuiz,
-  deleteQuiz
+  // createQuiz,
+  // updateQuiz,
+  // deleteQuiz
 } from "@/app/infraestructure/api/course/units/resources/quiz-api";
 import { Quiz } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
+import { createQuiz, deleteQuiz, fetchQuizzesByUnit, updateQuiz } from "../api/quiz";
 
 export function useQuizzesByUnit(courseId: CourseId | null, unitId: UnitId | null) {
   return useQuery<Quiz[]>({

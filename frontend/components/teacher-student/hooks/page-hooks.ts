@@ -3,16 +3,17 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { pageKeys } from "@/app/infraestructure/api/course/units/resources/page-keys";
-import {
-  fetchPagesByUnit,
-  fetchPageById,
-  createPage,
-  updatePage,
-  deletePage
-} from "@/app/infraestructure/api/course/units/resources/page-api";
+// import {
+//   fetchPagesByUnit,
+//   fetchPageById,
+//   createPage,
+//   updatePage,
+//   deletePage
+// } from "@/components/teacher-student/api/page-api";
 import { Page} from "@/app/domain/entities/CourseEntities";
 
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
+import { createPage, deletePage, fetchPagesByUnit, updatePage } from "../api/page";
 export function usePagesByUnit(courseId: CourseId | null, unitId: UnitId | null) {
   return useQuery<Page[]>({
     queryKey: pageKeys.list(courseId || "", unitId || ""),

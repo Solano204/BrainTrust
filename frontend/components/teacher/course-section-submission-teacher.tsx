@@ -25,7 +25,7 @@ import {
   useTaskInventoryManagement,
   useTaskInventoryMutations,
 } from "@/app/presentation/hooks/task/task-inventory-hooks";
-import { useQuizzesByCourse, useQuizzesByCourseWithoutDetails } from "@/app/presentation/hooks/submission/quiz-hooks";
+import { useQuizzesByCourse, useQuizzesByCourseWithoutDetails } from "@/components/teacher/hooks/quiz-hooks";
 import {
   TaskType,
 } from "@/app/domain/entities/CourseEntities";
@@ -85,12 +85,9 @@ export function CourseTaskOverviewTeacher({
 
   const { data: quizzes = [], isLoading: isLoadingQuizzes } =
     useQuizzesByCourseWithoutDetails(courseId);
-  const { data: quizzesCompleete  = [], isLoading: isLoadingQuizzesComplete } =
-    useQuizzesByCourse(courseId);
-
   // NEW: Get single quiz submission for specific student and quiz
   const { data: singleQuizSubmission, isLoading: isLoadingSingleSubmission } =
-    useSubmissionQuizByStudentAndQuiz(selectedQuizId, selectedStudentId);
+    useSubmissionQuizByStudentAndQuiz(selectedQuizId);
 
   // Combine tasks and quizzes for display
   const combinedItems: CombinedTaskItem[] = useMemo(() => {

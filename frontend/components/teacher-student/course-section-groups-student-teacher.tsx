@@ -14,7 +14,7 @@ import { useAuth } from "@/app/context/AuthContext"
 // Import your interfaces and types
 import type { UserId, CourseId } from "@/app/domain/valueObjects/CourseValues"
 import { Team } from "@/app/domain/entities/CourseEntities"
-import { useTeamsByCourse, useAvailableUsers, useTeamMutations } from "@/app/presentation/hooks/team/team-hooks"
+import { useTeamsByCourse, useAvailableUsers, useTeamMutations } from "@/components/teacher-student/hooks/team-hooks"
 import { TeamFormModal } from "../teacher/team-form-modal-teacher"
 import { TeamEditModal } from "../teacher/team-edit-modal-teacher"
 import { Label } from "@radix-ui/react-label";

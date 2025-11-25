@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Save, Plus, BookOpen, Loader2 } from "lucide-react";
 import { Course } from "@/app/domain/entities/CourseEntities";
-import { useCourseForm } from "@/app/presentation/hooks/course/hooks";
+import { useCourseForm } from "@/components/teacher/hooks/courses-hooks";
 
 interface CourseFormModalProps {
   open: boolean;

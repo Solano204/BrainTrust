@@ -8,7 +8,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Course } from "@/app/domain/entities/CourseEntities"
 import { CourseId } from "@/app/domain/valueObjects/CourseValues"
-import { useCoursesByTeacher } from "@/app/presentation/hooks/course/hooks"
+import { useCoursesByTeacher } from "@/components/teacher/hooks/courses-hooks"
 
 const getCourseColor = (id: CourseId): string => {
     const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

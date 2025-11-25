@@ -3,30 +3,17 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { teamKeys } from "@/app/infraestructure/api/team/team-keys";
-import {
-  fetchTeamsByCourse,
-  fetchTeamByName,
-  createTeam,
-  updateTeam,
-  deleteTeam,
-  addTeamMembers,
-  removeTeamMember,
-  setTeamLeader,
-  fetchAvailableUsers,
-  autoGenerateTeams,
-  updateTeamProperties,
-  updateTeamMemberLimit,
-  updateTeamInfo
-} from "@/app/infraestructure/api/team/team-api";
 import { Team} from "@/app/domain/entities/CourseEntities";
 import { CourseId , UserId} from "@/app/domain/valueObjects";
 import React from "react";
+import { addTeamMembers, AvailableUsersResponse, createTeam, fetchAvailableUsers,  fetchTeamsByCourse,  removeTeamMember,  TeamId,  TeamsResponse, updateTeamInfo } from "@/components/teacher-student/api/group";
+import { deleteTeam, updateTeam } from "@/components/teacher-student/api/team-api";
 
 /**
  * Custom hook for fetching teams by course
  */
 export function useTeamsByCourse(courseId: CourseId | null) {
-  return useQuery<Team[]>({
+  return useQuery<TeamsResponse>({
     queryKey: teamKeys.list(courseId || ""),
     queryFn: () => fetchTeamsByCourse(courseId!),
     enabled: !!courseId,
@@ -35,24 +22,12 @@ export function useTeamsByCourse(courseId: CourseId | null) {
   });
 }
 
-/**
- * Custom hook for fetching a single team
- */
-export function useTeam(courseId: CourseId | null, teamName: string | null) {
-  return useQuery<Team>({
-    queryKey: teamKeys.detail(courseId || "", teamName || ""),
-    queryFn: () => fetchTeamByName(courseId!, teamName!),
-    enabled: !!courseId && !!teamName,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
-}
 
 /**
  * Custom hook for fetching available users
  */
 export function useAvailableUsers(courseId: CourseId | null) {
-  return useQuery<any[]>({
+  return useQuery<AvailableUsersResponse>({
     queryKey: teamKeys.availableUsersByCourse(courseId || ""),
     queryFn: () => fetchAvailableUsers(courseId!),
     enabled: !!courseId,
@@ -71,7 +46,7 @@ export function useTeamMutations() {
     mutationFn: createTeam,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ 
-        queryKey: teamKeys.list(data.courseId) 
+        queryKey: teamKeys.list(data.team) 
       });
     },
     onError: (error: Error) => {
@@ -80,17 +55,17 @@ export function useTeamMutations() {
   });
 
   const updateTeamMutation = useMutation({
-    mutationFn: ({ courseId, teamName, teamData }: { 
+    mutationFn: ({ courseId, teamId, teamData }: { 
       courseId: CourseId, 
-      teamName: string, 
+      teamId: string, 
       teamData: Partial<Omit<Team, "courseId" | "name" | "createdAt">> 
-    }) => updateTeam(courseId, teamName, teamData),
+    }) => updateTeam(courseId, teamId, teamData),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ 
         queryKey: teamKeys.list(variables.courseId) 
       });
       queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
+        queryKey: teamKeys.detail(variables.courseId, variables.teamId) 
       });
     },
     onError: (error: Error) => {
@@ -99,8 +74,8 @@ export function useTeamMutations() {
   });
 
   const deleteTeamMutation = useMutation({
-    mutationFn: ({ courseId, teamName }: { courseId: CourseId, teamName: string }) =>
-      deleteTeam(courseId, teamName),
+    mutationFn: ({ courseId, teamId }: { courseId: CourseId, teamId: string }) =>
+      deleteTeam(courseId, teamId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 
         queryKey: teamKeys.list(variables.courseId) 
@@ -112,17 +87,17 @@ export function useTeamMutations() {
   });
 
   const addMembersMutation = useMutation({
-    mutationFn: ({ courseId, teamName, memberIds }: { 
+    mutationFn: ({ courseId, teamId, memberIds }: { 
       courseId: CourseId, 
-      teamName: string, 
+      teamId: string, 
       memberIds: UserId[] 
-    }) => addTeamMembers(courseId, teamName, memberIds),
+    }) => addTeamMembers(courseId, teamId, memberIds),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ 
         queryKey: teamKeys.list(variables.courseId) 
       });
       queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
+        queryKey: teamKeys.detail(variables.courseId, variables.teamId) 
       });
     },
     onError: (error: Error) => {
@@ -131,17 +106,17 @@ export function useTeamMutations() {
   });
 
   const removeMemberMutation = useMutation({
-    mutationFn: ({ courseId, teamName, memberId }: { 
+    mutationFn: ({ courseId, teamId, memberId }: { 
       courseId: CourseId, 
-      teamName: string, 
+      teamId: TeamId, 
       memberId: UserId 
-    }) => removeTeamMember(courseId, teamName, memberId),
+    }) => removeTeamMember(courseId, teamId, memberId),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ 
         queryKey: teamKeys.list(variables.courseId) 
       });
       queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
+        queryKey: teamKeys.detail(variables.courseId, variables.teamId) 
       });
     },
     onError: (error: Error) => {
@@ -149,62 +124,28 @@ export function useTeamMutations() {
     }
   });
 
-  const setLeaderMutation = useMutation({
-    mutationFn: ({ courseId, teamName, leaderId }: { 
-      courseId: CourseId, 
-      teamName: string, 
-      leaderId: UserId 
-    }) => setTeamLeader(courseId, teamName, leaderId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.list(variables.courseId) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error setting team leader:", error.message);
-    }
-  });
-
-  const autoGenerateTeamsMutation = useMutation({
-    mutationFn: ({ courseId, teamSize, method }: { 
-      courseId: CourseId, 
-      teamSize: number, 
-      method: "random" | "balanced" 
-    }) => autoGenerateTeams(courseId, teamSize, method),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.list(variables.courseId) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error auto-generating teams:", error.message);
-    }
-  });
 
 
   const updateTeamInfoMutation = useMutation({
-    mutationFn: ({ courseId, teamName, teamData }: { 
+    mutationFn: ({ courseId, teamId, teamData }: { 
       courseId: CourseId, 
-      teamName: string, 
+      teamId: TeamId, 
       teamData: {
         name?: string;
         description?: string;
         maxMembers?: number;
         active?: boolean;
       }
-    }) => updateTeamInfo(courseId, teamName, teamData),
+    }) => updateTeamInfo(courseId, teamId, teamData),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ 
         queryKey: teamKeys.list(variables.courseId) 
       });
       queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
+        queryKey: teamKeys.detail(variables.courseId, variables.teamId) 
       });
       // Also invalidate the old team name if it was changed
-      if (variables.teamData.name && variables.teamData.name !== variables.teamName) {
+      if (variables.teamData.name && variables.teamData.name !== variables.teamId) {
         queryClient.invalidateQueries({ 
           queryKey: teamKeys.detail(variables.courseId, variables.teamData.name) 
         });
@@ -215,58 +156,7 @@ export function useTeamMutations() {
     }
   });
 
-  const updateTeamMemberLimitMutation = useMutation({
-    mutationFn: ({ courseId, teamName, maxMembers }: { 
-      courseId: CourseId, 
-      teamName: string, 
-      maxMembers: number 
-    }) => updateTeamMemberLimit(courseId, teamName, maxMembers),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.list(variables.courseId) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error updating team member limit:", error.message);
-    }
-  });
-
-  const updateTeamPropertiesMutation = useMutation({
-    mutationFn: ({ courseId, teamName, updates }: { 
-      courseId: CourseId, 
-      teamName: string, 
-      updates: {
-        name?: string;
-        description?: string;
-        maxMembers?: number;
-        active?: boolean;
-        leaderId?: UserId | null;
-      }
-    }) => updateTeamProperties(courseId, teamName, updates),
-
-    
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.list(variables.courseId) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: teamKeys.detail(variables.courseId, variables.teamName) 
-      });
-      
-      // Also invalidate the old team name if it was changed
-      if (variables.updates.name && variables.updates.name !== variables.teamName) {
-        queryClient.invalidateQueries({ 
-          queryKey: teamKeys.detail(variables.courseId, variables.updates.name) 
-        });
-      }
-    },
-    onError: (error: Error) => {
-      console.error("Error updating team properties:", error.message);
-    }
-  });
+ 
 
  return {
     createTeam: createTeamMutation,
@@ -274,11 +164,7 @@ export function useTeamMutations() {
     deleteTeam: deleteTeamMutation,
     addMembers: addMembersMutation,
     removeMember: removeMemberMutation,
-    setLeader: setLeaderMutation,
-    autoGenerateTeams: autoGenerateTeamsMutation,
     updateTeamInfo: updateTeamInfoMutation,
-    updateTeamMemberLimit: updateTeamMemberLimitMutation,
-    updateTeamProperties: updateTeamPropertiesMutation
   };
 }
 

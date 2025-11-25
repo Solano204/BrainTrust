@@ -2,19 +2,13 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchUnitsByCourse,
-  fetchUnitById,
-  createUnit,
-  updateUnit,
-  deleteUnit,
-  reorderUnits,
-  deleteUnitResource
-} from "@/app/infraestructure/api/course/units/unit-api";
+
 import { CourseUnit, UnitResource } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
 import { unitKeys } from "@/app/infraestructure/api/course/units/unit-keys";
 import React from "react";
+import { createUnit, deleteUnit, fetchUnitById, fetchUnitsByCourse, reorderUnits, updateUnit } from "@/components/teacher-student/api/unit";
+import { deleteUnitResource } from "@/components/teacher-student/api/unit-api";
 
 /**
  * Custom hook for fetching units by course
@@ -105,25 +99,25 @@ export function useUnitMutations() {
 
  
 
-  const deleteResourceMutation = useMutation({
-    mutationFn: ({ unitId, resourceId }: { unitId: UnitId, resourceId: string }) =>
-      deleteUnitResource(unitId, resourceId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: unitKeys.detail(variables.unitId) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error deleting resource:", error.message);
-    }
-  });
+//   const deleteResourceMutation = useMutation({
+//     mutationFn: ({ unitId, resourceId }: { unitId: UnitId, resourceId: string }) =>
+//       deleteUnitResource(unitId, resourceId),
+//     onSuccess: (data, variables) => {
+//       queryClient.invalidateQueries({ 
+//         queryKey: unitKeys.detail(variables.unitId) 
+//       });
+//     },
+//     onError: (error: Error) => {
+//       console.error("Error deleting resource:", error.message);
+//     }
+//   });
 
   return {
     createUnit: createUnitMutation,
     updateUnit: updateUnitMutation,
     deleteUnit: deleteUnitMutation,
     reorderUnits: reorderUnitsMutation,
-    deleteResource: deleteResourceMutation
+    // deleteResource: deleteResourceMutation
   };
 }
 

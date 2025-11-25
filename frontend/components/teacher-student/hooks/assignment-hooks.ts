@@ -9,7 +9,7 @@ import {
   createAssignment,
   updateAssignment,
   deleteAssignment
-} from "@/app/infraestructure/api/course/units/resources/assignment-api";
+} from "@/components/teacher-student/api/assignment-api";
 import { Assignment } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
 

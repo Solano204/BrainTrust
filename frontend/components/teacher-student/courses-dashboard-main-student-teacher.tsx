@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Course } from '@/app/domain/entities/CourseEntities';
 import { CourseId } from '@/app/domain/valueObjects';
 import { CourseFormModal } from '../teacher/course-form-creator-teacher';
-import { useCourseMutations, useCourses } from '@/app/presentation/hooks/course/hooks';
+import { useCourseMutations, useCourses } from '@/components/teacher/hooks/courses-hooks';
 import { useAuth } from '@/app/context/AuthContext'; // Add this import
 
 export function CourseDashboard() {

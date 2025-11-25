@@ -7,6 +7,7 @@ import { SubmissionQuiz } from "@/app/domain/entities/CourseEntities";
 import { quizKeys } from "./quiz-keys";
 import { fetchSubmissionQuizByStudentAndQuiz, fetchSubmissionQuizzesByCourse } from "./quiz-api";
 import { QuizId } from "@/app/domain/valueObjects/CourseValues";
+import { fetchQuizSubmissionDetail } from "@/components/student/api/student-submission";
 
 /**
  * Custom hook for fetching all SubmissionQuiz entries for a course
@@ -29,7 +30,7 @@ export function useSubmissionQuizByStudentAndQuiz(
 ) {
   return useQuery<SubmissionQuiz | null>({
     queryKey: quizKeys.submissionQuizByStudentAndQuiz(quizId || "", studentId || ""),
-    queryFn: () => fetchSubmissionQuizByStudentAndQuiz(quizId!, studentId!),
+    queryFn: () => fetchQuizSubmissionDetail(quizId!, studentId!),
     enabled: !!quizId && !!studentId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,

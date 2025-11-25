@@ -44,7 +44,7 @@ import { TaskView } from "../teacher/task-view-information-teacher";
 import {
   useQuizSubmission,
   useTaskSubmission,
-} from "@/app/presentation/hooks/course/student/submission-hooks";
+} from "@/components/teacher-student/hooks/submission-hooks";
 import { TimelineSectionSkeleton } from "../sketons/timeline-skeleton";
 
 export type TimelineResourceData = Assignment | Quiz;

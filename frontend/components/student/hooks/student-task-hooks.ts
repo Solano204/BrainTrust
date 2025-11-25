@@ -8,9 +8,9 @@ import {
   fetchStudentAssignmentsItem, 
   fetchStudentQuizzes,
   fetchStudentQuizzesItem,
-  fetchStudentTaskStats,
-} from "@/app/infraestructure/api/course/student/student-task-api";
+} from "@/components/student/api/student-task-api";
 import { CourseId } from "@/app/domain/valueObjects";
+import { fetchStudentSubmissionsItem, fetchStudentSubmissionsQuizzesItem } from "@/components/student/api/student-submission";
 
 export interface StudentAssignment {
   id: string;
@@ -61,28 +61,21 @@ export interface StudentTaskStats {
 export function useStudentTaskOverview(courseId: CourseId | null, studentId: string | null) {
   const { data: assignments = [], isLoading: isLoadingAssignments } = useQuery({
     queryKey: ['student-assignments', courseId, studentId],
-    queryFn: () => fetchStudentAssignmentsItem(courseId!, studentId!),
+    queryFn: () => fetchStudentSubmissionsItem(courseId!, studentId!),
     enabled: !!courseId && !!studentId,
   });
 
   const { data: quizzes = [], isLoading: isLoadingQuizzes } = useQuery({
     queryKey: ['student-quizzes', courseId, studentId],
-    queryFn: () => fetchStudentQuizzesItem(courseId!, studentId!),
+    queryFn: () => fetchStudentSubmissionsQuizzesItem(courseId!, studentId!),
     enabled: !!courseId && !!studentId,
   });
 
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['student-stats', courseId, studentId],
-    queryFn: () => fetchStudentTaskStats(courseId!, studentId!),
-    enabled: !!courseId && !!studentId,
-  });
-
-  const isLoading = isLoadingAssignments || isLoadingQuizzes || isLoadingStats;
+  const isLoading = isLoadingAssignments || isLoadingQuizzes 
 
   return {
     assignments,
     quizzes,
-    stats,
     isLoading,
     error: null, // You can add error handling as needed
   };

@@ -396,7 +396,7 @@ const MOCK_STUDENT_QUIZZES = [
       }
     }
   }
-];
+];  
 
 const simulateDelay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -436,54 +436,6 @@ export async function fetchStudentQuizzesItem(courseId: CourseId, studentId: Use
 
   try {
     const response = await apiClient.get(`/courses/${courseId}/students/${studentId}/quizzes`);
-    return response.data;
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-export async function fetchStudentTaskStats(courseId: CourseId, studentId: UserId) {
-  if (isMockEnabled) {
-    await simulateDelay();
-    
-    const assignments = MOCK_STUDENT_ASSIGNMENTS;
-    const quizzes = MOCK_STUDENT_QUIZZES;
-    
-    const totalTasks = assignments.length + quizzes.length;
-    const completedTasks = [
-      ...assignments.filter(a => a.submission),
-      ...quizzes.filter(q => q.submission)
-    ].length;
-    const overdueTasks = [
-      ...assignments.filter(a => a.isOverdue && !a.submission),
-      ...quizzes.filter(q => q.isOverdue && !q.submission)
-    ].length;
-
-    // Calculate average grade from graded submissions
-    const gradedSubmissions = [
-      ...assignments.filter(a => a.submission?.grade),
-      ...quizzes.filter(q => q.submission?.grade)
-    ];
-    
-    const averageGrade = gradedSubmissions.length > 0 
-      ? Math.round(gradedSubmissions.reduce((sum, item) => {
-          const grade = item.submission!.grade!;
-          const percentage = (Number(grade.value) / grade.maxScore) * 100;
-          return sum + percentage;
-        }, 0) / gradedSubmissions.length)
-      : 0;
-
-    return {
-      totalTasks,
-      completedTasks,
-      pendingTasks: totalTasks - completedTasks,
-      averageGrade,
-      overdueTasks,
-    };
-  }
-
-  try {
-    const response = await apiClient.get(`/courses/${courseId}/students/${studentId}/task-stats`);
     return response.data;
   } catch (error) {
     return handleApiError(error);

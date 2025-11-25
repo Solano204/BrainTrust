@@ -21,7 +21,6 @@ import {
   useQuizzesByMonth,
 } from "@/app/presentation/hooks/calendar/quiz-hooks";
 import {
-  useTaskDetail,
   useTasksByMonth,
 } from "@/app/presentation/hooks/calendar/task-hooks";
 import { useAuth } from "@/app/context/AuthContext";
@@ -33,7 +32,7 @@ import { TaskView } from "../teacher/task-view-information-teacher";
 import {
   useQuizSubmission,
   useTaskSubmission,
-} from "@/app/presentation/hooks/course/student/submission-hooks";
+} from "@/components/teacher-student/hooks/submission-hooks";
 
 export type CalendarResource = Assignment | Quiz;
 
