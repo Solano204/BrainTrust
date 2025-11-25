@@ -10,18 +10,19 @@ import {
   requestAIAnalysis,
   downloadSubmissionAttachment,
   bulkUpdateTaskDeadlines
-} from "@/app/infraestructure/api/task/task-inventory-api";
+} from "@/components/teacher/api/task-inventory-api";
 import { CourseId, SubmissionId } from "@/app/domain/valueObjects";
 import React from "react";
 import { SubmissionDetailData, TaskInventoryItem } from "@/app/domain/entities/CourseEntities";
+import { fetchTeacherSubmissionsItem, SubmissionTask } from "@/components/student/api/student-submission";
 
 /**
  * Custom hook for fetching task inventory by course
  */
 export function useTaskInventory(courseId: CourseId | null) {
-  return useQuery<TaskInventoryItem[]>({
+  return useQuery<SubmissionTask[]>({
     queryKey: taskInventoryKeys.inventoryByCourse(courseId || ""),
-    queryFn: () => fetchTaskInventory(courseId!),
+    queryFn: () => fetchTeacherSubmissionsItem(courseId!),
     enabled: !!courseId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -167,6 +168,7 @@ export function useTaskInventoryManagement(courseId: CourseId | null) {
       return matchesSearch && matchesType;
     });
   }, [tasks, searchTerm, filterType]);
+
 
   const handleViewSubmission = (submissionId: SubmissionId) => {
     setSelectedSubmissionId(submissionId);

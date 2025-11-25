@@ -38,6 +38,8 @@ export interface CourseUnit {
   resources: UnitResource[];
 }
 
+
+type  TypeTask = "INDIVIDUAL" | "TEAM";
 /** Represents com.braintrust.education.domain.model.Submission */
 export interface Submission {
   id: SubmissionId;
@@ -50,6 +52,7 @@ export interface Submission {
   submittedAt: string;
   status: SubmissionStatus;
   grade: Grade | null;
+  type: TypeTask
   teacherFeedback: string | null;
 }
 
@@ -90,6 +93,7 @@ export interface Assignment {
   instructions: string;
   submissions: Submission[];
   allowLateSubmissions: boolean;
+  idUser: UserId;
 }
 
 export type deliveryMode = "GROUP" | "INDIVIDUAL"; // Added PAGE for general content
@@ -117,7 +121,7 @@ export interface Enrollment {
   /** Java: LocalDate, serialized to ISO 8601 date string (YYYY-MM-DD) */
   enrollmentDate: string;
   status: EnrollmentStatus;
-  grade: GradeEnrollment | null;
+  // grade: GradeEnrollment | null;
 }
 
 /** * Represents com.braintrust.education.domain.model.Course (Aggregate Root)
@@ -149,6 +153,8 @@ export interface Team {
   active: boolean;
   createdAt: Date;
 }
+
+
 
 export interface TeamWithMembers {
   courseId: CourseId;
@@ -202,6 +208,7 @@ export interface Quiz {
   /** Array of Question objects. */
   questions: Question[];
   acceptLateSubmissions: boolean;
+  idUser: UserId;
 }
 
 

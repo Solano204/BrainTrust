@@ -4,18 +4,10 @@
 import { Course } from "@/app/domain/entities/CourseEntities";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CourseId } from "@/app/domain/valueObjects/CourseValues";
-import {
-  fetchAllCourses,
-  fetchCourseById,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  toggleCourseActive,
-  fetchCourseByIdAllUnits,
-  fetchCoursesByTeacher,
-} from "@/app/infraestructure/api/course/course-api";
+
 import { courseKeys } from "@/app/infraestructure/api/course/course-keys";
 import React from "react";
+import { createCourse, deleteCourse, fetchAllCourses, fetchCourseById, fetchCourseByIdAllUnits, fetchCoursesByTeacher, updateCourse } from "../api/teacher-courses";
 /**
  * Custom hook for fetching all courses
  */
@@ -122,26 +114,12 @@ export function useCourseMutations() {
     }
   });
 
-  const toggleCourseActiveMutation = useMutation({
-    mutationFn: toggleCourseActive,
-    onSuccess: (data, courseId) => {
-      queryClient.invalidateQueries({ 
-        queryKey: courseKeys.lists() 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: courseKeys.detail(courseId) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error toggling course active status:", error.message);
-    }
-  });
+ 
 
   return {
     createCourse: createCourseMutation,
     updateCourse: updateCourseMutation,
-    deleteCourse: deleteCourseMutation,
-    toggleCourseActive: toggleCourseActiveMutation
+    deleteCourse: deleteCourseMutation
   };
 }
 

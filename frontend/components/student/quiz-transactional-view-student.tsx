@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { QuizView } from "@/components/student/quiz-view-submission-student";
-import { useStudentQuizSubmission } from '@/app/presentation/hooks/course/student/submission-hooks';
+import { useStudentQuizSubmission } from '@/components/teacher-student/hooks/submission-hooks';
 import { Quiz } from '@/app/domain/entities/CourseEntities';
 
 interface StudentQuizViewProps {

@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from "react" // 💡 Added useEffect
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ClipboardList, HelpCircle, MessageSquare } from "lucide-react"
 import { CourseResourceType, ResourceItem } from "@/app/domain/entities/CourseEntities"
 import { fetchResourceTypesMock } from "@/app/domain/services/serviceCourse"
 

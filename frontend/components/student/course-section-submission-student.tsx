@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/StudentCourseTaskOverview.tsx
 "use client"
 
 import { useState } from "react"
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Search, Eye, Loader2, BarChart3, FileText, HelpCircle, Calendar, Clock, CheckCircle, XCircle } from "lucide-react"
 import { useAuth } from "@/app/context/AuthContext"
-import { useStudentTaskOverview } from "@/app/presentation/hooks/course/student/student-task-hooks"
+import { useStudentTaskOverview } from "@/components/student/hooks/student-task-hooks"
 import { StudentTaskSubmissionView } from "./StudentTaskSubmissionView"
 import { StudentQuizView } from "./StudentQuizViewSubmission"
 
@@ -17,6 +16,9 @@ interface StudentCourseTaskOverviewProps {
     courseId: string
 }
 
+
+
+/// SUBMISSIONS FOR STUDENTS SENT
 export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOverviewProps) {
     const { user } = useAuth()
     const [activeTab, setActiveTab] = useState("assignments")
@@ -29,7 +31,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
         quizzes,
         isLoading,
         error,
-        stats
     } = useStudentTaskOverview(courseId, user?.id || null)
 
     const handleViewTask = (taskId: string) => {

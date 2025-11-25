@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { TaskSubmissionView } from "@/components/student/quiz-view-tasks-student";
-import { useStudentTaskSubmission } from '@/app/presentation/hooks/course/student/submission-hooks';
+import { useStudentTaskSubmission } from '@/components/teacher-student/hooks/submission-hooks';
 import { Assignment } from '@/app/domain/entities';
 
 interface StudentTaskViewProps {

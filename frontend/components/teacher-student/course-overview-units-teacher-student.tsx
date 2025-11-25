@@ -10,7 +10,7 @@ import { Clock, Users, BookOpen, Loader2, AlertTriangle, Plus, MoreVertical, Edi
 import Image from "next/image"
 import { CourseId } from "@/app/domain/valueObjects/CourseValues"
 import { UnitFormModal } from "./unit-form-modal-student-teacher"
-import { useCourseAllUnits } from "@/app/presentation/hooks/course/hooks";
+import { useCourseAllUnits } from "@/components/teacher/hooks/courses-hooks";
 import { useUnitMutations } from "@/app/presentation/hooks/course/unit-hooks";
 import { useAuth } from "@/app/context/AuthContext"; // Add auth context
 

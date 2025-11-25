@@ -2,7 +2,8 @@
 "use client";
 
 import { studentSubmissionKeys } from "@/app/infraestructure/api/course/student/student-key";
-import { getStudentQuizSubmission, getStudentTaskSubmission, submitQuiz, submitTask } from "@/app/infraestructure/api/course/student/submission-api";
+import { getStudentQuizSubmission, getStudentTaskSubmission, submitQuiz, submitTask } from "@/components/student/api/student-submission";
+// import { getStudentQuizSubmission, getStudentTaskSubmission, submitQuiz, submitTask } from "@/components/student/api/submission-api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Hook to get student's existing task submission

@@ -299,7 +299,7 @@ const handleApiError = (error: unknown): never => {
  */
 
 // HERE THE BACKEND WILL GET TOGETHER THE QUIZ AND TASKS
-export async function fetchTaskInventory(
+export async function  fetchTaskInventory(
   courseId: CourseId
 ): Promise<TaskInventoryItem[]> {
   if (isMockEnabled) {

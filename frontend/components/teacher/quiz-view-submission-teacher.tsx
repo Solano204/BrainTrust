@@ -21,7 +21,7 @@ import {
   ChevronUp,
   Calculator,
 } from "lucide-react";
-import { useQuizMutations } from "@/app/presentation/hooks/submission/quiz-hooks";
+import { useQuizMutations } from "@/components/teacher/hooks/quiz-hooks";
 import {
   Question,
   SubmissionQuiz,
@@ -51,7 +51,7 @@ export function QuizSubmissionsView({
   quiz,
   onBack,
 }: QuizSubmissionsViewProps) {
-  const { gradeSubmission, autoGrade } = useQuizMutations();
+  const { gradeSubmission } = useQuizMutations();
 
   // Initialize grades state from submission data
   const [grades, setGrades] = React.useState<{ [key: string]: number }>({});

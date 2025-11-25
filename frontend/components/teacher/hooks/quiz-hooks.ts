@@ -11,26 +11,24 @@ import {
   fetchQuizSubmissions,
   fetchStudentQuizSubmission,
   gradeQuizSubmission,
-  autoGradeQuiz,
   getQuizStats,
   fetchSubmissionQuizzes,
   fetchSubmissionQuizById,
   submitQuizAnswers,
-  gradeSubmissionQuiz,
   autoGradeSubmissionQuiz,
   fetchQuizzesByCourseWithoutDetails,
   fetchQuizzesByCourse,
-} from "@/app/infraestructure/api/submission/quiz-api";
-import {
-  Quiz,
-  Question,
-  Submission,
-  SubmissionQuiz,
-  QuizInventoryItem,
-} from "@/app/domain/entities/CourseEntities";
+} from "@/components/teacher/api/quiz-api";
+
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 import { QuestionId, QuizId } from "@/app/domain/valueObjects/CourseValues";
 import React from "react";
+import { SubmissionQuiz, QuizData, QuizAnswer, QuizInventoryItem, Quiz, Submission, Question  } from "../../../app/presentation/hooks/submission/types";
+import {  fetchTeacherSubmissionsItem, fetchTeacherSubmissionsQuizzesItem, StudentQuiz } from "@/components/student/api/student-submission";
+
+
+
+
 
 /**
  * Custom hook for fetching SubmissionQuiz entries
@@ -93,7 +91,7 @@ export function useSubmissionQuizMutations() {
     }: {
       submissionId: string;
       grades: { questionId: QuestionId; score: number; feedback?: string }[];
-    }) => gradeSubmissionQuiz(submissionId, grades),
+    }) => gradeQuizSubmission(submissionId, grades),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: quizKeys.submissionQuizzes(data.quizId),
@@ -108,7 +106,7 @@ export function useSubmissionQuizMutations() {
   });
 
   const autoGradeSubmissionQuizMutation = useMutation({
-    mutationFn: autoGradeSubmissionQuiz,
+    mutationFn: autoGradeSubmissionQuiz, // expects SubmissionQuiz
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: quizKeys.submissionQuizzes(data.quizId),
@@ -133,17 +131,18 @@ export function useSubmissionQuizMutations() {
  * Custom hook for fetching quizzes by course
  */
 export function useQuizzesByCourseWithoutDetails(courseId: CourseId | null) {
-  return useQuery<QuizInventoryItem[]>({
+  return useQuery<StudentQuiz[]>({
     queryKey: quizKeys.list(courseId || ""),
-    queryFn: () => fetchQuizzesByCourseWithoutDetails(courseId!),
+    queryFn: () => fetchTeacherSubmissionsQuizzesItem(courseId!),
     enabled: !!courseId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
   });
 }
+
 export function useQuizzesByCourse(courseId: CourseId | null) {
   return useQuery<Quiz[]>({
-    queryKey: quizKeys.list(courseId + "completed"),
+    queryKey: quizKeys.list((courseId || "") + "completed"),
     queryFn: () => fetchQuizzesByCourse(courseId!),
     enabled: !!courseId,
     staleTime: 300000, // 5 minutes
@@ -172,13 +171,10 @@ export function useQuizSubmissions(quizId: QuizId | null) {
     queryKey: quizKeys.quizSubmissions(quizId || ""),
     queryFn: async () => {
       const apiSubmissions = await fetchQuizSubmissions(quizId!);
-      // Map API submissions to domain submissions
       return apiSubmissions.map((submission: any) => ({
         ...submission,
         attachments: (submission.attachments || []).map((att: any) => {
-          // If already a Document, return as is; otherwise, map string to Document
           if (typeof att === "string") {
-            // Map string to a minimal Document object, adjust as needed
             return { id: att, name: att, url: att };
           }
           return att;
@@ -245,7 +241,7 @@ export function useQuizMutations() {
 
   const deleteQuizMutation = useMutation({
     mutationFn: deleteQuiz,
-    onSuccess: (_, quizId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: quizKeys.lists(),
       });
@@ -255,15 +251,16 @@ export function useQuizMutations() {
     },
   });
 
+  // fixed to use submissionId string like the API function
   const gradeSubmissionMutation = useMutation({
     mutationFn: ({
-      submission, // Changed from submissionId
+      submissionId,
       grades,
     }: {
-      submission: SubmissionQuiz; // Now passing the full submission object
-      grades: { questionId: QuestionId; score: number }[];
-    }) => gradeQuizSubmission(submission, grades), // Pass the submission object
-    onSuccess: (data, variables) => {
+      submissionId: string;
+      grades: { questionId: QuestionId; score: number; feedback?: string }[];
+    }) => gradeQuizSubmission(submissionId, grades),
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: quizKeys.submissions(),
       });
@@ -273,26 +270,25 @@ export function useQuizMutations() {
     },
   });
 
-  // In your quiz-hooks.ts
-  const autoGradeMutation = useMutation({
-    mutationFn: (submission: SubmissionQuiz) =>
-      autoGradeSubmissionQuiz(submission), // Pass full submission
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: quizKeys.submissions(),
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error auto-grading submission:", error.message);
-    },
-  });
+  // const autoGradeMutation = useMutation({
+  //   mutationFn: (submission: SubmissionQuiz) =>
+  //     autoGradeSubmissionQuiz(submission),
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({
+  //       queryKey: quizKeys.submissions(),
+  //     });
+  //   },
+  //   onError: (error: Error) => {
+  //     console.error("Error auto-grading submission:", error.message);
+  //   },
+  // });
 
   return {
     createQuiz: createQuizMutation,
     updateQuiz: updateQuizMutation,
     deleteQuiz: deleteQuizMutation,
     gradeSubmission: gradeSubmissionMutation,
-    autoGrade: autoGradeMutation,
+    // autoGrade: autoGradeMutation,
   };
 }
 

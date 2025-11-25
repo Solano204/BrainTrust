@@ -26,16 +26,17 @@ import { QuizCreator } from "../teacher/quiz-form-creator-teacher";
 import { TaskView } from "../teacher/task-view-information-teacher";
 import { QuizView } from "../teacher/quiz-view-information-teacher";
 import { PageView } from "./page-view-student-teacher";
-import { useAssignmentsByUnit } from "@/app/presentation/hooks/course/assignment-hooks";
-import { useQuizzesByUnit } from "@/app/presentation/hooks/course/quiz-hooks";
-import { usePagesByUnit } from "@/app/presentation/hooks/course/page-hooks";
-import { useAssignmentMutations } from "@/app/presentation/hooks/course/assignment-hooks";
-import { useQuizMutations } from "@/app/presentation/hooks/course/quiz-hooks";
-import { usePageMutations } from "@/app/presentation/hooks/course/page-hooks";
+import { useAssignmentsByUnit } from "@/components/teacher-student/hooks/assignment-hooks";
+import { useQuizzesByUnit } from "@/components/teacher-student/hooks/quiz-hooks";
+import { usePagesByUnit } from "@/components/teacher-student/hooks/page-hooks";
+import { useAssignmentMutations } from "@/components/teacher-student/hooks/assignment-hooks";
+import { useQuizMutations } from "@/components/teacher-student/hooks/quiz-hooks";
+import { usePageMutations } from "@/components/teacher-student/hooks/page-hooks";
 import { useAuth } from "@/app/context/AuthContext";
 import { StudentTaskView } from "../student/tasks-transactional-view-student";
 import { StudentQuizView } from "../student/quiz-transactional-view-student";
-import { useQuizSubmission, useTaskSubmission } from "@/app/presentation/hooks/course/student/submission-hooks";
+import { useQuizSubmission, useTaskSubmission } from "@/components/teacher-student/hooks/submission-hooks";
+import { fetchTasksByUnit } from "./api/task";
 
 
 interface UnitDetailProps {
@@ -54,7 +55,7 @@ export function UnitDetail({ idUnit, idCourse, onBack, unitData }: UnitDetailPro
     data: assignments = [], 
     isLoading: isLoadingAssignments,
     refetch: refetchAssignments 
-  } = useAssignmentsByUnit(idCourse, idUnit);
+  } = fetchTasksByUnit(idCourse, idUnit);
 
   const { 
     data: quizzes = [], 
@@ -73,7 +74,7 @@ export function UnitDetail({ idUnit, idCourse, onBack, unitData }: UnitDetailPro
   const quizMutations = useQuizMutations();
   const pageMutations = usePageMutations();
 
-  // Student-specific hooks for submissions
+  // STUDENT SUBMISSION HOOKS
   const { submitTask: submitTaskMutation, isSubmitting: isSubmittingTask } = useTaskSubmission();
   const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } = useQuizSubmission();
 

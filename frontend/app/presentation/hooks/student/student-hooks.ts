@@ -3,21 +3,12 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { studentKeys } from "@/app/infraestructure/api/students/student-keys";
-import {
-  fetchEnrollmentsByCourse,
-  fetchEnrollmentById,
-  createEnrollment,
-  updateEnrollment,
-  deleteEnrollment,
-  bulkEnrollStudents,
-  searchAvailableUsers,
-  updateStudentGrade,
-  getEnrollmentStats
-} from "@/app/infraestructure/api/students/student-api";
+
 import { Enrollment } from "@/app/domain/entities/CourseEntities";
 import { User } from "@/app/domain/entities/IdentityEntities";
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 import React from "react";
+import { createEnrollment, deleteEnrollment, fetchEnrollmentsByCourse, searchAvailableUsers } from "@/components/student/api/enrollment";
 
 // Extended interface for enrollments with user data
 interface EnrollmentWithUser extends Enrollment {
@@ -37,18 +28,7 @@ export function useEnrollmentsByCourse(courseId: CourseId | null) {
   });
 }
 
-/**
- * Custom hook for fetching enrollment statistics
- */
-export function useEnrollmentStats(courseId: CourseId | null) {
-  return useQuery({
-    queryKey: studentKeys.statsByCourse(courseId || ""),
-    queryFn: () => getEnrollmentStats(courseId!),
-    enabled: !!courseId,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
-}
+
 
 /**
  * Custom hook for searching available users
@@ -56,7 +36,7 @@ export function useEnrollmentStats(courseId: CourseId | null) {
 export function useAvailableUsersSearch( searchTerm: string) {
   return useQuery<User[]>({
     queryKey: [...studentKeys.availableUsersByCourse(""), searchTerm],
-    queryFn: () => searchAvailableUsers( searchTerm),
+    queryFn: () => searchAvailableUsers(searchTerm),
     enabled:  searchTerm.length > 0,
     staleTime: 60000, // 1 minute
     refetchOnWindowFocus: false,
@@ -100,23 +80,6 @@ export function useStudentMutations() {
     }
   });
 
-  const updateEnrollmentMutation = useMutation({
-    mutationFn: ({ enrollmentId, enrollmentData }: { 
-      enrollmentId: string, 
-      enrollmentData: Partial<Omit<Enrollment, "id" | "courseId" | "studentId">> 
-    }) => updateEnrollment(enrollmentId, enrollmentData),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: studentKeys.enrollmentsByCourse(data.courseId) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: studentKeys.enrollmentById(variables.enrollmentId) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error updating enrollment:", error.message);
-    }
-  });
 
   const deleteEnrollmentMutation = useMutation({
     mutationFn: deleteEnrollment,
@@ -131,32 +94,7 @@ export function useStudentMutations() {
     }
   });
 
-  const updateGradeMutation = useMutation({
-    mutationFn: ({ enrollmentId, grade }: { 
-      enrollmentId: string, 
-      grade: { value: string; maxScore: string } 
-    }) => updateStudentGrade(enrollmentId, grade),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: studentKeys.enrollmentsByCourse(data.courseId) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: studentKeys.enrollmentById(variables.enrollmentId) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error updating grade:", error.message);
-    }
-  });
 
-  return {
-    createEnrollment: createEnrollmentMutation,
-    bulkEnroll: bulkEnrollMutation,
-    updateEnrollment: updateEnrollmentMutation,
-    deleteEnrollment: deleteEnrollmentMutation,
-    updateGrade: updateGradeMutation
-  };
-}
 
 /**
  * Custom hook for managing student search and display
