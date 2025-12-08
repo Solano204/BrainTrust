@@ -45,8 +45,12 @@ export const PERMISSIONS = {
   // Admin permissions
   ADMIN_DASHBOARD: 'admin:dashboard',
   USER_MANAGEMENT: 'admin:users',
+  // USER_MANAGEMENT: 'admin:user:management',
   SYSTEM_SETTINGS: 'admin:settings',
   COURSE_MANAGEMENT: 'admin:courses',
+  VIEW_REPORTS: 'admin:reports:view',
+  EXPORT_DATA: 'admin:data:export',
+  
   
   // Teacher permissions
   TEACHER_DASHBOARD: 'teacher:dashboard',

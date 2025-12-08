@@ -1,8 +1,18 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/admin/courses/page": "app/admin/courses/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/reports/page": "app/admin/reports/page.js",
+  "/admin/users/page": "app/admin/users/page.js",
+  "/api/auth/clear-tokens/route": "app/api/auth/clear-tokens/route.js",
+  "/api/auth/initialize/route": "app/api/auth/initialize/route.js",
+  "/api/auth/set-tokens/route": "app/api/auth/set-tokens/route.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/page": "app/auth/page.js",
   "/calendar/page": "app/calendar/page.js",
   "/courses/[id]/page": "app/courses/[id]/page.js",
   "/courses/page": "app/courses/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/student/page": "app/student/page.js"
 }

@@ -13,13 +13,12 @@ import { authService } from '@/app/domain/services/authService';
 import { JWTUtils } from '@/app/utils/jwt';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (userData: { email: string; password: string; name: string; role: UserRole }) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: UserSession }>;
+  register: (userData: { email: string; password: string; name: string; role: UserRole }) => Promise<{ success: boolean; error?: string; user?: UserSession }>;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<boolean>;
   hasPermission: (permission: string) => boolean;
   hasRole: (role: UserRole) => boolean;
-  // Mock control methods
   enableMock: (mockUser?: Partial<UserSession>) => void;
   disableMock: () => void;
   isMockActive: boolean;
@@ -27,12 +26,11 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data
 const createMockUser = (overrides?: Partial<UserSession>): UserSession => ({
   id: 'mock-user-id',
   email: 'mock@example.com',
   name: 'Mock User',
-  role: 'USER' as UserRole,
+  role: 'student' as UserRole,
   permissions: ROLE_PERMISSIONS.student,
   ...overrides
 });
@@ -51,17 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshToken: null,
   });
 
-
-
-  
   const [isMockActive, setIsMockActive] = useState(false);
   const [mockUser, setMockUser] = useState<Partial<UserSession>>({});
 
-
-  
-  // Initialize auth state from cookies and validate tokens
   const initializeAuth = useCallback(async () => {
-    // Skip API call if mock is active
     if (isMockActive) {
       setAuthState({
         user: createMockUser(mockUser),
@@ -74,8 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // In a real app, you'd get tokens from HttpOnly cookies via server action
-      // For now, we'll use a server action to get initial state
       const response = await fetch('/api/auth/initialize', {
         method: 'GET',
         credentials: 'include',
@@ -104,19 +93,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, [initializeAuth]);
 
-  // Token refresh interval
   useEffect(() => {
     if (!authState.isAuthenticated || !authState.accessToken) return;
-
-    // Skip token refresh logic if mock is active
     if (isMockActive) return;
 
     const tokenPayload = JWTUtils.decodeToken(authState.accessToken);
     if (!tokenPayload) return;
 
-    // Set up token refresh 1 minute before expiry
     const expiresIn = tokenPayload.exp * 1000 - Date.now();
-    const refreshTime = Math.max(expiresIn - 60000, 5000); // Refresh 1 min before expiry
+    const refreshTime = Math.max(expiresIn - 60000, 5000);
 
     const refreshTimer = setTimeout(() => {
       refreshTokens();
@@ -126,17 +111,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [authState.accessToken, authState.isAuthenticated, isMockActive]);
 
   const login = async (email: string, password: string) => {
-    // Skip API call if mock is active
     console.log("MOCK ACTIVE:", isMockActive);
+    
     if (isMockActive) {
+      const user = createMockUser({ ...mockUser, email, name: email.split('@')[0] });
       setAuthState({
-        user: createMockUser({ ...mockUser, email, name: email.split('@')[0] }),
+        user,
         isAuthenticated: true,
         isLoading: false,
         accessToken: MOCK_TOKENS.accessToken,
         refreshToken: MOCK_TOKENS.refreshToken,
       });
-      return { success: true };
+      return { success: true, user }; // ✅ RETORNAR USER
     }
 
     try {
@@ -144,7 +130,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const tokenResponse = await authService.login({ email, password });
       
-      // Store tokens via server action
       await fetch('/api/auth/set-tokens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,9 +149,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshToken: tokenResponse.refreshToken,
       });
 
-      console.log('Login successful', authState);
+      console.log('Login successful', tokenResponse.user);
 
-      return { success: true };
+      return { success: true, user: tokenResponse.user }; // ✅ RETORNAR USER
     } catch (error: any) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       return { 
@@ -177,16 +162,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (userData: { email: string; password: string; name: string; role: UserRole }) => {
-    // Skip API call if mock is active
     if (isMockActive) {
+      const user = createMockUser({ ...mockUser, ...userData });
       setAuthState({
-        user: createMockUser({ ...mockUser, ...userData }),
+        user,
         isAuthenticated: true,
         isLoading: false,
         accessToken: MOCK_TOKENS.accessToken,
         refreshToken: MOCK_TOKENS.refreshToken,
       });
-      return { success: true };
+      return { success: true, user }; // ✅ RETORNAR USER
     }
 
     try {
@@ -213,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshToken: tokenResponse.refreshToken,
       });
 
-      return { success: true };
+      return { success: true, user: tokenResponse.user }; // ✅ RETORNAR USER
     } catch (error: any) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       return { 
@@ -224,7 +209,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    // Skip API call if mock is active
     if (isMockActive) {
       setAuthState({
         user: null,
@@ -243,7 +227,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear tokens via server action
       await fetch('/api/auth/clear-tokens', { method: 'POST' });
       
       setAuthState({
@@ -257,7 +240,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshTokens = async (): Promise<boolean> => {
-    // Skip API call if mock is active
     if (isMockActive) {
       setAuthState(prev => ({
         ...prev,
@@ -307,7 +289,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authState.user?.role === role;
   };
 
-  // Mock control methods
   const enableMock = (userOverrides?: Partial<UserSession>) => {
     const user = createMockUser(userOverrides);
     setMockUser(userOverrides || {});
@@ -341,7 +322,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshTokens,
     hasPermission,
     hasRole,
-    // Mock controls
     enableMock,
     disableMock,
     isMockActive,
@@ -362,4 +342,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

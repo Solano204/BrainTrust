@@ -1,43 +1,92 @@
-// components/dashboard-sidebar.tsx
 "use client"
 
-import { Home, Calendar, Settings, BookOpen, X, GraduationCap, Users, FileText } from "lucide-react"
+import { 
+  Home, 
+  Calendar, 
+  Settings, 
+  BookOpen, 
+  X, 
+  Users, 
+  BarChart3
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { usePathname, useRouter } from 'next/navigation'
-import { useAuth } from "@/app/context/AuthContext";
-import { PERMISSIONS } from "@/app/types/authentication";
+import { useAuth } from "@/app/context/AuthContext"
+import { PERMISSIONS } from "@/app/types/authentication"
 
-// Define navigation items based on user role
-const getNavigationItems = (userRole: string) => {
-  const commonItems = [
+// ==========================================
+// 🎯 FUNCIÓN NORMALIZE ROLE (Mantenemos tu lógica)
+// ==========================================
+function normalizeRole(role: string | undefined): string {
+  if (!role) return 'student';
+  
+  const roleStr = String(role).toLowerCase().trim();
+  
+  const roleMap: { [key: string]: string } = {
+    'admin': 'admin',
+    'ADMIN': 'ADMIN',
+    'administrator': 'admin',
+    'administrador': 'admin',
+    'teacher': 'teacher',
+    'profesor': 'teacher',
+    'student': 'student',
+    'estudiante': 'student',
+    'alumno': 'student'
+  };
+  
+  return roleMap[roleStr] || 'student';
+}
+
+// ==========================================
+// 📋 DEFINICIÓN DE ITEMS DE NAVEGACIÓN
+// ==========================================
+const getNavigationItems = (normalizedRole: string) => {
+  
+  // 1. Configuración Estándar (Estudiante y Teacher comparten la misma vista según tu solicitud)
+  const standardItems = [
     { name: "Dashboard", icon: Home, href: "/", permission: null },
     { name: "Calendar", icon: Calendar, href: "/calendar", permission: null },
     { name: "Courses", icon: BookOpen, href: "/courses", permission: null },
-    { name: "Private Files", icon: FileText, href: "/files", permission: null },
     { name: "Settings", icon: Settings, href: "/settings", permission: null },
   ];
 
-  const roleSpecificItems = {
-    admin: [
-      { name: "User Management", icon: Users, href: "/admin/users", permission: PERMISSIONS.USER_MANAGEMENT },
-      { name: "System Settings", icon: Settings, href: "/admin/settings", permission: PERMISSIONS.SYSTEM_SETTINGS },
-    ],
-    teacher: [
-      { name: "Grade Management", icon: GraduationCap, href: "/teacher/grades", permission: PERMISSIONS.GRADE_SUBMISSIONS },
-      { name: "Student Management", icon: Users, href: "/teacher/students", permission: PERMISSIONS.MANAGE_STUDENTS },
-    ],
-    student: [
-      { name: "My Grades", icon: GraduationCap, href: "/student/grades", permission: PERMISSIONS.VIEW_GRADES },
-      { name: "Assignments", icon: FileText, href: "/student/assignments", permission: PERMISSIONS.SUBMIT_ASSIGNMENTS },
-    ],
-  };
-
-  return [
-    ...commonItems,
-    ...(roleSpecificItems[userRole as keyof typeof roleSpecificItems] || [])
+  // 2. Configuración Exclusiva de Admin
+  const adminItems = [
+    { 
+      name: "Gestión de Cursos", 
+      icon: BookOpen, 
+      href: "/admin/courses", 
+      permission: PERMISSIONS.COURSE_MANAGEMENT 
+    },
+    { 
+      name: "Reportes", 
+      icon: BarChart3, 
+      href: "/admin/reports", 
+      permission: PERMISSIONS.VIEW_REPORTS 
+    },
+    { 
+      name: "Gestión de Usuarios", 
+      icon: Users, 
+      href: "/admin/users", 
+      permission: PERMISSIONS.USER_MANAGEMENT 
+    },
+    { 
+      name: "Settings", 
+      icon: Settings, 
+      href: "/settings", 
+      permission: null 
+    },
   ];
-};
+
+  // Retornamos la lista exacta dependiendo del rol
+  if (normalizedRole === 'admin') {
+    return adminItems;
+  }
+
+  // Para Student y Teacher retornamos la lista estándar
+  return standardItems;
+}
 
 interface DashboardSidebarProps {
   isOpen: boolean
@@ -52,17 +101,25 @@ export function DashboardSidebar({
   onClose, 
   activeView, 
   onNavigate,
-  userRole = 'student' 
+  userRole 
 }: DashboardSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { hasPermission, user } = useAuth()
 
-  const navigation = getNavigationItems(userRole).filter(item => 
-    !item.permission || hasPermission(item.permission)
-  );
+  // Normalización de rol
+  const rawRole = user?.role || userRole;
+  const currentRole = normalizeRole(rawRole);
 
-  // FIXED: Correct function signature
+  // Debug logs (opcional, puedes quitarlos en producción)
+  console.log('=== SIDEBAR ROLE ===', currentRole);
+
+  // Filtramos los items basados en permisos (si tienen)
+  const navigation = getNavigationItems(currentRole).filter(item => {
+    if (!item.permission) return true;
+    return hasPermission(item.permission);
+  });
+
   const handleNavClick = (href: string, name: string) => {
     onNavigate(name)
     router.push(href)
@@ -70,13 +127,22 @@ export function DashboardSidebar({
   }
 
   const isActive = (href: string) => {
-    if (href === '/dashboard' && pathname === '/') return true
+    if (href === '/' && pathname === '/') return true
+    if (href === '/') return false
     return pathname.startsWith(href)
   }
 
   return (
     <>
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} aria-hidden="true" />}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+          onClick={onClose} 
+          aria-hidden="true" 
+        />
+      )}
+
+
 
       {/* Mobile Sidebar */}
       <aside
@@ -85,6 +151,7 @@ export function DashboardSidebar({
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
+
         <div className="flex h-full flex-col gap-y-5 overflow-y-auto bg-sidebar border-r border-sidebar-border px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -136,7 +203,7 @@ export function DashboardSidebar({
                   {user?.name || 'User'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate capitalize">
-                  {user?.role || 'Student'}
+                  {currentRole}
                 </p>
               </div>
             </div>
@@ -156,7 +223,6 @@ export function DashboardSidebar({
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-2">
               {navigation.map((item) => (
@@ -183,7 +249,7 @@ export function DashboardSidebar({
             </ul>
           </nav>
 
-          {/* User Info */}
+          {/* User Info Desktop */}
           <div className="mt-auto pt-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/30">
               <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
@@ -194,7 +260,7 @@ export function DashboardSidebar({
                   {user?.name || 'User'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate capitalize">
-                  {user?.role || 'Student'}
+                  {currentRole}
                 </p>
               </div>
             </div>
