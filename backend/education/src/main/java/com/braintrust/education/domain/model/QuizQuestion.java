@@ -27,6 +27,7 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
 
     // ✅ Factory for Multiple Choice
 // ✅ Fixed Factory for Multiple Choice - ADD correctAnswer parameter
+// ✅ Fixed Factory for Multiple Choice - ADD correctAnswer parameter
     public static QuizQuestion createMultipleChoice(String questionText, int points,
                                                     List<QuestionOption> options,
                                                     String correctAnswer) { // ✅ ADD THIS PARAMETER
@@ -40,6 +41,76 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
     }
 
 
+    // ✅ Fixed reconstitute method
+    public static QuizQuestion reconstitute(QuizQuestionId id, String questionText,
+                                            QuestionType type, int points,
+                                            List<QuestionOption> options, String correctAnswer) {
+        QuizQuestion question = new QuizQuestion(id, questionText, type, points);
+
+        // ✅ Store the correct answer first
+        question.correctAnswer = correctAnswer;
+
+        // ✅ Then add options
+        if (options != null) {
+            question.options.addAll(options);
+        }
+
+        return question;
+    }
+
+
+    // In QuizQuestion class
+    public void updateQuestionText(String newText) {
+        if (newText == null || newText.trim().isEmpty()) {
+            throw new IllegalArgumentException("Question text cannot be null or empty");
+        }
+        this.questionText = newText.trim();
+    }
+
+    public void updatePoints(int newPoints) {
+        this.points = validatePoints(newPoints);
+    }
+
+    public void updateCorrectAnswer(String newCorrectAnswer) {
+        if (this.type == QuestionType.OPEN_ENDED) {
+            this.correctAnswer = newCorrectAnswer;
+        } else {
+            throw new IllegalStateException("Cannot set correct answer directly for multiple choice questions");
+        }
+    }
+
+    public void updateOptions(List<QuestionOption> newOptions) {
+        if (this.type == QuestionType.MULTIPLE_CHOICE || this.type == QuestionType.TRUE_FALSE) {
+            this.options.clear();
+            this.options.addAll(newOptions);
+        } else {
+            throw new IllegalStateException("Cannot set options for non-multiple choice questions");
+        }
+    }
+
+    public void addOption(QuestionOption newOption) {
+        if (this.type == QuestionType.MULTIPLE_CHOICE || this.type == QuestionType.TRUE_FALSE) {
+            this.options.add(newOption);
+        } else {
+            throw new IllegalStateException("Cannot add options to non-multiple choice questions");
+        }
+    }
+
+    public void removeOption(int index) {
+        if (this.type == QuestionType.MULTIPLE_CHOICE || this.type == QuestionType.TRUE_FALSE) {
+            if (index >= 0 && index < this.options.size()) {
+                this.options.remove(index);
+            } else {
+                throw new IllegalArgumentException("Invalid option index: " + index);
+            }
+        } else {
+            throw new IllegalStateException("Cannot remove options from non-multiple choice questions");
+        }
+    }
+
+
+
+
 
     // ✅ Factory for Open-Ended
     public static QuizQuestion createOpenEnded(String questionText, int points, String correctAnswer) {
@@ -50,18 +121,6 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
     }
 
     // ✅ Reconstitute
-    // In QuizQuestion class - ensure the reconstitute method looks like this:
-    public static QuizQuestion reconstitute(QuizQuestionId id, String questionText,
-                                            QuestionType type, int points,
-                                            List<QuestionOption> options, String correctAnswer) {
-        QuizQuestion question = new QuizQuestion(id, questionText, type, points);
-        question.correctAnswer = correctAnswer;  // This line must exist
-        if (options != null) {
-            question.options.addAll(options);
-        }
-        return question;
-    }
-
     public boolean isCorrectAnswer(List<Integer> selectedOptionIndices) {
         if (type != QuestionType.MULTIPLE_CHOICE) {
             throw new IllegalStateException("This method is only for multiple choice questions");

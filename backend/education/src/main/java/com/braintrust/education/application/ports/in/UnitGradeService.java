@@ -1,6 +1,7 @@
 package com.braintrust.education.application.ports.in;
 
 import com.braintrust.education.application.dtos.commands.AddUnitGradeFeedbackCommand;
+import com.braintrust.education.application.dtos.commands.BulkUpdateUnitGradesCommand;
 import com.braintrust.education.application.dtos.dtos.FinalGradeDTO;
 import com.braintrust.education.application.dtos.dtos.UnitGradeDTO;
 import com.braintrust.education.domain.valueobjects.AssignmentId;
@@ -16,6 +17,7 @@ public interface UnitGradeService {
 
     // Commands
     void addFeedback(AddUnitGradeFeedbackCommand command);
+    void bulkUpdateUnitGrades(BulkUpdateUnitGradesCommand command);
 
     // ✅ NEW: Final grade assignment methods
     void assignFinalGrade(UnitId unitId, UserId studentId, BigDecimal finalGrade, String feedback);

@@ -1,10 +1,10 @@
 package com.braintrust.education.application.ports.in;
+
 import com.braintrust.education.application.dtos.commands.*;
-import com.braintrust.education.application.dtos.dtos.CompleteQuizDTO;
-import com.braintrust.education.application.dtos.dtos.QuizDTO;
-import com.braintrust.education.application.dtos.dtos.QuizQuestionDTO;
+import com.braintrust.education.application.dtos.dtos.*;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.QuizId;
+import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.identity.domain.valueobjects.UserId;
 
 import java.util.List;
@@ -19,10 +19,19 @@ public interface QuizService {
     void deactivateQuiz(DeactivateQuizCommand command);
     QuizId createQuizWithQuestions(CreateQuizWithQuestionsCommand command);
     List<QuizDTO> getBasicQuizzesByCourse(CourseId courseId);
+    MinimalQuizDTO getMinimalQuizById(QuizId quizId);
+
+    // NEW: Delete quiz
+    void deleteQuiz(QuizId quizId);
+    void addQuestionsBulk(AddQuizQuestionsBulkCommand command);
+    void deleteQuestionsBulk(DeleteQuizQuestionsBulkCommand command);
+    void updateQuestionsBulk(UpdateQuizQuestionsBulkCommand command);
+    // NEW: Get submissions
+
+    List<QuizDTO> getQuizzesByCourseAndUnit(CourseId courseId, UnitId unitId);
 
     // Add this method to your QuizService interface
     CompleteQuizDTO getCompleteQuiz(QuizId quizId);
-
 
     // Queries
     QuizDTO getQuizById(QuizId quizId);
@@ -31,7 +40,6 @@ public interface QuizService {
     List<QuizQuestionDTO> getQuizQuestions(QuizId quizId);
     boolean isQuizAvailable(QuizId quizId);
     int getTotalPoints(QuizId quizId);
-
 
     // NEW: Calendar methods
     List<QuizDTO> getQuizzesForStudentMonth(UserId studentId, String monthStart);

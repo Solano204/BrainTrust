@@ -1,4 +1,8 @@
 package com.braintrust.education.application.dtos;
 
-public class RemoveLinkCommand {
-}
+import jakarta.validation.constraints.NotBlank;
+
+public record RemoveLinkCommand(
+        @NotBlank(message = "Link URL is required")
+        String linkUrl
+) {}

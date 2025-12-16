@@ -4,11 +4,14 @@ import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.CourseDTO;
 import com.braintrust.education.application.dtos.dtos.CourseUnitDTO;
 import com.braintrust.education.application.dtos.dtos.EnrollmentDTO;
+import com.braintrust.education.application.dtos.dtos.StudentSearchResultDTO;
 import com.braintrust.education.domain.valueobjects.CourseCode;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.EnrollmentId;
 import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -20,9 +23,16 @@ public interface CourseService {
     void updateCourseDetails(UpdateCourseCommand command);
     void updateCourseImage(CourseId courseId, String imageUrl);
 
+    // ✅ NEW: Pagination methods
+    Page<CourseDTO> getAllCourses(Pageable pageable);
+    Page<CourseDTO> getActiveCourses(Pageable pageable);
+    Page<CourseDTO> getCoursesByTeacher(UserId teacherId, Pageable pageable);
+    Page<CourseDTO> getCoursesByStudent(UserId studentId, Pageable pageable);
+
     /*
     void activateCourse(CourseId courseId);
     */
+    CourseDTO findCourseByUnitId(UnitId unitId);
 
     /*
     void deactivateCourse(CourseId courseId);
@@ -41,9 +51,11 @@ public interface CourseService {
 
     // NEW: Delete unit with cascade
     void deleteUnit(UnitId unitId);
+    CourseUnitDTO getUnitById(UnitId unitId);
 
     // Queries
     CourseDTO getCourseById(CourseId courseId);
+    CourseStatsDTO getCourseStatsAdmin();
 
     /*
     CourseDTO getCourseByCode(CourseCode code);
@@ -54,9 +66,9 @@ public interface CourseService {
     // NEW: Get courses for student
     List<CourseDTO> getCoursesByStudent(UserId studentId);
 
-    /*
+    List<StudentSearchResultDTO> searchStudentsForEnrollment(String searchQuery, CourseId courseId);
+
     List<CourseDTO> getActiveCourses();
-    */
 
     /*
     List<CourseDTO> getCoursesByGradeAndGroup(String grade, String group);
@@ -72,4 +84,11 @@ public interface CourseService {
     /*
     boolean isCourseCodeAvailable(CourseCode code);
     */
+
+    // NEW: Bulk enrollment operations
+    List<EnrollmentId> bulkEnrollStudents(BulkEnrollCommand command);
+    void bulkUnenrollStudents(BulkUnenrollCommand command);
+
+    // NEW: Update comprehensive course information
+    void updateCourseInformation(UpdateCourseInformationCommand command);
 }

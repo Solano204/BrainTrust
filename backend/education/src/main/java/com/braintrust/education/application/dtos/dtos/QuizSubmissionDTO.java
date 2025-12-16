@@ -15,5 +15,7 @@ public record QuizSubmissionDTO(
         GradeDTO grade,
         boolean autoGraded,
         List<QuizAnswerDTO> answers,
-        boolean timeExpired
+        boolean timeExpired,
+        String unitId,
+        String unitName
 ) {}

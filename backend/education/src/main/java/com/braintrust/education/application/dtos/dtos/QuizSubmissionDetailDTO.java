@@ -1,4 +1,7 @@
 package com.braintrust.education.application.dtos.dtos;
+
+import com.braintrust.education.application.dtos.commands.QuestionOptionDTO;
+
 import java.util.List;
 
 public record QuizSubmissionDetailDTO(
@@ -13,6 +16,8 @@ public record QuizSubmissionDetailDTO(
         String status,
         GradeDTO grade,
         boolean autoGraded,
-        List<QuestionResponseDTO> questionResponses, // ✅ Detailed question responses
-        boolean timeExpired
+        List<GradedQuestionResponseDTO> questionResponses, // ✅ CHANGED to GradedQuestionResponseDTO
+        boolean timeExpired,
+        String unitId,
+        String unitName
 ) {}

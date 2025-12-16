@@ -3,39 +3,27 @@ package com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql
 import com.braintrust.aidetectition.application.ports.out.AIDetectionProvider;
 import com.braintrust.aidetectition.domain.model.DetectedSegment;
 import com.braintrust.aidetectition.domain.valueobjects.*;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.repositories.ModelPerformance;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 /**
- * ✅ MOCK IMPLEMENTATION for testing without Python service
- *
- * Simulates the behavior of the Python AI detection service
- * Returns realistic mock data for testing
+ * ✅ SIMPLIFIED MOCK IMPLEMENTATION for text-only AI detection
  */
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
-// other imports...
-
 @Component("MockPythonAIProvider")
 @Primary
+@Profile("!prod") // Only active in non-production environments
 public class MockPythonAIDetectionProvider implements AIDetectionProvider {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(MockPythonAIDetectionProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(MockPythonAIDetectionProvider.class);
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
 
@@ -60,12 +48,12 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
 
     public MockPythonAIDetectionProvider() {
         this.objectMapper = new ObjectMapper();
-        log.info("✅ MockPythonAIDetectionProvider initialized for testing");
+        log.info("✅ MockPythonAIDetectionProvider initialized for testing (TEXT ONLY)");
     }
 
     @Override
     public DetectionResult analyzeContent(String content, ModelType modelType) {
-        log.info("🧪 MOCK: Analyzing content of length: {} with model: {}", content.length(), modelType);
+        log.info("🧪 MOCK: Analyzing text content (length: {}) with model: {}", content.length(), modelType);
 
         // Simulate API call delay
         simulateProcessingDelay(500, 1500);
@@ -92,93 +80,6 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
         } catch (Exception e) {
             log.error("🧪 MOCK: Error in mock analysis", e);
             throw new RuntimeException("Mock analysis failed: " + e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public String extractTextFromPdf(MultipartFile pdfFile) {
-        log.info("🧪 MOCK: Extracting text from PDF: {}", pdfFile.getOriginalFilename());
-
-        // Simulate PDF processing delay
-        simulateProcessingDelay(1000, 3000);
-
-        // Generate mock extracted text based on file name/size
-        String mockText = generateMockPdfText(pdfFile);
-        int wordCount = mockText.split("\\s+").length;
-
-        log.info("🧪 MOCK: Text extracted successfully. Words: {}, Method: mock-ocr", wordCount);
-        return mockText;
-    }
-
-    @Override
-    public List<DetectionResult> analyzePdfFile(List<MultipartFile> pdfFiles, ModelType modelType) {
-        long startTime = System.currentTimeMillis();
-        log.info("🧪 MOCK: Starting PARALLEL analysis for {} PDF files", pdfFiles.size());
-
-        try {
-            // Use virtual threads for parallel processing simulation
-            ExecutorService virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
-
-            List<CompletableFuture<DetectionResult>> futures = pdfFiles.stream()
-                    .filter(pdfFile -> pdfFile != null && !pdfFile.isEmpty())
-                    .map(pdfFile -> CompletableFuture.supplyAsync(() -> {
-                        try {
-                            log.debug("🧪 MOCK: Processing file: {}", pdfFile.getOriginalFilename());
-
-                            // 1. Extract text
-                            String extractedText = extractTextFromPdf(pdfFile);
-
-                            // 2. Analyze content
-                            DetectionResult result = analyzeContent(extractedText, modelType);
-
-                            // 3. Add file metadata
-                            Map<String, Object> mutableMetadata = new HashMap<>(result.getMetadata());
-                            mutableMetadata.put("original_file_name", pdfFile.getOriginalFilename());
-                            mutableMetadata.put("file_size", pdfFile.getSize());
-                            mutableMetadata.put("content_type", pdfFile.getContentType());
-
-                            return new DetectionResult(
-                                    result.getProbability(),
-                                    result.getModelUsed(),
-                                    result.getAnalyzedContent(),
-                                    result.getDetectedSegments(),
-                                    mutableMetadata
-                            );
-
-                        } catch (Exception e) {
-                            log.error("🧪 MOCK: Failed to analyze PDF file: {}", pdfFile.getOriginalFilename(), e);
-                            throw new CompletionException(e);
-                        }
-                    }, virtualExecutor))
-                    .collect(Collectors.toList());
-
-            // Wait for all completions
-            List<DetectionResult> results = futures.stream()
-                    .map(future -> {
-                        try {
-                            return future.get();
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            log.error("🧪 MOCK: Analysis interrupted", e);
-                            return null;
-                        } catch (ExecutionException e) {
-                            log.error("🧪 MOCK: Analysis failed", e.getCause());
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("🧪 MOCK: PARALLEL analysis completed in {}ms. Processed {} of {} files",
-                    duration, results.size(), pdfFiles.size());
-
-            virtualExecutor.shutdown();
-            return results;
-
-        } catch (Exception e) {
-            log.error("🧪 MOCK: Parallel PDF analysis failed", e);
-            throw new RuntimeException("Mock parallel analysis failed", e);
         }
     }
 
@@ -338,57 +239,17 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
         metadata.put("analysis_quality", "HIGH");
         metadata.put("word_count", content.split("\\s+").length);
         metadata.put("character_count", content.length());
+        metadata.put("provider", "Mock AI Detector");
 
         // Detailed metrics
         detailedMetrics.put("perplexity", String.format("%.2f", 50 + random.nextDouble() * 100));
         detailedMetrics.put("burstiness", String.format("%.2f", random.nextDouble() * 2));
         detailedMetrics.put("confidence_score", String.format("%.2f", 0.7 + random.nextDouble() * 0.3));
         detailedMetrics.put("model_version", "mock-1.0");
+        detailedMetrics.put("analysis_timestamp", new Date().toString());
 
         metadata.put("detailed_metrics", detailedMetrics);
 
         return metadata;
-    }
-
-    private String generateMockPdfText(MultipartFile pdfFile) {
-        String fileName = pdfFile.getOriginalFilename().toLowerCase();
-        long fileSize = pdfFile.getSize();
-
-        // Generate different content based on file name and size
-        StringBuilder text = new StringBuilder();
-
-        if (fileName.contains("academic") || fileName.contains("research")) {
-            text.append("Abstract: This research paper examines the impact of artificial intelligence on modern educational systems. ");
-            text.append("The study conducted a comprehensive analysis of AI-assisted learning tools across multiple institutions. ");
-            text.append("Results indicate a significant improvement in student engagement metrics when appropriate AI tools are implemented. ");
-            text.append("However, concerns regarding over-reliance on automated systems were also identified among educators. ");
-            text.append("Future work should focus on developing balanced approaches that leverage AI while maintaining human oversight. ");
-        } else if (fileName.contains("business") || fileName.contains("report")) {
-            text.append("Quarterly Performance Report: The company demonstrated strong growth in Q3 with a 15% increase in revenue. ");
-            text.append("Key performance indicators show improvement across all major departments. ");
-            text.append("Marketing initiatives resulted in a 25% increase in customer acquisition. ");
-            text.append("Operational efficiency improved by 12% through process automation. ");
-            text.append("The outlook for Q4 remains positive with projected growth of 10-12%. ");
-        } else if (fileName.contains("creative") || fileName.contains("story")) {
-            text.append("The old house at the end of the street had stood empty for years, its windows like vacant eyes staring out at the world. ");
-            text.append("Children whispered stories about ghosts and hidden treasures, but no one dared to venture inside. ");
-            text.append("That is, until the summer of 1998, when the Johnson family decided to make it their home. ");
-            text.append("Little did they know that the house held secrets that would change their lives forever. ");
-        } else {
-            text.append("This document contains important information regarding the subject matter. ");
-            text.append("Multiple aspects have been considered in the preparation of this material. ");
-            text.append("The content has been reviewed for accuracy and completeness. ");
-            text.append("Readers should consider the context and applicability to their specific situation. ");
-            text.append("Additional resources may be available for further clarification if needed. ");
-        }
-
-        // Add more content based on file size
-        int targetWords = (int) (fileSize / 1000) + 50; // Rough word count based on file size
-        while (text.toString().split("\\s+").length < targetWords && targetWords < 1000) {
-            text.append("Additional content paragraph providing more details and explanations. ");
-            text.append("This supplementary information helps to provide comprehensive coverage of the topic. ");
-        }
-
-        return text.toString();
     }
 }

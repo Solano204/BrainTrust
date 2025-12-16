@@ -1,4 +1,4 @@
-package com.braintrust.aidetectition.application.dtos.dtos;
+package com.braintrust.aidetectition.application.dtos.commands;
 
 import jakarta.validation.constraints.NotBlank;
 

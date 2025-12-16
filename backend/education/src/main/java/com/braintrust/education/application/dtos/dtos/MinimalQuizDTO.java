@@ -1,4 +1,8 @@
 package com.braintrust.education.application.dtos.dtos;
 
-public class MinimalQuizDTO {
-}
+
+public record MinimalQuizDTO(
+        String id,
+        String title,
+        String description
+) {}

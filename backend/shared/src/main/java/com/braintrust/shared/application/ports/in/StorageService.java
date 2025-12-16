@@ -1,7 +1,7 @@
-package com.braintrust.education.application.ports.in;
+package com.braintrust.shared.application.ports.in;
 
 
-import com.braintrust.education.application.dtos.dtos.FileUploadDTO;
+import com.braintrust.shared.application.dtos.dtos.FileUploadDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface StorageService {

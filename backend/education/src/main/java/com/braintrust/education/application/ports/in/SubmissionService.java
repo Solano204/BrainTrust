@@ -4,14 +4,9 @@ import com.braintrust.education.application.dtos.commands.GradeSubmissionCommand
 import com.braintrust.education.application.dtos.commands.ReturnSubmissionCommand;
 import com.braintrust.education.application.dtos.commands.SubmitAssignmentCommand;
 import com.braintrust.education.application.dtos.commands.SubmitTeamAssignmentCommand;
-import com.braintrust.education.application.dtos.dtos.SubmissionAnalyticsDTO;
-import com.braintrust.education.application.dtos.dtos.SubmissionBasicDTO;
-import com.braintrust.education.application.dtos.dtos.SubmissionDTO;
+import com.braintrust.education.application.dtos.dtos.*;
 import com.braintrust.education.domain.model.SubmissionStatus;
-import com.braintrust.education.domain.valueobjects.AssignmentId;
-import com.braintrust.education.domain.valueobjects.CourseId;
-import com.braintrust.education.domain.valueobjects.StudentGroupId;
-import com.braintrust.education.domain.valueobjects.SubmissionId;
+import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 
 import java.util.List;
@@ -27,6 +22,8 @@ public interface SubmissionService {
     /*
     void returnSubmissionForRevision(ReturnSubmissionCommand command);
     */
+    SubmissionId submitAssignmentFrontend(SubmitAssignmentFrontendDTO command);
+    SubmissionId submitTeamAssignmentFrontend(SubmitTeamAssignmentFrontendDTO command);
 
     /*
     void requestAIAnalysis(SubmissionId submissionId);
@@ -45,8 +42,10 @@ public interface SubmissionService {
 
     // Queries
     SubmissionDTO getSubmissionById(SubmissionId submissionId);
+
     // In SubmissionService interface
     List<SubmissionBasicDTO> getSubmissionsByCourseBasic(CourseId courseId);
+
     /*
     List<SubmissionDTO> getSubmissionsByAssignment(AssignmentId assignmentId);
     */
@@ -75,4 +74,11 @@ public interface SubmissionService {
     /*
     boolean hasStudentSubmitted(AssignmentId assignmentId, UserId studentId);
     */
+
+
+    // NEW: Get submissions by course and unit
+    List<SubmissionDTO> getSubmissionsByCourseAndUnit(CourseId courseId, UnitId unitId);
+
+    // NEW: Get submissions by student, course and unit
+    List<SubmissionDTO> getSubmissionsByStudentAndCourseAndUnit(UserId studentId, CourseId courseId, UnitId unitId);
 }

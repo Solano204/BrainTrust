@@ -1,11 +1,11 @@
 package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
 
-
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.QuizJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -18,12 +18,15 @@ public interface QuizJpaRepository extends JpaRepository<QuizJpaEntity, String> 
     List<QuizJpaEntity> findByCourseIdAndActiveTrue(String courseId);
 
 
+    List<QuizJpaEntity> findByCourseIdAndUnitId(String courseId, String unitId);
+
+    List<QuizJpaEntity> findByCourseIdAndUnitIdIsNull(String courseId);
+
     // In QuizJpaRepository interface
     List<QuizJpaEntity> findByCourseIdOrderByCreatedAtDesc(String courseId);
 
     // Optional: Also add method to get active quizzes ordered by date
     List<QuizJpaEntity> findByCourseIdAndActiveTrueOrderByCreatedAtDesc(String courseId);
-
 
     // FIXED: Month calendar queries for quizzes - removed DISTINCT and simplified ORDER BY
     @Query("""
@@ -111,10 +114,7 @@ public interface QuizJpaRepository extends JpaRepository<QuizJpaEntity, String> 
             @Param("teacherId") String teacherId,
             @Param("weekStart") LocalDateTime weekStart,
             @Param("weekEnd") LocalDateTime weekEnd
-
     );
-
-
 
     @Query("SELECT DISTINCT q FROM QuizJpaEntity q " +
             "LEFT JOIN FETCH q.questions " +

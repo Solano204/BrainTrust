@@ -1,13 +1,13 @@
 package com.braintrust.containerapp.rest.course;
 
+import com.braintrust.aidetectition.application.dtos.commands.FrontendDocumentDTO;
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.AssignmentDTO;
 import com.braintrust.education.application.ports.in.AssignmentService;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
-import io.swagger.v3.oas.annotations.Operation;
-import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,16 +17,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-// other imports...
-
 
 @RestController
 @RequestMapping("/api/assignments")
 @CrossOrigin(origins = "*")
 public class AssignmentController {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(AssignmentController.class);
+    private static final Logger log = LoggerFactory.getLogger(AssignmentController.class);
 
     private final AssignmentService assignmentService;
 
@@ -37,44 +34,106 @@ public class AssignmentController {
     // ------------------------------------------------------------------
     // ✅ ASSIGNMENT COMMANDS (CUD Operations)
     // ------------------------------------------------------------------
-
     @PostMapping
-    public ResponseEntity<SuccessResponseDTO> createAssignment(@RequestBody CreateAssignmentCommand command) {
+    public ResponseEntity<AssignmentDTO> createAssignment(@RequestBody CreateAssignmentCommand command) {
         log.info("Request to create new assignment for Course ID: {}", command.courseId());
         AssignmentId assignmentId = assignmentService.createAssignment(command);
+        AssignmentDTO createdAssignment = assignmentService.getAssignmentById(assignmentId);
         log.info("Assignment created successfully with ID: {}", assignmentId.getValue());
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Assignment created successfully", assignmentId.getValue()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAssignment);
     }
 
-    @Operation(summary = "Create Assignment with File Attachments",
-            description = "Creates a new assignment and uploads multiple files for instructions/resources.")
     @PostMapping(value = "/with-attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SuccessResponseDTO> createAssignmentWithAttachments(
+    public ResponseEntity<AssignmentDTO> createAssignmentWithAttachments(
             @ModelAttribute CreateAssignmentWithAttachmentsCommand command
     ) {
         log.info("Request to create assignment with {} attachments for Course ID: {}",
                 command.attachments().size(), command.courseId());
 
         AssignmentId assignmentId = assignmentService.createAssignmentWithAttachments(command);
+        AssignmentDTO createdAssignment = assignmentService.getAssignmentById(assignmentId);
 
         log.info("Assignment created with attachments. ID: {}", assignmentId.getValue());
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Assignment created successfully with attachments", assignmentId.getValue()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAssignment);
     }
 
+
+
+    @PostMapping(value = "/frontend", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<AssignmentDTO> createAssignmentFrontend(
+            @RequestBody CreateAssignmentFrontendDTO command
+    ) {
+        log.info("Frontend extraction - Creating assignment '{}' for Course {} with {} frontend documents",
+                command.title(), command.courseId(),
+                command.attachments() != null ? command.attachments().size() : 0);
+
+        AssignmentId assignmentId = assignmentService.createAssignmentFrontend(command);
+        AssignmentDTO createdAssignment = assignmentService.getAssignmentById(assignmentId);
+
+        log.info("Assignment created with frontend extraction. ID: {}", assignmentId.getValue());
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdAssignment);
+    }
+
+
+
+    // ✅ Bulk attachments via JSON (FrontendDocumentDTO) for existing assignments
+    @PostMapping(value = "/{assignmentId}/attachments/bulk-json", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SuccessResponseDTO> addBulkAttachmentsJson(
+            @PathVariable String assignmentId,
+            @Valid @RequestBody AddBulkAttachmentsJsonCommand command
+    ) {
+        log.info("Request to add {} attachments via JSON to Assignment ID: {}",
+                command.attachments() != null ? command.attachments().size() : 0, assignmentId);
+
+        assignmentService.addBulkAttachmentsJson(
+                AssignmentId.fromString(assignmentId),
+                command.attachments()
+        );
+
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Attachments added successfully via JSON", null)
+        );
+    }
+
+    // ✅ Single attachment via JSON
+    @PostMapping(value = "/{assignmentId}/attachments/single-json", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SuccessResponseDTO> addSingleAttachmentJson(
+            @PathVariable String assignmentId,
+            @Valid @RequestBody FrontendDocumentDTO attachment
+    ) {
+        log.info("Request to add single attachment via JSON to Assignment ID: {}", assignmentId);
+
+        assignmentService.addSingleAttachmentJson(
+                AssignmentId.fromString(assignmentId),
+                attachment
+        );
+
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Attachment added successfully via JSON", null)
+        );
+    }
+
+
     @PutMapping("/{assignmentId}")
-    public ResponseEntity<SuccessResponseDTO> updateAssignment(
+    public ResponseEntity<AssignmentDTO> updateAssignment(
             @PathVariable String assignmentId,
             @RequestBody UpdateAssignmentCommand command
     ) {
         log.info("Request to update assignment details for ID: {}", assignmentId);
-        assignmentService.updateAssignmentDetails(command);
-        log.debug("Assignment ID {} details updated.", assignmentId);
-        return ResponseEntity.ok(new SuccessResponseDTO(true, "Assignment updated successfully", null));
-    }
 
+        if (!assignmentId.equals(command.assignmentId())) {
+            throw new IllegalArgumentException("Assignment ID mismatch");
+        }
+
+        assignmentService.updateAssignmentDetails(command);
+        AssignmentDTO updatedAssignment = assignmentService.getAssignmentById(
+                AssignmentId.fromString(assignmentId)
+        );
+
+        log.debug("Assignment ID {} details updated.", assignmentId);
+        return ResponseEntity.ok(updatedAssignment);
+    }
     @PutMapping("/{assignmentId}/due-date")
     public ResponseEntity<SuccessResponseDTO> extendDueDate(
             @PathVariable String assignmentId,
@@ -115,14 +174,41 @@ public class AssignmentController {
     // ✅ ASSIGNMENT QUERIES
     // ------------------------------------------------------------------
 
-    /*
     @GetMapping("/{assignmentId}")
     public ResponseEntity<AssignmentDTO> getAssignmentById(@PathVariable String assignmentId) {
         log.debug("Querying details for assignment ID: {}", assignmentId);
         AssignmentDTO assignment = assignmentService.getAssignmentById(AssignmentId.fromString(assignmentId));
         return ResponseEntity.ok(assignment);
     }
-    */
+
+//    // 3. Get assignments by student and course (CRITICAL - student-submission-api needs this)
+//    @GetMapping("/student/{studentId}/course/{courseId}/unit/{unitId}")
+//    public ResponseEntity<List<AssignmentDTO>> getAssignmentsByStudentCourseUnit(
+//            @PathVariable String studentId,
+//            @PathVariable String courseId,
+//            @PathVariable String unitId) {
+//        log.debug("Fetching assignments for student {} course {} unit {}", studentId, courseId, unitId);
+//        List<AssignmentDTO> assignments = assignmentService.getAssignmentsByStudentCourseUnit(
+//                UserId.fromString(studentId),
+//                CourseId.fromString(courseId),
+//                UnitId.fromString(unitId)
+//        );
+//        return ResponseEntity.ok(assignments);z
+//    }
+
+    // 4. Get assignments by course and unit (teacher view - course-tasks-api needs this)
+    @GetMapping("/course/{courseId}/unit/{unitId}")
+    public ResponseEntity<List<AssignmentDTO>> getAssignmentsByCourseUnit(
+            @PathVariable String courseId,
+            @PathVariable String unitId) {
+        log.debug("Fetching assignments for course {} unit {}", courseId, unitId);
+        List<AssignmentDTO> assignments = assignmentService.getAssignmentByCourseAndUnit(
+                CourseId.fromString(courseId),
+                UnitId.fromString(unitId)
+        );
+        return ResponseEntity.ok(assignments);
+    }
+
 
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<AssignmentDTO>> getAssignmentsByCourse(@PathVariable String courseId) {
@@ -132,7 +218,7 @@ public class AssignmentController {
     }
 
     // NEW: Get assignments for specific unit in a course
-    @GetMapping("/course/{courseId}/unit/{unitId}")
+    @GetMapping("/course/unit/{unitId}")
     public ResponseEntity<List<AssignmentDTO>> getAssignmentsByUnit(
             @PathVariable String courseId,
             @PathVariable String unitId) {
@@ -265,5 +351,123 @@ public class AssignmentController {
 
         log.info("Returning {} assignments for teacher month view", assignments.size());
         return ResponseEntity.ok(assignments);
+    }
+
+
+
+    @PostMapping("/{assignmentId}/links")
+    public ResponseEntity<SuccessResponseDTO> addLink(
+            @PathVariable String assignmentId,
+            @Valid @RequestBody AddLinksCommand command
+    ) {
+        log.info("Request to add link to Assignment ID: {}", assignmentId);
+        assignmentService.addLink(
+                AssignmentId.fromString(assignmentId),
+                command.link()
+        );
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Link added successfully", null)
+        );
+    }
+
+    @PostMapping("/{assignmentId}/links/batch")
+    public ResponseEntity<SuccessResponseDTO> addMultipleLinks(
+            @PathVariable String assignmentId,
+            @Valid @RequestBody AddMultipleLinksCommand command
+    ) {
+        log.info("Request to add {} links to Assignment ID: {}",
+                command.links().size(), assignmentId);
+        assignmentService.addLinks(
+                AssignmentId.fromString(assignmentId),
+                command.links()
+        );
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Links added successfully", null)
+        );
+    }
+
+    @DeleteMapping("/{assignmentId}/links")
+    public ResponseEntity<SuccessResponseDTO> removeLink(
+            @PathVariable String assignmentId,
+            @Valid @RequestBody RemoveLinkCommand command
+    ) {
+        log.info("Request to remove link from Assignment ID: {}", assignmentId);
+        assignmentService.removeLink(
+                AssignmentId.fromString(assignmentId),
+                command.linkUrl()
+        );
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Link removed successfully", null)
+        );
+    }
+
+    @DeleteMapping("/{assignmentId}/links/all")
+    public ResponseEntity<SuccessResponseDTO> clearLinks(@PathVariable String assignmentId) {
+        log.info("Request to clear all links from Assignment ID: {}", assignmentId);
+        assignmentService.clearLinks(AssignmentId.fromString(assignmentId));
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "All links cleared successfully", null)
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // ✅ ATTACHMENT MANAGEMENT ENDPOINTS
+    // ------------------------------------------------------------------
+
+    @PostMapping(value = "/{assignmentId}/attachments",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SuccessResponseDTO> addAttachment(
+            @PathVariable String assignmentId,
+            @Valid @ModelAttribute AddAttachmentCommand command
+    ) {
+        log.info("Request to add attachment to Assignment ID: {}", assignmentId);
+        assignmentService.addAttachment(
+                AssignmentId.fromString(assignmentId),
+                command.file()
+        );
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Attachment added successfully", null)
+        );
+    }
+
+    @PostMapping(value = "/{assignmentId}/attachments/batch",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SuccessResponseDTO> addMultipleAttachments(
+            @PathVariable String assignmentId,
+            @Valid @ModelAttribute AddMultipleAttachmentsCommand command
+    ) {
+        log.info("Request to add {} attachments to Assignment ID: {}",
+                command.files().size(), assignmentId);
+        assignmentService.addMultipleAttachments(
+                AssignmentId.fromString(assignmentId),
+                command.files()
+        );
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Attachments added successfully", null)
+        );
+    }
+
+    @DeleteMapping("/{assignmentId}/attachments")
+    public ResponseEntity<SuccessResponseDTO> removeAttachment(
+            @PathVariable String assignmentId,
+            @Valid @RequestBody RemoveAttachmentCommand command
+    ) {
+        log.info("Request to remove attachment from Assignment ID: {}", assignmentId);
+        assignmentService.removeAttachment(
+                AssignmentId.fromString(assignmentId),
+                command.documentName()
+        );
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Attachment removed successfully", null)
+        );
+    }
+
+    @DeleteMapping("/{assignmentId}/attachments/all")
+    public ResponseEntity<SuccessResponseDTO> clearAttachments(@PathVariable String assignmentId) {
+        log.info("Request to clear all attachments from Assignment ID: {}", assignmentId);
+        assignmentService.clearAttachments(AssignmentId.fromString(assignmentId));
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "All attachments cleared successfully", null)
+        );
     }
 }

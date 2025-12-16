@@ -9,21 +9,24 @@ import com.braintrust.identity.domain.model.Role;
 import com.braintrust.identity.domain.valueobjects.Email;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-// 📍 identity/application/ports/in/UserService.java
 public interface UserService {
 
-
     MinimalUserInfoDTO getMinimalUserInfo(UserId userId);
-
 
     // Commands
     UserId registerTeacher(RegisterTeacherCommand command);
     UserId registerStudent(RegisterStudentCommand command);
     UserId registerAdmin(RegisterAdminCommand command);
-    
+
+
+    void deleteUser(UserId userId);
+
+
     void updateUserPersonalInfo(UpdateUserInfoCommand command);
     void changeUserEmail(ChangeEmailCommand command);
     void changeUserPassword(ChangePasswordCommand command);
@@ -31,6 +34,7 @@ public interface UserService {
     void activateUser(UserId userId);
     CompleteUserDTO createCompleteUser(CreateCompleteUserCommand command);
     List<UserDTO> getUsersByIds(List<String> userIds);
+    void adminChangePassword(AdminChangePasswordCommand command);
 
     // Queries
     List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds);
@@ -40,9 +44,15 @@ public interface UserService {
     List<UserDTO> getUsersByRole(Role role);
     List<UserDTO> getActiveUsers();
     boolean isEmailAvailable(Email email);
+    List<MinimalUserInfoDTO> searchUsersByName(String searchQuery, Role role);
+
+    // ✅ NEW: Pagination methods
+    Page<UserDTO> getAllUsers(Pageable pageable);
+    Page<UserDTO> getUsersByRole(Role role, Pageable pageable);
+    Page<UserDTO> searchUsersByName(String name, Pageable pageable);
+    Page<UserDTO> searchUsersByNameAndRole(String name, Role role, Pageable pageable);
 
     // Authentication
-    // ✅ AUTHENTICATION
     AuthenticationResult authenticate(AuthenticateUserCommand command);
     AuthenticationResult refreshToken(RefreshTokenCommand command);
 }

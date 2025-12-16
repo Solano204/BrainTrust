@@ -14,6 +14,9 @@ import com.braintrust.shared.domain.exception.EmailAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,15 +37,15 @@ import static com.braintrust.identity.application.Maps.RepositoryHelper.findUser
 
 /**
  * ✅ PRODUCTION-READY User Service with Virtual Threads & Security
- *
+ * <p>
  * Este servicio maneja autenticación, autorización y gestión de usuarios.
- *
+ * <p>
  * Optimizaciones con Virtual Threads:
  * 1. Registro de usuarios (DB writes parkean VT)
  * 2. Autenticación (bcrypt parkea VT durante hashing)
  * 3. Token generation (CPU-bound pero rápido)
  * 4. Queries parkean VT durante DB access
- *
+ * <p>
  * IMPORTANTE:
  * - bcrypt password hashing es CPU-intensive pero parkea el VT
  * - JWT generation es rápido y no requiere optimización
@@ -86,7 +89,7 @@ public class UserApplicationService implements UserService {
 
     /**
      * ✅ REGISTER TEACHER
-     *
+     * <p>
      * Este método se beneficia de Virtual Threads:
      * - bcrypt hashing parkea el VT (CPU-intensive)
      * - DB writes parkean el VT
@@ -139,6 +142,269 @@ public class UserApplicationService implements UserService {
             throw new RuntimeException("Failed to register teacher", e);
         }
     }
+
+
+
+    @Override
+    public void adminChangePassword(AdminChangePasswordCommand command) {
+        UserId userId = UserId.fromString(command.userId());
+        long startTime = System.currentTimeMillis();
+
+        // ⚠️ WARN level for security audit (admin changing password)
+        log.warn("🔐 ADMIN initiating password reset for User ID: {}", userId.getValue());
+
+        try {
+            // ✅ Find the user
+            User user = findUserByIdOrThrow(userId, userRepository);
+
+            // ✅ Optional: Check if admin is changing their own password (can add extra logging)
+            // You could get current admin ID from SecurityContext if needed
+
+            // ✅ Hash new password (bcrypt parks VT)
+            Password newPassword = Password.create(command.newPassword(), passwordEncoder);
+
+            // ✅ Update password in domain model
+            user.changePassword(newPassword);
+
+            // ✅ Save changes
+            userRepository.save(user);
+
+            long duration = System.currentTimeMillis() - startTime;
+
+            // ⚠️ WARN level - security event for audit
+            log.warn("✅ ADMIN password reset completed in {}ms for User ID: {}",
+                    duration, userId.getValue());
+
+        } catch (UserNotFoundException e) {
+            log.error("❌ ADMIN password reset failed: User {} not found", userId.getValue());
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ ADMIN password reset failed for User {}: {}",
+                    userId.getValue(), e.getMessage(), e);
+            throw new RuntimeException("Failed to reset password", e);
+        }
+    }
+
+
+    @Override
+    public void deleteUser(UserId userId) {
+        long startTime = System.currentTimeMillis();
+
+        log.warn("🗑️ Deleting User ID: {}", userId.getValue());
+
+        try {
+            // Get user before deletion (for audit/logging)
+            User user = findUserByIdOrThrow(userId, userRepository);
+
+            // Check if user is active
+            if (user.isActive()) {
+                log.warn("⚠️ Attempting to delete active user: {}", userId.getValue());
+            }
+
+            // Delete user from repository
+            userRepository.deleteById(userId);
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.warn("✅ User {} deleted in {}ms. Role: {}, Email: {}",
+                    userId.getValue(), duration, user.getRole().name(), user.getEmail().getValue());
+
+        } catch (UserNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("❌ Failed to delete User {}: {}", userId.getValue(), e.getMessage(), e);
+            throw new RuntimeException("Failed to delete user", e);
+        }
+    }
+
+    // ✅ NEW: Pagination implementation methods
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserDTO> getAllUsers(Pageable pageable) {
+        log.debug("📊 Fetching all users with pagination. Page: {}, Size: {}",
+                pageable.getPageNumber(), pageable.getPageSize());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            Page<User> userPage = userRepository.findAll(pageable);
+
+            List<UserDTO> dtos = userPage.getContent().stream()
+                    .map(user -> {
+                        Person person = personRepository.findById(user.getPersonId())
+                                .orElse(null);
+                        return toUserDTO(user, person);
+                    })
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Retrieved page {} of {} users (total: {}) in {}ms",
+                    pageable.getPageNumber(), dtos.size(), userPage.getTotalElements(), duration);
+
+            return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to fetch paginated users: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch paginated users", e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserDTO> getUsersByRole(Role role, Pageable pageable) {
+        log.debug("📊 Fetching users by Role: {} with pagination. Page: {}, Size: {}",
+                role.name(), pageable.getPageNumber(), pageable.getPageSize());
+        long startTime = System.currentTimeMillis();
+
+        try {
+
+            com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
+                    com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
+
+            Page<User> userPage = userRepository.findByRole(roleJpa, pageable);
+
+            List<UserDTO> dtos = userPage.getContent().stream()
+                    .map(user -> {
+                        Person person = personRepository.findById(user.getPersonId())
+                                .orElse(null);
+                        return toUserDTO(user, person);
+                    })
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Retrieved page {} of {} users with role {} (total: {}) in {}ms",
+                    pageable.getPageNumber(), dtos.size(), role.name(),
+                    userPage.getTotalElements(), duration);
+
+            return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to fetch paginated users by role {}: {}",
+                    role.name(), e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch paginated users by role", e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserDTO> searchUsersByName(String name, Pageable pageable) {
+        log.debug("🔍 Searching users by name: '{}' with pagination. Page: {}, Size: {}",
+                name, pageable.getPageNumber(), pageable.getPageSize());
+        long startTime = System.currentTimeMillis();
+
+        try {
+            Page<User> userPage = userRepository.findByNameContaining(name, pageable);
+
+            List<UserDTO> dtos = userPage.getContent().stream()
+                    .map(user -> {
+                        Person person = personRepository.findById(user.getPersonId())
+                                .orElse(null);
+                        return toUserDTO(user, person);
+                    })
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Found {} users matching '{}' in page {} (total: {}) in {}ms",
+                    dtos.size(), name, pageable.getPageNumber(),
+                    userPage.getTotalElements(), duration);
+
+            return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to search users by name '{}': {}", name, e.getMessage(), e);
+            throw new RuntimeException("Failed to search users by name", e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserDTO> searchUsersByNameAndRole(String name, Role role, Pageable pageable) {
+        log.debug("🔍 Searching users by name: '{}' and role: {} with pagination. Page: {}, Size: {}",
+                name, role.name(), pageable.getPageNumber(), pageable.getPageSize());
+        long startTime = System.currentTimeMillis();
+
+        com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
+                com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
+
+        try {
+            Page<User> userPage = userRepository.findByNameContainingAndRole(name, roleJpa, pageable);
+
+            List<UserDTO> dtos = userPage.getContent().stream()
+                    .map(user -> {
+                        Person person = personRepository.findById(user.getPersonId())
+                                .orElse(null);
+                        return toUserDTO(user, person);
+                    })
+                    .collect(Collectors.toList());
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("✅ Found {} users matching '{}' with role {} in page {} (total: {}) in {}ms",
+                    dtos.size(), name, role.name(), pageable.getPageNumber(),
+                    userPage.getTotalElements(), duration);
+
+            return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to search users by name '{}' and role {}: {}",
+                    name, role.name(), e.getMessage(), e);
+            throw new RuntimeException("Failed to search users by name and role", e);
+        }
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MinimalUserInfoDTO> searchUsersByName(String searchQuery, Role role) {
+        log.info("Searching users by name: '{}' with role filter: {}", searchQuery, role);
+
+        try {
+            // Get users by role
+            List<User> users = userRepository.findByRole(
+                    com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role
+                            .valueOf(role.name())
+            );
+
+            // Filter by search query and map to DTO
+            return users.stream()
+                    .filter(user -> {
+                        try {
+                            Person person = personRepository.findById(user.getPersonId())
+                                    .orElse(null);
+                            if (person == null) return false;
+
+                            String searchLower = searchQuery.toLowerCase();
+                            return person.getFullName().toLowerCase().contains(searchLower) ||
+                                    person.getFirstName().toLowerCase().contains(searchLower) ||
+                                    person.getLastName().toLowerCase().contains(searchLower);
+                        } catch (Exception e) {
+                            log.warn("Error filtering user {}: {}", user.getId().getValue(), e.getMessage());
+                            return false;
+                        }
+                    })
+                    .map(user -> {
+                        try {
+                            Person person = personRepository.findById(user.getPersonId())
+                                    .orElseThrow(() -> new UserNotFoundException("Person not found"));
+
+                            return new MinimalUserInfoDTO(
+                                    user.getId().getValue(),
+                                    person.getId().getValue(),
+                                    person.getFirstName(),
+                                    person.getLastName(),
+                                    person.getFullName()
+                            );
+                        } catch (Exception e) {
+                            log.warn("Failed to map user {} to DTO: {}", user.getId().getValue(), e.getMessage());
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("Failed to search users by name '{}': {}", searchQuery, e.getMessage(), e);
+            throw new RuntimeException("Failed to search users", e);
+        }
+    }
+
 
     @Override
     public UserId registerStudent(RegisterStudentCommand command) {
@@ -488,7 +754,7 @@ public class UserApplicationService implements UserService {
 
     /**
      * ✅ AUTHENTICATE USER
-     *
+     * <p>
      * Este método se beneficia de Virtual Threads:
      * - bcrypt verification parkea el VT
      * - DB queries parkean el VT
@@ -617,7 +883,6 @@ public class UserApplicationService implements UserService {
     }
 
 
-
     @Override
     @Transactional(readOnly = true)
     public MinimalUserInfoDTO getMinimalUserInfo(UserId userId) {
@@ -661,7 +926,6 @@ public class UserApplicationService implements UserService {
             throw new RuntimeException("Failed to fetch minimal user info", e);
         }
     }
-
 
 
     @Override
@@ -824,14 +1088,37 @@ public class UserApplicationService implements UserService {
                                   Email email, Password password) {
         return switch (command.role()) {
             case STUDENT -> {
-                if (command.userId() == null || command.userId().trim().isEmpty()) {
-                    throw new IllegalArgumentException("Student ID is required for STUDENT role");
+                // ✅ Generate STUDED-UUID format if not provided
+                String studentId = command.userId();
+                if (studentId == null || studentId.trim().isEmpty()) {
+                    // Generate STUDED-UUID format
+                    studentId = generateStudentId();
+                    log.info("Generated student ID: {}", studentId);
+                } else if (!isValidStudentIdFormat(studentId)) {
+                    throw new IllegalArgumentException(
+                            "Invalid student ID format. Should be STUDED-UUID format"
+                    );
                 }
-                yield User.createStudent(person, email, password, command.userId());
+                yield User.createStudent(person, email, password, studentId);
             }
             case TEACHER -> User.createTeacher(person, email, password);
             case ADMIN -> User.createAdmin(person, email, password);
         };
+    }
+
+    private String generateStudentId() {
+        // Generate STUDED- followed by UUID
+        String uuid = java.util.UUID.randomUUID().toString().toUpperCase();
+        // Take first 8 characters of UUID for brevity
+        String shortUuid = uuid.substring(0, 8);
+        return "STUDED-" + shortUuid;
+    }
+
+    private boolean isValidStudentIdFormat(String studentId) {
+        // Check if it matches STUDED-XXXXXXX format
+        return studentId != null &&
+                studentId.startsWith("STUDED-") &&
+                studentId.length() > "STUDED-".length();
     }
 
     /**

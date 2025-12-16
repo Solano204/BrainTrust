@@ -8,7 +8,6 @@ import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.AssignmentEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -18,14 +17,11 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
-// other imports...
 
 @Repository
 public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(JpaAssignmentRepositoryAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(JpaAssignmentRepositoryAdapter.class);
     private final AssignmentJpaRepository jpaRepository;
     private final AssignmentEntityMapper mapper;
 
@@ -44,7 +40,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
                 assignment.getId().getValue(), assignment.getCourseId().getValue());
         AssignmentJpaEntity entity = mapper.toEntity(assignment);
         AssignmentJpaEntity savedEntity = jpaRepository.save(entity);
-        log.debug("Assignment saved/updated. Mapping entity back to domain model.");
+        log.info("Assignment saved/updated. Mapping entity back to domain model.");
         return mapper.toDomain(savedEntity);
     }
 
@@ -57,15 +53,17 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
     @Override
     public Optional<Assignment> findById(AssignmentId assignmentId) {
-        log.debug("Querying database for Assignment ID: {}", assignmentId.getValue());
-        return jpaRepository.findByIdWithDocuments(assignmentId.getValue())
+        log.info("Querying database for Assignment ID: {}", assignmentId.getValue());
+        // ✅ Use the EntityGraph method to fetch both documents and links
+        return jpaRepository.findByIdWithDocumentsAndLinks(assignmentId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public List<Assignment> findByCourseId(CourseId courseId) {
-        log.debug("Fetching all assignments for Course ID: {}", courseId.getValue());
-        return jpaRepository.findByCourseIdWithDocuments(courseId.getValue())
+        log.info("Fetching all assignments for Course ID: {}", courseId.getValue());
+        // ✅ Use the EntityGraph method to fetch both documents and links
+        return jpaRepository.findByCourseIdWithDocumentsAndLinks(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -73,9 +71,25 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
     @Override
     public List<Assignment> findByCourseIdAndUnitId(CourseId courseId, UnitId unitId) {
-        log.debug("Fetching assignments for Course ID: {} and Unit ID: {}",
+        log.info("Fetching assignments for Course ID: {} and Unit ID: {}",
                 courseId.getValue(), unitId.getValue());
-        return jpaRepository.findByCourseIdAndUnit(courseId.getValue(), unitId.getValue())
+        // ✅ Use the EntityGraph method to fetch both documents and links
+        return jpaRepository.findByCourseIdAndUnitId(courseId.getValue(), unitId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Assignment> findByStudentCourseUnit(UserId studentId, CourseId courseId, UnitId unitId) {
+        log.info("Fetching assignments for Student {} in Course {} Unit {}",
+                studentId.getValue(), courseId.getValue(), unitId.getValue());
+        // ✅ Use the EntityGraph method to fetch both documents and links
+        return jpaRepository.findByStudentCourseUnit(
+                        studentId.getValue(),
+                        courseId.getValue(),
+                        unitId.getValue()
+                )
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -83,7 +97,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
     @Override
     public List<Assignment> findActiveAssignmentsByCourse(CourseId courseId) {
-        log.debug("Fetching ACTIVE assignments only for Course ID: {}", courseId.getValue());
+        log.info("Fetching ACTIVE assignments only for Course ID: {}", courseId.getValue());
         return jpaRepository.findByCourseIdAndActiveTrue(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -92,7 +106,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
     @Override
     public List<Assignment> findAssignmentsDueBetween(CourseId courseId, LocalDateTime start, LocalDateTime end) {
-        log.debug("Fetching assignments due between {} and {} for Course ID: {}", start, end, courseId.getValue());
+        log.info("Fetching assignments due between {} and {} for Course ID: {}", start, end, courseId.getValue());
         return jpaRepository.findByCourseIdAndDueDateBetween(courseId.getValue(), start, end)
                 .stream()
                 .map(mapper::toDomain)
@@ -103,6 +117,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Student ID {} for week {} to {}",
                 studentId.getValue(), weekStart, weekEnd);
+        // ✅ Use the EntityGraph method to fetch both documents and links
         return jpaRepository.findAssignmentsByStudentForWeek(
                         studentId.getValue(),
                         weekStart,
@@ -117,6 +132,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Teacher ID {} for week {} to {}",
                 teacherId.getValue(), weekStart, weekEnd);
+        // ✅ Use the EntityGraph method to fetch both documents and links
         return jpaRepository.findAssignmentsByTeacherForWeek(
                         teacherId.getValue(),
                         weekStart,
@@ -131,6 +147,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByStudentForMonth(UserId studentId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Fetching assignments for Student ID {} for month {} to {}",
                 studentId.getValue(), monthStart, monthEnd);
+        // ✅ Use the EntityGraph method to fetch both documents and links
         return jpaRepository.findAssignmentsByStudentForMonth(
                         studentId.getValue(),
                         monthStart,
@@ -145,6 +162,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByTeacherForMonth(UserId teacherId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Fetching assignments for Teacher ID {} for month {} to {}",
                 teacherId.getValue(), monthStart, monthEnd);
+        // ✅ Use the EntityGraph method to fetch both documents and links
         return jpaRepository.findAssignmentsByTeacherForMonth(
                         teacherId.getValue(),
                         monthStart,

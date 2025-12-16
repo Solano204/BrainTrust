@@ -1,4 +1,9 @@
 package com.braintrust.education.application.dtos.dtos;
 
-public class BulkAddMembersRequest {
-}
+import java.util.List;
+
+public record BulkAddMembersRequest(
+        String courseId,
+        String groupId,
+        List<String> studentIds
+) {}

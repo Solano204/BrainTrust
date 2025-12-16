@@ -1,5 +1,6 @@
 package com.braintrust.containerapp.rest.identity;
 
+import com.braintrust.education.application.dtos.dtos.PaginatedResponse;
 import com.braintrust.identity.application.dtos.commands.*;
 import com.braintrust.identity.application.dtos.dtos.AuthenticationResult;
 import com.braintrust.identity.application.dtos.dtos.CompleteUserDTO;
@@ -15,11 +16,17 @@ import io.swagger.v3.oas.annotations.Parameter; // ⬅️ OpenAPI Import
 import io.swagger.v3.oas.annotations.media.Content; // ⬅️ OpenAPI Import
 import io.swagger.v3.oas.annotations.media.Schema; // ⬅️ OpenAPI Import
 import io.swagger.v3.oas.annotations.responses.ApiResponse; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag; // ⬅️ OpenAPI Import
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -74,6 +81,121 @@ public class UserController {
                 result.userId(), result.personId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
+
+    @Operation(
+            summary = "Get all users with pagination",
+            description = "Retrieves a paginated list of all users. Supports sorting and filtering by page/size."
+    )
+    @ApiResponse(responseCode = "200", description = "Paginated users retrieved successfully")
+    @GetMapping("/paginated")
+    public ResponseEntity<PaginatedResponse<UserDTO>> getAllUsersPaginated(
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Number of items per page", example = "20")
+            @RequestParam(defaultValue = "20") int size,
+
+            @Parameter(description = "Sort by field (e.g., 'email,asc' or 'createdAt,desc')",
+                    example = "createdAt,desc")
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+
+        log.info("📊 Fetching paginated users. Page: {}, Size: {}, Sort: {}", page, size, sort);
+
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        Page<UserDTO> userPage = userService.getAllUsers(pageable);
+
+        PaginatedResponse<UserDTO> response = PaginatedResponse.fromPage(userPage);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Get users by role with pagination",
+            description = "Retrieves a paginated list of users filtered by role."
+    )
+    @ApiResponse(responseCode = "200", description = "Paginated users by role retrieved successfully")
+    @GetMapping("/role/{role}/paginated")
+    public ResponseEntity<PaginatedResponse<UserDTO>> getUsersByRolePaginated(
+            @PathVariable String role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+
+        log.info("📊 Fetching paginated users with role: {}. Page: {}, Size: {}", role, page, size);
+
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        Page<UserDTO> userPage = userService.getUsersByRole(
+                Role.valueOf(role.toUpperCase()),
+                pageable
+        );
+
+        PaginatedResponse<UserDTO> response = PaginatedResponse.fromPage(userPage);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Search users by name",
+            description = "Searches users by name (first name, last name, or full name) with pagination support."
+    )
+    @ApiResponse(responseCode = "200", description = "Users found successfully")
+    @GetMapping("/search")
+    public ResponseEntity<PaginatedResponse<UserDTO>> searchUsersByName(
+            @Parameter(description = "Name to search for", required = true)
+            @RequestParam String name,
+
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        log.info("🔍 Searching users by name: '{}'. Page: {}, Size: {}", name, page, size);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserDTO> userPage = userService.searchUsersByName(name, pageable);
+
+        PaginatedResponse<UserDTO> response = PaginatedResponse.fromPage(userPage);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Search users by name and role",
+            description = "Searches users by name within a specific role with pagination."
+    )
+    @ApiResponse(responseCode = "200", description = "Users found successfully")
+    @GetMapping("/search/{role}")
+    public ResponseEntity<PaginatedResponse<UserDTO>> searchUsersByNameAndRole(
+            @PathVariable String role,
+            @RequestParam String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "firstName,asc") String sort) {
+
+        log.info("🔍 Searching users by name: '{}' with role: {}. Page: {}, Size: {}",
+                name, role, page, size);
+
+        String[] sortParams = sort.split(",");
+        Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
+        Page<UserDTO> userPage = userService.searchUsersByNameAndRole(
+                name,
+                Role.valueOf(role.toUpperCase()),
+                pageable
+        );
+
+        PaginatedResponse<UserDTO> response = PaginatedResponse.fromPage(userPage);
+        return ResponseEntity.ok(response);
     }
 
 
@@ -267,15 +389,43 @@ public class UserController {
 //        return ResponseEntity.ok(user);
 //    }
 
-//    @Operation(summary = "Get users by role", description = "Retrieves a list of all users filtered by their primary role (e.g., ADMIN, STUDENT).")
-//    @ApiResponse(responseCode = "200", description = "List of users retrieved")
-//    @Parameter(name = "role", description = "The role name (e.g., STUDENT)", required = true)
-//    @GetMapping("/role/{role}")
-//    public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable String role) {
-//        log.debug("Fetching all users with role: {}", role.toUpperCase());
-//        List<UserDTO> users = userService.getUsersByRole(Role.valueOf(role.toUpperCase()));
-//        return ResponseEntity.ok(users);
-//    }
+    @Operation(summary = "Get users by role", description = "Retrieves a list of all users filtered by their primary role (e.g., ADMIN, STUDENT).")
+    @ApiResponse(responseCode = "200", description = "List of users retrieved")
+    @Parameter(name = "role", description = "The role name (e.g., STUDENT)", required = true)
+    @GetMapping("/role/{role}")
+    public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable String role) {
+        log.debug("Fetching all users with role: {}", role.toUpperCase());
+        List<UserDTO> users = userService.getUsersByRole(Role.valueOf(role.toUpperCase()));
+        return ResponseEntity.ok(users);
+    }
+
+
+
+
+    @Operation(
+            summary = "Delete user by ID",
+            description = "Permanently deletes a user from the system. This action cannot be undone."
+    )
+    @ApiResponse(responseCode = "200", description = "User deleted successfully")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @ApiResponse(responseCode = "400", description = "Invalid user ID or constraint violation")
+    @Parameter(name = "userId", description = "The ID of the user to delete", required = true)
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<SuccessResponseDTO> deleteUser(@PathVariable String userId) {
+        log.warn("🗑️ Delete request received for User ID: {}", userId);
+
+            userService.deleteUser(UserId.fromString(userId));
+
+            log.info("✅ User ID {} deleted successfully.", userId);
+
+            return ResponseEntity.ok(
+                    new SuccessResponseDTO(true, "User deleted successfully", null)
+            );
+
+
+    }
+
+
 //
 //    @Operation(summary = "Get all active users", description = "Retrieves a list of all users whose accounts are currently active.")
 //    @ApiResponse(responseCode = "200", description = "List of active users retrieved")
@@ -295,4 +445,34 @@ public class UserController {
 //        boolean available = userService.isEmailAvailable(new Email(email));
 //        return ResponseEntity.ok(available);
 //    }
+
+
+
+
+    @Operation(
+            summary = "Admin: Reset user password (privileged operation)",
+            description = "Allows administrators to change any user's password without knowing the current password. " +
+                    "This is a privileged operation for account recovery and administrative purposes.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponse(responseCode = "200", description = "Password reset successfully")
+    @ApiResponse(responseCode = "403", description = "Forbidden: Caller does not have ADMIN role")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    //@PreAuthorize("hasRole('ADMIN')") // ⬅️ IMPORTANT: Secure with Spring Security
+    @PutMapping("/admin/reset-password")
+    public ResponseEntity<SuccessResponseDTO> adminResetPassword(
+            @RequestBody @Valid AdminChangePasswordCommand command) {
+
+        // ⚠️ Log at WARN level for security audit trail
+        log.warn("🔐 ADMIN password reset requested by admin for User ID: {}", command.userId());
+
+        userService.adminChangePassword(command);
+
+        log.warn("✅ ADMIN password reset completed for User ID: {}", command.userId());
+
+        return ResponseEntity.ok(
+                new SuccessResponseDTO(true, "Password reset successfully", null)
+        );
+    }
+
 }

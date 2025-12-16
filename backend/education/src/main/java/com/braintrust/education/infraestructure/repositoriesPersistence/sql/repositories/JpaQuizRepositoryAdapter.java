@@ -1,9 +1,11 @@
 package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
 
+import com.braintrust.education.application.dtos.dtos.QuizDTO;
 import com.braintrust.education.application.ports.out.QuizRepository;
 import com.braintrust.education.domain.model.Quiz;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.QuizId;
+import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.QuizEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.QuizJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -17,16 +19,12 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-// other imports...
 
 @Repository
 @Transactional(readOnly = true)
 public class JpaQuizRepositoryAdapter implements QuizRepository {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(JpaQuizRepositoryAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(JpaQuizRepositoryAdapter.class);
 
     private final QuizJpaRepository jpaRepository;
     private final QuizEntityMapper mapper;
@@ -40,6 +38,22 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
     }
 
 
+
+    @Override
+    public List<Quiz> findByCourseIdAndUnitId(CourseId courseId, UnitId unitId) {
+        log.debug("Finding quizzes by Course ID: {} and Unit ID: {}",
+                courseId.getValue(), unitId.getValue());
+
+        return jpaRepository.findByCourseIdAndUnitId(
+                        courseId.getValue(),
+                        unitId.getValue()
+                ).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+
+
     @Override
     public List<Quiz> findBasicQuizzesByCourseId(CourseId courseId) {
         log.debug("Finding basic quizzes by Course ID: {} (without questions)", courseId.getValue());
@@ -48,8 +62,6 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
                 .map(mapper::mapToBasicQuiz) // Map without questions
                 .collect(Collectors.toList());
     }
-
-
 
     @Override
     @Transactional
@@ -100,7 +112,6 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
-
 
     // NEW: Calendar query implementations
     @Override

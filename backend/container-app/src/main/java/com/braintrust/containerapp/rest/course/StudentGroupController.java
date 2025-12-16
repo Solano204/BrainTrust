@@ -1,8 +1,8 @@
 package com.braintrust.containerapp.rest.course;
 
-
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.StudentGroupDTO;
+import com.braintrust.education.application.dtos.dtos.UserWithoutGroupDTO;
 import com.braintrust.education.application.ports.in.StudentGroupService;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -22,7 +23,6 @@ public class StudentGroupController {
         this.groupService = groupService;
     }
 
-
     // Add these endpoints to StudentGroupController
 
     @PostMapping("/with-members")
@@ -31,11 +31,49 @@ public class StudentGroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id.getValue());
     }
 
+    // Get group by ID (Frontend team-api needs this)
+    @GetMapping("/{groupId}")
+    public ResponseEntity<StudentGroupDTO> getGroupById(@PathVariable String groupId) {
+        StudentGroupDTO group = groupService.getGroupById(StudentGroupId.fromString(groupId));
+        return ResponseEntity.ok(group);
+    }
+
     @DeleteMapping("/{groupId}")
     public ResponseEntity<Void> deleteGroup(@PathVariable String groupId) {
         groupService.deleteGroup(StudentGroupId.fromString(groupId));
         return ResponseEntity.noContent().build();
     }
+
+    // ✅ NEW: Get groups for specific user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<StudentGroupDTO>> getGroupsByUser(@PathVariable String userId) {
+        List<StudentGroupDTO> groups = groupService.getGroupsByStudent(UserId.fromString(userId));
+        return ResponseEntity.ok(groups);
+    }
+
+    // ✅ NEW: Update group information
+    @PutMapping("/{groupId}/info")
+    public ResponseEntity<Void> updateGroupInfo(
+            @PathVariable String groupId,
+            @RequestBody UpdateGroupInfoRequest request) {
+
+
+        // Validate request
+        if (request.name() == null || request.name().trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        groupService.updateGroupInfo(
+                StudentGroupId.fromString(groupId),
+                request.name().trim(),
+                request.description() != null ? request.description().trim() : null
+        );
+
+        return ResponseEntity.ok().build();
+    }
+
+
+
 
 //
 //    @PostMapping("/{groupId}/members/bulk")
@@ -51,7 +89,6 @@ public class StudentGroupController {
 //        groupService.addMultipleMembers(command);
 //        return ResponseEntity.ok().build();
 //    }
-
 
     @PostMapping
     public ResponseEntity<String> createGroup(@RequestBody CreateStudentGroupCommand command) {
@@ -92,6 +129,53 @@ public class StudentGroupController {
         List<StudentGroupDTO> groups = groupService.getGroupsByCourse(CourseId.fromString(courseId));
         return ResponseEntity.ok(groups);
     }
+
+
+
+    // ✅ NEW: Bulk add members to group
+    @PostMapping("/{groupId}/members/bulk-add")
+    public ResponseEntity<Void> bulkAddMembers(
+            @PathVariable String groupId,
+            @RequestParam String courseId,
+            @RequestBody List<String> studentIds) {
+
+
+        groupService.bulkAddMembersToGroup(courseId, groupId, studentIds);
+        return ResponseEntity.ok().build();
+    }
+
+    // ✅ NEW: Bulk remove members from group
+    @DeleteMapping("/{groupId}/members/bulk-remove")
+    public ResponseEntity<Void> bulkRemoveMembers(
+            @PathVariable String groupId,
+            @RequestParam String courseId,
+            @RequestBody List<String> studentIds) {
+
+
+        groupService.bulkRemoveMembersFromGroup(courseId, groupId, studentIds);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ✅ NEW: Check which students are already in groups
+    @PostMapping("/course/{courseId}/check-students-in-groups")
+    public ResponseEntity<List<String>> checkStudentsInGroups(
+            @PathVariable String courseId,
+            @RequestBody List<String> studentIds) {
+
+
+        List<String> studentsInGroups = groupService.getStudentsInGroups(
+                CourseId.fromString(courseId), studentIds);
+
+        return ResponseEntity.ok(studentsInGroups);
+    }
+
+    // ✅ UPDATED: Get users without group for a course
+    @GetMapping("/course/{courseId}/users-without-group")
+    public ResponseEntity<List<UserWithoutGroupDTO>> getUsersWithoutGroup(@PathVariable String courseId) {
+        List<UserWithoutGroupDTO> users = groupService.getUsersWithoutGroup(CourseId.fromString(courseId));
+        return ResponseEntity.ok(users);
+    }
+
 //
 //    @GetMapping("/course/{courseId}/active")
 //    public ResponseEntity<List<StudentGroupDTO>> getActiveGroupsByCourse(@PathVariable String courseId) {
