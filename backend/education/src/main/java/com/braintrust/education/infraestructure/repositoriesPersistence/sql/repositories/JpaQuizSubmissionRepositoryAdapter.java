@@ -82,7 +82,6 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
     }
     */
 
-    /*
     @Override
     public List<QuizSubmission> findByStudentId(UserId studentId) {
         log.debug("Finding submissions by Student ID: {}", studentId.getValue());
@@ -91,7 +90,6 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
-    */
 
     /*
     @Override

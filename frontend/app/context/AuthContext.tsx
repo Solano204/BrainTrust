@@ -8,7 +8,7 @@ import {
   UserRole, 
   ROLE_PERMISSIONS,
   AUTH_CONFIG 
-} from '@/app/types/authentication';
+  } from '@/app/auth/types/authentication';
 import { authService } from '@/app/domain/services/authService';
 import { JWTUtils } from '@/app/utils/jwt';
 
@@ -32,8 +32,10 @@ const createMockUser = (overrides?: Partial<UserSession>): UserSession => ({
   id: 'mock-user-id',
   email: 'mock@example.com',
   name: 'Mock User',
-  role: 'USER' as UserRole,
+  role: 'student',
   permissions: ROLE_PERMISSIONS.student,
+  active: true,
+  createdAt: new Date().toISOString(),
   ...overrides
 });
 
@@ -41,6 +43,8 @@ const MOCK_TOKENS = {
   accessToken: 'mock-access-token',
   refreshToken: 'mock-refresh-token'
 };
+
+
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({
@@ -51,13 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshToken: null,
   });
 
-
-
-  
-  const [isMockActive, setIsMockActive] = useState(false);
+  const [isMockActive, setIsMockActive] = useState(AUTH_CONFIG.MOCK_MODE);
   const [mockUser, setMockUser] = useState<Partial<UserSession>>({});
 
-
+  
   
   // Initialize auth state from cookies and validate tokens
   const initializeAuth = useCallback(async () => {
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isMockActive) {
       setAuthState({
         user: createMockUser(mockUser),
-        isAuthenticated: false,
+        isAuthenticated: true,
         isLoading: false,
         accessToken: MOCK_TOKENS.accessToken,
         refreshToken: MOCK_TOKENS.refreshToken,
@@ -74,23 +75,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // In a real app, you'd get tokens from HttpOnly cookies via server action
-      // For now, we'll use a server action to get initial state
       const response = await fetch('/api/auth/initialize', {
         method: 'GET',
         credentials: 'include',
       });
 
       if (response.ok) {
-        const { user, accessToken, refreshToken } = await response.json();
+        const data = await response.json();
         
-        setAuthState({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-          accessToken,
-          refreshToken,
-        });
+        if (data.authenticated && data.user && data.accessToken) {
+          setAuthState({
+            user: data.user,
+            isAuthenticated: true,
+            isLoading: false,
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+          });
+        } else {
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            accessToken: null,
+            refreshToken: null,
+          });
+        }
       } else {
         setAuthState(prev => ({ ...prev, isLoading: false }));
       }
@@ -106,17 +115,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Token refresh interval
   useEffect(() => {
-    if (!authState.isAuthenticated || !authState.accessToken) return;
+    if (!authState.isAuthenticated || !authState.accessToken || isMockActive) return;
 
-    // Skip token refresh logic if mock is active
-    if (isMockActive) return;
-
-    const tokenPayload = JWTUtils.decodeToken(authState.accessToken);
-    if (!tokenPayload) return;
+    const tokenExpiry = JWTUtils.getTokenExpiry(authState.accessToken);
+    if (!tokenExpiry) return;
 
     // Set up token refresh 1 minute before expiry
-    const expiresIn = tokenPayload.exp * 1000 - Date.now();
-    const refreshTime = Math.max(expiresIn - 60000, 5000); // Refresh 1 min before expiry
+    const refreshTime = Math.max(tokenExpiry - Date.now() - 60000, 5000);
 
     const refreshTimer = setTimeout(() => {
       refreshTokens();
@@ -127,7 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     // Skip API call if mock is active
-    console.log("MOCK ACTIVE:", isMockActive);
     if (isMockActive) {
       setAuthState({
         user: createMockUser({ ...mockUser, email, name: email.split('@')[0] }),
@@ -163,8 +167,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         accessToken: tokenResponse.accessToken,
         refreshToken: tokenResponse.refreshToken,
       });
-
-      console.log('Login successful', authState);
 
       return { success: true };
     } catch (error: any) {
@@ -223,38 +225,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = async () => {
-    // Skip API call if mock is active
-    if (isMockActive) {
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        accessToken: null,
-        refreshToken: null,
-      });
-      return;
-    }
 
-    try {
-      if (authState.accessToken && authState.refreshToken) {
-        await authService.logout(authState.accessToken, authState.refreshToken);
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Clear tokens via server action
-      await fetch('/api/auth/clear-tokens', { method: 'POST' });
-      
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        accessToken: null,
-        refreshToken: null,
-      });
+
+  
+  const logout = async () => {
+  try {
+    // Call logout API if we have tokens
+    if (authState.accessToken && authState.refreshToken) {
+      await authService.logout(authState.accessToken, authState.refreshToken);
     }
-  };
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    // Always clear tokens and state, even if API call fails
+    try {
+      await fetch('/api/auth/clear-tokens', { 
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Error clearing tokens:', error);
+    }
+    
+    // Clear local state
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      accessToken: null,
+      refreshToken: null,
+    });
+  }
+};
 
   const refreshTokens = async (): Promise<boolean> => {
     // Skip API call if mock is active
@@ -314,7 +316,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsMockActive(true);
     setAuthState({
       user,
-      isAuthenticated: false,
+      isAuthenticated: true,
       isLoading: false,
       accessToken: MOCK_TOKENS.accessToken,
       refreshToken: MOCK_TOKENS.refreshToken,
@@ -356,10 +358,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  console.log(context);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
-

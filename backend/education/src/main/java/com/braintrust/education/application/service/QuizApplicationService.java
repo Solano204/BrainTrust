@@ -3,443 +3,297 @@ package com.braintrust.education.application.service;
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.*;
 import com.braintrust.education.application.ports.in.QuizService;
-import com.braintrust.education.application.ports.out.QuizRepository;
-import com.braintrust.education.domain.exceptions.*;
-import com.braintrust.education.domain.model.*;
 import com.braintrust.education.domain.valueobjects.*;
-import com.braintrust.education.domain.valueobjects.QuestionOption;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static jakarta.xml.bind.DatatypeConverter.parseDateTime;
+@RestController
+@RequestMapping("/api/quizzes")
+public class QuizController {
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-// other imports...
+    private final QuizService quizService;
 
-@Service
-@Transactional
-public class QuizApplicationService implements QuizService {
-
-    private static final Logger log =
-            LoggerFactory.getLogger(QuizApplicationService.class);
-
-    private final QuizRepository quizRepository;
-
-    public QuizApplicationService(QuizRepository quizRepository) {
-        this.quizRepository = quizRepository;
+    public QuizController(QuizService quizService) {
+        this.quizService = quizService;
     }
 
+    @PostMapping("/{quizId}/questions/bulk")
+    public ResponseEntity<Void> addQuestionsBulk(
+            @PathVariable String quizId,
+            @RequestBody AddQuizQuestionsBulkCommand command) {
 
+        if (!quizId.equals(command.quizId())) {
+            throw new IllegalArgumentException("Quiz ID in path and body must match");
+        }
 
-
-
-    @Override
-    @Transactional(readOnly = true)
-    public CompleteQuizDTO getCompleteQuiz(QuizId quizId) {
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        return mapToCompleteQuizDTO(quiz);
+        quizService.addQuestionsBulk(command);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @DeleteMapping("/{quizId}/questions/bulk")
+    public ResponseEntity<Void> deleteQuestionsBulk(
+            @PathVariable String quizId,
+            @RequestBody DeleteQuizQuestionsBulkCommand command) {
 
+        if (!quizId.equals(command.quizId())) {
+            throw new IllegalArgumentException("Quiz ID in path and body must match");
+        }
 
-    @Override
-    public QuizId createQuizWithQuestions(CreateQuizWithQuestionsCommand command) {
-        CourseId courseId = CourseId.fromString(command.courseId());
-        UnitId unitId = command.unitId() != null ? UnitId.fromString(command.unitId()) : null;
+        quizService.deleteQuestionsBulk(command);
+        return ResponseEntity.noContent().build();
+    }
 
-        log.info("Creating quiz '{}' for course {} with {} questions",
-                command.title(), courseId.getValue(), command.questions().size());
+    @PutMapping("/{quizId}/questions/bulk")
+    public ResponseEntity<Void> updateQuestionsBulk(
+            @PathVariable String quizId,
+            @RequestBody UpdateQuizQuestionsBulkCommand command) {
 
-        // ✅ FIX: Use Instant for UTC timestamps with 'Z'
-        Quiz quiz = Quiz.create(
-                courseId,
-                unitId,
-                command.title(),
-                command.description(),
-                command.availableFrom() != null ? Instant.parse(command.availableFrom()).atZone(ZoneId.systemDefault()).toLocalDateTime() : null,
-                command.availableUntil() != null ? Instant.parse(command.availableUntil()).atZone(ZoneId.systemDefault()).toLocalDateTime() : null,
-                command.timeLimitMinutes()
-        );
+        if (!quizId.equals(command.quizId())) {
+            throw new IllegalArgumentException("Quiz ID in path and body must match");
+        }
 
-        // Add all questions
-        for (CreateQuizWithQuestionsCommand.QuizQuestionData questionData : command.questions()) {
-            QuizQuestion question;
-            QuestionType type = QuestionType.valueOf(questionData.questionType());
+        quizService.updateQuestionsBulk(command);
+        return ResponseEntity.ok().build();
+    }
 
-            if (type == QuestionType.MULTIPLE_CHOICE || type == QuestionType.TRUE_FALSE) {
-                List<QuestionOption> options = questionData.options().stream()
-                        .map(opt -> new QuestionOption(opt.text(), opt.correct()))
+    // Batch modification endpoints
+
+    @PatchMapping("/{quizId}/questions/points")
+    public ResponseEntity<Void> updateQuestionsPointsBulk(
+            @PathVariable String quizId,
+            @RequestBody Map<String, Integer> questionPoints) {
+
+        List<UpdateQuizQuestionsBulkCommand.QuestionUpdateData> updates =
+                questionPoints.entrySet().stream()
+                        .map(entry -> new UpdateQuizQuestionsBulkCommand.QuestionUpdateData(
+                                entry.getKey(),
+                                null, // no text change
+                                null, // no type change
+                                entry.getValue(),
+                                null, // no options change
+                                null, // no correct answer change
+                                UpdateQuizQuestionsBulkCommand.QuestionUpdateData.UpdateAction.UPDATE_POINTS
+                        ))
                         .collect(Collectors.toList());
-                // ✅ FIX: Pass the correctAnswer parameter
-                question = QuizQuestion.createMultipleChoice(
-                        questionData.questionText(),
-                        questionData.points(),
-                        options,
-                        questionData.correctAnswer() // ✅ ADD THIS
-                );
-            } else {
-                question = QuizQuestion.createOpenEnded(
-                        questionData.questionText(),
-                        questionData.points(),
-                        questionData.correctAnswer()
-                );
-            }
 
-            quiz.addQuestion(question);
-        }
-
-        Quiz saved = quizRepository.save(quiz);
-        log.info("Quiz created with {} questions: {}", saved.getQuestions().size(), saved.getId().getValue());
-        return saved.getId();
-    }
-
-
-    @Override
-    public QuizId createQuiz(CreateQuizCommand command) {
-        CourseId courseId = CourseId.fromString(command.courseId());
-        UnitId unitId = UnitId.fromString(command.unitId());
-        log.info("Creating quiz '{}' for course {}", command.title(), courseId.getValue());
-
-        Quiz quiz = Quiz.create(
-                courseId,
-                unitId,
-                command.title(),
-                command.description(),
-                command.availableFrom() != null ? LocalDateTime.parse(command.availableFrom()) : null,
-                command.availableUntil() != null ? LocalDateTime.parse(command.availableUntil()) : null,
-                command.timeLimitMinutes()
+        UpdateQuizQuestionsBulkCommand command = new UpdateQuizQuestionsBulkCommand(
+                quizId,
+                updates
         );
 
-        Quiz saved = quizRepository.save(quiz);
-        log.info("Quiz created: {}", saved.getId().getValue());
-        return saved.getId();
+        quizService.updateQuestionsBulk(command);
+        return ResponseEntity.ok().build();
     }
 
-    @Override
-    public void addQuestion(AddQuizQuestionCommand command) {
-        QuizId quizId = QuizId.fromString(command.quizId());
-        log.info("Adding question to quiz {}", quizId.getValue());
+    @PatchMapping("/{quizId}/questions/text")
+    public ResponseEntity<Void> updateQuestionsTextBulk(
+            @PathVariable String quizId,
+            @RequestBody Map<String, String> questionTexts) {
 
-        Quiz quiz = findQuizByIdOrThrow(quizId);
+        List<UpdateQuizQuestionsBulkCommand.QuestionUpdateData> updates =
+                questionTexts.entrySet().stream()
+                        .map(entry -> new UpdateQuizQuestionsBulkCommand.QuestionUpdateData(
+                                entry.getKey(),
+                                entry.getValue(),
+                                null, // no type change
+                                null, // no points change
+                                null, // no options change
+                                null, // no correct answer change
+                                UpdateQuizQuestionsBulkCommand.QuestionUpdateData.UpdateAction.UPDATE_TEXT
+                        ))
+                        .collect(Collectors.toList());
 
-        QuizQuestion question;
-        QuestionType type = QuestionType.valueOf(command.questionType());
-
-        if (type == QuestionType.MULTIPLE_CHOICE || type == QuestionType.TRUE_FALSE) {
-            List<QuestionOption> options = command.options().stream()
-                    .map(opt -> new QuestionOption(opt.text(), opt.correct()))
-                    .collect(Collectors.toList());
-            // ✅ FIX: Pass the correctAnswer parameter
-            question = QuizQuestion.createMultipleChoice(
-                    command.questionText(),
-                    command.points(),
-                    options,
-                    command.correctAnswer() // ✅ ADD THIS
-            );
-        } else {
-            question = QuizQuestion.createOpenEnded(
-                    command.questionText(),
-                    command.points(),
-                    command.correctAnswer()
-            );
-        }
-
-        quiz.addQuestion(question);
-        quizRepository.save(quiz);
-
-        log.info("Question added successfully");
-    }
-    @Override
-    public void updateQuiz(UpdateQuizCommand command) {
-        QuizId quizId = QuizId.fromString(command.quizId());
-        log.info("Updating quiz {}", quizId.getValue());
-
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-
-        // ✅ FIX: Use robust date parsing
-        LocalDateTime availableFrom = parseDateTime(command.availableFrom());
-        LocalDateTime availableUntil = parseDateTime(command.availableUntil());
-
-        quiz.update(
-                command.title(),
-                command.description(),
-                availableFrom,
-                availableUntil,
-                command.timeLimitMinutes()
+        UpdateQuizQuestionsBulkCommand command = new UpdateQuizQuestionsBulkCommand(
+                quizId,
+                updates
         );
-        quizRepository.save(quiz);
 
-        log.info("Quiz updated");
+        quizService.updateQuestionsBulk(command);
+        return ResponseEntity.ok().build();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getBasicQuizzesByCourse(CourseId courseId) {
-        log.info("Getting basic quizzes for course {} (without questions)", courseId.getValue());
-        return quizRepository.findBasicQuizzesByCourseId(courseId).stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
+    @PatchMapping("/{quizId}/questions/answers")
+    public ResponseEntity<Void> updateQuestionsAnswersBulk(
+            @PathVariable String quizId,
+            @RequestBody Map<String, String> questionAnswers) {
+
+        List<UpdateQuizQuestionsBulkCommand.QuestionUpdateData> updates =
+                questionAnswers.entrySet().stream()
+                        .map(entry -> new UpdateQuizQuestionsBulkCommand.QuestionUpdateData(
+                                entry.getKey(),
+                                null, // no text change
+                                null, // no type change
+                                null, // no points change
+                                null, // no options change
+                                entry.getValue(), // correct answer
+                                UpdateQuizQuestionsBulkCommand.QuestionUpdateData.UpdateAction.UPDATE_ANSWER
+                        ))
+                        .collect(Collectors.toList());
+
+        UpdateQuizQuestionsBulkCommand command = new UpdateQuizQuestionsBulkCommand(
+                quizId,
+                updates
+        );
+
+        quizService.updateQuestionsBulk(command);
+        return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/{quizId}/questions/options")
+    public ResponseEntity<Void> updateQuestionsOptionsBulk(
+            @PathVariable String quizId,
+            @RequestBody Map<String, List<QuestionOptionData>> questionOptions) {
 
-    @Override
-    public void activateQuiz(ActivateQuizCommand command) {
-        QuizId quizId = QuizId.fromString(command.quizId());
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        // Add activate() method to Quiz domain model
-        quizRepository.save(quiz);
+        List<UpdateQuizQuestionsBulkCommand.QuestionUpdateData> updates =
+                questionOptions.entrySet().stream()
+                        .map(entry -> {
+                            List<UpdateQuizQuestionsBulkCommand.QuestionOptionUpdateData> optionUpdates =
+                                    entry.getValue().stream()
+                                            .map(opt -> new UpdateQuizQuestionsBulkCommand.QuestionOptionUpdateData(
+                                                    opt.text(),
+                                                    opt.correct(),
+                                                    null, // no optionId for bulk replacement
+                                                    UpdateQuizQuestionsBulkCommand.QuestionOptionUpdateData.OptionAction.UPDATE
+                                            ))
+                                            .collect(Collectors.toList());
+
+                            return new UpdateQuizQuestionsBulkCommand.QuestionUpdateData(
+                                    entry.getKey(),
+                                    null, // no text change
+                                    null, // no type change
+                                    null, // no points change
+                                    optionUpdates,
+                                    null, // no correct answer change
+                                    UpdateQuizQuestionsBulkCommand.QuestionUpdateData.UpdateAction.UPDATE_OPTIONS
+                            );
+                        })
+                        .collect(Collectors.toList());
+
+        UpdateQuizQuestionsBulkCommand command = new UpdateQuizQuestionsBulkCommand(
+                quizId,
+                updates
+        );
+
+        quizService.updateQuestionsBulk(command);
+        return ResponseEntity.ok().build();
     }
 
-    @Override
-    public void deactivateQuiz(DeactivateQuizCommand command) {
-        QuizId quizId = QuizId.fromString(command.quizId());
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        // Add deactivate() method to Quiz domain model
-        quizRepository.save(quiz);
+    // Utility record for option updates
+    public record QuestionOptionData(
+            String text,
+            boolean correct
+    ) {}
+
+    @PostMapping("/with-questions")
+    public ResponseEntity<String> createQuizWithQuestions(@RequestBody CreateQuizWithQuestionsCommand command) {
+        QuizId id = quizService.createQuizWithQuestions(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(id.getValue());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public QuizDTO getQuizById(QuizId quizId) {
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        return mapToQuizDTO(quiz);
+    @PostMapping("/{quizId}/questions")
+    public ResponseEntity<Void> addQuestion(
+            @PathVariable String quizId,
+            @RequestBody AddQuizQuestionCommand command) {
+        quizService.addQuestion(command);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getQuizzesByCourse(CourseId courseId) {
-        return quizRepository.findByCourseId(courseId).stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
+    @PutMapping("/{quizId}")
+    public ResponseEntity<Void> updateQuiz(
+            @PathVariable String quizId,
+            @RequestBody UpdateQuizCommand command) {
+        quizService.updateQuiz(command);
+        return ResponseEntity.ok().build();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getAvailableQuizzesByCourse(CourseId courseId) {
-        return quizRepository.findAvailableQuizzes(courseId, LocalDateTime.now()).stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
+    @GetMapping("/course/{courseId}/basic")
+    public ResponseEntity<List<QuizDTO>> getBasicQuizzesByCourse(@PathVariable String courseId) {
+        List<QuizDTO> quizzes = quizService.getBasicQuizzesByCourse(CourseId.fromString(courseId));
+        return ResponseEntity.ok(quizzes);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizQuestionDTO> getQuizQuestions(QuizId quizId) {
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        return quiz.getQuestions().stream()
-                .map(this::mapToQuestionDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isQuizAvailable(QuizId quizId) {
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        return quiz.isAvailableNow();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public int getTotalPoints(QuizId quizId) {
-        Quiz quiz = findQuizByIdOrThrow(quizId);
-        return quiz.getTotalPoints();
-    }
-
-    private Quiz findQuizByIdOrThrow(QuizId quizId) {
-        return quizRepository.findById(quizId)
-                .orElseThrow(() -> new QuizNotFoundException("Quiz not found: " + quizId.getValue()));
-    }
-
-    // NEW: Calendar methods implementation
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getQuizzesForStudentMonth(UserId studentId, String monthStart) {
-        log.info("📅 Fetching month calendar quizzes for Student ID: {} starting {}",
-                studentId.getValue(), monthStart);
-
-        LocalDateTime start = parseDateTime(monthStart);
-        LocalDateTime end = start.plusMonths(1);
-
-        List<Quiz> quizzes = quizRepository.findQuizzesByStudentForMonth(studentId, start, end);
-
-        log.info("✅ Found {} quizzes for student month view", quizzes.size());
-        return quizzes.stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getQuizzesForTeacherMonth(UserId teacherId, String monthStart) {
-        log.info("📅 Fetching month calendar quizzes for Teacher ID: {} starting {}",
-                teacherId.getValue(), monthStart);
-
-        LocalDateTime start = parseDateTime(monthStart);
-        LocalDateTime end = start.plusMonths(1);
-
-        List<Quiz> quizzes = quizRepository.findQuizzesByTeacherForMonth(teacherId, start, end);
-
-        log.info("✅ Found {} quizzes for teacher month view", quizzes.size());
-        return quizzes.stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getQuizzesForStudentWeek(UserId studentId, String weekStart) {
-        log.info("📅 Fetching week calendar quizzes for Student ID: {} starting {}",
-                studentId.getValue(), weekStart);
-
-        LocalDateTime start = parseDateTime(weekStart);
-        LocalDateTime end = start.plusDays(7);
-
-        List<Quiz> quizzes = quizRepository.findQuizzesByStudentForWeek(studentId, start, end);
-
-        log.info("✅ Found {} quizzes for student week view", quizzes.size());
-        return quizzes.stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuizDTO> getQuizzesForTeacherWeek(UserId teacherId, String weekStart) {
-        log.info("📅 Fetching week calendar quizzes for Teacher ID: {} starting {}",
-                teacherId.getValue(), weekStart);
-
-        LocalDateTime start = parseDateTime(weekStart);
-        LocalDateTime end = start.plusDays(7);
-
-        List<Quiz> quizzes = quizRepository.findQuizzesByTeacherForWeek(teacherId, start, end);
-
-        log.info("✅ Found {} quizzes for teacher week view", quizzes.size());
-        return quizzes.stream()
-                .map(this::mapToQuizDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * ✅ Robust date parsing that handles multiple formats
-     */
-    private LocalDateTime parseDateTime(String dateTimeStr) {
-        if (dateTimeStr == null || dateTimeStr.trim().isEmpty()) {
-            throw new IllegalArgumentException("Date parameter cannot be null or empty");
-        }
+    @GetMapping("/course/{courseId}/unit/{unitId}")
+    public ResponseEntity<List<QuizDTO>> getQuizzesByCourseAndUnit(
+            @PathVariable String courseId,
+            @PathVariable String unitId) {
 
         try {
-            // Try ISO format with timezone first (e.g., "2025-11-20T08:00:00Z")
-            if (dateTimeStr.endsWith("Z")) {
-                return Instant.parse(dateTimeStr)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime();
-            }
+            CourseId courseIdVo = CourseId.fromString(courseId);
+            UnitId unitIdVo = UnitId.fromString(unitId);
 
-            // Try ISO format without timezone (e.g., "2025-11-20T08:00:00")
-            return LocalDateTime.parse(dateTimeStr);
+            List<QuizDTO> quizzes = quizService.getQuizzesByCourseAndUnit(courseIdVo, unitIdVo);
+            return ResponseEntity.ok(quizzes);
 
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("Failed to parse date time '{}': {}", dateTimeStr, e.getMessage());
-            throw new IllegalArgumentException("Invalid date format. Use ISO format like '2025-11-20T08:00:00' or '2025-11-20T08:00:00Z'");
+            return ResponseEntity.internalServerError().build();
         }
-
     }
 
+    @DeleteMapping("/{quizId}")
+    public ResponseEntity<Void> deleteQuiz(@PathVariable String quizId) {
+        quizService.deleteQuiz(QuizId.fromString(quizId));
+        return ResponseEntity.noContent().build();
+    }
 
-    private QuizDTO mapToQuizDTO(Quiz quiz) {
-        return new QuizDTO(
-                quiz.getId().getValue(),
-                quiz.getCourseId().getValue(),
-                "Course Name",
-                quiz.getTitle(),
-                quiz.getDescription(),
-                quiz.getAvailableFrom() != null ? quiz.getAvailableFrom().toString() : null,
-                quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().toString() : null,
-                quiz.getTimeLimitMinutes(),
-                quiz.getMaxAttempts(),
-                quiz.isShuffleQuestions(),
-                quiz.isShowCorrectAnswers(),
-                quiz.getTotalPoints(),
-                quiz.getQuestions().size(),
-                quiz.getCreatedAt().toString(),
-                quiz.isActive(),
-                quiz.isAvailableNow()
+    @GetMapping("/{quizId}/complete")
+    public ResponseEntity<CompleteQuizDTO> getCompleteQuiz(@PathVariable String quizId) {
+        CompleteQuizDTO completeQuiz = quizService.getCompleteQuiz(QuizId.fromString(quizId));
+        return ResponseEntity.ok(completeQuiz);
+    }
+
+    @GetMapping("/calendar/student/{studentId}/month")
+    public ResponseEntity<List<QuizDTO>> getStudentMonthCalendar(
+            @PathVariable String studentId,
+            @RequestParam String monthStart) {
+
+        List<QuizDTO> quizzes = quizService.getQuizzesForStudentMonth(
+                UserId.fromString(studentId),
+                monthStart
         );
+        return ResponseEntity.ok(quizzes);
     }
 
-    private QuizQuestionDTO mapToQuestionDTO(QuizQuestion question) {
-        List<QuestionOptionDTO> options = question.getOptions().stream()
-                .map(opt -> new QuestionOptionDTO(opt.getText(), opt.isCorrect()))
-                .collect(Collectors.toList());
+    @GetMapping("/calendar/teacher/{teacherId}/month")
+    public ResponseEntity<List<QuizDTO>> getTeacherMonthCalendar(
+            @PathVariable String teacherId,
+            @RequestParam String monthStart) {
 
-        return new QuizQuestionDTO(
-                question.getId().getValue(),
-                question.getQuestionText(),
-                question.getType().name(),
-                question.getPoints(),
-                options,
-                null // Don't expose correct answer in DTO
+        List<QuizDTO> quizzes = quizService.getQuizzesForTeacherMonth(
+                UserId.fromString(teacherId),
+                monthStart
         );
+        return ResponseEntity.ok(quizzes);
     }
 
+    @GetMapping("/calendar/student/{studentId}/week")
+    public ResponseEntity<List<QuizDTO>> getStudentWeekCalendar(
+            @PathVariable String studentId,
+            @RequestParam String weekStart) {
 
-    /**
-     * ✅ New mapping method that includes correct answers
-     */
-    private CompleteQuizDTO mapToCompleteQuizDTO(Quiz quiz) {
-        List<CompleteQuizQuestionDTO> questions = quiz.getQuestions().stream()
-                .map(this::mapToCompleteQuestionDTO)
-                .collect(Collectors.toList());
-
-        return new CompleteQuizDTO(
-                quiz.getId().getValue(),
-                quiz.getCourseId().getValue(),
-                "Course Name", // TODO: Get actual course name
-                quiz.getUnitId() != null ? quiz.getUnitId().getValue() : null,
-                quiz.getTitle(),
-                quiz.getDescription(),
-                quiz.getAvailableFrom() != null ? quiz.getAvailableFrom().toString() : null,
-                quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().toString() : null,
-                quiz.getTimeLimitMinutes(),
-                quiz.getMaxAttempts(),
-                quiz.isShuffleQuestions(),
-                quiz.isShowCorrectAnswers(),
-                quiz.getTotalPoints(),
-                quiz.getQuestions().size(),
-                quiz.getCreatedAt().toString(),
-                quiz.isActive(),
-                quiz.isAvailableNow(),
-                questions
+        List<QuizDTO> quizzes = quizService.getQuizzesForStudentWeek(
+                UserId.fromString(studentId),
+                weekStart
         );
+        return ResponseEntity.ok(quizzes);
     }
 
-    /**
-     * ✅ New mapping method that includes correct answers for questions
-     */
-    private CompleteQuizQuestionDTO mapToCompleteQuestionDTO(QuizQuestion question) {
-        List<QuestionOptionDTO> options = question.getOptions().stream()
-                .map(opt -> new QuestionOptionDTO(opt.getText(), opt.isCorrect()))
-                .collect(Collectors.toList());
+    @GetMapping("/calendar/teacher/{teacherId}/week")
+    public ResponseEntity<List<QuizDTO>> getTeacherWeekCalendar(
+            @PathVariable String teacherId,
+            @RequestParam String weekStart) {
 
-        return new CompleteQuizQuestionDTO(
-                question.getId().getValue(),
-                question.getQuestionText(),
-                question.getType().name(),
-                question.getPoints(),
-                options,
-                question.getCorrectAnswer() // ✅ This includes the correct answer!
+        List<QuizDTO> quizzes = quizService.getQuizzesForTeacherWeek(
+                UserId.fromString(teacherId),
+                weekStart
         );
+        return ResponseEntity.ok(quizzes);
     }
-
-
 }

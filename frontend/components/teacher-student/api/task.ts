@@ -3,14 +3,15 @@
 
 import axios from "axios";
 import { cookies } from "next/headers";
-import { deliveryMode, Submission } from "@/app/domain/entities/CourseEntities";
+import { Assignment, deliveryMode, Submission } from "@/app/domain/entities/CourseEntities";
 import { AssignmentId, CourseId, Document, Score, UserId } from "@/app/domain/valueObjects";
+import { submissionFormat } from "./task-teacher";
 
 // ============================================
 // CONFIGURATION
 // ============================================
 
-const isMockEnabled = true;
+const isMockEnabled = false ;
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -18,24 +19,24 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 // INTERFACES
 // ============================================
 
-export interface Assignment {
-  id: AssignmentId;
-  title: string;
-  courseId: CourseId; 
-  unitId: CourseId;
-  description: string;
-  createdAt: string;
-  urls: string[];
-  attachments: Document[];
-  links: string[];
-  deliveryMode: deliveryMode;
-  dueDate: string | null;
-  maxScore: Score;
-  instructions: string;
-  submissions: Submission[];
-  allowLateSubmissions: boolean;
-  idUser: UserId;
-}
+// export interface Assignment {
+//   id: AssignmentId;
+//   title: string;
+//   courseId: CourseId; 
+//   unitId: CourseId;
+//   description: string;
+//   createdAt: string;
+//   urls: string[];
+//   attachments: Document[];
+//   links: string[];
+//   deliveryMode: deliveryMode;
+//   dueDate: string | null;
+//   maxScore: Score;
+//   instructions: string;
+//   submissions: Submission[];
+//   allowLateSubmissions: boolean;
+//   idUser: UserId;
+// }
 
 // ============================================
 // BACKEND DTO TYPES
@@ -52,6 +53,7 @@ interface AssignmentDTO {
   createdAt: string;
   dueDate: string;
   maxPoints: number;
+  submissionFormat: string;
   links : string[];
   instructions: string;
   active: boolean;
@@ -96,7 +98,7 @@ const MOCK_TASKS: Assignment[] = [
     courseId: "COURSE-DES-401",
     unitId: "UNIT-3",
     description: "Create detailed wireframes for a mobile banking application focusing on user experience and accessibility",
-    createdAt: "2024-03-01T10:00:00Z",
+    createdAt: "2025-11-27T10:00:00Z",
     urls: [
       "https://figma.com/design/banking-wireframes",
       "https://material.io/design"
@@ -118,7 +120,7 @@ const MOCK_TASKS: Assignment[] = [
       "https://uxdesign.cc/the-ultimate-wireframing-guide-2024"
     ],
     deliveryMode: "INDIVIDUAL",
-    dueDate: "2025-11-14T23:59:00Z",
+    dueDate: "2025-11-28T23:59:00Z",
     maxScore: { value: 100, maxPoints: 100 },
     instructions: "Design wireframes for 5 key screens: login, dashboard, account overview, money transfer, and settings. Focus on intuitive navigation and WCAG 2.1 AA compliance. Submit your Figma file and a brief design rationale document.",
     submissions: [],
@@ -159,7 +161,7 @@ const MOCK_TASKS: Assignment[] = [
 // UTILITIES
 // ============================================
 
-const simulateDelay = (ms: number = 500) =>
+const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 const apiClient = axios.create({
@@ -179,7 +181,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-const handleApiError = (error: unknown) => {
+const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || error.message;
     throw new Error(errorMessage);
@@ -191,15 +193,16 @@ const handleApiError = (error: unknown) => {
 // MAPPERS
 // ============================================
 
-function mapAssignmentFromBackend(dto: AssignmentDTO): Assignment {
+async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment> {
   return {
     id: dto.id,
     title: dto.title,
     description: dto.description,
     courseId: dto.courseId,
     unitId: dto.unitId,
+    submissionFormat: dto.submissionFormat as submissionFormat,
     createdAt: dto.createdAt,
-    urls: [], // Will be populated from context
+    urls: dto.links, // Will be populated from context
     attachments: dto.attachments.map(doc => ({
       name: doc.name,
       storagePath: doc.storagePath,
@@ -216,7 +219,7 @@ function mapAssignmentFromBackend(dto: AssignmentDTO): Assignment {
   };
 }
 
-function mapCreateAssignmentToBackendCommand(data: Omit<Assignment, "id" | "createdAt" | "submissions" | "urls" | "links">): CreateAssignmentCommand {
+async function mapCreateAssignmentToBackendCommand(data: Omit<Assignment, "id" | "createdAt" | "submissions" | "urls" | "links">): Promise<CreateAssignmentCommand> {
   return {
     courseId: data.courseId,
     unitId: data.unitId,
@@ -232,6 +235,8 @@ function mapCreateAssignmentToBackendCommand(data: Omit<Assignment, "id" | "crea
 // ============================================
 // API FUNCTIONS (ONLY THE ONES YOU NEED)
 // ============================================
+// CURRENTLY WORKS
+
 
 export async function fetchTasksByMonth(
   userId: string,
@@ -249,6 +254,7 @@ export async function fetchTasksByMonth(
       
       const taskDate = new Date(task.dueDate);
       const isInMonth = taskDate.getMonth() === month && taskDate.getFullYear() === year;
+
       
       if (userType === 'student') {
         const now = new Date();
@@ -267,11 +273,15 @@ export async function fetchTasksByMonth(
   try {
     const endpoint = userType === 'teacher' ? 'teacher' : 'student';
     const response = await apiClient.get<AssignmentDTO[]>(`/api/assignments/calendar/${endpoint}/${userId}/month?monthStart=${monthStart}`);
-    return response.data.map(mapAssignmentFromBackend);
+    const tasks = await Promise.all(response.data.map(dto => mapAssignmentFromBackend(dto)));
+    return tasks;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
+
+
+// CURRENTLY WORKS
 
 export async function fetchThisWeekTasks(
   userId: string,
@@ -306,9 +316,11 @@ export async function fetchThisWeekTasks(
   try {
     const endpoint = userType === 'teacher' ? 'teacher' : 'student';
     const response = await apiClient.get<AssignmentDTO[]>(`/api/assignments/calendar/${endpoint}/${userId}/week?weekStart=${weekStart}`);
-    return response.data.map(mapAssignmentFromBackend);
+    console.log("API Response:", response.data);
+    const tasks = await Promise.all(response.data.map(dto => mapAssignmentFromBackend(dto)));
+    return tasks;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -339,9 +351,10 @@ export async function fetchTaskDetail(
       throw new Error(`Assignment not found: ${taskId}`);
     }
     
-    return mapAssignmentFromBackend(assignmentDTO);
+    const task = await mapAssignmentFromBackend(assignmentDTO);
+    return task;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -363,7 +376,7 @@ export async function createTask(taskData: Omit<Assignment, "id" | "createdAt" |
   }
 
   try {
-    const backendCommand: CreateAssignmentCommand = mapCreateAssignmentToBackendCommand(taskData);
+    const backendCommand = await mapCreateAssignmentToBackendCommand(taskData);
     const response = await apiClient.post<SuccessResponseDTO>("/api/assignments", backendCommand);
     
     // Fetch the created assignment to get full details
@@ -380,7 +393,7 @@ export async function createTask(taskData: Omit<Assignment, "id" | "createdAt" |
     
     return newTask;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -409,7 +422,7 @@ export async function updateTask(taskId: string, taskData: Partial<Omit<Assignme
     await simulateDelay(800);
     throw new Error("Update task backend integration not implemented");
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -432,7 +445,7 @@ export async function deleteTask(taskId: string): Promise<void> {
   try {
     await apiClient.delete(`/api/assignments/${taskId}`);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -448,13 +461,17 @@ export async function fetchTasksByCourse(courseId: string): Promise<Assignment[]
 
   try {
     const response = await apiClient.get<AssignmentDTO[]>(`/api/assignments/course/${courseId}`);
-    return response.data.map(mapAssignmentFromBackend);
+    const tasks = await Promise.all(response.data.map(dto => mapAssignmentFromBackend(dto)));
+    return tasks;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
-export async function fetchTasksByUnit(unitId: string, courseId: string): Promise<Assignment[]> {
+
+// CURRENTLY WORKS
+
+export async function fetchTasksByUnit( courseId: string, unitId: string): Promise<Assignment[]> {
   if (isMockEnabled) {
     await simulateDelay();
     
@@ -465,9 +482,15 @@ export async function fetchTasksByUnit(unitId: string, courseId: string): Promis
   }
 
   try {
-    const response = await apiClient.get<AssignmentDTO[]>(`/api/assignments/course/all/unit/${unitId}/course/${courseId}`);
-    return response.data.map(mapAssignmentFromBackend);
+
+    console.log(`API: Fetching tasks for course ${courseId} and unit ${unitId}`);
+        const response = await apiClient.get<AssignmentDTO[]>(`/api/assignments/course/${courseId}/unit/${unitId}`);
+
+        // console.log("API Response for fetchTasksByUnit:", response.data);
+    const tasks = await Promise.all(response.data.map(dto => mapAssignmentFromBackend(dto)));
+    // console.log("Fetched tasks:", tasks);
+    return tasks;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }

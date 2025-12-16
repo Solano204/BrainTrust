@@ -1,6 +1,6 @@
+// app/login/page.tsx
 "use client";
 
-// 💡 FIX 1: Import useEffect
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
@@ -19,22 +19,39 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     
-    const { login, register, isAuthenticated } = useAuth();
+    const { login, register, isAuthenticated, isLoading: authLoading, user } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirect = searchParams.get('redirect') || '/';
 
-    // 💡 FIX 2: Move conditional navigation logic into a useEffect hook.
-    // This runs the side effect (router.push) AFTER rendering, preventing the state update conflict.
+    // Redirect if already authenticated based on role
     useEffect(() => {
-        if (isAuthenticated) {
-            router.push(redirect);
+        if (!authLoading && isAuthenticated && user) {
+            const redirectUrl = getRedirectUrlByRole(user.role);
+            router.push(redirectUrl);
         }
-    }, [isAuthenticated, router, redirect]);
+    }, [isAuthenticated, authLoading, user, router]);
 
-    // If isAuthenticated is true, the useEffect handled navigation, so render nothing temporarily.
-    if (isAuthenticated) {
-      return null;
+    // Function to get redirect URL based on user role
+    const getRedirectUrlByRole = (userRole: string): string => {
+        switch (userRole.toLowerCase()) {
+            case 'admin':
+                return '/admin/users';
+            case 'teacher':
+                return '/';
+            case 'student':
+                return '/';
+            default:
+                return '/';
+        }
+    };
+
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
     }
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -45,14 +62,12 @@ export default function LoginPage() {
         const result = await login(email, password);
         
         if (result.success) {
-            // Note: Keeping this direct push here is fine as it's within an event handler, 
-            // but the useEffect ensures the initial check and eventual state change handler works too.
-            router.push(redirect);
+            // Redirect will happen automatically in useEffect
+            // because user state will update
         } else {
             setError(result.error || 'Login failed');
+            setIsLoading(false);
         }
-        
-        setIsLoading(false);
     };
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -63,12 +78,11 @@ export default function LoginPage() {
         const result = await register({ email, password, name, role });
         
         if (result.success) {
-            router.push(redirect);
+            // Redirect will happen automatically in useEffect
         } else {
             setError(result.error || 'Registration failed');
+            setIsLoading(false);
         }
-        
-        setIsLoading(false);
     };
 
     return (
@@ -104,6 +118,7 @@ export default function LoginPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        disabled={isLoading}
                                     />
                                 </div>
                                 
@@ -116,6 +131,7 @@ export default function LoginPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
+                                        disabled={isLoading}
                                     />
                                 </div>
                                 
@@ -135,10 +151,10 @@ export default function LoginPage() {
                                 </Button>
                                 
                                 <div className="text-center text-sm text-muted-foreground">
-                                    <p>Demo Accounts:</p>
-                                    <p>Admin: admin@school.com / admin123</p>
-                                    <p>Teacher: teacher@school.com / teacher123</p>
-                                    <p>Student: student@school.com / student123</p>
+                                    <p className="font-semibold mb-1">Demo Accounts:</p>
+                                    <p className="text-red-600">Admin: admin@school.com / admin123</p>
+                                    <p className="text-blue-600">Teacher: teacher@school.com / teacher123</p>
+                                    <p className="text-green-600">Student: student@school.com / student123</p>
                                 </div>
                             </form>
                         </TabsContent>
@@ -160,6 +176,7 @@ export default function LoginPage() {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         required
+                                        disabled={isLoading}
                                     />
                                 </div>
                                 
@@ -172,6 +189,7 @@ export default function LoginPage() {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
+                                        disabled={isLoading}
                                     />
                                 </div>
                                 
@@ -180,10 +198,12 @@ export default function LoginPage() {
                                     <Input
                                         id="register-password"
                                         type="password"
-                                        placeholder="Create a password"
+                                        placeholder="Create a password (min. 8 characters)"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
+                                        disabled={isLoading}
+                                        minLength={8}
                                     />
                                 </div>
                                 
@@ -191,10 +211,11 @@ export default function LoginPage() {
                                     <Label htmlFor="register-role">Role</Label>
                                     <select
                                         id="register-role"
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
                                         value={role}
                                         onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}
                                         required
+                                        disabled={isLoading}
                                     >
                                         <option value="student">Student</option>
                                         <option value="teacher">Teacher</option>

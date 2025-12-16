@@ -1,12 +1,15 @@
 // services/authService.ts
-import { ROLE_PERMISSIONS } from '@/app/types/authentication';
 import { 
   LoginRequest, 
   RegisterRequest, 
   TokenResponse, 
   UserSession,
-  AUTH_CONFIG 
-} from '@/app/types/authentication';
+  AUTH_CONFIG,
+  AuthenticationResult,
+  CompleteUserDTO,
+  UserRole,
+  ROLE_PERMISSIONS
+} from '@/app/auth/types/authentication';
 
 class AuthService {
   private baseURL = AUTH_CONFIG.API_BASE_URL;
@@ -33,10 +36,10 @@ class AuthService {
   }
 
   async logout(accessToken: string, refreshToken: string): Promise<void> {
-    if (AUTH_CONFIG.MOCK_MODE) {
-      return this.mockLogout();
-    }
-    return this.realLogout(accessToken, refreshToken);
+    // if (AUTH_CONFIG.MOCK_MODE) {
+    //   return this.mockLogout();
+    // }
+    // return this.realLogout(accessToken, refreshToken);
   }
 
   async validateToken(accessToken: string): Promise<UserSession | null> {
@@ -46,43 +49,246 @@ class AuthService {
     return this.realValidateToken(accessToken);
   }
 
-  // Mock implementations
-  private async mockLogin(credentials: LoginRequest): Promise<TokenResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  // Real API implementations
+  private async realLogin(credentials: LoginRequest): Promise<TokenResponse> {
+    const response = await fetch(`${this.baseURL}/api/users/authenticate`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(credentials),
+    });
 
+    const result: AuthenticationResult = await response.json();
+    
+    if (!result.success || !result.user || !result.accessToken || !result.refreshToken) {
+      throw new Error(result.failureReason || 'Login failed');
+    }
+
+    // Map backend user to our UserSession format
+    const userSession: UserSession = {
+      id: result.user.id,
+      email: result.user.email,
+      name: result.user.person?.fullName || result.user.email.split('@')[0],
+      role: this.mapRoleStringToUserRole(result.user.role),
+      avatar: result.user.person?.imagePath,
+      permissions: ROLE_PERMISSIONS[this.mapRoleStringToUserRole(result.user.role)],
+      active: result.user.active,
+      createdAt: result.user.createdAt,
+      studentId: result.user.studentId,
+      person: result.user.person,
+    };
+
+    return {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      expiresIn: result.expiresIn || 900, // 15 minutes default
+      userId: result.user.id,
+      user: userSession,
+    };
+  }
+
+  private async realRegister(userData: RegisterRequest): Promise<TokenResponse> {
+    // Map frontend registration data to backend complete user command
+    const [firstName, ...lastNameParts] = userData.name.split(' ');
+    const lastName = lastNameParts.join(' ') || 'Unknown';
+    
+    const completeUserCommand = {
+      firstName,
+      lastName,
+      gender: userData.gender || 'OTHER',
+      phone: userData.phone || '',
+      addressStreet: userData.addressStreet || '',
+      addressColony: userData.addressColony || '',
+      addressMunicipality: userData.addressMunicipality || '',
+      addressState: userData.addressState || '',
+      addressPostalCode: userData.addressPostalCode || '',
+      email: userData.email,
+      password: userData.password,
+      role: userData.role.toUpperCase() as 'STUDENT' | 'TEACHER' | 'ADMIN',
+      userId: '', // Only needed for STUDENT role in your backend
+    };
+
+    const response = await fetch(`${this.baseURL}/api/users/register/complete`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(completeUserCommand),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Registration failed');
+    }
+
+    const completeUser: CompleteUserDTO = await response.json();
+    
+    // After registration, automatically login
+    return this.realLogin({
+      email: userData.email,
+      password: userData.password,
+    });
+  }
+
+  private async realRefreshTokens(refreshToken: string): Promise<TokenResponse> {
+    const response = await fetch(`${this.baseURL}/api/users/refresh-token`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    const result: AuthenticationResult = await response.json();
+    
+    if (!result.success || !result.user || !result.accessToken || !result.refreshToken) {
+      throw new Error(result.failureReason || 'Token refresh failed');
+    }
+
+    const userSession: UserSession = {
+      id: result.user.id,
+      email: result.user.email,
+      name: result.user.person?.fullName || result.user.email.split('@')[0],
+      role: this.mapRoleStringToUserRole(result.user.role),
+      avatar: result.user.person?.imagePath,
+      permissions: ROLE_PERMISSIONS[this.mapRoleStringToUserRole(result.user.role)],
+      active: result.user.active,
+      createdAt: result.user.createdAt,
+      studentId: result.user.studentId,
+      person: result.user.person,
+    };
+
+    return {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      expiresIn: result.expiresIn || 900,
+      userId: result.user.id,
+      user: userSession,
+    };
+  }
+
+  private async realLogout(accessToken: string, refreshToken: string): Promise<void> {
+    try {
+      await fetch(`${this.baseURL}/api/users/logout`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // Still proceed with client-side cleanup
+    }
+  }
+
+  private async realValidateToken(accessToken: string): Promise<UserSession | null> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/users/${this.getUserIdFromToken(accessToken)}`, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${accessToken}`,
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const userData = await response.json();
+      
+      return {
+        id: userData.id,
+        email: userData.email,
+        name: userData.person?.fullName || userData.email.split('@')[0],
+        role: this.mapRoleStringToUserRole(userData.role),
+        avatar: userData.person?.imagePath,
+        permissions: ROLE_PERMISSIONS[this.mapRoleStringToUserRole(userData.role)],
+        active: userData.active,
+        createdAt: userData.createdAt,
+        studentId: userData.studentId,
+        person: userData.person,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // Helper methods
+  private getUserIdFromToken(token: string): string {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.userId || payload.sub;
+    } catch {
+      return '';
+    }
+  }
+
+  private mapRoleStringToUserRole(role: string): UserRole {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return 'admin';
+      case 'teacher':
+        return 'teacher';
+      case 'student':
+        return 'student';
+      default:
+        return 'guest';
+    }
+  }
+
+  // Mock implementations (kept for compatibility)
+  private async mockLogin(credentials: LoginRequest): Promise<TokenResponse> {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     const mockUsers: Record<string, { password: string; user: UserSession }> = {
       'admin@school.com': {
         password: 'admin123',
         user: {
-          id: '1',
+          id: 'user_001',
           email: 'admin@school.com',
           name: 'System Administrator',
           role: 'admin',
-          avatar: '/avatars/admin.png',
+          avatar: 'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
           permissions: ['admin:dashboard', 'admin:users', 'admin:settings', 'admin:courses'],
+          active: true,
+          createdAt: new Date().toISOString(),
         },
       },
       'teacher@school.com': {
         password: 'teacher123',
         user: {
-          id: 'user-001',
+          id: 'user_001',
           email: 'teacher@school.com',
           name: 'John Mathematics Teacher',
           role: 'teacher',
-          avatar: '/avatars/teacher.png',
+          avatar: 'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
           permissions: ['teacher:dashboard', 'teacher:classes', 'teacher:students', 'teacher:grades'],
+          active: true,
+          createdAt: new Date().toISOString(),
         },
       },
       'student@school.com': {
         password: 'student123',
         user: {
-          id: 'student-001',
+          id: 'user_002',
           email: 'student@school.com',
           name: 'Alice Johnson Student',
           role: 'student',
-          avatar: '/avatars/student.png',
+          avatar: 'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
           permissions: ['student:dashboard', 'student:courses', 'student:submit', 'student:grades'],
+          active: true,
+          createdAt: new Date().toISOString(),
         },
       },
     };
@@ -93,7 +299,6 @@ class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    // Generate mock tokens
     const accessToken = this.generateMockToken(userCreds.user, AUTH_CONFIG.ACCESS_TOKEN_EXPIRY);
     const refreshToken = this.generateMockToken(userCreds.user, AUTH_CONFIG.REFRESH_TOKEN_EXPIRY);
 
@@ -116,6 +321,8 @@ class AuthService {
       role: userData.role,
       avatar: `/avatars/${userData.role}.png`,
       permissions: ROLE_PERMISSIONS[userData.role],
+      active: true,
+      createdAt: new Date().toISOString(),
     };
 
     const accessToken = this.generateMockToken(newUser, AUTH_CONFIG.ACCESS_TOKEN_EXPIRY);
@@ -141,6 +348,8 @@ class AuthService {
       role: payload.role,
       avatar: payload.avatar,
       permissions: payload.permissions,
+      active: true,
+      createdAt: new Date().toISOString(),
     };
 
     const newAccessToken = this.generateMockToken(user, AUTH_CONFIG.ACCESS_TOKEN_EXPIRY);
@@ -159,7 +368,6 @@ class AuthService {
     try {
       const payload = JSON.parse(atob(accessToken.split('.')[1]));
       
-      // Check if token is expired
       if (Date.now() >= payload.exp * 1000) {
         return null;
       }
@@ -171,6 +379,8 @@ class AuthService {
         role: payload.role,
         avatar: payload.avatar,
         permissions: payload.permissions,
+        active: true,
+        createdAt: new Date().toISOString(),
       };
     } catch {
       return null;
@@ -181,78 +391,6 @@ class AuthService {
     await new Promise(resolve => setTimeout(resolve, 300));
   }
 
-  // Real API implementations
-  private async realLogin(credentials: LoginRequest): Promise<TokenResponse> {
-    const response = await fetch(`${this.baseURL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
-    }
-
-    return response.json();
-  }
-
-  private async realRegister(userData: RegisterRequest): Promise<TokenResponse> {
-    const response = await fetch(`${this.baseURL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
-    }
-
-    return response.json();
-  }
-
-  private async realRefreshTokens(refreshToken: string): Promise<TokenResponse> {
-    const response = await fetch(`${this.baseURL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${refreshToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Token refresh failed');
-    }
-
-    return response.json();
-  }
-
-  private async realLogout(accessToken: string, refreshToken: string): Promise<void> {
-    await fetch(`${this.baseURL}/auth/logout`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
-  }
-
-  private async realValidateToken(accessToken: string): Promise<UserSession | null> {
-    const response = await fetch(`${this.baseURL}/auth/validate`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return response.json();
-  }
-
-  // Helper method to generate mock JWT tokens
   private generateMockToken(user: UserSession, expiresIn: number): string {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
     const payload = btoa(JSON.stringify({

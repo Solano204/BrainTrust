@@ -3,8 +3,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { timelineKeys } from "@/app/infraestructure/api/calendar/timeline-keys";
-import { fetchTimelineResources, dismissTimelineItem } from "@/app/infraestructure/api/calendar/timeline-api";
 import { Assignment, Quiz } from "@/app/domain/entities/CourseEntities";
+import { dismissTimelineItem, fetchTimelineResources } from "@/app/infraestructure/api/calendar/timeline-api";
 
 export function useTimelineResources(
   userId: string | null, 

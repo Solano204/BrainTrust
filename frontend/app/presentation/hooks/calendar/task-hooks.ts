@@ -6,6 +6,9 @@ import { taskKeys } from "@/app/infraestructure/api/calendar/task-keys";
 import { Assignment } from "@/app/domain/entities/CourseEntities";
 import { fetchTasksByMonth, fetchThisWeekTasks } from "@/components/teacher-student/api/task";
 
+
+// CURRENTLY WORKS
+
 export function useTasksByMonth(
   userId: string | null, 
   monthStart: string, 
@@ -18,6 +21,10 @@ export function useTasksByMonth(
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
+
+
+
+// CURRENTLY WORKS
 
 export function useThisWeekTasks(
   userId: string | null, 

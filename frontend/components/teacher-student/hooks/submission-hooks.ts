@@ -7,6 +7,8 @@ import { getStudentQuizSubmission, getStudentTaskSubmission, submitQuiz, submitT
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Hook to get student's existing task submission
+
+// THIS CURRENTLY WORKS
 export function useStudentTaskSubmission(assignmentId: string | null, studentId: string | null) {
   return useQuery({
     queryKey: studentSubmissionKeys.taskSubmission(assignmentId || "", studentId || ""),
@@ -16,8 +18,14 @@ export function useStudentTaskSubmission(assignmentId: string | null, studentId:
   });
 }
 
+
+// THIS CURRENTLY WORKS
+
+
 // Hook to get student's existing quiz submission
 export function useStudentQuizSubmission(quizId: string | null, studentId: string | null) {
+
+  console.log("QUIZ ID:", quizId);
   return useQuery({
     queryKey: studentSubmissionKeys.quizSubmission(quizId || "", studentId || ""),
     queryFn: () => getStudentQuizSubmission(quizId!, studentId!),
@@ -27,6 +35,9 @@ export function useStudentQuizSubmission(quizId: string | null, studentId: strin
 }
 
 // Hook for task submission mutations
+
+// CURRENTLY WORKS
+
 export function useTaskSubmission() {
   const queryClient = useQueryClient();
 
@@ -50,6 +61,8 @@ export function useTaskSubmission() {
 }
 
 // Hook for quiz submission mutations
+// CURRENTLY WORKS
+
 export function useQuizSubmission() {
   const queryClient = useQueryClient();
 

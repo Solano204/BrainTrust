@@ -10,15 +10,16 @@ import {
   QuizInventoryItem,
   SubmissionQuiz,
   QuizAnswer,
+  QuestionType,
 } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UserId } from "@/app/domain/valueObjects";
-import { QuestionId, QuizId } from "@/app/domain/valueObjects/CourseValues";
+import { QuestionId, QuizId, SubmissionStatus } from "@/app/domain/valueObjects/CourseValues";
 
 // ============================================
 // CONFIGURATION
 // ============================================
 
-const isMockEnabled = true; // Switch between mock and real API
+const isMockEnabled = false; // Switch between mock and real API
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -345,7 +346,7 @@ const MOCK_SUBMISSION_QUIZZES: SubmissionQuiz[] = [
 // UTILITIES
 // ============================================
 
-const simulateDelay = (ms: number = 500) =>
+const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 const apiClient = axios.create({
@@ -368,7 +369,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-const handleApiError = (error: unknown): never => {
+const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || error.message;
     redirect("/courses");
@@ -381,7 +382,7 @@ const handleApiError = (error: unknown): never => {
 // MAPPERS - BACKEND TO FRONTEND
 // ============================================
 
-function mapQuizFromBackend(dto: QuizDTO): Quiz {
+async function mapQuizFromBackend(dto: QuizDTO): Promise<Quiz> {
   return {
     id: dto.id,
     title: dto.title,
@@ -397,7 +398,7 @@ function mapQuizFromBackend(dto: QuizDTO): Quiz {
   };
 }
 
-function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Quiz {
+async function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Promise<Quiz> {
   return {
     id: dto.id,
     title: dto.title,
@@ -411,7 +412,8 @@ function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Quiz {
     acceptLateSubmissions: true, // Default value
     questions: dto.questions.map(q => ({
       id: q.id,
-      type: q.questionType.toLowerCase(),
+
+      type: q.questionType.toLowerCase() as QuestionType,
       text: q.questionText,
       maxPoints: q.points,
       question: q.questionText,
@@ -423,7 +425,7 @@ function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Quiz {
   };
 }
 
-function mapQuizInventoryFromBackend(dto: QuizDTO): QuizInventoryItem {
+async function mapQuizInventoryFromBackend(dto: QuizDTO): Promise<QuizInventoryItem> {
   return {
     id: dto.id,
     quizId: dto.id,
@@ -437,7 +439,7 @@ function mapQuizInventoryFromBackend(dto: QuizDTO): QuizInventoryItem {
   };
 }
 
-function mapSubmissionQuizFromBackend(dto: QuizSubmissionDTO): SubmissionQuiz {
+async function mapSubmissionQuizFromBackend(dto: QuizSubmissionDTO): Promise<SubmissionQuiz> {
   return {
     id: dto.id,
     quizId: dto.quizId,
@@ -446,7 +448,7 @@ function mapSubmissionQuizFromBackend(dto: QuizSubmissionDTO): SubmissionQuiz {
     studentName: dto.studentName,
     content: JSON.stringify(dto.answers),
     submittedAt: dto.submittedAt,
-    status: dto.status,
+    status: dto.status as SubmissionStatus ,
     grade: dto.grade ? {
       value: parseFloat(dto.grade.value),
       maxScore: parseFloat(dto.grade.maxScore)
@@ -471,7 +473,7 @@ function mapSubmissionQuizFromBackend(dto: QuizSubmissionDTO): SubmissionQuiz {
   };
 }
 
-function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO): SubmissionQuiz {
+async function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO): Promise<SubmissionQuiz> {
   return {
     id: dto.id,
     quizId: dto.quizId,
@@ -480,7 +482,7 @@ function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO): Submi
     studentName: dto.studentName,
     content: JSON.stringify(dto.questionResponses),
     submittedAt: dto.submittedAt,
-    status: dto.status,
+    status: dto.status as SubmissionStatus,
     grade: dto.grade ? {
       value: parseFloat(dto.grade.value),
       maxScore: parseFloat(dto.grade.maxScore)
@@ -490,7 +492,7 @@ function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO): Submi
       answers: dto.questionResponses.map(qr => ({
         questionId: qr.questionId,
         questionText: qr.questionText,
-        questionType: qr.questionType.toLowerCase(),
+        questionType: qr.questionType .toLowerCase() as QuestionType,
         studentAnswer: qr.selectedOptions.length > 0 ? qr.selectedOptions[0] : qr.textAnswer,
         correctAnswer: qr.correctAnswer,
         points: 0, // Will be calculated
@@ -509,29 +511,73 @@ function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO): Submi
 // MAPPERS - FRONTEND TO BACKEND
 // ============================================
 
-function mapCreateQuizToBackendCommand(data: Omit<Quiz, "id">): CreateQuizWithQuestionsCommand {
+async function mapCreateQuizToBackendCommand(data: Omit<Quiz, "id">): Promise<CreateQuizWithQuestionsCommand> {
+  // Validate required fields
+  if (!data.courseId || !data.courseUnitId || !data.title) {
+    throw new Error('Missing required quiz fields: courseId, courseUnitId, title');
+  }
+
+  const questions: QuizQuestionData[] = data.questions.map((q, index) => {
+    // Get question text with fallback
+    const questionText = q.text || q.question;
+    if (!questionText) {
+      throw new Error(`Question ${index + 1} is missing text`);
+    }
+
+    // Get points with fallback
+    const points = q.points || q.maxPoints || 1;
+
+    // Map question type
+    const questionType = q.type === 'multiple-choice' ? 'CLOSED_CHOICE' : 'OPEN_ENDED';
+
+    // Handle options for multiple-choice
+    const options: QuestionOptionData[] = [];
+    if (q.type === 'multiple-choice') {
+      if (!q.options || q.options.length === 0) {
+        throw new Error(`Multiple-choice question ${index + 1} has no options`);
+      }
+      
+      options.push(...q.options.map((opt, optIndex) => ({
+        text: opt || `Option ${optIndex + 1}`,
+        correct: optIndex === q.correctAnswer
+      })));
+
+      // Validate that correctAnswer is set for multiple-choice
+      if (q.correctAnswer === undefined || q.correctAnswer === null) {
+        throw new Error(`Multiple-choice question ${index + 1} has no correct answer specified`);
+      }
+    }
+
+    // Handle correct answer
+    let correctAnswer = '';
+    if (q.type === 'multiple-choice') {
+      correctAnswer = q.correctAnswer?.toString() || '';
+    } else {
+      correctAnswer = q.expectedAnswer || '';
+    }
+
+    return {
+      questionText,
+      questionType,
+      points,
+      options,
+      correctAnswer
+    };
+  });
+
   return {
     courseId: data.courseId,
     unitId: data.courseUnitId,
     title: data.title,
-    description: data.description,
+    description: data.description || '',
     availableFrom: new Date().toISOString(),
-    availableUntil: data.dueDate,
-    timeLimitMinutes: data.timeLimit,
-    questions: data.questions.map(q => ({
-      questionText: q.text,
-      questionType: q.type.toUpperCase(),
-      points: q.points,
-      options: q.options.map((opt, index) => ({
-        text: opt,
-        correct: index === q.correctAnswer
-      })),
-      correctAnswer: q.type === 'multiple-choice' ? q.correctAnswer.toString() : q.expectedAnswer
-    }))
+    availableUntil: data.dueDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    timeLimitMinutes: data.timeLimit || 30, // Default 30 minutes
+    questions
   };
 }
 
-function mapUpdateQuizToBackendCommand(quizId: string, data: Partial<Omit<Quiz, "id" | "questions">>): UpdateQuizCommand {
+async function mapUpdateQuizToBackendCommand(quizId: string, data: Partial<Omit<Quiz, "id" | "questions">>): Promise<UpdateQuizCommand> {
   return {
     quizId,
     title: data.title || "",
@@ -545,7 +591,7 @@ function mapUpdateQuizToBackendCommand(quizId: string, data: Partial<Omit<Quiz, 
   };
 }
 
-function mapSubmitQuizToBackendCommand(quizId: string, studentId: string, answers: Array<{ questionId: string; answer: string | number }>): SubmitQuizWithAnswersCommand {
+async function mapSubmitQuizToBackendCommand(quizId: string, studentId: string, answers: Array<{ questionId: string; answer: string | number }>): Promise<SubmitQuizWithAnswersCommand> {
   const answerMap = new Map<string, QuizAnswerData>();
   
   answers.forEach(ans => {
@@ -570,6 +616,8 @@ function mapSubmitQuizToBackendCommand(quizId: string, studentId: string, answer
 /**
  * Fetch quizzes by course
  */
+
+
 export async function fetchQuizzesByCourse(courseId: CourseId): Promise<Quiz[]> {
   if (isMockEnabled) {
     await simulateDelay();
@@ -580,9 +628,10 @@ export async function fetchQuizzesByCourse(courseId: CourseId): Promise<Quiz[]> 
 
   try {
     const response = await apiClient.get<QuizDTO[]>(`/api/quizzes/course/${courseId}/basic`);
-    return response.data.map(mapQuizFromBackend);
+    const quizzes = await Promise.all(response.data.map(dto => mapQuizFromBackend(dto)));
+    return quizzes;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -599,9 +648,10 @@ export async function fetchQuizzesByCourseWithoutDetails(courseId: CourseId): Pr
 
   try {
     const response = await apiClient.get<QuizDTO[]>(`/api/quizzes/course/${courseId}/basic`);
-    return response.data.map(mapQuizInventoryFromBackend);
+    const quizzes = await Promise.all(response.data.map(dto => mapQuizInventoryFromBackend(dto)));
+    return quizzes;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -620,9 +670,10 @@ export async function fetchQuizById(quizId: QuizId): Promise<Quiz> {
 
   try {
     const response = await apiClient.get<CompleteQuizDTO>(`/api/quizzes/${quizId}/complete`);
-    return mapCompleteQuizFromBackend(response.data);
+    const quiz = await mapCompleteQuizFromBackend(response.data);
+    return quiz;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -642,15 +693,14 @@ export async function createQuiz(quizData: Omit<Quiz, "id">): Promise<Quiz> {
   }
 
   try {
-    const backendCommand: CreateQuizWithQuestionsCommand = mapCreateQuizToBackendCommand(quizData);
-    const response = await apiClient.post<SuccessResponseDTO>("/api/quizzes/with-questions", backendCommand);
+    const backendCommand = await mapCreateQuizToBackendCommand(quizData);
+    const response = await apiClient.post<CompleteQuizDTO>("/api/quizzes/with-questions", backendCommand);
     
     // Fetch the created quiz to get full details
-    const quizId = response.data.data;
-    const quizResponse = await apiClient.get<CompleteQuizDTO>(`/api/quizzes/${quizId}/complete`);
-    return mapCompleteQuizFromBackend(quizResponse.data);
+    const quiz = await mapCompleteQuizFromBackend(response.data);
+    return quiz;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -670,14 +720,14 @@ export async function updateQuiz(quizId: QuizId, quizData: Partial<Omit<Quiz, "i
   }
 
   try {
-    const backendCommand: UpdateQuizCommand = mapUpdateQuizToBackendCommand(quizId, quizData);
-    await apiClient.put(`/api/quizzes/${quizId}`, backendCommand);
+    const backendCommand = await mapUpdateQuizToBackendCommand(quizId, quizData);
+    const response =  await apiClient.put <CompleteQuizDTO> (`/api/quizzes/${quizId}`, backendCommand);
     
     // Fetch the updated quiz
-    const response = await apiClient.get<CompleteQuizDTO>(`/api/quizzes/${quizId}/complete`);
-    return mapCompleteQuizFromBackend(response.data);
+    const quiz = await mapCompleteQuizFromBackend(response.data);
+    return quiz;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -699,7 +749,7 @@ export async function deleteQuiz(quizId: QuizId): Promise<void> {
   try {
     await apiClient.delete(`/api/quizzes/${quizId}`);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -716,9 +766,10 @@ export async function fetchQuizSubmissions(quizId: QuizId): Promise<SubmissionQu
 
   try {
     const response = await apiClient.get<QuizSubmissionDTO[]>(`/api/quiz-submissions/course/${quizId}`);
-    return response.data.map(mapSubmissionQuizFromBackend);
+    const submissions = await Promise.all(response.data.map(dto => mapSubmissionQuizFromBackend(dto)));
+    return submissions;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -739,15 +790,18 @@ export async function fetchStudentQuizSubmission(quizId: QuizId, studentId: User
   try {
     // This endpoint might need to be adjusted based on your backend
     const response = await apiClient.get<QuizSubmissionDetailDTO>(`/api/quiz-submissions/detail`);
-    return mapSubmissionQuizDetailFromBackend(response.data);
+    const submission = await mapSubmissionQuizDetailFromBackend(response.data);
+    return submission;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
  * Submit quiz answers
  */
+
+// CURRENTLY WORK
 export async function submitQuizAnswers(
   quizId: QuizId,
   studentId: UserId,
@@ -814,15 +868,16 @@ export async function submitQuizAnswers(
   }
 
   try {
-    const backendCommand: SubmitQuizWithAnswersCommand = mapSubmitQuizToBackendCommand(quizId, studentId, answers);
-    const response = await apiClient.post<SuccessResponseDTO>("/api/quiz-submissions/submit-with-answers", backendCommand);
+    const backendCommand = await mapSubmitQuizToBackendCommand(quizId, studentId, answers);
+    const response = await apiClient.post<SuccessResponseDTO>("", backendCommand);
     
     // Fetch the created submission
     const submissionId = response.data.data;
     const submissionResponse = await apiClient.get<QuizSubmissionDetailDTO>(`/api/quiz-submissions/${submissionId}/detail`);
-    return mapSubmissionQuizDetailFromBackend(submissionResponse.data);
+    const submission = await mapSubmissionQuizDetailFromBackend(submissionResponse.data);
+    return submission;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -876,9 +931,10 @@ export async function gradeQuizSubmission(
     
     // Fetch the graded submission
     const response = await apiClient.get<QuizSubmissionDetailDTO>(`/api/quiz-submissions/${submissionId}/detail`);
-    return mapSubmissionQuizDetailFromBackend(response.data);
+    const submission = await mapSubmissionQuizDetailFromBackend(response.data);
+    return submission;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -925,7 +981,7 @@ export async function getQuizStats(quizId: QuizId): Promise<{
       completionRate: Math.round((submissions.length / 25) * 100), // Assuming 25 students
     };
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -946,9 +1002,10 @@ export async function fetchStudentCalendarQuizzes(
   try {
     const endpoint = period === 'week' ? 'week' : 'month';
     const response = await apiClient.get<QuizDTO[]>(`/api/quizzes/calendar/student/${studentId}/${endpoint}?${period}Start=${startDate}`);
-    return response.data.map(mapQuizFromBackend);
+    const quizzes = await Promise.all(response.data.map(dto => mapQuizFromBackend(dto)));
+    return quizzes;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -969,8 +1026,9 @@ export async function fetchTeacherCalendarQuizzes(
   try {
     const endpoint = period === 'week' ? 'week' : 'month';
     const response = await apiClient.get<QuizDTO[]>(`/api/quizzes/calendar/teacher/${teacherId}/${endpoint}?${period}Start=${startDate}`);
-    return response.data.map(mapQuizFromBackend);
+    const quizzes = await Promise.all(response.data.map(dto => mapQuizFromBackend(dto)));
+    return quizzes;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }

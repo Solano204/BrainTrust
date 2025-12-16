@@ -1,4 +1,3 @@
-// File: src/app/features/courses/api/course-api.ts
 "use server";
 
 import {
@@ -11,7 +10,6 @@ import axios from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 // File: src/app/infraestructure/api/types/course-types.ts
-"use server";
 
 // ============================================
 // BACKEND DTO TYPES
@@ -89,6 +87,8 @@ export interface UpdateCourseCommand {
   description: string;
   grade: string;
   group: string;
+  teacherId?: string;
+  imageUrl?: string;
 }
 
 export interface UpdateImageRequest {
@@ -144,7 +144,7 @@ export interface CourseStatsDTO {
  * Flag to enable/disable mocking.
  * Set to true to use mock data, false to use the real backend.
  */
-const isMockEnabled = process.env.NEXT_PUBLIC_MOCK_ENABLED === 'true';
+const isMockEnabled = false ;
 
 // Mock course data
 const MOCK_COURSES_ALL_UNITS: Course[] = [
@@ -266,7 +266,7 @@ const MOCK_COURSES: Course[] = [
 ];
 
 // Utility to simulate network delay for mock data
-const simulateDelay = (ms: number = 500) =>
+const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 // --- API CLIENT CONFIGURATION (ONLY USED WHEN MOCKING IS DISABLED) ---
@@ -297,10 +297,10 @@ apiClient.interceptors.request.use(
 /**
  * Error handling wrapper for API calls
  */
-const handleApiError = (error: unknown): never => {
+const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || error.message;
-    redirect("/courses");
+  //  redirect("/courses");
     throw new Error(errorMessage);
   }
   throw error;
@@ -313,7 +313,7 @@ const handleApiError = (error: unknown): never => {
 /**
  * Maps backend CourseDTO to frontend Course entity
  */
-function mapCourseFromBackend(dto: CourseDTO): Course {
+async function mapCourseFromBackend(dto: CourseDTO): Promise<Course> {
   return {
     id: dto.id,
     code: dto.code,
@@ -332,24 +332,25 @@ function mapCourseFromBackend(dto: CourseDTO): Course {
 /**
  * Maps backend EnrollmentDTO to frontend Enrollment entity
  */
-function mapEnrollmentFromBackend(dto: EnrollmentDTO): Enrollment {
+async function mapEnrollmentFromBackend(dto: EnrollmentDTO): Promise<Enrollment> {
   return {
     id: dto.id,
     courseId: dto.courseId,
     studentId: dto.studentId,
     enrollmentDate: dto.enrollmentDate,
-    status: dto.status,
-    grade: dto.finalGrade ? {
-      value: parseFloat(dto.finalGrade.value),
-      maxScore: parseFloat(dto.finalGrade.maxScore)
-    } : null
+    // status: dto.status,
+    
+    // grade: dto.finalGrade ? {
+    //   value: parseFloat(dto.finalGrade.value),
+    //   maxScore: parseFloat(dto.finalGrade.maxScore)
+    // } : null
   };
 }
 
 /**
  * Maps backend CourseUnitDTO to frontend CourseUnit entity
  */
-function mapCourseUnitFromBackend(dto: CourseUnitDTO): CourseUnit {
+async function mapCourseUnitFromBackend(dto: CourseUnitDTO): Promise<CourseUnit> {
   return {
     id: dto.id,
     courseId: dto.courseId,
@@ -368,7 +369,7 @@ function mapCourseUnitFromBackend(dto: CourseUnitDTO): CourseUnit {
 /**
  * Maps frontend course data to backend CreateCourseCommand
  */
-function mapCreateCourseToBackendCommand(data: Omit<Course, "id" | "enrollments" | "units">): CreateCourseCommand {
+async function mapCreateCourseToBackendCommand(data: Omit<Course, "id" | "enrollments" | "units">): Promise<CreateCourseCommand> {
   return {
     code: data.code,
     name: data.name,
@@ -382,22 +383,22 @@ function mapCreateCourseToBackendCommand(data: Omit<Course, "id" | "enrollments"
 /**
  * Maps frontend course data to backend CreateCourseWithImageCommand
  */
-function mapCreateCourseWithImageToBackendCommand(data: Omit<Course, "id" | "teacherId" | "enrollments" | "units">): CreateCourseWithImageCommand {
+async function mapCreateCourseWithImageToBackendCommand(data: Omit<Course, "id"  | "enrollments" | "units">): Promise<CreateCourseWithImageCommand> {
   return {
     code: data.code,
     name: data.name,
     description: data.description,
     grade: data.grade,
     group: data.group,
-    teacherId: "current-user-id", // This should come from auth context
-    imageUrl: data.urlImage
+    teacherId: data.teacherId, // This should come from auth context
+    imageUrl: data.urlImage || ""
   };
 }
 
 /**
  * Maps frontend course update data to backend UpdateCourseCommand
  */
-function mapUpdateCourseToBackendCommand(courseId: string, data: Partial<Omit<Course, "id" | "teacherId" | "enrollments" | "units">>): UpdateCourseCommand {
+async function mapUpdateCourseToBackendCommand(courseId: string, data: Partial<Omit<Course, "id" | "teacherId" | "enrollments" | "units">>): Promise<UpdateCourseCommand> {
   return {
     courseId,
     name: data.name || "",
@@ -407,10 +408,21 @@ function mapUpdateCourseToBackendCommand(courseId: string, data: Partial<Omit<Co
   };
 }
 
+async function mapUpdateCourseToBackendCommandImage(courseId: string, data: Partial<Omit<Course, "id" | "teacherId" | "enrollments" | "units">>): Promise<UpdateCourseCommand> {
+  return {
+    courseId,
+    name: data.name || "",
+    description: data.description || "",
+    grade: data.grade || "",
+    group: data.group || "",
+    imageUrl: data.urlImage || ""
+  };
+}
+
 /**
  * Maps frontend enrollment data to backend EnrollStudentRequest
  */
-function mapEnrollStudentToBackendCommand(studentId: string): EnrollStudentRequest {
+async function mapEnrollStudentToBackendCommand(studentId: string): Promise<EnrollStudentRequest> {
   return {
     studentId
   };
@@ -419,7 +431,7 @@ function mapEnrollStudentToBackendCommand(studentId: string): EnrollStudentReque
 /**
  * Maps frontend unit data to backend AddUnitRequest
  */
-function mapAddUnitToBackendCommand(data: { name: string; order: number; description: string }): AddUnitRequest {
+async function mapAddUnitToBackendCommand(data: { name: string; order: number; description: string }): Promise<AddUnitRequest> {
   return {
     name: data.name,
     order: data.order,
@@ -435,52 +447,35 @@ function mapAddUnitToBackendCommand(data: { name: string; order: number; descrip
  * Fetch all courses for current user
  */
 export async function fetchAllCourses(): Promise<Course[]> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    console.log("MOCK: Returning all courses.");
-    console.log("MOCK COURSES DATA:", MOCK_COURSES);
-    console.log(
-      "COURSE IDs:",
-      MOCK_COURSES.map((c) => c.id)
-    );
-    return MOCK_COURSES;
-  }
+ 
 
   try {
     const response = await apiClient.get<CourseDTO[]>("/api/courses");
-    const backendCourses = response.data;
-    return backendCourses.map(mapCourseFromBackend);
+    const backendCourses = await Promise.all(response.data.map(dto => mapCourseFromBackend(dto)));
+    return backendCourses;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
  * Fetch courses by teacher ID
  */
+
+// CURRENTLY WORKS
+
 export async function fetchCoursesByTeacher(
   teacherId: string
 ): Promise<Course[]> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    const teacherCourses = MOCK_COURSES.filter(
-      (course) => course.teacherId === teacherId
-    );
-    console.log(`MOCK: Returning courses for teacher ${teacherId}`);
-    console.log("TEACHER COURSES DATA:", teacherCourses);
-    console.log(
-      "TEACHER COURSE IDs:",
-      teacherCourses.map((c) => c.id)
-    );
-    return teacherCourses;
-  }
+ 
 
   try {
     const response = await apiClient.get<CourseDTO[]>(`/api/courses/teacher/${teacherId}`);
-    const backendCourses = response.data;
-    return backendCourses.map(mapCourseFromBackend);
+
+    const backendCourses = await Promise.all(response.data.map(dto => mapCourseFromBackend(dto)));
+    return backendCourses;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -490,20 +485,13 @@ export async function fetchCoursesByTeacher(
 export async function fetchCoursesByStudent(
   studentId: string
 ): Promise<Course[]> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    console.log(`MOCK: Returning courses for student ${studentId}`);
-    // Return all active courses for mock
-    const studentCourses = MOCK_COURSES.filter(course => course.active);
-    return studentCourses;
-  }
-
+  
   try {
     const response = await apiClient.get<CourseDTO[]>(`/api/courses/student/${studentId}`);
-    const backendCourses = response.data;
-    return backendCourses.map(mapCourseFromBackend);
+    const backendCourses = await Promise.all(response.data.map(dto => mapCourseFromBackend(dto)));
+    return backendCourses;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -511,133 +499,161 @@ export async function fetchCoursesByStudent(
  * Fetch course by ID
  */
 export async function fetchCourseById(courseId: string): Promise<Course> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    const course = MOCK_COURSES.find((c) => c.id === courseId);
-    if (!course) {
-      console.error(`MOCK: Course with ID ${courseId} not found.`);
-      const fallbackCourse = MOCK_COURSES[0];
-      console.log(`MOCK: Falling back to course ${fallbackCourse.id}`);
-      return fallbackCourse;
-    }
-    console.log(`MOCK: Returning course ${courseId}.`);
-    console.log("COURSE DATA:", course);
-    return course;
-  }
+  
 
   try {
     const response = await apiClient.get<CourseDTO>(`/api/courses/${courseId}`);
-    return mapCourseFromBackend(response.data);
+    const course = await mapCourseFromBackend(response.data);
+    return course;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
  * Fetch course by ID with all units
  */
+
+
+const MOCK_COURSE_UNITS_DTO: CourseUnitDTO[] = [
+  {
+    id: "unit-1-1",
+    courseId: "crs-101",
+    name: "Module 1: Basic JavaScript Syntax",
+    urlImage: "https://picsum.photos/seed/unit-1-1/300/200",
+    numUnity: 1,
+    description: "Covers variables, data types, and basic operators in JS.",
+  },
+  {
+    id: "unit-1-2",
+    courseId: "crs-101",
+    name: "Module 2: Control Flow",
+    urlImage: "https://picsum.photos/seed/unit-1-2/300/200",
+    numUnity: 2,
+    description: "Conditionals (if/else) and loops (for/while).",
+  },
+  {
+    id: "unit-1-3",
+    courseId: "crs-101",
+    name: "Module 3: Functions and Scope",
+    urlImage: "https://picsum.photos/seed/unit-1-3/300/200",
+    numUnity: 3,
+    description: "Understanding functions, parameters, and variable scope.",
+  },
+  {
+    id: "unit-2-1",
+    courseId: "crs-202",
+    name: "Chapter 1: Vector Spaces",
+    urlImage: "https://picsum.photos/seed/unit-2-1/300/200",
+    numUnity: 1,
+    description: "Introduction to vector spaces and linear transformations.",
+  },
+  {
+    id: "unit-2-2",
+    courseId: "crs-202",
+    name: "Chapter 2: Matrices and Determinants",
+    urlImage: "https://picsum.photos/seed/unit-2-2/300/200",
+    numUnity: 2,
+    description: "Matrix operations and determinant calculations.",
+  },
+  {
+    id: "unit-2-3",
+    courseId: "crs-202",
+    name: "Chapter 3: Eigenvalues and Eigenvectors",
+    urlImage: "https://picsum.photos/seed/unit-2-3/300/200",
+    numUnity: 3,
+    description: "Understanding eigenvalues and their applications.",
+  },
+  {
+    id: "unit-3-1",
+    courseId: "crs-303",
+    name: "Unit 1: Greek Literature",
+    urlImage: "https://picsum.photos/seed/unit-3-1/300/200",
+    numUnity: 1,
+    description: "Exploring Homer's Iliad and Odyssey.",
+  },
+  {
+    id: "unit-3-2",
+    courseId: "crs-303",
+    name: "Unit 2: Roman Literature",
+    urlImage: "https://picsum.photos/seed/unit-3-2/300/200",
+    numUnity: 2,
+    description: "Study of Virgil's Aeneid and Ovid's Metamorphoses.",
+  },
+];
+
+
+
+// THIS CURRENTLY WORKS
 export async function fetchCourseByIdAllUnits(
   courseId: CourseId
-): Promise<Course> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    const course = MOCK_COURSES_ALL_UNITS.find((c) => c.id === courseId);
-    if (!course) {
-      console.error(
-        `MOCK: Course with ID ${courseId} not found in ALL_UNITS data.`
-      );
-      const fallbackCourse = MOCK_COURSES.find((c) => c.id === courseId);
-      if (fallbackCourse) {
-        console.log(
-          `MOCK: Falling back to regular course data for ${courseId}`
-        );
-        return fallbackCourse;
-      }
-      throw new Error(`MOCK: Course ${courseId} not found in any dataset.`);
-    }
-    console.log(`MOCK: Returning course ${courseId} with all units.`);
-    console.log("COURSE WITH UNITS DATA:", course);
-    console.log("UNIT COUNT:", course.units.length);
-    console.log(
-      "UNIT IDs:",
-      course.units.map((u) => u.id)
-    );
-    return course;
-  }
+): Promise<CourseUnitDTO[]> { // Now returns array of CourseUnitDTO
+  
 
   try {
     if (!courseId) throw new Error("Course ID is required");
     
-    // Fetch course details
-    const courseResponse = await apiClient.get<CourseDTO>(`/api/courses/${courseId}`);
-    const course = mapCourseFromBackend(courseResponse.data);
-    
-    // Fetch course units
+    // Fetch course units from backend
     const unitsResponse = await apiClient.get<CourseUnitDTO[]>(`/api/courses/${courseId}/units`);
-    course.units = unitsResponse.data.map(mapCourseUnitFromBackend);
+    console.log(`Fetched ${unitsResponse.data.length} units for course ${courseId} from backend.`);
+    return unitsResponse.data; // Directly return the DTO array
     
-    // Fetch course enrollments
-    const enrollmentsResponse = await apiClient.get<EnrollmentDTO[]>(`/api/courses/${courseId}/enrollments`);
-    course.enrollments = enrollmentsResponse.data.map(mapEnrollmentFromBackend);
-    
-    return course;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
  * Create a new course
  */
-export async function createCourse(
-  courseData: Omit<Course, "id" | "teacherId">
-): Promise<Course> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-    const newCourse: Course = {
-      ...courseData,
-      id: `crs-${Date.now()}`,
-      teacherId: "mock-teacher",
-      enrollments: [],
-      units: [],
-    };
-    MOCK_COURSES.push(newCourse);
-    MOCK_COURSES_ALL_UNITS.push({
-      ...newCourse,
-      enrollments: Array.from({ length: 0 }, (_, i) => ({
-        id: `enr-new-${i}`,
-        courseId: newCourse.id,
-        studentId: `student-new-${i}`,
-        enrollmentDate: "2024-01-01",
-        status: "ACTIVE",
-        grade: null,
-      })),
-      units: [],
-    });
 
-    console.log("MOCK: Created new course.");
-    console.log("COURSE DATA PROVIDED:", courseData);
-    console.log("CREATED COURSE DATA:", newCourse);
-    console.log("NEW COURSE ID:", newCourse.id);
-    return newCourse;
-  }
+
+// CURRENTLY WORKS
+
+export async function createCourse(
+  courseData: Course
+): Promise<Course> {
+  
 
   try {
-    const backendCommand: CreateCourseCommand = mapCreateCourseToBackendCommand(courseData);
-    const response = await apiClient.post<SuccessResponseDTO>("/api/courses", backendCommand);
+    const backendCommand = await mapCreateCourseToBackendCommand(courseData);
+    const courseResponse = await apiClient.post<CourseDTO>("/api/courses", backendCommand);
     
     // Fetch the created course to get full details
-    const courseId = response.data.data;
-    const courseResponse = await apiClient.get<CourseDTO>(`/api/courses/${courseId}`);
-    return mapCourseFromBackend(courseResponse.data);
+   
+    const course = await mapCourseFromBackend(courseResponse.data);
+    return course;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
+
+export async function createCourseWithImage(
+  courseData: Course
+): Promise<Course> {
+ 
+
+  try {
+    // Create a mapping function for the new command
+
+    console.log("COURSE DATA PROVIDED:", courseData);
+    const backendCommand = await mapCreateCourseWithImageToBackendCommand(courseData);
+    const courseResponse = await apiClient.post<CourseDTO>("/api/courses/with-image", backendCommand);
+    
+    const course = await mapCourseFromBackend(courseResponse.data);
+    return course;
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
 
 /**
  * Update an existing course
  */
+
+// CURRENTLY WORKS
+
 export async function updateCourse(
   courseId: CourseId,
   courseData: Partial<Omit<Course, "id" | "teacherId">>
@@ -679,94 +695,40 @@ export async function updateCourse(
 
   try {
     if (!courseId) throw new Error("Course ID is required");
-    const backendCommand: UpdateCourseCommand = mapUpdateCourseToBackendCommand(courseId, courseData);
+    const backendCommand = await mapUpdateCourseToBackendCommandImage(courseId, courseData);
     
-    await apiClient.put(`/api/courses/${courseId}`, backendCommand);
+    const response = await apiClient.put<CourseDTO>(`/api/courses/${courseId}`, backendCommand);
     
     // Fetch the updated course
-    const response = await apiClient.get<CourseDTO>(`/api/courses/${courseId}`);
-    return mapCourseFromBackend(response.data);
+    const course = await mapCourseFromBackend(response.data);
+    return course;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
  * Delete a course
  */
+
+// CURRENTLY WORKS
+
 export async function deleteCourse(courseId: CourseId): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-
-    let deletedFromCourses = false;
-    let deletedFromAllUnits = false;
-
-    const courseIndex = MOCK_COURSES.findIndex((c) => c.id === courseId);
-    if (courseIndex > -1) {
-      const deletedCourse = MOCK_COURSES[courseIndex];
-      MOCK_COURSES.splice(courseIndex, 1);
-      deletedFromCourses = true;
-      console.log(`MOCK: Deleted course ${courseId} from MOCK_COURSES.`);
-      console.log("DELETED COURSE DATA:", deletedCourse);
-    }
-
-    const allUnitsIndex = MOCK_COURSES_ALL_UNITS.findIndex(
-      (c) => c.id === courseId
-    );
-    if (allUnitsIndex > -1) {
-      const deletedAllUnitsCourse = MOCK_COURSES_ALL_UNITS[allUnitsIndex];
-      MOCK_COURSES_ALL_UNITS.splice(allUnitsIndex, 1);
-      deletedFromAllUnits = true;
-      console.log(
-        `MOCK: Deleted course ${courseId} from MOCK_COURSES_ALL_UNITS.`
-      );
-      console.log("DELETED ALL_UNITS COURSE DATA:", deletedAllUnitsCourse);
-    }
-
-    if (!deletedFromCourses && !deletedFromAllUnits) {
-      throw new Error(`MOCK: Course ${courseId} not found for deletion.`);
-    }
-
-    console.log(
-      `MOCK: Deletion completed. MOCK_COURSES size: ${MOCK_COURSES.length}, MOCK_COURSES_ALL_UNITS size: ${MOCK_COURSES_ALL_UNITS.length}`
-    );
-    return;
-  }
+ 
 
   try {
     if (!courseId) throw new Error("Course ID is required");
     await apiClient.delete(`/api/courses/${courseId}`);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
-
-
 
 /**
  * Search courses by name or code
  */
 export async function searchCourses(searchTerm: string): Promise<Course[]> {
-  if (isMockEnabled) {
-    await simulateDelay(600);
-
-    const searchLower = searchTerm.toLowerCase();
-    const filteredCourses = MOCK_COURSES.filter(
-      (course) =>
-        course.name.toLowerCase().includes(searchLower) ||
-        course.code.toLowerCase().includes(searchLower) ||
-        course.description.toLowerCase().includes(searchLower)
-    );
-
-    console.log(`MOCK: Searching courses with term "${searchTerm}"`);
-    console.log("SEARCH RESULTS:", filteredCourses);
-    console.log(
-      "MATCHED COURSE IDs:",
-      filteredCourses.map((c) => c.id)
-    );
-
-    return filteredCourses;
-  }
+ 
 
   try {
     // Note: Your backend might not have a search endpoint
@@ -780,57 +742,7 @@ export async function searchCourses(searchTerm: string): Promise<Course[]> {
         course.description.toLowerCase().includes(searchLower)
     );
   } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-/**
- * Get course statistics
- */
-export async function getCourseStats(courseId: CourseId): Promise<{
-  totalStudents: number;
-  activeStudents: number;
-  averageGrade: number;
-  unitCount: number;
-}> {
-  if (isMockEnabled) {
-    await simulateDelay(400);
-
-    const course =
-      MOCK_COURSES_ALL_UNITS.find((c) => c.id === courseId) ||
-      MOCK_COURSES.find((c) => c.id === courseId);
-
-    if (!course) {
-      console.error(`MOCK: Course ${courseId} not found for stats`);
-      throw new Error(`Course not found: ${courseId}`);
-    }
-
-    const stats = {
-      totalStudents: course.enrollments?.length || 0,
-      activeStudents:
-        course.enrollments?.filter((e) => e.status === "ACTIVE").length || 0,
-      averageGrade: 85.5,
-      unitCount: course.units?.length || 0,
-    };
-
-    console.log(`MOCK: Returning stats for course ${courseId}`);
-    console.log("COURSE STATS DATA:", stats);
-
-    return stats;
-  }
-
-  try {
-    // Note: Your backend might not have a stats endpoint
-    // You might need to calculate from course data
-    const course = await fetchCourseByIdAllUnits(courseId);
-    return {
-      totalStudents: course.enrollments.length,
-      activeStudents: course.enrollments.filter(e => e.status === "ACTIVE").length,
-      averageGrade: 0, // You might need to calculate this from grades
-      unitCount: course.units.length
-    };
-  } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -838,17 +750,12 @@ export async function getCourseStats(courseId: CourseId): Promise<{
  * Enroll student in course
  */
 export async function enrollStudent(courseId: CourseId, studentId: string): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(600);
-    console.log(`MOCK: Enrolling student ${studentId} in course ${courseId}`);
-    return;
-  }
-
+ 
   try {
-    const backendCommand: EnrollStudentRequest = mapEnrollStudentToBackendCommand(studentId);
+    const backendCommand = await mapEnrollStudentToBackendCommand(studentId);
     await apiClient.post(`/api/courses/${courseId}/enrollments`, backendCommand);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -856,15 +763,44 @@ export async function enrollStudent(courseId: CourseId, studentId: string): Prom
  * Unenroll student from course
  */
 export async function unenrollStudent(courseId: CourseId, studentId: string): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(600);
-    console.log(`MOCK: Unenrolling student ${studentId} from course ${courseId}`);
-    return;
-  }
-
+  
   try {
     await apiClient.delete(`/api/courses/${courseId}/enrollments/${studentId}`);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
+  }
+}
+
+
+
+// CURRENTLY WORKS
+
+export async function uploadCourseImageFile(courseId: string, file: File): Promise<string> {
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await apiClient.post<SuccessResponseDTO>(
+      `/api/courses/${courseId}/image/upload`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    // Extract the URL from the response
+    // Based on your backend: data.data.url
+    const imageUrl = response.data.data?.url || response.data.data;
+    
+    if (!imageUrl) {
+      throw new Error("No image URL returned from upload");
+    }
+
+    return imageUrl;
+  } catch (error) {
+    return await handleApiError(error);
   }
 }

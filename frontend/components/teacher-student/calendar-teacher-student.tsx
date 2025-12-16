@@ -1,4 +1,4 @@
-// components/calendar.tsx
+// File: src/app/features/calendar/components/CalendarView.tsx
 "use client";
 
 import * as React from "react";
@@ -10,6 +10,8 @@ import {
   ChevronRight,
   Calendar as CalendarIcon,
   Loader2,
+  Users,
+  User,
 } from "lucide-react";
 import {
   Assignment,
@@ -28,16 +30,18 @@ import { Submission } from "@/app/domain/entities";
 import { StudentTaskView } from "../student/tasks-transactional-view-student";
 import { StudentQuizView } from "../student/quiz-transactional-view-student";
 import { QuizView as QuizTeacherView } from "../teacher/quiz-view-information-teacher";
-import { TaskView } from "../teacher/task-view-information-teacher";
+import { AssignmentInfoView } from "../teacher/task-view-information-teacher";
 import {
   useQuizSubmission,
   useTaskSubmission,
 } from "@/components/teacher-student/hooks/submission-hooks";
+import { useUserTeam } from "./hooks/team-hooks";
 
 export type CalendarResource = Assignment | Quiz;
 
 // Date utilities
 const dateFns = {
+
   format: (date: Date, formatStr: string) => {
     const d = new Date(date);
     if (formatStr === "yyyy-MM-dd") {
@@ -118,10 +122,14 @@ const getResourceStyles = (resource: CalendarResource) => {
   const type = getResourceType(resource);
   switch (type) {
     case "ASSIGNMENT":
+      const assignment = resource as Assignment;
+      const isGroupAssignment = assignment.deliveryMode === "TEAM";
       return {
-        icon: "📝",
-        color: "text-red-600 bg-red-100 border-red-200",
-        title: "Assignment",
+        icon: isGroupAssignment ? "👥" : "📝",
+        color: isGroupAssignment 
+          ? "text-blue-600 bg-blue-100 border-blue-200" 
+          : "text-red-600 bg-red-100 border-red-200",
+        title: isGroupAssignment ? "Group Assignment" : "Individual Assignment",
       };
     case "QUIZ":
       return {
@@ -141,28 +149,6 @@ const getResourceStyles = (resource: CalendarResource) => {
 const formatForAPI = (date: Date): string => {
   return date.toISOString().split("T")[0] + "T00:00:00";
 };
-
-// Mock submission data for student submissions
-const MOCK_SUBMISSIONS: Submission[] = [
-  {
-    id: "sub-001",
-    assignmentId: "task-101",
-    studentId: "user-001",
-    content: "I have completed the wireframe design project with 5 key screens as requested.",
-    attachments: [
-      {
-        name: "wireframes.fig",
-        storagePath: "/submissions/wireframes.fig",
-        createdAt: "2024-11-10T10:00:00Z",
-      },
-    ],
-    submittedAt: "2024-11-10T10:00:00Z",
-    status: "SUBMITTED",
-    grade: { value: 80, maxScore: 100 },
-    teacherFeedback: "Great work on the wireframes! The navigation flow is intuitive and the WCAG compliance is well implemented.",
-    courseID: "course-001",
-  },
-];
 
 interface CalendarViewProps {
   userId: string;
@@ -195,14 +181,10 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     error: quizzesError,
   } = useQuizzesByMonth(userId, monthStartString, userType);
 
-  // Fetch detailed data when resource is selected
-  const { data: taskDetail, isLoading: taskLoading } = useTaskDetail(
-    selectedResourceId && activeResource && "deliveryMode" in activeResource
-      ? selectedResourceId
-      : null,
-    userType
-  );
+  // Get user's team for group assignments
+  const { data: userTeam } = useUserTeam(userId);
 
+  // Only fetch quiz detail when needed
   const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(
     selectedResourceId && activeResource && "questions" in activeResource
       ? selectedResourceId
@@ -220,7 +202,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     const grouped: { [dateKey: string]: CalendarResource[] } = {};
 
     allResources.forEach((resource) => {
-      // use a safe cast to avoid TypeScript narrowing issues on the union type
       const dueDate = "dueDate" in resource ? (resource as any).dueDate : null;
 
       if (dueDate) {
@@ -264,26 +245,39 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
   const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
     useQuizSubmission();
 
+  // UPDATED: Handle task submission with delivery mode detection
   const handleTaskSubmit = async (submissionData: {
-    content: string;
-    attachments: File[];
-  }) => {
-    if (!activeResource || !user?.id) return;
+  content: string;
+  attachments: File[];
+}) => {
+  if (!activeResource || !user?.id) return;
 
-    try {
-      await submitTaskMutation.mutateAsync({
-        assignmentId: activeResource.id,
-        studentId: user.id,
-        content: submissionData.content,
-        attachments: submissionData.attachments,
-      });
-
-      // Return to carousel view after submission
-      handleBackFromDetail();
-    } catch (error) {
-      console.error("Failed to submit task:", error);
+  try {
+    const assignment = activeResource as Assignment;
+    const submissionType = assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
+    
+    // Get groupId for team submissions
+    let groupId: string | undefined;
+    if (submissionType === "TEAM" && userTeam) {
+      groupId = userTeam.teamId;
     }
-  };
+    
+    const submissionParams = {
+      assignmentId: activeResource.id,
+      studentId: user.id,
+      content: submissionData.content,
+      attachments: submissionData.attachments,
+      submissionType: submissionType as "INDIVIDUAL" | "TEAM",
+      ...(groupId && { groupId })
+    };
+
+    await submitTaskMutation.mutateAsync(submissionParams);
+
+    handleBackFromDetail();
+  } catch (error) {
+    console.error("Failed to submit task:", error);
+  }
+};
 
   const handleQuizSubmit = async (answers: any) => {
     if (!activeResource || !user?.id) return;
@@ -305,7 +299,9 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     resourceId: string
   ): Submission | undefined => {
     if (userType === "student") {
-      return MOCK_SUBMISSIONS.find((sub) => sub.assignmentId === resourceId);
+      return tasks
+        .flatMap((t) => t.submissions)
+        .find((s) => s.studentId === userId);
     }
     return undefined;
   };
@@ -398,7 +394,8 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     if (!activeResource) return null;
 
     const resourceType = getResourceType(activeResource);
-    const isLoading = taskLoading || quizLoading;
+    
+    const isLoading = quizLoading && resourceType === "QUIZ";
 
     if (isLoading) {
       return (
@@ -408,7 +405,7 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
                 <p className="text-xl text-primary">
-                  Loading {resourceType.toLowerCase()} details...
+                  Loading quiz details...
                 </p>
               </div>
             </div>
@@ -419,18 +416,20 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
 
     // Student View - Show submission interfaces
     if (userType === "student") {
-      if (resourceType === "ASSIGNMENT" && taskDetail) {
-        const existingSubmission = getExistingSubmission(taskDetail.id);
+      if (resourceType === "ASSIGNMENT") {
+        const assignment = activeResource as Assignment;
+        const existingSubmission = getExistingSubmission(assignment.id);
 
         return (
           <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <div className="container mx-auto py-4">
               <StudentTaskView
                 onExit={handleBackFromDetail}
-                assignment={taskDetail}
+                assignment={assignment}
                 onSubmit={handleTaskSubmit}
                 studentId={userId}
                 isSubmitting={isSubmittingTask}
+                // userTeam={userTeam}
               />
               <div className="text-center mt-4">
                 <Button
@@ -451,7 +450,7 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <div className="container mx-auto py-4">
               <StudentQuizView
-                quiz={quizDetail}
+                quizData={quizDetail}
                 onSubmit={handleQuizSubmit}
                 onExit={handleBackFromDetail}
                 studentId={userId}
@@ -468,8 +467,8 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
             <div className="min-h-full bg-background p-4 md:p-6">
               <div className="max-w-4xl mx-auto">
-                {resourceType === "ASSIGNMENT" && taskDetail && (
-                  <TaskView task={taskDetail} onClose={handleBackFromDetail} />
+                {resourceType === "ASSIGNMENT" && (
+                  <AssignmentInfoView assignment={activeResource as Assignment} onClose={handleBackFromDetail} />
                 )}
                 {resourceType === "QUIZ" && quizDetail && (
                   <QuizTeacherView
@@ -586,7 +585,11 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
         <div className="flex flex-wrap gap-4 justify-center text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-            <span>Assignment</span>
+            <span>Individual Assignment</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
+            <span>Group Assignment</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-purple-100 border border-purple-200 rounded"></div>
