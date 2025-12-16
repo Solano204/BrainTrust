@@ -30,4 +30,24 @@ export const studentKeys = {
   // Statistics
   stats: () => [...studentKeys.all, "stats"] as const,
   statsByCourse: (courseId: CourseId) => [...studentKeys.stats(), courseId] as const,
+
+  
 } as const;
+
+
+
+export const studentKeysEnrollment = {
+  all: ['students'] as const,
+  
+  enrollments: () => [...studentKeys.all, 'enrollments'] as const,
+  enrollmentsByCourse: (courseId: string) => 
+    [...studentKeys.enrollments(), courseId] as const,
+  
+  stats: () => [...studentKeys.all, 'stats'] as const,
+  statsByCourse: (courseId: string) => 
+    [...studentKeys.stats(), courseId] as const,
+  
+  availableUsers: () => [...studentKeys.all, 'available'] as const,
+  availableUsersByCourse: (courseId: string) => 
+    [...studentKeys.availableUsers(), courseId] as const,
+};

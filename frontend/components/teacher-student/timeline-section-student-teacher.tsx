@@ -1,4 +1,4 @@
-// components/timeline-section.tsx
+// File: components/timeline-section.tsx
 "use client";
 
 import * as React from "react";
@@ -17,6 +17,8 @@ import {
   Check,
   Loader2,
   Calendar,
+  Users,
+  User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -24,28 +26,22 @@ import {
   Assignment,
   Quiz,
 } from "@/app/domain/entities/CourseEntities";
-import {
-  useTimelineResources,
-  useTimelineMutations,
-} from "@/app/presentation/hooks/calendar/timeline-hooks";
-import {
-  formatForAPI,
-  getDaysUntilDue,
-  getStartOfWeek,
-  getTimelineUrgency,
-} from "@/app/presentation/hooks/calendar/date-utils";
-import { useTaskDetail } from "@/app/presentation/hooks/calendar/task-hooks";
-import { useQuizDetail } from "@/app/presentation/hooks/calendar/quiz-hooks";
 import { useAuth } from "@/app/context/AuthContext";
 import { StudentTaskView } from "../student/tasks-transactional-view-student";
 import { StudentQuizView } from "../student/quiz-transactional-view-student";
 import { QuizView as QuizTeacherView } from "../teacher/quiz-view-information-teacher";
-import { TaskView } from "../teacher/task-view-information-teacher";
+import { AssignmentInfoView } from "../teacher/task-view-information-teacher";
 import {
   useQuizSubmission,
   useTaskSubmission,
-} from "@/app/presentation/hooks/course/student/submission-hooks";
+} from "@/components/teacher-student/hooks/submission-hooks";
 import { TimelineSectionSkeleton } from "../sketons/timeline-skeleton";
+import { useQuizDetail } from "@/app/presentation/hooks/calendar/quiz-hooks";
+import { useUserTeam } from "./hooks/team-hooks";
+
+// IMPORT THE EXISTING HOOKS
+import { useThisWeekTasks } from "@/app/presentation/hooks/calendar/task-hooks";
+import { useThisWeekQuizzes } from "@/app/presentation/hooks/calendar/quiz-hooks";
 
 export type TimelineResourceData = Assignment | Quiz;
 
@@ -58,14 +54,12 @@ const getResourceType = (
 };
 
 const getResourceIcon = (resource: TimelineResourceData): React.ElementType => {
-  switch (getResourceType(resource)) {
-    case "ASSIGNMENT":
-      return AlertTriangle;
-    case "QUIZ":
-      return ClipboardList;
-    default:
-      return FileText;
+  const type = getResourceType(resource);
+  if (type === "ASSIGNMENT") {
+    const assignment = resource as Assignment;
+    return assignment.deliveryMode === "TEAM" ? Users : AlertTriangle;
   }
+  return ClipboardList;
 };
 
 const getResourceTimeDisplay = (resource: TimelineResourceData): string => {
@@ -117,13 +111,47 @@ const getResourceStatus = (
         const isSubmitted = assignment.submissions?.some(
           (s) => s.studentId === userId
         );
-        return isSubmitted ? "Submitted" : "Not submitted";
+        const deliveryMode =
+          assignment.deliveryMode === "TEAM" ? "Group" : "Individual";
+        return isSubmitted
+          ? `Submitted (${deliveryMode})`
+          : `Not submitted (${deliveryMode})`;
       case "QUIZ":
         return "Not attempted";
       default:
         return "Not started";
     }
   }
+};
+
+// Date utility functions (add these if missing)
+const getDaysUntilDue = (dueDate: string | null): number => {
+  if (!dueDate) return Infinity;
+  const due = new Date(dueDate);
+  const now = new Date();
+  const diffTime = due.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+const getTimelineUrgency = (dueDate: string | null): "urgent" | "warning" | "normal" => {
+  const daysUntilDue = getDaysUntilDue(dueDate);
+  
+  if (daysUntilDue < 0) return "urgent";
+  if (daysUntilDue <= 2) return "warning";
+  return "normal";
+};
+
+const getStartOfWeek = (date: Date = new Date()): Date => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const formatForAPI = (date: Date): string => {
+  return date.toISOString().split('T')[0] + 'T00:00:00';
 };
 
 interface TimelineSectionProps {
@@ -147,21 +175,23 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     return formatForAPI(startOfWeek);
   }, []);
 
+  // USE EXISTING HOOKS FOR TASKS AND QUIZZES
   const {
-    data: timelineResources = [],
-    isLoading,
-    error,
-  } = useTimelineResources(userId, weekStart, userType);
-  const { dismissItem } = useTimelineMutations();
+    data: tasks = [],
+    isLoading: tasksLoading,
+    error: tasksError,
+  } = useThisWeekTasks(userId, weekStart, userType);
 
-  // Fetch detailed resource data when a resource is clicked
-  const { data: taskDetail, isLoading: taskLoading } = useTaskDetail(
-    selectedResourceId && activeResource && "deliveryMode" in activeResource
-      ? selectedResourceId
-      : null,
-    userType
-  );
+  const {
+    data: quizzes = [],
+    isLoading: quizzesLoading,
+    error: quizzesError,
+  } = useThisWeekQuizzes(userId, weekStart, userType);
 
+  // Get user's team for group assignments
+  const { data: userTeam } = useUserTeam(userId);
+
+  // Only fetch quiz detail when needed
   const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(
     selectedResourceId && activeResource && "questions" in activeResource
       ? selectedResourceId
@@ -169,8 +199,13 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     userType
   );
 
+  // Combine tasks and quizzes for timeline
+  const timelineResources = React.useMemo(() => {
+    return [...tasks, ...quizzes];
+  }, [tasks, quizzes]);
+
   const handleDismiss = (id: string) => {
-    dismissItem.mutate(id);
+    // Implement dismiss logic if needed
     setDismissingId(null);
   };
 
@@ -189,6 +224,7 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
   const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
     useQuizSubmission();
 
+  // Handle task submission with delivery mode detection
   const handleTaskSubmit = async (submissionData: {
     content: string;
     attachments: File[];
@@ -196,14 +232,27 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     if (!activeResource || !user?.id) return;
 
     try {
-      await submitTaskMutation.mutate({
+      const assignment = activeResource as Assignment;
+      const submissionType =
+        assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
+
+      // Get groupId for team submissions
+      let groupId: string | undefined;
+      if (submissionType === "TEAM" && userTeam) {
+        groupId = userTeam.teamId;
+      }
+
+      const submissionParams = {
         assignmentId: activeResource.id,
         studentId: user.id,
         content: submissionData.content,
         attachments: submissionData.attachments,
-      });
+        submissionType: submissionType as "INDIVIDUAL" | "TEAM",
+        ...(groupId && { groupId }),
+      };
 
-      // Return to carousel view after submission
+      await submitTaskMutation.mutate(submissionParams);
+
       handleCloseModal();
     } catch (error) {
       console.error("Failed to submit task:", error);
@@ -225,6 +274,7 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
       console.error("Failed to submit quiz:", error);
     }
   };
+
   // Sort by urgency and due date
   const sortedResources = React.useMemo(() => {
     return [...timelineResources].sort((a, b) => {
@@ -257,7 +307,7 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     if (!activeResource) return null;
 
     const resourceType = getResourceType(activeResource);
-    const isLoading = taskLoading || quizLoading;
+    const isLoading = quizLoading && resourceType === "QUIZ";
 
     if (isLoading) {
       return <TimelineSectionSkeleton />;
@@ -265,16 +315,18 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
 
     // Show different views based on user role and resource type
     if (userType === "student") {
-      if (resourceType === "ASSIGNMENT" && taskDetail) {
+      if (resourceType === "ASSIGNMENT") {
+        // Use activeResource directly since we have all task data
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto">
               <StudentTaskView
                 onExit={handleCloseModal}
-                assignment={taskDetail}
+                assignment={activeResource as Assignment}
                 onSubmit={handleTaskSubmit}
                 studentId={userId}
                 isSubmitting={isSubmittingTask}
+                // userTeam={userTeam}
               />
             </div>
           </div>
@@ -284,7 +336,7 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto">
               <StudentQuizView
-                quiz={quizDetail}
+                quizData={quizDetail}
                 onSubmit={handleQuizSubmit}
                 onExit={handleCloseModal}
                 studentId={userId}
@@ -301,8 +353,11 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
             <div className="min-h-full bg-background p-4 md:p-6">
               <div className="max-w-4xl mx-auto">
-                {resourceType === "ASSIGNMENT" && taskDetail && (
-                  <TaskView task={taskDetail} onClose={handleCloseModal} />
+                {resourceType === "ASSIGNMENT" && (
+                  <AssignmentInfoView
+                    assignment={activeResource as Assignment}
+                    onClose={handleCloseModal}
+                  />
                 )}
                 {resourceType === "QUIZ" && quizDetail && (
                   <QuizTeacherView
@@ -334,6 +389,9 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
       end: end.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
     };
   }, []);
+
+  const isLoading = tasksLoading || quizzesLoading;
+  const hasError = tasksError || quizzesError;
 
   return (
     <>
@@ -379,7 +437,7 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
               Loading this week's activities...
             </p>
           </div>
-        ) : error ? (
+        ) : hasError ? (
           <div className="text-center py-12 text-destructive">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
               <AlertTriangle className="h-8 w-8 text-destructive" />
@@ -412,6 +470,9 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                 "dueDate" in item ? item.dueDate : null
               );
               const itemIcon = getResourceIcon(item);
+              const isGroupAssignment =
+                getResourceType(item) === "ASSIGNMENT" &&
+                (item as Assignment).deliveryMode === "TEAM";
 
               return (
                 <div
@@ -435,6 +496,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                           ? "bg-destructive/10 text-destructive"
                           : itemUrgency === "warning"
                           ? "bg-warning/10 text-warning"
+                          : isGroupAssignment
+                          ? "bg-blue-100 text-blue-600"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -453,6 +516,11 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                           )}
                         >
                           {item.title}
+                          {isGroupAssignment && (
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              Group
+                            </Badge>
+                          )}
                         </h3>
                         <Badge
                           variant={
@@ -500,20 +568,15 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => handleDismiss(item.id)}
-                            disabled={dismissItem.isPending}
+                            disabled={false} // Remove if you implement actual mutation
                           >
-                            {dismissItem.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Check className="h-4 w-4" />
-                            )}
+                            <Check className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
                             onClick={() => setDismissingId(null)}
-                            disabled={dismissItem.isPending}
                           >
                             <X className="h-4 w-4" />
                           </Button>

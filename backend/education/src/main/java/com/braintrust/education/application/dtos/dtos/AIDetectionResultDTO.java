@@ -1,14 +1,23 @@
 package com.braintrust.education.application.dtos.dtos;
 
-import java.time.LocalDateTime;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.DetectedSegmentDTO;
 
-// 📍 aidetection/application/dtos/AIDetectionResultDTO.java
+import java.util.List;
+import java.util.Map;
+
 public record AIDetectionResultDTO(
         String analysisId,
-        String probability,
-        String percentage,
-        boolean isLikelyAI,
-        String confidenceLevel,
+        String submissionId,
+        String aiProbability,
+        String aiPercentage,
         String modelUsed,
-        LocalDateTime analyzedAt
+        String confidenceLevel,
+        boolean likelyAI,
+        boolean uncertain,
+        boolean likelyHuman,
+        String status,
+        String analyzedAt,
+        String errorMessage,
+        List<DetectedSegmentDTO> detectedSegments, // ✅ AI detected segments are here
+        Map<String, Object> metadata
 ) {}

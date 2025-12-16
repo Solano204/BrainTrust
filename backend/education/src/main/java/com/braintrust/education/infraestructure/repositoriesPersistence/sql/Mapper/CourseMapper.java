@@ -10,22 +10,72 @@ import com.braintrust.education.domain.model.Enrollment;
 import com.braintrust.education.domain.valueobjects.CourseCode;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
+import com.braintrust.identity.application.dtos.dtos.MinimalUserInfoDTO;
+import com.braintrust.identity.application.ports.in.UserService;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-// other imports...
 
 @Component
 public class CourseMapper {
 
     private static final Logger log =
             LoggerFactory.getLogger(CourseMapper.class);
+
+
+    private final UserService userService;
+
+    // ✅ Add constructor injection for UserService
+    public CourseMapper(UserService userService) {
+        this.userService = userService;
+        log.info("✅ CourseMapper initialized with UserService");
+    }
+
+    public CourseDTO mapToCourseDTO(Course course) {
+        log.trace("Mapping Course {} to DTO.", course.getId().getValue());
+
+        String teacherName = getTeacherName(course.getTeacherId());
+
+        return new CourseDTO(
+                course.getId().getValue(),
+                course.getCode().getValue(),
+                course.getName(),
+                course.getDescription(),
+                course.getUrlImage(),
+                course.getGrade(),
+                course.getGroup(),
+                course.getTeacherId().getValue(),
+                teacherName, // ✅ Now using real teacher name
+                course.isActive(),
+                course.getEnrollments().size(),
+                0, // TODO: Get assignment count
+                course.getUnits().size(),
+                java.time.LocalDateTime.now() // TODO: Add createdAt to Course entity
+        );
+    }
+
+    /**
+     * Get teacher name from UserService
+     */
+    private String getTeacherName(UserId teacherId) {
+        try {
+            MinimalUserInfoDTO teacherInfo = userService.getMinimalUserInfo(teacherId);
+            if (teacherInfo != null) {
+                return teacherInfo.fullName();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get teacher name for ID {}: {}",
+                    teacherId.getValue(), e.getMessage());
+        }
+
+        // Fallback
+        return "Teacher Name";
+    }
+
 
     /**
      * Converts a Domain Course model to a JPA Entity.
@@ -80,34 +130,38 @@ public class CourseMapper {
     // ------------------------------------------------------------------
 
     /**
-     * Maps the Course Domain Model to the public CourseDTO.
+     * Maps the Enrollment Domain Model to the public EnrollmentDTO.
+     * NOTE: This is a basic mapping without user details. For full details,
+     * use the method in CourseApplicationService that fetches user information.
      */
-    public static CourseDTO mapToCourseDTO(Course course) {
-        // Logging trace level for frequent DTO operations
-        log.trace("Mapping Course {} to DTO.", course.getId().getValue());
+    public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment) {
+        GradeDTO gradeDTO = enrollment.getFinalGrade() != null
+                ? new GradeDTO(
+                enrollment.getFinalGrade().getValue().toString(),
+                enrollment.getFinalGrade().getMaxScore().toString(),
+                enrollment.getFinalGrade().getPercentage().toString()
+        )
+                : null;
 
-        return new CourseDTO(
-                course.getId().getValue(),
-                course.getCode().getValue(),
-                course.getName(),
-                course.getDescription(),
-                course.getUrlImage(),
-                course.getGrade(),
-                course.getGroup(),
-                course.getTeacherId().getValue(),
-                "Teacher Name", // TODO: Get from UserQueryPort
-                course.isActive(),
-                course.getEnrollments().size(),
-                0, // TODO: Get assignment count
-                course.getUnits().size(),
-                java.time.LocalDateTime.now() // TODO: Add createdAt to Course entity
+        // Return basic EnrollmentDTO without user details
+        return new EnrollmentDTO(
+                enrollment.getId().getValue(),
+                enrollment.getCourseId().getValue(),
+                "Course Name", // TODO: Get from Course
+                enrollment.getStudentId().getValue(),
+                "Student Name", // TODO: Get from UserService
+                "", // studentEmail - empty in basic mapping
+                "", // studentRefId - empty in basic mapping
+                enrollment.getEnrollmentDate().toString(),
+                enrollment.getStatus().name(),
+                gradeDTO
         );
     }
 
     /**
-     * Maps the Enrollment Domain Model to the public EnrollmentDTO.
+     * Overloaded method to map Enrollment with Course name
      */
-    public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment) {
+    public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment, String courseName) {
         GradeDTO gradeDTO = enrollment.getFinalGrade() != null
                 ? new GradeDTO(
                 enrollment.getFinalGrade().getValue().toString(),
@@ -119,9 +173,11 @@ public class CourseMapper {
         return new EnrollmentDTO(
                 enrollment.getId().getValue(),
                 enrollment.getCourseId().getValue(),
-                "Course Name", // TODO: Get from Course
+                courseName,
                 enrollment.getStudentId().getValue(),
-                "Student Name", // TODO: Get from UserQueryPort
+                "Student Name", // TODO: Get from UserService
+                "", // studentEmail - empty in basic mapping
+                "", // studentRefId - empty in basic mapping
                 enrollment.getEnrollmentDate().toString(),
                 enrollment.getStatus().name(),
                 gradeDTO
@@ -131,7 +187,7 @@ public class CourseMapper {
     /**
      * Maps the CourseUnit Domain Model to the public CourseUnitDTO.
      */
-    public static CourseUnitDTO mapToUnitDTO(CourseUnit unit) {
+    public CourseUnitDTO mapToUnitDTO(CourseUnit unit) {
         return new CourseUnitDTO(
                 unit.getId().getValue(),
                 unit.getCourseId().getValue(),
@@ -139,6 +195,43 @@ public class CourseMapper {
                 unit.getUrlImage(),
                 unit.getNumUnity(),
                 unit.getDescription()
+        );
+    }
+
+
+
+
+
+    /**
+     * Maps Enrollment with all user details (to be used with UserService)
+     * This is the complete mapping method for enrollment details.
+     */
+    public static EnrollmentDTO mapToEnrollmentDTOWithDetails(
+            Enrollment enrollment,
+            String courseName,
+            String studentName,
+            String studentEmail,
+            String studentRefId) {
+
+        GradeDTO gradeDTO = enrollment.getFinalGrade() != null
+                ? new GradeDTO(
+                enrollment.getFinalGrade().getValue().toString(),
+                enrollment.getFinalGrade().getMaxScore().toString(),
+                enrollment.getFinalGrade().getPercentage().toString()
+        )
+                : null;
+
+        return new EnrollmentDTO(
+                enrollment.getId().getValue(),
+                enrollment.getCourseId().getValue(),
+                courseName,
+                enrollment.getStudentId().getValue(),
+                studentName,
+                studentEmail,
+                studentRefId,
+                enrollment.getEnrollmentDate().toString(),
+                enrollment.getStatus().name(),
+                gradeDTO
         );
     }
 }

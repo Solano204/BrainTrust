@@ -32,7 +32,6 @@ public class Quiz extends AggregateRoot<QuizId> {
         this.showCorrectAnswers = true;
     }
 
-
     public void update(String title, String description, LocalDateTime availableFrom,
                        LocalDateTime availableUntil, Integer timeLimitMinutes) {
         this.title = validateTitle(title);
@@ -41,7 +40,6 @@ public class Quiz extends AggregateRoot<QuizId> {
         this.availableUntil = availableUntil;
         this.timeLimitMinutes = timeLimitMinutes;
     }
-
 
     // ✅ Update factory method
     public static Quiz create(CourseId courseId, UnitId unitId, String title, String description,
@@ -80,6 +78,7 @@ public class Quiz extends AggregateRoot<QuizId> {
         }
         return quiz;
     }
+
     // 🎯 Domain Behavior
     public void addQuestion(QuizQuestion question) {
         questions.add(question);
@@ -106,6 +105,13 @@ public class Quiz extends AggregateRoot<QuizId> {
                 .sum();
     }
 
+    // ✅ NEW: Check if quiz has submissions
+    public boolean hasSubmissions() {
+        // This would need to check if there are any quiz submissions
+        // For now, return false - you'll need to implement this based on your submission tracking
+        return false;
+    }
+
     private String validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("Quiz title cannot be null or empty");
@@ -113,9 +119,10 @@ public class Quiz extends AggregateRoot<QuizId> {
         return title.trim();
     }
 
+
+
     // Getters
     public UnitId getUnitId() { return unitId; }
-
     public CourseId getCourseId() { return courseId; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }

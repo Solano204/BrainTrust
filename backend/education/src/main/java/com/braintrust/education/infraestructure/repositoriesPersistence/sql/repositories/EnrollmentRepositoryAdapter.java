@@ -2,6 +2,7 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.rep
 
 import com.braintrust.education.application.ports.out.EnrollmentRepository;
 import com.braintrust.education.domain.model.Enrollment;
+import com.braintrust.education.domain.model.EnrollmentStatus;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.EnrollmentId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.EnrollmentEntityMapper;
@@ -36,6 +37,37 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
         this.mapper = mapper;
         log.info("Initialized EnrollmentRepositoryAdapter.");
     }
+
+
+    @Override
+    public int countByCourseAndStatus(CourseId courseId, EnrollmentStatus status) {
+        log.debug("Counting enrollments for Course ID: {} with Status: {}",
+                courseId.getValue(), status.name());
+
+        long count = jpaRepository.countByCourseIdAndStatus(courseId.getValue(), status.name());
+
+        // Convert to int (assuming count will fit within int range for your use case)
+        int result = Math.toIntExact(count);
+        log.trace("Found {} enrollments for Course ID: {} with Status: {}",
+                result, courseId.getValue(), status.name());
+
+        return result;
+    }
+
+    @Override
+    public List<String> findStudentIdsByCourse(CourseId courseId, EnrollmentStatus status) {
+        log.debug("Finding student IDs for Course ID: {} with Status: {}",
+                courseId.getValue(), status.name());
+
+        List<String> studentIds = jpaRepository.findStudentIdsByCourseIdAndStatus(
+                courseId.getValue(), status.name());
+
+        log.trace("Found {} student IDs for Course ID: {} with Status: {}",
+                studentIds.size(), courseId.getValue(), status.name());
+
+        return studentIds;
+    }
+
 
     @Override
     @Transactional

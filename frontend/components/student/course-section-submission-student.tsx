@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/StudentCourseTaskOverview.tsx
 "use client"
 
 import { useState } from "react"
@@ -7,11 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Search, Eye, Loader2, BarChart3, FileText, HelpCircle, Calendar, Clock, CheckCircle, XCircle } from "lucide-react"
+import { Search, Eye, Loader2, BarChart3, FileText, HelpCircle, Calendar, Clock, CheckCircle, XCircle, AlertCircle, BookOpen, ArrowLeft } from "lucide-react"
 import { useAuth } from "@/app/context/AuthContext"
-import { useStudentTaskOverview } from "@/app/presentation/hooks/course/student/student-task-hooks"
+import { useStudentTaskOverview } from "@/components/student/hooks/student-task-hooks"
 import { StudentTaskSubmissionView } from "./StudentTaskSubmissionView"
 import { StudentQuizView } from "./StudentQuizViewSubmission"
+import { useCourseAllUnits } from "@/components/teacher/hooks/courses-hooks"
 
 interface StudentCourseTaskOverviewProps {
     courseId: string
@@ -19,18 +19,42 @@ interface StudentCourseTaskOverviewProps {
 
 export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOverviewProps) {
     const { user } = useAuth()
+    const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState("assignments")
     const [selectedTask, setSelectedTask] = useState<string | null>(null)
     const [selectedQuiz, setSelectedQuiz] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
 
+    const { 
+        units: courseUnits, 
+        isLoading: isLoadingUnits, 
+        error: unitsError 
+    } = useCourseAllUnits(courseId)
+
     const {
         assignments,
         quizzes,
-        isLoading,
-        error,
-        stats
-    } = useStudentTaskOverview(courseId, user?.id || null)
+        stats,
+        isLoading: isLoadingTasks,
+        error: tasksError,
+        refetchAssignments,
+        refetchQuizzes,
+    } = useStudentTaskOverview(courseId, user?.id || null, selectedUnitId)
+
+    const handleSelectUnit = (unitId: string) => {
+        setSelectedUnitId(unitId)
+        setActiveTab("assignments")
+        setSelectedTask(null)
+        setSelectedQuiz(null)
+        setSearchTerm("")
+    }
+
+    const handleBackToUnits = () => {
+        setSelectedUnitId(null)
+        setSelectedTask(null)
+        setSelectedQuiz(null)
+        setSearchTerm("")
+    }
 
     const handleViewTask = (taskId: string) => {
         setSelectedTask(taskId)
@@ -42,24 +66,16 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
 
     const handleBackFromTask = () => {
         setSelectedTask(null)
+        refetchAssignments()
     }
 
     const handleBackFromQuiz = () => {
         setSelectedQuiz(null)
+        refetchQuizzes()
     }
 
-    // Filter tasks and quizzes based on search
-    const filteredAssignments = assignments.filter(assignment => 
-        assignment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        assignment.unit.toLowerCase().includes(searchTerm.toLowerCase())
-    )
 
-    const filteredQuizzes = quizzes.filter(quiz => 
-        quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        quiz.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
-    // Show task submission view
+    console.log("assignments", assignments)
     if (selectedTask) {
         const assignment = assignments.find(a => a.id === selectedTask)
         return assignment ? (
@@ -70,8 +86,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
         ) : null
     }
 
-    console.log("filteredQuizzes", quizzes)
-    // Show quiz view
     if (selectedQuiz) {
         const quiz = quizzes.find(q => q.id === selectedQuiz)
         return quiz ? (
@@ -81,6 +95,91 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
             />
         ) : null
     }
+
+    console.log("submissions", assignments)
+    if (!selectedUnitId) {
+        return (
+            <div className="p-4 md:p-6 lg:p-8 space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Course Units</h1>
+                        <p className="text-muted-foreground mt-2">
+                            Select a unit to view your tasks and quizzes
+                        </p>
+                    </div>
+                </div>
+
+                {isLoadingUnits ? (
+                    <Card className="p-8 text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                        <p className="text-muted-foreground">Loading units...</p>
+                    </Card>
+                ) : unitsError ? (
+                    <Card className="p-6 bg-destructive/10 border-destructive">
+                        <div className="flex items-center gap-3 text-destructive">
+                            <AlertCircle className="h-5 w-5" />
+                            <div>
+                                <h3 className="font-semibold">Error loading units</h3>
+                                <p className="text-sm">{unitsError.message}</p>
+                            </div>
+                        </div>
+                    </Card>
+                ) : courseUnits.length === 0 ? (
+                    <Card className="p-8 text-center text-muted-foreground">
+                        <BookOpen className="h-12 w-12 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No Units Available</h3>
+                        <p>There are no units in this course yet.</p>
+                    </Card>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {courseUnits.map((unit) => (
+                            <Card 
+                                key={unit.id} 
+                                className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group"
+                                onClick={() => handleSelectUnit(unit.id)}
+                            >
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <Badge variant="secondary" className="text-sm">
+                                            Unit {unit.numUnity}
+                                        </Badge>
+                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                            <BookOpen className="h-4 w-4 text-primary" />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
+                                            {unit.name}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground line-clamp-2">
+                                            {unit.description}
+                                        </p>
+                                    </div>
+
+                                    <Button className="w-full gap-2" variant="default">
+                                        <Eye className="h-4 w-4" />
+                                        View Tasks & Quizzes
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    const selectedUnit = courseUnits.find(unit => unit.id === selectedUnitId)
+
+    const filteredAssignments = assignments.filter(assignment => 
+        assignment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        assignment.unit.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const filteredQuizzes = quizzes.filter(quiz => 
+        quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) 
+    )
 
     const getStatusBadge = (status: string, isOverdue: boolean) => {
         if (isOverdue && !status) {
@@ -129,39 +228,58 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
 
     return (
         <div className="p-4 md:p-6 lg:p-8 space-y-6">
-            {/* Header with Statistics */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">My Tasks & Quizzes</h1>
-                    {stats && (
-                        <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                                <BarChart3 className="h-4 w-4" />
-                                Total: {stats.totalTasks} tasks
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <CheckCircle className="h-4 w-4" />
-                                Completed: {stats.completedTasks}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <Calendar className="h-4 w-4" />
-                                Pending: {stats.pendingTasks}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
-                                Average: {stats.averageGrade}%
-                            </span>
-                        </div>
-                    )}
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleBackToUnits}
+                        className="gap-2"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Units
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                            {selectedUnit?.name || "Unit Tasks & Quizzes"}
+                        </h1>
+                        {stats && (
+                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                    <BarChart3 className="h-4 w-4" />
+                                    Total: {stats.totalTasks} tasks
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <CheckCircle className="h-4 w-4" />
+                                    Completed: {stats.completedTasks}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    Pending: {stats.pendingTasks}
+                                </span>
+                                {stats.overdueTasks > 0 && (
+                                    <span className="flex items-center gap-1 text-destructive font-medium">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Overdue: {stats.overdueTasks}
+                                    </span>
+                                )}
+                                {stats.averageGrade > 0 && (
+                                    <span className="flex items-center gap-1">
+                                        <BarChart3 className="h-4 w-4" />
+                                        Average: {stats.averageGrade}%
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Search */}
             <Card className="p-6 shadow-md">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search my tasks or quizzes..."
+                        placeholder="Search tasks or quizzes..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -169,7 +287,18 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                 </div>
             </Card>
 
-            {/* Tabs for Assignments and Quizzes */}
+            {tasksError && (
+                <Card className="p-6 bg-destructive/10 border-destructive">
+                    <div className="flex items-center gap-3 text-destructive">
+                        <AlertCircle className="h-5 w-5" />
+                        <div>
+                            <h3 className="font-semibold">Error loading tasks</h3>
+                            <p className="text-sm">{tasksError}</p>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="assignments" className="flex items-center gap-2">
@@ -182,34 +311,31 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Assignments Tab */}
                 <TabsContent value="assignments" className="space-y-4">
-                    {isLoading ? (
+                    {isLoadingTasks ? (
                         <div className="p-8 text-center text-muted-foreground">
                             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
                             Loading your assignments...
-                        </div>
-                    ) : error ? (
-                        <div className="p-8 text-center text-destructive">
-                            <div className="h-8 w-8 mx-auto mb-4">⚠️</div>
-                            Error loading your assignments. Please try again.
                         </div>
                     ) : filteredAssignments.length === 0 ? (
                         <Card className="p-8 text-center text-muted-foreground">
                             <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                             <h3 className="text-lg font-semibold mb-2">No Assignments</h3>
-                            <p>You don't have any assignments in this course yet.</p>
+                            <p>
+                                {searchTerm 
+                                    ? "No assignments match your search."
+                                    : "You don't have any assignments in this unit yet."
+                                }
+                            </p>
                         </Card>
                     ) : (
                         <>
-                            {/* Desktop Table View */}
                             <Card className="overflow-hidden hidden lg:block shadow-lg">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
                                         <thead>
                                             <tr className="bg-muted/50 border-b border-border">
                                                 <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Assignment</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Unit</th>
                                                 <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Status</th>
                                                 <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Due Date</th>
                                                 <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Grade</th>
@@ -220,7 +346,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                             {filteredAssignments.map((assignment) => (
                                                 <tr key={assignment.id} className="border-b border-border hover:bg-muted/30 transition-colors">
                                                     <td className="px-6 py-4 font-medium">{assignment.name}</td>
-                                                    <td className="px-6 py-4 text-muted-foreground">{assignment.unit}</td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
                                                             {getStatusIcon(assignment.submission?.status || '', assignment.isOverdue)}
@@ -234,7 +359,10 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        {getGradeDisplay(assignment.submission?.grade, assignment.maxPoints)}
+                                                        {assignment.submission?.grade 
+                                                            ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
+                                                            : <span className="text-muted-foreground">—</span>
+                                                        }
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center justify-center gap-3">
@@ -256,7 +384,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                 </div>
                             </Card>
 
-                            {/* Mobile Card View */}
                             <div className="space-y-4 lg:hidden">
                                 {filteredAssignments.map((assignment) => (
                                     <Card key={assignment.id} className="p-4 shadow-md">
@@ -283,7 +410,10 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                                 <div>
                                                     <div className="text-xs text-muted-foreground mb-1">Grade</div>
                                                     <div className="text-sm font-medium">
-                                                        {getGradeDisplay(assignment.submission?.grade, assignment.maxPoints) || "—"}
+                                                        {assignment.submission?.grade 
+                                                            ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
+                                                            : "—"
+                                                        }
                                                     </div>
                                                 </div>
                                             </div>
@@ -307,9 +437,8 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                     )}
                 </TabsContent>
 
-                {/* Quizzes Tab */}
                 <TabsContent value="quizzes" className="space-y-4">
-                    {isLoading ? (
+                    {isLoadingTasks ? (
                         <div className="p-8 text-center text-muted-foreground">
                             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
                             Loading your quizzes...
@@ -318,21 +447,23 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                         <Card className="p-8 text-center text-muted-foreground">
                             <HelpCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                             <h3 className="text-lg font-semibold mb-2">No Quizzes</h3>
-                            <p>You don't have any quizzes in this course yet.</p>
+                            <p>
+                                {searchTerm 
+                                    ? "No quizzes match your search."
+                                    : "You don't have any quizzes in this unit yet."
+                                }
+                            </p>
                         </Card>
                     ) : (
                         <>
-                            {/* Desktop Table View */}
                             <Card className="overflow-hidden hidden lg:block shadow-lg">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
                                         <thead>
                                             <tr className="bg-muted/50 border-b border-border">
                                                 <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Quiz Title</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Description</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Time Limit</th>
                                                 <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Status</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Due Date</th>
+                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Grade</th>
                                                 <th className="px-6 py-4 text-center text-sm font-bold uppercase text-muted-foreground">Actions</th>
                                             </tr>
                                         </thead>
@@ -340,12 +471,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                             {filteredQuizzes.map((quiz) => (
                                                 <tr key={quiz.id} className="border-b border-border hover:bg-muted/30 transition-colors">
                                                     <td className="px-6 py-4 font-medium">{quiz.title}</td>
-                                                    <td className="px-6 py-4 text-muted-foreground max-w-md truncate">
-                                                        {quiz.description}
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {quiz.timeLimit} minutes
-                                                    </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
                                                             {getStatusIcon(quiz.submission?.status || '', quiz.isOverdue)}
@@ -353,7 +478,22 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        {quiz.dueDate ? new Date(quiz.dueDate).toLocaleDateString() : 'No due date'}
+                                                        {quiz.submission?.grade 
+                                                            ? (
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-semibold">
+                                                                        {quiz.submission.grade.value}/{quiz.submission.grade.maxScore}
+                                                                    </span>
+                                                                    <Badge 
+                                                                        variant={quiz.submission.grade.value >= (quiz.submission.grade.maxScore * 0.7) ? "default" : "destructive"} 
+                                                                        className="text-xs"
+                                                                    >
+                                                                        {((quiz.submission.grade.value / quiz.submission.grade.maxScore) * 100).toFixed(1)}%
+                                                                    </Badge>
+                                                                </div>
+                                                            )
+                                                            : <span className="text-muted-foreground">—</span>
+                                                        }
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center justify-center gap-3">
@@ -375,7 +515,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                 </div>
                             </Card>
 
-                            {/* Mobile Card View */}
                             <div className="space-y-4 lg:hidden">
                                 {filteredQuizzes.map((quiz) => (
                                     <Card key={quiz.id} className="p-4 shadow-md">
@@ -383,9 +522,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex-1">
                                                     <h3 className="font-bold text-lg mb-1">{quiz.title}</h3>
-                                                    <p className="text-sm text-muted-foreground line-clamp-2">
-                                                        {quiz.description}
-                                                    </p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     {getStatusIcon(quiz.submission?.status || '', quiz.isOverdue)}
@@ -395,30 +531,18 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
 
                                             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
                                                 <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Time Limit</div>
-                                                    <div className="text-sm font-medium">
-                                                        {quiz.timeLimit} min
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Questions</div>
-                                                    <div className="text-sm font-medium">
-                                                        {quiz.questions?.length || 0}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Due Date</div>
-                                                    <div className="text-sm font-medium">
-                                                        {quiz.dueDate ? new Date(quiz.dueDate).toLocaleDateString() : 'No due date'}
-                                                    </div>
-                                                </div>
-                                                <div>
                                                     <div className="text-xs text-muted-foreground mb-1">Max Grade</div>
                                                     <div className="text-sm font-medium">
-                                                        {quiz.maxGrade}%
+                                                        {quiz.maxGrade}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-muted-foreground mb-1">Grade</div>
+                                                    <div className="text-sm font-medium">
+                                                        {quiz.submission?.grade 
+                                                            ? `${quiz.submission.grade.value}/${quiz.submission.grade.maxScore}`
+                                                            : "—"
+                                                        }
                                                     </div>
                                                 </div>
                                             </div>

@@ -1,6 +1,5 @@
 package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
 
-
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,7 +35,7 @@ public class QuizSubmissionJpaEntity {
     private String status;
 
     @Column(name = "answers_json", columnDefinition = "TEXT")
-    private String answersJson; // JSON serialized List<QuizAnswer>
+    private String answersJson;
 
     @Column(name = "grade_value", precision = 10, scale = 2)
     private BigDecimal gradeValue;
@@ -47,12 +46,15 @@ public class QuizSubmissionJpaEntity {
     @Column(name = "auto_graded", nullable = false)
     private boolean autoGraded;
 
+    @Column(name = "question_grades_json", columnDefinition = "TEXT") // ✅ NEW: Store question grades
+    private String questionGradesJson;
+
     public QuizSubmissionJpaEntity() {}
 
     public QuizSubmissionJpaEntity(String id, String quizId, String studentId, int attemptNumber,
                                    LocalDateTime startedAt, LocalDateTime submittedAt, String status,
                                    String answersJson, BigDecimal gradeValue, BigDecimal gradeMaxScore,
-                                   boolean autoGraded) {
+                                   boolean autoGraded, String questionGradesJson) { // ✅ ADDED
         this.id = id;
         this.quizId = quizId;
         this.studentId = studentId;
@@ -64,6 +66,7 @@ public class QuizSubmissionJpaEntity {
         this.gradeValue = gradeValue;
         this.gradeMaxScore = gradeMaxScore;
         this.autoGraded = autoGraded;
+        this.questionGradesJson = questionGradesJson; // ✅ SET
     }
 
     // Getters/Setters
@@ -89,4 +92,6 @@ public class QuizSubmissionJpaEntity {
     public void setGradeMaxScore(BigDecimal gradeMaxScore) { this.gradeMaxScore = gradeMaxScore; }
     public boolean isAutoGraded() { return autoGraded; }
     public void setAutoGraded(boolean autoGraded) { this.autoGraded = autoGraded; }
+    public String getQuestionGradesJson() { return questionGradesJson; } // ✅ GETTER
+    public void setQuestionGradesJson(String questionGradesJson) { this.questionGradesJson = questionGradesJson; } // ✅ SETTER
 }

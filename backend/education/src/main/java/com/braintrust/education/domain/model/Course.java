@@ -169,8 +169,37 @@ public class Course extends AggregateRoot<CourseId> {
     public String getUrlImage() { return urlImage; }
     public String getGrade() { return grade; }
     public String getGroup() { return group; }
+
     public UserId getTeacherId() { return teacherId; }
     public boolean isActive() { return active; }
     public Set<Enrollment> getEnrollments() { return Set.copyOf(enrollments); }
     public List<CourseUnit> getUnits() { return List.copyOf(units); }
+
+    public void setCode(CourseCode code) {
+        this.code = code;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public void setTeacherId(UserId teacherId) {
+        this.teacherId = teacherId;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

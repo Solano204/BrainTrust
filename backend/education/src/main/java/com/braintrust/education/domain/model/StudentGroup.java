@@ -1,11 +1,11 @@
 package com.braintrust.education.domain.model;
 
-
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.domain.AggregateRoot;
 import java.time.LocalDateTime;
 import java.util.*;
+
 public class StudentGroup extends AggregateRoot<StudentGroupId> {
     private CourseId courseId;
     private String name;
@@ -32,6 +32,15 @@ public class StudentGroup extends AggregateRoot<StudentGroupId> {
         return group;
     }
 
+    public void updateInfo(String name, String description) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Group name cannot be null or empty");
+        }
+
+        this.name = name.trim();
+        this.description = (description != null) ? description.trim() : null;
+    }
+
     // ✅ Reconstitute from database
     public static StudentGroup reconstitute(StudentGroupId id, CourseId courseId,
                                             String name, String description,
@@ -47,40 +56,19 @@ public class StudentGroup extends AggregateRoot<StudentGroupId> {
         return group;
     }
 
-    // 🎯 Domain Behavior
-    public void addMember(UserId studentId) {
-        if (memberIds.size() >= MAX_MEMBERS) {
-            throw new IllegalStateException("Group is full. Maximum " + MAX_MEMBERS + " members allowed.");
-        }
-        if (memberIds.contains(studentId)) {
-            throw new IllegalArgumentException("Student already in group");
-        }
-        memberIds.add(studentId);
-    }
 
 
-    // ✅ NEW: Get available slots
-    public int getAvailableSlots() {
-        return MAX_MEMBERS - memberIds.size();
-    }
-
-    // ✅ NEW: Check if can add members
-    public boolean canAddMembers(int numberOfMembers) {
-        return memberIds.size() + numberOfMembers <= MAX_MEMBERS;
-    }
-
-
-
-    // ✅ NEW: Bulk add members with validation
     public void addMembers(Set<UserId> studentIds) {
+        if (studentIds == null || studentIds.isEmpty()) {
+            return;
+        }
+
         if (memberIds.size() + studentIds.size() > MAX_MEMBERS) {
             throw new IllegalStateException(
                     String.format("Cannot add %d members. Group would exceed maximum of %d members",
                             studentIds.size(), MAX_MEMBERS)
             );
         }
-
-
 
         // Check for duplicates within the new set
         Set<UserId> uniqueNewMembers = new HashSet<>(studentIds);
@@ -97,6 +85,29 @@ public class StudentGroup extends AggregateRoot<StudentGroupId> {
 
         memberIds.addAll(studentIds);
     }
+
+
+    // 🎯 Domain Behavior
+    public void addMember(UserId studentId) {
+        if (memberIds.size() >= MAX_MEMBERS) {
+            throw new IllegalStateException("Group is full. Maximum " + MAX_MEMBERS + " members allowed.");
+        }
+        if (memberIds.contains(studentId)) {
+            throw new IllegalArgumentException("Student already in group");
+        }
+        memberIds.add(studentId);
+    }
+
+    // ✅ NEW: Get available slots
+    public int getAvailableSlots() {
+        return MAX_MEMBERS - memberIds.size();
+    }
+
+    // ✅ NEW: Check if can add members
+    public boolean canAddMembers(int numberOfMembers) {
+        return memberIds.size() + numberOfMembers <= MAX_MEMBERS;
+    }
+
 
     public void removeMember(UserId studentId) {
         if (!memberIds.remove(studentId)) {

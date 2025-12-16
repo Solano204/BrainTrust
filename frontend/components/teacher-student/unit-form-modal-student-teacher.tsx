@@ -1,185 +1,236 @@
-// File: src/app/features/courses/components/unit-form-modal.tsx
+// File: src/app/features/courses/components/unit-form-modal-student-teacher.tsx
 "use client";
 
-import * as React from "react";
-import { Card } from "@/components/ui/card";
+import * as React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Save, Plus, BookOpen, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { CourseUnit } from "@/app/domain/entities/CourseEntities";
+import { ImageUploadWithValidation } from './image-upload-with-validation';
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Zod validation schema
+const unitFormSchema = z.object({
+  name: z.string()
+    .min(3, "Unit name must be at least 3 characters")
+    .max(150, "Unit name must not exceed 150 characters")
+    .trim(),
+  description: z.string()
+    .min(10, "Description must be at least 10 characters")
+    .max(1000, "Description must not exceed 1000 characters")
+    .trim(),
+  numUnity: z.number()
+    .min(1, "Unit number must be at least 1")
+    .max(100, "Unit number cannot exceed 100")
+    .int("Unit number must be a whole number"),
+  urlImage: z.string().optional(),
+});
+
+type UnitFormData = z.infer<typeof unitFormSchema>;
 
 interface UnitFormModalProps {
   open: boolean;
   onClose: () => void;
   initialData?: CourseUnit;
-  onSave: (
-    unitData: Omit<CourseUnit, "id" | "courseId" | "resources">,
-    unitId?: string
-  ) => void;
-  isSaving?: boolean;
+  onSave: (unitData: Omit<CourseUnit, "id" | "courseId" | "resources">, unitId?: string, imageFile?: File | null) => void;
+  isSaving: boolean;
 }
 
-export function UnitFormModal({
-  open,
-  onClose,
-  initialData,
-  onSave,
-  isSaving = false,
-}: UnitFormModalProps) {
-  const isEditMode = !!initialData;
-  const title = isEditMode ? "Edit Unit" : "Create New Unit";
-  const submitButtonText = isEditMode ? "Save Changes" : "Create Unit";
+export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: UnitFormModalProps) {
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string>(initialData?.urlImage || "");
 
-  const [formData, setFormData] = React.useState({
-    name: initialData?.name || "",
-    description: initialData?.description || "",
-    numUnity: initialData?.numUnity || 1,
-    urlImage: initialData?.urlImage || "",
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid },
+    reset,
+    setValue
+  } = useForm<UnitFormData>({
+    resolver: zodResolver(unitFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      numUnity: initialData?.numUnity || 1,
+      urlImage: initialData?.urlImage || "",
+    }
   });
 
+  // Reset form when modal opens/closes or initialData changes
   React.useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name,
-        description: initialData.description,
-        numUnity: initialData.numUnity,
-        urlImage: initialData.urlImage || "",
-      });
-    } else {
-      setFormData({
-        name: "",
-        description: "",
-        numUnity: 1,
-        urlImage: "",
-      });
+    if (open) {
+      if (initialData) {
+        reset({
+          name: initialData.name,
+          description: initialData.description,
+          numUnity: initialData.numUnity,
+          urlImage: initialData.urlImage || "",
+        });
+        setImagePreview(initialData.urlImage || "");
+        setImageFile(null);
+      } else {
+        reset({
+          name: "",
+          description: "",
+          numUnity: 1,
+          urlImage: "",
+        });
+        setImagePreview("");
+        setImageFile(null);
+      }
     }
-  }, [initialData]);
+  }, [initialData, open, reset]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value, type } = e.target;
-    setFormData((prev) => ({ 
-      ...prev, 
-      [id]: type === 'number' ? parseInt(value) || 1 : value 
-    }));
+  const handleImageChange = (imageData: { file: File; previewUrl: string; validationType: string } | null) => {
+    if (imageData) {
+      setImageFile(imageData.file);
+      setImagePreview(imageData.previewUrl);
+      setValue("urlImage", imageData.previewUrl, { shouldValidate: true });
+    } else {
+      setImageFile(null);
+      setImagePreview("");
+      setValue("urlImage", "", { shouldValidate: true });
+    }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData, initialData?.id);
-  };
+  const onSubmit = (data: UnitFormData) => {
+    const unitData = {
+      name: data.name,
+      description: data.description,
+      numUnity: data.numUnity,
+      urlImage: data.urlImage || "",
+    };
 
-  if (!open) return null;
+    // Pass the unitData AND the raw imageFile to the parent
+    onSave(unitData, initialData?.id, imageFile);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
-        <form onSubmit={handleFormSubmit}>
-          {/* Header */}
-          <div className="flex justify-between items-center p-6 border-b border-border">
-            <h2 className="text-2xl font-bold flex items-center gap-3 text-primary">
-              <BookOpen className="h-6 w-6" /> {title}
-            </h2>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {initialData ? "Edit Unit" : "Create New Unit"}
+          </DialogTitle>
+          <DialogDescription>
+            {initialData 
+              ? "Update the unit information below." 
+              : "Fill in the details to create a new unit for this course."
+            }
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
+          {/* Unit Name */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Unit Name *</Label>
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="name"
+                  placeholder="e.g., Module 1: Introduction to JavaScript"
+                  disabled={isSaving}
+                  className={errors.name ? "border-red-500" : ""}
+                />
+              )}
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* Unit Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description *</Label>
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <Textarea
+                  {...field}
+                  id="description"
+                  placeholder="Describe what students will learn in this unit..."
+                  rows={4}
+                  disabled={isSaving}
+                  className={errors.description ? "border-red-500" : ""}
+                />
+              )}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description.message}</p>
+            )}
+          </div>
+
+          {/* Unit Number (Optional - auto-assigned if creating) */}
+          {initialData && (
+            <div className="space-y-2">
+              <Label htmlFor="numUnity">Unit Number</Label>
+              <Controller
+                name="numUnity"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    id="numUnity"
+                    type="number"
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    min={1}
+                    disabled={isSaving}
+                    className={errors.numUnity ? "border-red-500" : ""}
+                  />
+                )}
+              />
+              {errors.numUnity && (
+                <p className="text-sm text-red-500">{errors.numUnity.message}</p>
+              )}
+            </div>
+          )}
+
+          {/* Image Upload Component */}
+          <ImageUploadWithValidation
+            currentImageUrl={imagePreview}
+            onImageChange={handleImageChange}
+            label="Unit Cover Image"
+            disabled={isSaving}
+          />
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t">
             <Button
-              variant="ghost"
-              size="icon"
+              type="submit"
+              className="flex-1"
+              disabled={isSaving || !isValid}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {initialData ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                initialData ? "Update Unit" : "Create Unit"
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               disabled={isSaving}
             >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Form Body */}
-          <div className="p-6 space-y-6">
-            {/* Unit Number */}
-            <div className="space-y-2">
-              <Label htmlFor="numUnity" className="font-semibold">
-                Unit Number *
-              </Label>
-              <Input
-                id="numUnity"
-                type="number"
-                min="1"
-                value={formData.numUnity}
-                onChange={handleChange}
-                required
-                disabled={isSaving}
-              />
-            </div>
-
-            {/* Unit Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="font-semibold">
-                Unit Name *
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                disabled={isSaving}
-                placeholder="Enter unit title"
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="font-semibold">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                rows={4}
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Describe what students will learn in this unit..."
-                disabled={isSaving}
-              />
-            </div>
-
-            {/* Image URL */}
-            <div className="space-y-2">
-              <Label htmlFor="urlImage" className="font-semibold">
-                Image URL (Optional)
-              </Label>
-              <Input
-                id="urlImage"
-                value={formData.urlImage || ""}
-                onChange={handleChange}
-                placeholder="Paste an image URL for the unit"
-                disabled={isSaving}
-              />
-              {formData.urlImage && (
-                <p className="text-xs text-muted-foreground italic">
-                  Preview: {formData.urlImage.substring(0, 50)}...
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Footer / Save Button */}
-          <div className="flex justify-end p-6 border-t border-border bg-gray-50 dark:bg-gray-800">
-            <Button
-              type="submit"
-              disabled={isSaving || !formData.name || !formData.numUnity}
-              className="gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isEditMode ? (
-                <Save className="h-4 w-4" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              {isSaving ? "Saving..." : submitButtonText}
+              Cancel
             </Button>
           </div>
         </form>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

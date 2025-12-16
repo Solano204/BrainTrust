@@ -5,11 +5,11 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { CourseOverview } from "@/components/teacher-student/course-overview-units-teacher-student";
 import { UnitDetail } from "@/components/teacher-student/unit-detail-student-teacher";
-import { CourseTaskInventory } from "@/components/course-task-inventory";
+// import { CourseTaskInventory } from "@/components/course-task-inventory";
 import { CourseStudents } from "@/components/teacher-student/course-section-enrollment-teacher-student";
 import { CourseGroups } from "@/components/teacher-student/course-section-groups-student-teacher";
 import { useParams } from "next/navigation";
-import { ResourceTypeSelector } from "@/components/submission-detail";
+// import { ResourceTypeSelector } from "@/components/submission-detail";
 import { CourseDashboard } from "@/components/teacher-student/courses-dashboard-main-student-teacher";
 import { useAuth } from "@/app/context/AuthContext"; // Add this import
 

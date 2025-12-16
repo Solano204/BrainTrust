@@ -13,6 +13,7 @@ import java.util.List;
 })
 public class PageJpaEntity {
 
+    // ✅ Field order should match database column order
     @Id
     @Column(name = "id", length = 50)
     private String id;
@@ -26,17 +27,8 @@ public class PageJpaEntity {
     @Column(name = "title", length = 255, nullable = false)
     private String title;
 
-    @Column(name = "content", columnDefinition = "TEXT")
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
-
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "page_external_links",
-            joinColumns = @JoinColumn(name = "page_id"))
-    @Column(name = "url", length = 500)
-    private List<String> externalLinks = new ArrayList<>();
-
-    @OneToMany(mappedBy = "page", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DocumentJpaEntity> attachments = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -47,8 +39,19 @@ public class PageJpaEntity {
     @Column(name = "published", nullable = false)
     private boolean published;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "page_external_links",
+            joinColumns = @JoinColumn(name = "page_id"))
+    @Column(name = "url", length = 500)
+    private List<String> externalLinks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "page", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<DocumentJpaEntity> attachments = new ArrayList<>();
+
+    // Default constructor
     public PageJpaEntity() {}
 
+    // Constructor matching database column order
     public PageJpaEntity(String id, String courseId, String unitId, String title, String content,
                          LocalDateTime createdAt, LocalDateTime lastModified, boolean published) {
         this.id = id;
@@ -61,7 +64,7 @@ public class PageJpaEntity {
         this.published = published;
     }
 
-    // CRITICAL: Helper method to maintain bidirectional relationship
+    // Helper methods
     public void addAttachment(DocumentJpaEntity document) {
         if (document != null) {
             attachments.add(document);
@@ -76,19 +79,36 @@ public class PageJpaEntity {
         }
     }
 
-    // Getters/Setters
+    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
+
     public String getCourseId() { return courseId; }
     public void setCourseId(String courseId) { this.courseId = courseId; }
+
     public String getUnitId() { return unitId; }
     public void setUnitId(String unitId) { this.unitId = unitId; }
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getLastModified() { return lastModified; }
+    public void setLastModified(LocalDateTime lastModified) { this.lastModified = lastModified; }
+
+    public boolean isPublished() { return published; }
+    public void setPublished(boolean published) { this.published = published; }
+
     public List<String> getExternalLinks() { return externalLinks; }
-    public void setExternalLinks(List<String> externalLinks) { this.externalLinks = externalLinks; }
+    public void setExternalLinks(List<String> externalLinks) {
+        this.externalLinks = externalLinks != null ? externalLinks : new ArrayList<>();
+    }
+
     public List<DocumentJpaEntity> getAttachments() { return attachments; }
     public void setAttachments(List<DocumentJpaEntity> attachments) {
         if (attachments != null) {
@@ -96,10 +116,4 @@ public class PageJpaEntity {
             this.attachments.forEach(doc -> doc.setPage(this));
         }
     }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public LocalDateTime getLastModified() { return lastModified; }
-    public void setLastModified(LocalDateTime lastModified) { this.lastModified = lastModified; }
-    public boolean isPublished() { return published; }
-    public void setPublished(boolean published) { this.published = published; }
 }

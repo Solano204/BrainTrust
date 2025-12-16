@@ -11,29 +11,101 @@ import java.util.List;
 
 public class Assignment extends AggregateRoot<AssignmentId> {
     private CourseId courseId;
-    private UnitId unitId; // ✅ Now properly linked to a unit
+    private UnitId unitId;
     private String title;
     private String description;
     private LocalDateTime createdAt;
     private final List<Document> attachments;
+    private final List<String> links;
     private LocalDateTime dueDate;
     private Score maxScore;
     private String instructions;
     private final List<Submission> submissions;
     private boolean active;
     private AssignmentTargetType targetType;
+    private SubmissionFormat submissionFormat; // ✅ NEW: Submission format field
     private static final int MAX_ATTACHMENTS = 10;
+    private static final int MAX_LINKS = 10;
 
+    // Update constructor to include submissionFormat
     private Assignment(AssignmentId id, CourseId courseId, UnitId unitId, String title) {
         this.id = id;
         this.courseId = courseId;
-        this.unitId = unitId; // ✅ UnitId is now required in constructor
+        this.unitId = unitId;
         this.title = validateTitle(title);
         this.createdAt = LocalDateTime.now();
         this.attachments = new ArrayList<>();
+        this.links = new ArrayList<>();
         this.submissions = new ArrayList<>();
         this.active = true;
+        this.submissionFormat = SubmissionFormat.DIGITAL; // Default to DIGITAL
     }
+
+
+
+    // Update factory methods to include submissionFormat
+    public static Assignment create(CourseId courseId, UnitId unitId, String title, String description,
+                                    LocalDateTime dueDate, int maxPoints, String instructions,
+                                    AssignmentTargetType targetType, SubmissionFormat submissionFormat) { // ✅ NEW parameter
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+        assignment.targetType = targetType;
+        assignment.submissionFormat = submissionFormat != null ? submissionFormat : SubmissionFormat.DIGITAL;
+        return assignment;
+    }
+
+    // Update reconstitute method
+    public static Assignment reconstitute(AssignmentId id, CourseId courseId, UnitId unitId, String title,
+                                          String description, LocalDateTime createdAt,
+                                          List<Document> attachments, List<String> links,
+                                          LocalDateTime dueDate, Score maxScore, String instructions,
+                                          List<Submission> submissions, boolean active,
+                                          AssignmentTargetType targetType,
+                                          SubmissionFormat submissionFormat) { // ✅ NEW parameter
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.description = description;
+        assignment.createdAt = createdAt;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = maxScore;
+        assignment.instructions = instructions;
+        assignment.active = active;
+        assignment.targetType = targetType;
+        assignment.submissionFormat = submissionFormat != null ? submissionFormat : SubmissionFormat.DIGITAL;
+
+        if (attachments != null) {
+            assignment.attachments.addAll(attachments);
+        }
+        if (links != null) {
+            assignment.links.addAll(links);
+        }
+        if (submissions != null) {
+            assignment.submissions.addAll(submissions);
+        }
+        return assignment;
+    }
+
+    // Add getter for submission format
+    public SubmissionFormat getSubmissionFormat() {
+        return submissionFormat;
+    }
+
+    // Add setter for submission format
+    public void updateSubmissionFormat(SubmissionFormat submissionFormat) {
+        this.submissionFormat = submissionFormat != null ? submissionFormat : SubmissionFormat.DIGITAL;
+    }
+
+    // Update details method to include submission format
+    public void updateDetails(String title, String description, String instructions, SubmissionFormat submissionFormat) {
+        this.title = validateTitle(title);
+        this.description = description;
+        this.instructions = instructions;
+        this.submissionFormat = submissionFormat != null ? submissionFormat : SubmissionFormat.DIGITAL;
+    }
+
 
     // ✅ Factory Method for INDIVIDUAL Assignment with Unit
     public static Assignment createForIndividual(CourseId courseId, UnitId unitId, String title,
@@ -77,9 +149,6 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-
-
-
     // ✅ Factory Method with attachments, target type and Unit
     public static Assignment createWithAttachments(CourseId courseId, UnitId unitId, String title, String description,
                                                    LocalDateTime dueDate, int maxPoints, String instructions,
@@ -99,11 +168,63 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // ✅ RECONSTITUTE METHOD - UnitId is now properly handled
+
+    // ✅ Factory Method with links support
+    public static Assignment createWithLinks(CourseId courseId, UnitId unitId, String title, String description,
+                                             LocalDateTime dueDate, int maxPoints, String instructions,
+                                             List<String> links, AssignmentTargetType targetType) {
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+        assignment.targetType = targetType;
+
+        if (links != null && !links.isEmpty()) {
+            assignment.addLinks(links);
+        }
+
+        return assignment;
+    }
+
+
+    // Add this factory method to the Assignment domain class
+    public static Assignment createWithAttachmentsAndLinks(
+            CourseId courseId, UnitId unitId, String title, String description,
+            LocalDateTime dueDate, int maxPoints, String instructions,
+            List<Document> attachments, List<String> links,
+            AssignmentTargetType targetType,
+            SubmissionFormat submissionFormat
+            ) {
+
+        AssignmentId id = AssignmentId.generate();
+        Assignment assignment = new Assignment(id, courseId, unitId, title);
+        assignment.description = description;
+        assignment.dueDate = dueDate;
+        assignment.maxScore = new Score(maxPoints, maxPoints);
+        assignment.instructions = instructions;
+        assignment.targetType = targetType;
+        assignment.submissionFormat= submissionFormat;
+
+        // Add attachments if provided
+        if (attachments != null && !attachments.isEmpty()) {
+            assignment.addAttachments(attachments);
+        }
+
+        // ✅ Add links if provided
+        if (links != null && !links.isEmpty()) {
+            assignment.addLinks(links);
+        }
+
+        return assignment;
+    }
+
+    // ✅ RECONSTITUTE METHOD - Updated with links support
     public static Assignment reconstitute(AssignmentId id, CourseId courseId, UnitId unitId, String title,
                                           String description, LocalDateTime createdAt,
-                                          List<Document> attachments, LocalDateTime dueDate,
-                                          Score maxScore, String instructions,
+                                          List<Document> attachments, List<String> links, // ✅ ADDED links parameter
+                                          LocalDateTime dueDate, Score maxScore, String instructions,
                                           List<Submission> submissions, boolean active,
                                           AssignmentTargetType targetType) {
         Assignment assignment = new Assignment(id, courseId, unitId, title);
@@ -118,13 +239,14 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         if (attachments != null) {
             assignment.attachments.addAll(attachments);
         }
+        if (links != null) { // ✅ ADDED - Initialize links
+            assignment.links.addAll(links);
+        }
         if (submissions != null) {
             assignment.submissions.addAll(submissions);
         }
         return assignment;
     }
-
-    // ... (rest of your methods remain the same, just ensure they use the unitId)
 
     private String validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
@@ -135,6 +257,20 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         }
         return title.trim();
     }
+
+
+
+
+
+    public int getLinkCount() {
+        return links.size();
+    }
+
+    public boolean hasLinks() {
+        return !links.isEmpty();
+    }
+
+
 
     public void addAttachment(Document document) {
         if (document == null) {
@@ -170,6 +306,62 @@ public class Assignment extends AggregateRoot<AssignmentId> {
             throw new IllegalArgumentException("Document not found in attachments");
         }
     }
+
+
+    public void addLink(String link) {
+        if (link == null || link.trim().isEmpty()) {
+            throw new IllegalArgumentException("Link cannot be null or empty");
+        }
+
+//        if (!isValidUrl(link)) {
+//            throw new IllegalArgumentException("Invalid URL format: " + link);
+//        }
+
+        if (links.size() >= MAX_LINKS) {
+            throw new IllegalStateException("Cannot add more than " + MAX_LINKS + " links");
+        }
+
+        links.add(link.trim());
+    }
+
+    public void addLinks(List<String> newLinks) {
+        if (newLinks == null || newLinks.isEmpty()) {
+            return;
+        }
+
+        if (links.size() + newLinks.size() > MAX_LINKS) {
+            throw new IllegalStateException("Cannot add more than " + MAX_LINKS + " links in total");
+        }
+
+        for (String link : newLinks) {
+            addLink(link);
+        }
+    }
+
+    public void removeLink(String link) {
+        if (link == null) {
+            throw new IllegalArgumentException("Link cannot be null");
+        }
+
+        boolean removed = links.remove(link.trim());
+        if (!removed) {
+            throw new IllegalArgumentException("Link not found: " + link);
+        }
+    }
+
+    public void clearLinks() {
+        links.clear();
+    }
+
+    private boolean isValidUrl(String url) {
+        try {
+            new java.net.URL(url);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 
     public void clearAttachments() {
         attachments.clear();
@@ -251,17 +443,21 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         this.instructions = instructions;
     }
 
+
+
+
     public boolean isTeamAssignment() {
         return targetType == AssignmentTargetType.TEAM;
     }
 
     // Getters
     public CourseId getCourseId() { return courseId; }
-    public UnitId getUnitId() { return unitId; } // ✅ UnitId getter
+    public UnitId getUnitId() { return unitId; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<Document> getAttachments() { return Collections.unmodifiableList(attachments); }
+    public List<String> getLinks() { return Collections.unmodifiableList(links); } // ✅ ADDED - Links getter
     public LocalDateTime getDueDate() { return dueDate; }
     public Score getMaxScore() { return maxScore; }
     public String getInstructions() { return instructions; }

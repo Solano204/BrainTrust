@@ -1,33 +1,39 @@
 // File: src/app/features/courses/components/CourseGroups.tsx
 "use client";
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Users, Plus, Trash2, UserPlus, X, Search, Crown, Edit, MoreVertical, Loader2, Shield, Settings, Users2, Eye } from "lucide-react"
+import { Users, Plus, Trash2, UserPlus, X, Search, Edit, MoreVertical, Loader2, Eye } from "lucide-react"
 import { useAuth } from "@/app/context/AuthContext"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
-// Import your interfaces and types
+// Import types and interfaces
 import type { UserId, CourseId } from "@/app/domain/valueObjects/CourseValues"
-import { Team } from "@/app/domain/entities/CourseEntities"
-import { useTeamsByCourse, useAvailableUsers, useTeamMutations } from "@/app/presentation/hooks/team/team-hooks"
-import { TeamFormModal } from "../teacher/team-form-modal-teacher"
-import { TeamEditModal } from "../teacher/team-edit-modal-teacher"
-import { Label } from "@radix-ui/react-label";
+import { 
+  Team,
+  TeamWithIds,
+} from "@/app/domain/entities/CourseEntities"
+import { 
+  useAvailableUsers, 
+  useTeamMutations, 
+  useTeamsByCourse 
+} from "./hooks/team-hooks"
 
 interface CourseGroupsProps {
   courseId: CourseId
 }
 
+// User interface for local use
 interface User {
   id: UserId
   name: string
-  role: string
-  email?: string
+  email: string
 }
 
 export function CourseGroups({ courseId }: CourseGroupsProps) {
@@ -36,62 +42,56 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
   
   // React Query for data fetching
   const { 
-    data: teams = [], 
+    data: teamsData, 
     isLoading: isLoadingTeams,
     error: teamsError,
     refetch: refetchTeams 
   } = useTeamsByCourse(courseId);
   
+  const teams = teamsData?.teams || [];
+  
   const { 
-    data: availableUsers = [], 
+    data: availableUsersData, 
     isLoading: isLoadingUsers,
     error: usersError 
   } = useAvailableUsers(courseId);
 
-  // Team mutations - only for teachers
+  const availableUsers = availableUsersData?.users || [];
+
+  // Team mutations
   const { 
     createTeam, 
-    updateTeam, 
     deleteTeam,
     addMembers,
     removeMember,
-    setLeader,
-    autoGenerateTeams,
-    updateTeamInfo,
-    updateTeamMemberLimit,
-    updateTeamProperties 
+    updateTeamInfo
   } = useTeamMutations();
 
   // Local state
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showMemberLimitModal, setShowMemberLimitModal] = useState(false)
   const [showAddMemberModal, setShowAddMemberModal] = useState(false)
-  const [showAutoGenerateModal, setShowAutoGenerateModal] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
-  const [selectedTeamForLimit, setSelectedTeamForLimit] = useState<Team | null>(null)
   const [newTeamName, setNewTeamName] = useState("")
   const [newTeamDescription, setNewTeamDescription] = useState("")
   const [selectedMembers, setSelectedMembers] = useState<UserId[]>([])
-  const [creationMethod, setCreationMethod] = useState<"manual" | "automatic">("manual")
   const [memberSearchQuery, setMemberSearchQuery] = useState("")
-  const [teamSize, setTeamSize] = useState(4)
   const [deleteConfirmTeam, setDeleteConfirmTeam] = useState<string | null>(null)
   const [showTeamDetail, setShowTeamDetail] = useState(false)
 
-  // Event handlers - only for teachers
-  const handleCreateTeam = async (teamData: any, teamName?: string) => {
+  // Event handlers
+  const handleCreateTeam = async () => {
     if (!isTeacher) return;
     
-    const newTeamData = {
-      courseId,
-      name: teamData.name,
-      description: teamData.description,
-      leaderId: null,
-      members: new Set<UserId>([]),
-      maxMembers: teamData.maxMembers,
-      active: teamData.active
-    };
+const newTeamData: TeamWithIds = {
+  courseId,
+  createdAt: new Date(),
+  teamId: "",
+  name: newTeamName,
+  description: newTeamDescription,
+  members: new Set(selectedMembers),
+  active: true,
+};
 
     createTeam.mutate(newTeamData, {
       onSuccess: () => {
@@ -103,40 +103,30 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
     });
   };
 
-  const handleUpdateTeam = async (teamName: string, updates: any) => {
-    if (!isTeacher) return;
+  const handleUpdateTeam = async () => {
+    if (!isTeacher || !selectedTeam) return;
     
-    updateTeamProperties.mutate({
+    updateTeamInfo.mutate({
       courseId,
-      teamName,
-      updates
+      teamId: selectedTeam.teamId,
+      updates: {
+        name: newTeamName,
+        description: newTeamDescription
+      }
     }, {
       onSuccess: () => {
         setShowEditModal(false);
         setSelectedTeam(null);
+        setNewTeamName("");
+        setNewTeamDescription("");
       }
     });
   };
 
-  const handleUpdateMemberLimit = async (teamName: string, maxMembers: number) => {
+  const handleDeleteTeam = async (teamId: string) => {
     if (!isTeacher) return;
     
-    updateTeamMemberLimit.mutate({
-      courseId,
-      teamName,
-      maxMembers
-    }, {
-      onSuccess: () => {
-        setShowMemberLimitModal(false);
-        setSelectedTeamForLimit(null);
-      }
-    });
-  };
-
-  const handleDeleteTeam = async (teamName: string) => {
-    if (!isTeacher) return;
-    
-    deleteTeam.mutate({ courseId, teamName }, {
+    deleteTeam.mutate({ courseId, teamId }, {
       onSuccess: () => {
         setDeleteConfirmTeam(null);
       }
@@ -144,46 +134,27 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
   };
 
   const handleAddMember = async () => {
-    if (!isTeacher) return;
+    if (!isTeacher || !selectedTeam) return;
     
-    if (selectedTeam && selectedMembers.length > 0) {
+    if (selectedMembers.length > 0) {
       addMembers.mutate({ 
         courseId, 
-        teamName: selectedTeam.name, 
+        teamId: selectedTeam.teamId, 
         memberIds: selectedMembers 
       }, {
         onSuccess: () => {
           setShowAddMemberModal(false);
           setSelectedMembers([]);
           setSelectedTeam(null);
+          setMemberSearchQuery("");
         }
       });
     }
   };
 
-  const handleRemoveMember = async (teamName: string, memberId: UserId) => {
+  const handleRemoveMember = async (teamId: string, memberId: UserId) => {
     if (!isTeacher) return;
-    removeMember.mutate({ courseId, teamName, memberId });
-  };
-
-  const handleSetLeader = async (teamName: string, leaderId: UserId) => {
-    if (!isTeacher) return;
-    setLeader.mutate({ courseId, teamName, leaderId });
-  };
-
-  const handleAutoGenerateTeams = async () => {
-    if (!isTeacher) return;
-    
-    autoGenerateTeams.mutate({ 
-      courseId, 
-      teamSize, 
-      method: "random" 
-    }, {
-      onSuccess: () => {
-        setShowAutoGenerateModal(false);
-        setTeamSize(4);
-      }
-    });
+    removeMember.mutate({ courseId, teamId, memberId });
   };
 
   // Helper function to get user details by ID
@@ -191,22 +162,27 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
     return availableUsers.find(user => user.id === userId)
   }
 
-  // Get available users for adding to teams (users not in any team)
-  const getAvailableUsersForTeam = (currentTeam?: Team): User[] => {
-    const usersInTeams = new Set<UserId>()
+  // Get member user IDs from team members
+  const getTeamMemberIds = (team: Team): UserId[] => {
+    return Array.from(team.members).map(member => member.userId)
+  }
+
+  // Get available users for adding to teams (excluding users already in the selected team)
+  const filteredAvailableUsers = useMemo(() => {
+    // Get all users already in teams (except current selected team)
+    const usersInOtherTeams = new Set<UserId>();
     teams.forEach(team => {
-      if (team.name !== currentTeam?.name) {
-        team.members.forEach(member => usersInTeams.add(member))
+      if (!selectedTeam || team.teamId !== selectedTeam.teamId) {
+        team.members.forEach(member => usersInOtherTeams.add(member.userId));
       }
     });
     
+    // Filter available users by search query and exclude those in other teams
     return availableUsers.filter(user => 
-      !usersInTeams.has(user.id) && 
+      !usersInOtherTeams.has(user.id) && 
       user.name.toLowerCase().includes(memberSearchQuery.toLowerCase())
-    )
-  }
-
-  const filteredAvailableUsers = getAvailableUsersForTeam()
+    );
+  }, [availableUsers, teams, selectedTeam, memberSearchQuery]);
 
   // STUDENT VIEW - Read Only
   if (!isTeacher) {
@@ -218,20 +194,27 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
         </div>
 
         {/* Teams Grid - Read Only */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {teams.map((team) => (
-            <TeamCardReadOnly
-              key={team.name}
-              team={team}
-              availableUsers={availableUsers}
-              getUserById={getUserById}
-              onViewDetails={(team) => {
-                setSelectedTeam(team);
-                setShowTeamDetail(true);
-              }}
-            />
-          ))}
-        </div>
+        {isLoadingTeams ? (
+          <div className="text-center text-muted-foreground py-12">
+            <Loader2 className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            Loading groups...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {teams.map((team) => (
+              <TeamCardReadOnly
+                key={team.teamId}
+                team={team}
+                availableUsers={availableUsers}
+                getUserById={getUserById}
+                onViewDetails={(team) => {
+                  setSelectedTeam(team);
+                  setShowTeamDetail(true);
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Empty State */}
         {teams.length === 0 && !isLoadingTeams && (
@@ -269,7 +252,7 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
   if (isLoadingTeams) {
     return (
       <div className="p-8 text-center text-muted-foreground">
-        <Loader2 className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+        <Loader2 className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
         Loading teams...
       </div>
     )
@@ -292,54 +275,41 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
       {/* Header with Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Team Management</h1>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button 
-            onClick={() => setShowAutoGenerateModal(true)}
-            variant="outline"
-            className="gap-2 w-full sm:w-auto"
-            disabled={autoGenerateTeams.isPending}
-          >
-            <Shield className="h-4 w-4" />
-            {autoGenerateTeams.isPending ? "Generating..." : "Auto Generate"}
-          </Button>
-          <Button 
-            onClick={() => setShowCreateModal(true)} 
-            className="gap-2 w-full sm:w-auto"
-            disabled={createTeam.isPending}
-          >
-            <Plus className="h-4 w-4" />
-            {createTeam.isPending ? "Creating..." : "Create Team"}
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setShowCreateModal(true)} 
+          className="gap-2 w-full sm:w-auto"
+          disabled={createTeam.isPending}
+        >
+          <Plus className="h-4 w-4" />
+          {createTeam.isPending ? "Creating..." : "Create Team"}
+        </Button>
       </div>
 
       {/* Teams Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {teams.map((team) => (
           <TeamCard
-            key={team.name}
+            key={team.teamId}
             team={team}
             availableUsers={availableUsers}
             getUserById={getUserById}
+            getTeamMemberIds={getTeamMemberIds}
             onEdit={(team) => {
               setSelectedTeam(team);
+              setNewTeamName(team.name);
+              setNewTeamDescription(team.description);
               setShowEditModal(true);
-            }}
-            onUpdateMemberLimit={(team) => {
-              setSelectedTeamForLimit(team);
-              setShowMemberLimitModal(true);
             }}
             onAddMember={(team) => {
               setSelectedTeam(team);
               setShowAddMemberModal(true);
             }}
             onRemoveMember={handleRemoveMember}
-            onSetLeader={handleSetLeader}
             onDeleteTeam={handleDeleteTeam}
             deleteConfirmTeam={deleteConfirmTeam}
             setDeleteConfirmTeam={setDeleteConfirmTeam}
             isDeleting={deleteTeam.isPending}
-            isUpdating={removeMember.isPending || setLeader.isPending || updateTeamProperties.isPending}
+            isUpdating={removeMember.isPending}
             isTeacher={isTeacher}
           />
         ))}
@@ -350,40 +320,140 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
         <Card className="text-center p-12 border-2 border-dashed">
           <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">No teams yet</h3>
-          <p className="text-muted-foreground mb-4">Create your first team or generate teams automatically</p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={() => setShowCreateModal(true)} className="gap-2">
-              <Plus className="h-4 w-4" /> Create Team
-            </Button>
-            <Button onClick={() => setShowAutoGenerateModal(true)} variant="outline" className="gap-2">
-              <Shield className="h-4 w-4" /> Auto Generate
-            </Button>
-          </div>
+          <p className="text-muted-foreground mb-4">Create your first team to get started</p>
+          <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+            <Plus className="h-4 w-4" /> Create Team
+          </Button>
         </Card>
       )}
 
       {/* Create Team Modal */}
-      <TeamFormModal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSave={handleCreateTeam}
-        isSaving={createTeam.isPending}
-      />
+      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Team</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="name">Team Name</Label>
+              <Input
+                id="name"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                placeholder="Enter team name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newTeamDescription}
+                onChange={(e) => setNewTeamDescription(e.target.value)}
+                placeholder="Enter team description"
+              />
+            </div>
+            <div>
+              <Label>Members (Optional)</Label>
+              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                {availableUsers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    No available users
+                  </p>
+                ) : (
+                  availableUsers.map((user) => (
+                    <label
+                      key={user.id}
+                      className="flex items-center gap-3 p-2 bg-muted/30 rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.includes(user.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedMembers([...selectedMembers, user.id])
+                          } else {
+                            setSelectedMembers(selectedMembers.filter((id) => id !== user.id))
+                          }
+                        }}
+                      />
+                      <span className="text-sm">
+                        {user.name} ({user.email})
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowCreateModal(false);
+                setNewTeamName("");
+                setNewTeamDescription("");
+                setSelectedMembers([]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateTeam}
+              disabled={!newTeamName || createTeam.isPending}
+            >
+              {createTeam.isPending ? "Creating..." : "Create Team"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Team Modal */}
-      {selectedTeam && (
-        <TeamEditModal
-          open={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedTeam(null);
-          }}
-          team={selectedTeam}
-          availableUsers={availableUsers}
-          onSave={handleUpdateTeam}
-          isSaving={updateTeamProperties.isPending}
-        />
-      )}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Team</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="edit-name">Team Name</Label>
+              <Input
+                id="edit-name"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                placeholder="Enter team name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={newTeamDescription}
+                onChange={(e) => setNewTeamDescription(e.target.value)}
+                placeholder="Enter team description"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowEditModal(false);
+                setSelectedTeam(null);
+                setNewTeamName("");
+                setNewTeamDescription("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateTeam}
+              disabled={!newTeamName || updateTeamInfo.isPending}
+            >
+              {updateTeamInfo.isPending ? "Updating..." : "Update Team"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Member Modal */}
       <Dialog open={showAddMemberModal} onOpenChange={setShowAddMemberModal}>
@@ -422,7 +492,7 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
                       }}
                     />
                     <span>
-                      {user.name} ({user.role})
+                      {user.name} ({user.email})
                     </span>
                   </label>
                 ))
@@ -430,7 +500,15 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddMemberModal(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowAddMemberModal(false);
+                setSelectedMembers([]);
+                setSelectedTeam(null);
+                setMemberSearchQuery("");
+              }}
+            >
               Cancel
             </Button>
             <Button 
@@ -442,67 +520,22 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Auto Generate Teams Modal */}
-      <Dialog open={showAutoGenerateModal} onOpenChange={setShowAutoGenerateModal}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Auto Generate Teams</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="teamSize" className="font-semibold mb-2 block">
-                Team Size
-              </Label>
-              <Input
-                id="teamSize"
-                type="number"
-                min="2"
-                max="10"
-                value={teamSize}
-                onChange={(e) => setTeamSize(parseInt(e.target.value) || 2)}
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                Number of students per team
-              </p>
-            </div>
-            <div className="bg-muted/30 p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                This will create teams automatically by randomly distributing available students. 
-                Existing teams will be preserved.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAutoGenerateModal(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAutoGenerateTeams}
-              disabled={autoGenerateTeams.isPending}
-            >
-              {autoGenerateTeams.isPending ? "Generating..." : "Generate Teams"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
 
-// Enhanced Team Card Component with Update Options (Teacher)
+// Enhanced Team Card Component (Teacher)
 interface TeamCardProps {
   team: Team;
-  availableUsers: any[];
-  getUserById: (userId: UserId) => any;
+  availableUsers: User[];
+  getUserById: (userId: UserId) => User | undefined;
+  getTeamMemberIds: (team: Team) => UserId[];
   onEdit: (team: Team) => void;
-  onUpdateMemberLimit: (team: Team) => void;
   onAddMember: (team: Team) => void;
-  onRemoveMember: (teamName: string, memberId: UserId) => void;
-  onSetLeader: (teamName: string, leaderId: UserId) => void;
-  onDeleteTeam: (teamName: string) => void;
+  onRemoveMember: (teamId: string, memberId: UserId) => void;
+  onDeleteTeam: (teamId: string) => void;
   deleteConfirmTeam: string | null;
-  setDeleteConfirmTeam: (teamName: string | null) => void;
+  setDeleteConfirmTeam: (teamId: string | null) => void;
   isDeleting: boolean;
   isUpdating: boolean;
   isTeacher: boolean;
@@ -512,11 +545,10 @@ const TeamCard: React.FC<TeamCardProps> = ({
   team,
   availableUsers,
   getUserById,
+  getTeamMemberIds,
   onEdit,
-  onUpdateMemberLimit,
   onAddMember,
   onRemoveMember,
-  onSetLeader,
   onDeleteTeam,
   deleteConfirmTeam,
   setDeleteConfirmTeam,
@@ -524,10 +556,10 @@ const TeamCard: React.FC<TeamCardProps> = ({
   isUpdating,
   isTeacher
 }) => {
-  const isPendingDelete = deleteConfirmTeam === team.name;
+  const isPendingDelete = deleteConfirmTeam === team.teamId;
 
   return (
-    <Card key={team.name} className="hover:shadow-xl transition-all duration-300">
+    <Card className="hover:shadow-xl transition-all duration-300">
       <div className="p-6 space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -537,8 +569,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
             <div>
               <h3 className="font-bold text-lg">{team.name}</h3>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary">
-                  {team.members.size}/{team.maxMembers} members
+                <Badge variant="secondary" className="text-xs">
+                  {team.members.size} members
                 </Badge>
                 {!team.active && (
                   <Badge variant="outline" className="text-xs">
@@ -560,13 +592,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Team
                 </DropdownMenuItem>
-                
                 <DropdownMenuItem onClick={() => onAddMember(team)}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add Members
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => setDeleteConfirmTeam(team.name)}
+                  onClick={() => setDeleteConfirmTeam(team.teamId)}
                   className="text-red-600"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -588,7 +619,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
                 variant="ghost"
                 onClick={() => onAddMember(team)}
                 className="gap-1 h-7 text-xs"
-                disabled={team.members.size >= team.maxMembers || isUpdating}
               >
                 <UserPlus className="h-3 w-3" />
                 Add
@@ -596,71 +626,63 @@ const TeamCard: React.FC<TeamCardProps> = ({
             )}
           </div>
           <div className="space-y-1 max-h-40 overflow-y-auto">
-            {Array.from(team.members).map((memberId) => {
-              const member = getUserById(memberId)
-              return member ? (
-                <div
-                  key={memberId}
-                  className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{member.name}</span>
-                    {team.leaderId === memberId && (
-                      <Crown className="h-3 w-3 text-yellow-500" />
-                    )}
-                  </div>
-                  {isTeacher && (
-                    <div className="flex items-center gap-1">
-                      {team.leaderId !== memberId && (
-                        <button
-                          onClick={() => onSetLeader(team.name, memberId)}
-                          className="text-muted-foreground hover:text-yellow-500 transition-colors"
-                          title="Set as Leader"
-                          disabled={isUpdating}
-                        >
-                          <Crown className="h-3 w-3" />
-                        </button>
-                      )}
+            {team.members.size === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-2">No members yet</p>
+            ) : (
+              Array.from(team.members).map((member) => {
+                const user = getUserById(member.userId)
+                return user ? (
+                  <div
+                    key={member.userId}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{user.name}</span>
+                    </div>
+                    {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(team.name, memberId)}
+                        onClick={() => onRemoveMember(team.teamId, member.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                         title="Remove Member"
                         disabled={isUpdating}
                       >
                         <X className="h-3 w-3" />
                       </button>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    key={member.userId}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>{member.fullName}</span>
                     </div>
-                  )}
-                </div>
-              ) : null
-            })}
+                    {isTeacher && (
+                      <button
+                        onClick={() => onRemoveMember(team.teamId, member.userId)}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        title="Remove Member"
+                        disabled={isUpdating}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
 
-        {/* Quick Actions - Only for Teachers */}
-        {isTeacher && (
-          <div className="flex gap-2 pt-2 border-t border-border">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onEdit(team)}
-              className="flex-1 gap-1 text-xs"
-              disabled={isUpdating}
-            >
-              <Settings className="h-3 w-3" />
-              Edit
-            </Button>
-          </div>
-        )}
-
-        {/* Delete Confirmation - Only for Teachers */}
+        {/* Delete Confirmation */}
         {isTeacher && isPendingDelete && (
           <div className="flex gap-2 pt-2 border-t border-border">
             <Button 
               variant="destructive" 
               size="sm" 
               className="flex-1 gap-2"
-              onClick={() => onDeleteTeam(team.name)}
+              onClick={() => onDeleteTeam(team.teamId)}
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -681,9 +703,11 @@ const TeamCard: React.FC<TeamCardProps> = ({
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground">
-          Created: {team.createdAt.toLocaleDateString()}
-        </div>
+        {team.createdAt && (
+          <div className="text-xs text-muted-foreground">
+            Created: {team.createdAt.toLocaleDateString()}
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -692,8 +716,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
 // Team Card for Students (Read Only)
 const TeamCardReadOnly: React.FC<{
   team: Team;
-  availableUsers: any[];
-  getUserById: (userId: UserId) => any;
+  availableUsers: User[];
+  getUserById: (userId: UserId) => User | undefined;
   onViewDetails: (team: Team) => void;
 }> = ({ team, availableUsers, getUserById, onViewDetails }) => {
   return (
@@ -707,8 +731,8 @@ const TeamCardReadOnly: React.FC<{
             <div>
               <h3 className="font-bold text-lg">{team.name}</h3>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary">
-                  {team.members.size}/{team.maxMembers} members
+                <Badge variant="secondary" className="text-xs">
+                  {team.members.size} members
                 </Badge>
                 {!team.active && (
                   <Badge variant="outline" className="text-xs">
@@ -728,19 +752,23 @@ const TeamCardReadOnly: React.FC<{
             <span className="text-sm font-medium">Team Members:</span>
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
-            {Array.from(team.members).slice(0, 5).map((memberId) => {
-              const member = getUserById(memberId)
-              return member ? (
+            {Array.from(team.members).slice(0, 5).map((member) => {
+              const user = getUserById(member.userId)
+              return user ? (
                 <div
-                  key={memberId}
+                  key={member.userId}
                   className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm"
                 >
-                  <span>{member.name}</span>
-                  {team.leaderId === memberId && (
-                    <Crown className="h-3 w-3 text-yellow-500" />
-                  )}
+                  <span>{user.name}</span>
                 </div>
-              ) : null
+              ) : (
+                <div
+                  key={member.userId}
+                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm"
+                >
+                  <span>{member.fullName}</span>
+                </div>
+              )
             })}
             {team.members.size > 5 && (
               <div className="text-xs text-muted-foreground text-center">
@@ -761,7 +789,7 @@ const TeamCardReadOnly: React.FC<{
 // Team Detail View (Shared)
 const TeamDetailView: React.FC<{
   team: Team;
-  getUserById: (userId: UserId) => any;
+  getUserById: (userId: UserId) => User | undefined;
 }> = ({ team, getUserById }) => {
   return (
     <div className="space-y-6 py-4">
@@ -774,7 +802,7 @@ const TeamDetailView: React.FC<{
           <h2 className="text-2xl font-bold">{team.name}</h2>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="secondary">
-              {team.members.size}/{team.maxMembers} members
+              {team.members.size} members
             </Badge>
             {!team.active && (
               <Badge variant="outline" className="text-xs">
@@ -795,37 +823,39 @@ const TeamDetailView: React.FC<{
       <div>
         <h3 className="font-semibold text-lg mb-3">Team Members</h3>
         <div className="space-y-2">
-          {Array.from(team.members).map((memberId) => {
-            const member = getUserById(memberId)
-            return member ? (
-              <div
-                key={memberId}
-                className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                    {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-medium">{member.name}</div>
-                    <div className="text-sm text-muted-foreground">{member.email}</div>
+          {team.members.size === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No members yet</p>
+          ) : (
+            Array.from(team.members).map((member) => {
+              const user = getUserById(member.userId)
+              return (
+                <div
+                  key={member.userId}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      {member.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="font-medium">{member.fullName}</div>
+                      {user && (
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {team.leaderId === memberId && (
-                  <Badge variant="default" className="bg-yellow-600">
-                    <Crown className="h-3 w-3 mr-1" />
-                    Leader
-                  </Badge>
-                )}
-              </div>
-            ) : null
-          })}
+              )
+            })
+          )}
         </div>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        Created: {team.createdAt.toLocaleDateString()}
-      </div>
+      {team.createdAt && (
+        <div className="text-sm text-muted-foreground">
+          Created: {team.createdAt.toLocaleDateString()}
+        </div>
+      )}
     </div>
   );
 };

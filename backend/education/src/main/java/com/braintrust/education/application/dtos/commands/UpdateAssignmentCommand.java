@@ -3,6 +3,7 @@ package com.braintrust.education.application.dtos.commands;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+
 public record UpdateAssignmentCommand(
         @NotBlank(message = "Assignment ID is required")
         String assignmentId,
@@ -15,5 +16,8 @@ public record UpdateAssignmentCommand(
         String description,
 
         @Size(min = 10, message = "Instructions must be at least 10 characters")
-        String instructions
+        String instructions,
+
+        // ✅ NEW: Submission format field
+        String submissionFormat // "DIGITAL" or "NOTEBOOK"
 ) {}

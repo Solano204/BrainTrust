@@ -38,7 +38,6 @@ export default function DashboardPage() {
   }
 
   return (
-    <RouteGuard>
       <div className="flex min-h-screen bg-background">
         {/* Sidebar */}
         <DashboardSidebar
@@ -86,6 +85,5 @@ export default function DashboardPage() {
           </main>
         </div>
       </div>
-    </RouteGuard>
   )
 }

@@ -17,7 +17,7 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
   children,
   requiredPermission,
   requiredRole,
-  fallbackPath = '/unauthorized',
+  fallbackPath = '/auth/login',
 }) => {
   const { isAuthenticated, isLoading, user, hasPermission, hasRole } = useAuth();
   const router = useRouter();
@@ -26,8 +26,14 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
   useEffect(() => {
     if (isLoading) return;
 
-    if (!isAuthenticated) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+
+    if(pathname.includes("/auth/login") || pathname.includes("/auth/register")){
+      
+
+    }
+
+    else if (!isAuthenticated) {
+      router.push(`/auth/login`);
       return;
     }
 
@@ -61,14 +67,16 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  if (!isAuthenticated || 
-      (requiredRole && user && !hasRole(requiredRole)) ||
-      (requiredPermission && user && !hasPermission(requiredPermission))) {
-    return null;
-  }
+  // if (!isAuthenticated || 
+  //     (requiredRole && user && !hasRole(requiredRole)) ||
+  //     (requiredPermission && user && !hasPermission(requiredPermission))) {
+  //   return null;
+  // }
 
   return <>{children}</>;
 };
+
+ console.log("GUARDS")
 
 // Convenience components
 export const AdminOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => (
