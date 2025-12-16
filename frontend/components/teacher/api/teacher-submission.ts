@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 // =====================================================
 // MOCK CONFIGURATION
 // =====================================================
-const MOCK_ENABLED = true; // Set to false to use real API
+const MOCK_ENABLED = false; // Set to false to use real API
 
 // =====================================================
 // INTERFACES - Frontend Types
@@ -507,7 +507,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-const handleApiError = (error: unknown): never => {
+const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || error.message;
     console.error("API Error:", errorMessage);
@@ -516,14 +516,14 @@ const handleApiError = (error: unknown): never => {
   throw error;
 };
 
-const simulateDelay = (ms: number = 500) =>
+const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 // =====================================================
 // MAPPERS: Backend DTO -> Frontend Types
 // =====================================================
 
-function mapAssignmentDTOToAssignment(dto: AssignmentDTO): Assignment {
+async function mapAssignmentDTOToAssignment(dto: AssignmentDTO): Promise<Assignment> {
   return {
     id: dto.id,
     courseId: dto.courseId,
@@ -549,7 +549,7 @@ function mapAssignmentDTOToAssignment(dto: AssignmentDTO): Assignment {
   };
 }
 
-function mapQuizDTOToQuiz(dto: QuizDTO): Quiz {
+async function mapQuizDTOToQuiz(dto: QuizDTO): Promise<Quiz> {
   return {
     id: dto.id,
     courseId: dto.courseId,
@@ -570,7 +570,7 @@ function mapQuizDTOToQuiz(dto: QuizDTO): Quiz {
   };
 }
 
-function mapCompleteQuizDTOToCompleteQuiz(dto: CompleteQuizDTO): CompleteQuiz {
+async function mapCompleteQuizDTOToCompleteQuiz(dto: CompleteQuizDTO): Promise<CompleteQuiz> {
   return {
     id: dto.id,
     courseId: dto.courseId,
@@ -659,7 +659,7 @@ export async function fetchTaskInventory(courseId: string): Promise<TaskInventor
 
     return taskInventory;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -746,7 +746,7 @@ export async function fetchSubmissionDetail(submissionId: string): Promise<Submi
       aiAnalysis: dto.aiAnalysis || { status: "PENDING", result: null },
     };
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -807,7 +807,7 @@ export async function updateSubmissionGrade(
     // Fetch updated submission
     return await fetchSubmissionDetail(submissionId);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -848,7 +848,7 @@ export async function requestAIAnalysis(submissionId: string): Promise<Submissio
     const response = await apiClient.post(`/api/submissions/${submissionId}/request-ai-analysis`);
     return await fetchSubmissionDetail(submissionId);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -876,7 +876,7 @@ export async function downloadSubmissionAttachment(
     );
     return response.data;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -914,7 +914,7 @@ export async function bulkUpdateTaskDeadlines(
     );
     return response.data;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 

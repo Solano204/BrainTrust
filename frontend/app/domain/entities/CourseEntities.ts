@@ -1,3 +1,14 @@
+export interface Page {
+  id: PageId;
+  title: string;
+  sectionContent: string;
+  courseId: CourseId;
+  unitId: CourseId;
+  createdAt: string;
+  attachments: Document[];
+  urlsSupport: string[];
+  /** Java: LocalDateTime, serialized to ISO 8601 string */
+}
 // ----------------------------------------------------
 // ENTITIES
 // ----------------------------------------------------
@@ -26,6 +37,9 @@ import {
   GradeEnrollment,
 } from "../valueObjects/CourseValues";
 import { ComponentType } from "react";
+import { GroupMemberDTO } from "@/components/teacher-student/api/group";
+import { GradeDTO } from "@/components/student/api/enrollment";
+import { submissionFormat } from "@/components/teacher-student/api/task-teacher";
 
 /** Represents com.braintrust.education.domain.model.CourseUnit */
 export interface CourseUnit {
@@ -81,6 +95,8 @@ export interface Assignment {
   courseId: CourseId;
   unitId: CourseId;
   description: string;
+    submissionFormat: submissionFormat
+
   /** Java: LocalDateTime, serialized to ISO 8601 string */
   createdAt: string;
   urls: string[];
@@ -96,22 +112,9 @@ export interface Assignment {
   idUser: UserId;
 }
 
-export type deliveryMode = "GROUP" | "INDIVIDUAL"; // Added PAGE for general content
+export type deliveryMode = "TEAM" | "INDIVIDUAL"; // Added PAGE for general content
 
-export interface Page {
-  id: PageId;
-  title: string;
-  welcomeTitle: string;
-  welcomeSubtitle: string;
-  sectionTitle: string;
-  sectionContent: string;
-  courseId: CourseId;
-  unitId: CourseId;
-  createdAt: string;
-  attachments: Document[];
-  urlsSupport: string[];
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
-}
+
 
 /** Represents com.braintrust.education.domain.model.Enrollment */
 export interface Enrollment {
@@ -120,8 +123,13 @@ export interface Enrollment {
   studentId: UserId;
   /** Java: LocalDate, serialized to ISO 8601 date string (YYYY-MM-DD) */
   enrollmentDate: string;
-  status: EnrollmentStatus;
+  // status: EnrollmentStatus;
   // grade: GradeEnrollment | null;
+    status: string,
+    studentName: string,
+    studentEmail: string,
+    studentRefId: string,
+    finalGrade: GradeDTO | null
 }
 
 /** * Represents com.braintrust.education.domain.model.Course (Aggregate Root)
@@ -145,11 +153,23 @@ export interface Course {
 
 export interface Team {
   courseId: CourseId;
+  teamId: TeamId;
   name: string;
   description: string;
-  leaderId: UserId | null; // Team leader (optional)
+  // leaderId: UserId | null; // Team leader (optional)
+  members: Set<GroupMemberDTO>;
+  // maxMembers: number;
+  active: boolean;
+  createdAt: Date;
+}
+export interface TeamWithIds {
+  courseId: CourseId;
+  teamId: TeamId;
+  name: string;
+  description: string;
+  // leaderId: UserId | null; // Team leader (optional)
   members: Set<UserId>;
-  maxMembers: number;
+  // maxMembers: number;
   active: boolean;
   createdAt: Date;
 }
@@ -188,6 +208,7 @@ export interface Question {
 }
 
 /** Represents a collection of questions used for assessment. */
+/** Represents a collection of questions used for assessment. */
 export interface Quiz {
   /** Unique identifier for the quiz. */
   id: QuizId;
@@ -202,13 +223,26 @@ export interface Quiz {
   /** Time limit in minutes (or seconds). */
   timeLimit: number;
   /** Percentage required to pass (e.g., 70). */
-  passingScore: number;
-
+  // passingScore: number;
   dueDate: string | null;
   /** Array of Question objects. */
   questions: Question[];
   acceptLateSubmissions: boolean;
-  idUser: UserId;
+  idUser?: UserId;
+  
+  // New fields for backend integration
+  availableFrom?: string;
+  availableUntil?: string;
+  maxAttempts?: number;
+  shuffleQuestions?: boolean;
+  showCorrectAnswers?: boolean;
+  totalPoints?: number;
+  questionCount?: number;
+  createdAt?: string;
+  active?: boolean;
+  availableNow?: boolean;
+  courseName?: string;
+  unitName?: string;
 }
 
 
@@ -244,11 +278,13 @@ export interface QuizAnswers {
 
 // Export the quiz-specific interfaces
 
+
+export type QuestionType = "multiple-choice" | "open-ended";
 // File: src/app/domain/entities/QuizSubmission.ts
 export interface QuizAnswer {
   questionId: string;
   questionText: string;
-  questionType: "multiple-choice" | "open-ended";
+  questionType: QuestionType;
   studentAnswer: string | number;
   correctAnswer?: string | number;
   points: number;
@@ -334,4 +370,4 @@ export type AnalysisRequest = {
   status: "PENDING" | "COMPLETED" | "FAILED";
   result: any | null;
 };
-export type TaskType = "ASSIGNMENT" | "QUIZ" | "FORUM";
+export type TaskType = "ASSIGNMENT" | "QUIZ" 

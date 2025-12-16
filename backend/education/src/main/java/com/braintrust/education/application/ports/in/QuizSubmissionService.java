@@ -40,9 +40,7 @@ public interface QuizSubmissionService {
     List<QuizSubmissionDTO> getSubmissionsByQuiz(QuizId quizId);
     */
 
-    /*
     List<QuizSubmissionDTO> getSubmissionsByStudent(UserId studentId);
-    */
 
     /*
     List<QuizSubmissionDTO> getSubmissionsByQuizAndStudent(QuizId quizId, UserId studentId);

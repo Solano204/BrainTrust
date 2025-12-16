@@ -16,9 +16,7 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
     List<QuizSubmissionJpaEntity> findByQuizId(String quizId);
     */
 
-    /*
     List<QuizSubmissionJpaEntity> findByStudentId(String studentId);
-    */
 
     /*
     List<QuizSubmissionJpaEntity> findByQuizIdAndStudentId(String quizId, String studentId);

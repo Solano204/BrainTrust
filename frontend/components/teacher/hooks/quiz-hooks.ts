@@ -3,53 +3,44 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { quizKeys } from "@/app/infraestructure/api/submission/quiz-keys";
-import {
-  fetchQuizById,
-  createQuiz,
-  updateQuiz,
-  deleteQuiz,
-  fetchQuizSubmissions,
-  fetchStudentQuizSubmission,
-  gradeQuizSubmission,
-  getQuizStats,
-  fetchSubmissionQuizzes,
-  fetchSubmissionQuizById,
-  submitQuizAnswers,
-  autoGradeSubmissionQuiz,
-  fetchQuizzesByCourseWithoutDetails,
-  fetchQuizzesByCourse,
-} from "@/components/teacher/api/quiz-api";
+
 
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 import { QuestionId, QuizId } from "@/app/domain/valueObjects/CourseValues";
 import React from "react";
-import { SubmissionQuiz, QuizData, QuizAnswer, QuizInventoryItem, Quiz, Submission, Question  } from "../../../app/presentation/hooks/submission/types";
-import {  fetchTeacherSubmissionsItem, fetchTeacherSubmissionsQuizzesItem, StudentQuiz } from "@/components/student/api/student-submission";
-
-
-
-
+import { SubmissionQuiz, QuizData, QuizAnswer, QuizInventoryItem,  Submission } from "../../../app/presentation/hooks/submission/types";
+import { Question } from "@/app/domain/entities/CourseEntities";
+import {  
+  fetchTeacherSubmissionsItem, 
+  fetchTeacherSubmissionsQuizzesItem, 
+  StudentSubmissionQuiz,
+} from "@/components/student/api/student-submission";
+import { createQuiz, deleteQuiz, fetchQuizSubmissions, fetchQuizzesByCourse, getQuizStats,  submitQuizAnswers, updateQuiz } from "../api/quiz";
+import { Quiz } from "@/app/domain/entities/CourseEntities";
+import { fetchQuizSubmissionDetail, gradeQuizSubmission } from "@/components/teacher-student/api/quiz-teacher";
 
 /**
- * Custom hook for fetching SubmissionQuiz entries
+ * Custom hook for fetching all quiz submissions for a course
  */
-export function useSubmissionQuizzes(quizId: QuizId | null) {
-  return useQuery<SubmissionQuiz[]>({
-    queryKey: quizKeys.submissionQuizzes(quizId || ""),
-    queryFn: () => fetchSubmissionQuizzes(quizId!),
-    enabled: !!quizId,
+export function useQuizSubmissionsByCourse(courseId: CourseId | null, unitId : string | null) {
+  return useQuery<StudentSubmissionQuiz[]>({
+    queryKey: ['quiz-submissions', courseId],
+    queryFn: () => fetchTeacherSubmissionsQuizzesItem(courseId!, unitId!),
+    enabled: !!courseId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
   });
 }
 
 /**
- * Custom hook for fetching a single SubmissionQuiz by ID
+ * Custom hook for fetching a single detailed quiz submission
  */
-export function useSubmissionQuiz(submissionId: string | null) {
-  return useQuery<SubmissionQuiz>({
-    queryKey: quizKeys.submissionQuizDetail(submissionId || ""),
-    queryFn: () => fetchSubmissionQuizById(submissionId!),
+// CURRENTLY WORKS
+
+export function useQuizSubmissionDetail(submissionId: string | null) {
+  return useQuery({
+    queryKey: quizKeys.submissionDetail(submissionId || ''),
+    queryFn: () => fetchQuizSubmissionDetail(submissionId!),
     enabled: !!submissionId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -57,10 +48,41 @@ export function useSubmissionQuiz(submissionId: string | null) {
 }
 
 /**
+ * Custom hook for fetching SubmissionQuiz entries
+ */
+// export function useSubmissionQuizzes(quizId: QuizId | null) {
+//   return useQuery<SubmissionQuiz[]>({
+//     queryKey: quizKeys.submissionQuizzes(quizId || ""),
+//     queryFn: () => fetchSubmissionQuizzes(quizId!),
+//     enabled: !!quizId,
+//     staleTime: 300000, // 5 minutes
+//     refetchOnWindowFocus: false,
+//   });
+// }
+
+/**
+ * Custom hook for fetching a single SubmissionQuiz by ID
+ */
+// export function useSubmissionQuiz(submissionId: string | null) {
+//   return useQuery<SubmissionQuiz>({
+//     queryKey: quizKeys.submissionQuizDetail(submissionId || ""),
+//     queryFn: () => fetchSubmissionQuizById(submissionId!),
+//     enabled: !!submissionId,
+//     staleTime: 300000, // 5 minutes
+//     refetchOnWindowFocus: false,
+//   });
+// }
+
+/**
  * Custom hook for SubmissionQuiz mutations
  */
+
+// CURRENTLY WORK
+
 export function useSubmissionQuizMutations() {
   const queryClient = useQueryClient();
+
+// CURRENTLY WORK
 
   const submitQuizMutation = useMutation({
     mutationFn: ({
@@ -99,41 +121,52 @@ export function useSubmissionQuizMutations() {
       queryClient.invalidateQueries({
         queryKey: quizKeys.submissionQuizDetail(data.id),
       });
+      // Also invalidate the detailed submission query
+      queryClient.invalidateQueries({
+        queryKey: ['quiz-submission-detail', data.id],
+      });
     },
     onError: (error: Error) => {
       console.error("Error grading submission quiz:", error.message);
     },
   });
 
-  const autoGradeSubmissionQuizMutation = useMutation({
-    mutationFn: autoGradeSubmissionQuiz, // expects SubmissionQuiz
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({
-        queryKey: quizKeys.submissionQuizzes(data.quizId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: quizKeys.submissionQuizDetail(data.id),
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error auto-grading submission quiz:", error.message);
-    },
-  });
+  // const autoGradeSubmissionQuizMutation = useMutation({
+  //   mutationFn: autoGradeSubmissionQuiz, // expects SubmissionQuiz
+  //   onSuccess: (data) => {
+  //     queryClient.invalidateQueries({
+  //       queryKey: quizKeys.submissionQuizzes(data.quizId),
+  //     });
+  //     queryClient.invalidateQueries({
+  //       queryKey: quizKeys.submissionQuizDetail(data.id),
+  //     });
+  //     // Also invalidate the detailed submission query
+  //     queryClient.invalidateQueries({
+  //       queryKey: ['quiz-submission-detail', data.id],
+  //     });
+  //   },
+  //   onError: (error: Error) => {
+  //     console.error("Error auto-grading submission quiz:", error.message);
+  //   },
+  // });
 
   return {
     submitQuiz: submitQuizMutation,
     gradeSubmissionQuiz: gradeSubmissionQuizMutation,
-    autoGradeSubmissionQuiz: autoGradeSubmissionQuizMutation,
+    // autoGradeSubmissionQuiz: autoGradeSubmissionQuizMutation,
   };
 }
 
 /**
  * Custom hook for fetching quizzes by course
  */
-export function useQuizzesByCourseWithoutDetails(courseId: CourseId | null) {
-  return useQuery<StudentQuiz[]>({
-    queryKey: quizKeys.list(courseId || ""),
-    queryFn: () => fetchTeacherSubmissionsQuizzesItem(courseId!),
+// THIS CURRENTLY WORKS
+
+
+export function useQuizzesByCourseWithoutDetails(courseId: CourseId | null, unitId : string | null) {
+  return useQuery<StudentSubmissionQuiz[]>({
+    queryKey: quizKeys.listUnit(courseId || "", unitId || ""),
+    queryFn: () => fetchTeacherSubmissionsQuizzesItem(courseId!, unitId!),
     enabled: !!courseId,
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
@@ -150,22 +183,30 @@ export function useQuizzesByCourse(courseId: CourseId | null) {
   });
 }
 
+
+
+
 /**
  * Custom hook for fetching a single quiz by ID
  */
-export function useQuiz(quizId: QuizId | null) {
-  return useQuery<Quiz>({
-    queryKey: quizKeys.detail(quizId || ""),
-    queryFn: () => fetchQuizById(quizId!),
-    enabled: !!quizId,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
-}
+// export function useQuiz(quizId: QuizId | null) {
+//   return useQuery<Quiz>({
+//     queryKey: quizKeys.detail(quizId || ""),
+//     queryFn: () => fetchQuizById(quizId!),
+//     enabled: !!quizId,
+//     staleTime: 300000, // 5 minutes
+//     refetchOnWindowFocus: false,
+//   });
+// }
 
 /**
  * Custom hook for fetching quiz submissions
  */
+
+
+
+// CURRENTLY WORKS
+
 export function useQuizSubmissions(quizId: QuizId | null) {
   return useQuery<Submission[]>({
     queryKey: quizKeys.quizSubmissions(quizId || ""),
@@ -190,19 +231,22 @@ export function useQuizSubmissions(quizId: QuizId | null) {
 /**
  * Custom hook for fetching quiz statistics
  */
-export function useQuizStats(quizId: QuizId | null) {
-  return useQuery({
-    queryKey: quizKeys.statsByQuiz(quizId || ""),
-    queryFn: () => getQuizStats(quizId!),
-    enabled: !!quizId,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
-  });
-}
+
+// export function useQuizStats(quizId: QuizId | null) {
+//   return useQuery({
+//     queryKey: quizKeys.statsByQuiz(quizId || ""),
+//     queryFn: () => getQuizStats(quizId!),
+//     enabled: !!quizId,
+//     staleTime: 300000, // 5 minutes
+//     refetchOnWindowFocus: false,
+//   });
+// }
 
 /**
  * Custom hook for quiz mutations
  */
+// CURRENTLY WORKS
+
 export function useQuizMutations() {
   const queryClient = useQueryClient();
 
@@ -251,44 +295,44 @@ export function useQuizMutations() {
     },
   });
 
-  // fixed to use submissionId string like the API function
-  const gradeSubmissionMutation = useMutation({
-    mutationFn: ({
-      submissionId,
-      grades,
-    }: {
-      submissionId: string;
-      grades: { questionId: QuestionId; score: number; feedback?: string }[];
-    }) => gradeQuizSubmission(submissionId, grades),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: quizKeys.submissions(),
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error grading submission:", error.message);
-    },
-  });
+ 
 
-  // const autoGradeMutation = useMutation({
-  //   mutationFn: (submission: SubmissionQuiz) =>
-  //     autoGradeSubmissionQuiz(submission),
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({
-  //       queryKey: quizKeys.submissions(),
-  //     });
-  //   },
-  //   onError: (error: Error) => {
-  //     console.error("Error auto-grading submission:", error.message);
-  //   },
-  // });
+  
+    
+  
+    const gradeSubmissionMutation = useMutation({
+      mutationFn: ({
+        submissionId,
+        grades,
+        overallGrade,
+      }: {
+        submissionId: string;
+        grades: { questionId: string; score: number; feedback?: string }[];
+        overallGrade?: string;
+      }) => gradeQuizSubmission(submissionId, grades, overallGrade),
+      onSuccess: (data) => {
+        // Invalidate the submission detail query
+        queryClient.invalidateQueries({
+          queryKey: quizKeys.submissionDetail(data.id),
+        });
+        // Invalidate all submissions queries
+        queryClient.invalidateQueries({
+          queryKey: quizKeys.submissions(),
+        });
+      },
+      onError: (error: Error) => {
+        console.error("Error grading submission:", error.message);
+      },
+    });
+  
 
+
+  
   return {
     createQuiz: createQuizMutation,
     updateQuiz: updateQuizMutation,
     deleteQuiz: deleteQuizMutation,
     gradeSubmission: gradeSubmissionMutation,
-    // autoGrade: autoGradeMutation,
   };
 }
 

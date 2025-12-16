@@ -2,13 +2,21 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { CourseUnit, UnitResource } from "@/app/domain/entities/CourseEntities";
+import { CourseUnit } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
 import { unitKeys } from "@/app/infraestructure/api/course/units/unit-keys";
 import React from "react";
-import { createUnit, deleteUnit, fetchUnitById, fetchUnitsByCourse, reorderUnits, updateUnit } from "@/components/teacher-student/api/unit";
-import { deleteUnitResource } from "@/components/teacher-student/api/unit-api";
+import { 
+  createUnit, 
+  createUnitWithImage, 
+  deleteUnit, 
+  fetchUnitById, 
+  fetchUnitsByCourse, 
+  reorderUnits, 
+  updateUnit,
+  uploadUnitImageFile 
+} from "@/components/teacher-student/api/unit";
+import { deleteImageFromCloudinary, uploadImageFile } from "@/app/utils/cloudinary/cloudinary";
 
 /**
  * Custom hook for fetching units by course
@@ -37,44 +45,116 @@ export function useUnit(unitId: UnitId | null) {
 }
 
 /**
- * Custom hook for unit mutations
+ * Custom hook for unit mutations with image upload support
  */
+
+
+// CURRENTLY WORKS
+
 export function useUnitMutations() {
   const queryClient = useQueryClient();
 
-  const createUnitMutation = useMutation({
-    mutationFn: ({ courseId, unitData }: { courseId: CourseId, unitData: Omit<CourseUnit, "id" | "courseId" | "resources"> }) =>
-      createUnit(courseId, unitData),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: unitKeys.list(variables.courseId) 
-      });
+  // Mutation for uploading unit image
+  const uploadImageMutation = useMutation({
+    mutationFn: async ({ unitId, file }: { unitId: string, file: File }) => {
+      return uploadUnitImageFile(unitId, file);
     },
     onError: (error: Error) => {
-      console.error("Error creating unit:", error.message);
+      console.error("Error uploading unit image:", error.message);
     }
   });
 
-  const updateUnitMutation = useMutation({
-    mutationFn: ({ unitId, unitData }: { unitId: UnitId, unitData: Partial<Omit<CourseUnit, "id" | "courseId" | "resources">> }) =>
-      updateUnit(unitId, unitData),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: unitKeys.list(data.courseId) 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: unitKeys.detail(variables.unitId) 
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error updating unit:", error.message);
-    }
-  });
+  // Mutation for creating unit
+  // Then in your mutation, you can use:
+const createUnitMutation = useMutation({
+  mutationFn: async ({ 
+    courseId, 
+    unitData, 
+    imageFile 
+  }: { 
+    courseId: CourseId, 
+    unitData: Omit<CourseUnit, "id" | "courseId" | "resources">,
+    imageFile?: File | null 
+  }) => {
+    if (imageFile) {
 
+      // Use the new function for units with images
+      return await createUnitWithImage(courseId, unitData, imageFile);
+    } else {
+      // Use the regular function for units without images
+      return await createUnit(courseId, unitData);
+    }
+  },
+  onSuccess: (data, variables) => {
+    queryClient.invalidateQueries({ 
+      queryKey: unitKeys.list(variables.courseId) 
+    });
+  },
+  onError: (error: Error) => {
+    console.error("Error creating unit:", error.message);
+  }
+});
+ // In your unit-hooks.ts file
+
+
+// Mutation for updating unit
+const updateUnitMutation = useMutation({
+  mutationFn: async ({ 
+    unitId, 
+    unitData,
+    imageFile,
+    oldImageUrl, // Add this parameter
+  }: { 
+    unitId: UnitId, 
+    unitData: Partial<Omit<CourseUnit, "id" | "courseId" | "resources">>,
+    imageFile?: File | null,
+    oldImageUrl?: string, // The current image URL from the unit
+  }) => {
+    let finalUnitData = { ...unitData };
+    
+    // If there's a new image file, handle the image swap
+    if (imageFile) {
+      console.log(`Uploading new image for unit ${unitId}...`);
+      
+      // 1. Delete old image from Cloudinary (if it exists)
+      if (oldImageUrl && oldImageUrl.includes('cloudinary.com')) {
+        try {
+          console.log('Deleting old image from Cloudinary...');
+          await deleteImageFromCloudinary(oldImageUrl);
+          console.log('✓ Old image deleted from Cloudinary');
+        } catch (deleteError) {
+          console.warn('Failed to delete old image from Cloudinary:', deleteError);
+          // Continue with upload even if delete fails
+        }
+      }
+      
+      // 2. Upload new image
+      const uploadedUrl = await uploadImageFile(imageFile);
+      finalUnitData.urlImage = uploadedUrl;
+      console.log('✓ New image uploaded to Cloudinary');
+    }
+
+    // Update the unit with the (possibly updated) data
+    return updateUnit(unitId, finalUnitData);
+  },
+  onSuccess: (data, variables) => {
+    queryClient.invalidateQueries({ 
+      queryKey: unitKeys.list(data.courseId) 
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: unitKeys.detail(variables.unitId) 
+    });
+  },
+  onError: (error: Error) => {
+    console.error("Error updating unit:", error.message);
+  }
+});
+
+
+  // Mutation for deleting unit
   const deleteUnitMutation = useMutation({
     mutationFn: deleteUnit,
-    onSuccess: (_, unitId) => {
-      // We need to invalidate all course unit lists since we don't know which course this unit belonged to
+    onSuccess: () => {
       queryClient.invalidateQueries({ 
         queryKey: unitKeys.lists() 
       });
@@ -84,6 +164,7 @@ export function useUnitMutations() {
     }
   });
 
+  // Mutation for reordering units
   const reorderUnitsMutation = useMutation({
     mutationFn: ({ courseId, unitOrder }: { courseId: CourseId, unitOrder: { unitId: UnitId, order: number }[] }) =>
       reorderUnits(courseId, unitOrder),
@@ -97,27 +178,12 @@ export function useUnitMutations() {
     }
   });
 
- 
-
-//   const deleteResourceMutation = useMutation({
-//     mutationFn: ({ unitId, resourceId }: { unitId: UnitId, resourceId: string }) =>
-//       deleteUnitResource(unitId, resourceId),
-//     onSuccess: (data, variables) => {
-//       queryClient.invalidateQueries({ 
-//         queryKey: unitKeys.detail(variables.unitId) 
-//       });
-//     },
-//     onError: (error: Error) => {
-//       console.error("Error deleting resource:", error.message);
-//     }
-//   });
-
   return {
     createUnit: createUnitMutation,
     updateUnit: updateUnitMutation,
     deleteUnit: deleteUnitMutation,
     reorderUnits: reorderUnitsMutation,
-    // deleteResource: deleteResourceMutation
+    uploadImage: uploadImageMutation
   };
 }
 

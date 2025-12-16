@@ -113,15 +113,13 @@ public class QuizSubmissionController {
     }
     */
 
-    /*
-    @GetMapping("/student/{studentId}")
-    public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByStudent(@PathVariable String studentId) {
+    @GetMapping("/student/{studentId}/{courseId}")
+    public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByStudent(@PathVariable String studentId, @PathVariable String courseId) {
         List<QuizSubmissionDTO> submissions = submissionService.getSubmissionsByStudent(
                 UserId.fromString(studentId)
         );
         return ResponseEntity.ok(submissions);
     }
-    */
 
     /*
     @GetMapping("/quiz/{quizId}/student/{studentId}")

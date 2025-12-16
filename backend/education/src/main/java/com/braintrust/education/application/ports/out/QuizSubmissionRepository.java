@@ -22,9 +22,7 @@ public interface QuizSubmissionRepository {
     List<QuizSubmission> findByQuizId(QuizId quizId);
     */
 
-    /*
     List<QuizSubmission> findByStudentId(UserId studentId);
-    */
 
     /*
     List<QuizSubmission> findByQuizAndStudent(QuizId quizId, UserId studentId);

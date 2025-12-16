@@ -5,6 +5,7 @@ import { Course } from "@/app/domain/entities";
 import { generateUUID } from "@/app/utils/uuid";
 import { GradeDTO } from "@/components/student/api/student-submission";
 import axios from "axios";
+import { cookies } from "next/headers";
 
 // Add these types for course and student
 export interface CourseDTO {
@@ -51,7 +52,7 @@ const isMockEnabled = process.env.NEXT_PUBLIC_MOCK_ENABLED === 'true';
 // Mock student courses data
 const MOCK_STUDENT_COURSES: Course[] = [
   {
-    id: generateUUID(),
+    id: "crs-101",
     code: "CS101",
     name: "Introduction to Computer Science",
     description: "A foundational course covering basic programming concepts and algorithms.",
@@ -141,8 +142,12 @@ const mapBackendEnrollmentToCourse = (enrollment: EnrollmentDTO): Course => {
   };
 };
 
+
+
+// THIS CURRENTLY WORKS
+
 /**
- * Fetch courses for a specific student
+ * Fetch courses for a specific student WORK
  */
 export async function fetchStudentCourses(studentId: string): Promise<Course[]> {
   if (isMockEnabled) {
@@ -318,6 +323,9 @@ export async function isStudentEnrolled(courseId: string, studentId: string): Pr
 /**
  * Get courses by teacher
  */
+
+// CURRENTLY WORK
+
 export async function fetchTeacherCourses(teacherId: string): Promise<Course[]> {
   if (isMockEnabled) {
     await simulateDelay();

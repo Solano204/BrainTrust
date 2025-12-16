@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { fetchThisWeekQuizzes } from "./quiz";
-import { Quiz } from "./quiz-api";
-import { Assignment, fetchThisWeekTasks } from "./task";
+import {  fetchThisWeekTasks } from "./task";
+import { Assignment, Quiz } from "@/app/domain/entities/CourseEntities";
 
 // Global dismissal set (you might want to move this to a proper state management)
 const DISMISSED_ITEMS = new Set<string>();
@@ -76,4 +77,34 @@ export function dismissResource(resourceId: string): void {
 export function restoreResource(resourceId: string): void {
   DISMISSED_ITEMS.delete(resourceId);
   console.log(`Restored resource ${resourceId}. Total dismissed: ${DISMISSED_ITEMS.size}`);
+}
+
+
+
+
+export function useTimelineTasks(
+  userId: string | null,
+  weekStart: string,
+  userType: 'teacher' | 'student' = 'teacher'
+) {
+  return useQuery<Assignment[]>({
+    queryKey: ['timeline-tasks', userId, weekStart, userType],
+    queryFn: () => fetchThisWeekTasks(userId!, weekStart, userType),
+    enabled: !!userId && !!weekStart,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
+
+export function useTimelineQuizzes(
+  userId: string | null,
+  weekStart: string,
+  userType: 'teacher' | 'student' = 'teacher'
+) {
+  return useQuery<Quiz[]>({
+    queryKey: ['timeline-quizzes', userId, weekStart, userType],
+    queryFn: () => fetchThisWeekQuizzes(userId!, weekStart, userType),
+    enabled: !!userId && !!weekStart,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
 }

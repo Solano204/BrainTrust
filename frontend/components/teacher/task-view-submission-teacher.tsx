@@ -1,332 +1,859 @@
-// File: src/app/features/courses/components/SubmissionDetails.tsx
+
 "use client";
 
-import * as React from 'react';
+import * as React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Paperclip, Download, MonitorCheck, FileText, CheckCircle, Loader2 } from "lucide-react";
-import { SubmissionStatus } from "@/app/domain/valueObjects";
-import { SubmissionId } from '@/app/domain/services/serviceCourse';
-import { AISegmentsModal } from './quiz-view-submission-modalia-teacher';
-import { SubmissionDetailData } from '@/app/domain/entities/CourseEntities';
+import {
+  ArrowLeft,
+  Download,
+  FileText,
+  Calendar,
+  User,
+  Brain,
+  AlertTriangle,
+  BarChart3,
+  Clock,
+  Users,
+  File,
+  Hash,
+  Award,
+  Eye,
+  X,
+  Activity,
+  Shield,
+  Cpu,
+} from "lucide-react";
+import { SubmissionTask } from "../student/api/student-submission";
 
-interface SubmissionDetailProps {
-    data: SubmissionDetailData;
-    onBack: () => void;
-    onUpdateGrade: (params: { submissionId: SubmissionId; gradeData: { grade: number; feedback: string } }) => void;
-    onRequestAnalysis: (submissionId: SubmissionId) => void;
-    onDownloadAttachment: (params: { submissionId: SubmissionId; attachmentId: string }) => void;
-    isUpdatingGrade: boolean;
-    isRequestingAnalysis: boolean;
-    isDownloadingAttachment: boolean;
+// Import modal components
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface SubmissionDetailViewProps {
+  data: SubmissionTask;
+  onBack: () => void;
+  onUpdateGrade: (data: {
+    submissionId: string;
+    gradeValue: string;
+    maxScore: string;
+    feedback: string;
+  }) => void;
+  onDownloadAttachment: (attachment: {
+    name: string;
+    storagePath: string;
+  }) => void;
+  isUpdatingGrade: boolean;
+  isDownloadingAttachment?: boolean;
 }
 
-export function SubmissionDetailView({ 
-    data, 
-    onBack, 
-    onUpdateGrade, 
-    onRequestAnalysis, 
-    onDownloadAttachment,
-    isUpdatingGrade,
-    isRequestingAnalysis,
-    isDownloadingAttachment
-}: SubmissionDetailProps) {
-    const { submission, task, student, aiAnalysis } = data;
+export function SubmissionDetailView({
+  data,
+  onBack,
+  onUpdateGrade,
+  onDownloadAttachment,
+  isUpdatingGrade,
+  isDownloadingAttachment = false,
+}: SubmissionDetailViewProps) {
+  const [gradeValue, setGradeValue] = React.useState(
+    data.submission?.grade?.value || ""
+  );
+  const [feedback, setFeedback] = React.useState(
+    data.submission?.teacherFeedback || ""
+  );
+  const [showAIAnalysisModal, setShowAIAnalysisModal] = React.useState(false);
 
-    // State management
-    const initialGrade = submission.grade?.value ?? '';
-    const [gradeInput, setGradeInput] = React.useState<string | number>(initialGrade);
-    const [feedback, setFeedback] = React.useState(submission.teacherFeedback || '');
-    const [isModalOpen, setIsModalOpen] = React.useState(false);
+  // Calculate percentage - handle both string and number grade values
+  const percentage = React.useMemo(() => {
+    if (!data.submission?.grade) return 0;
+    const gradeNum = Number(gradeValue || data.submission.grade.value);
+    return (gradeNum / data.maxPoints) * 100;
+  }, [gradeValue, data.submission?.grade, data.maxPoints]);
 
-    // Handle grade input change
-    const handleGradeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        const max = task.maxPoints;
-        const min = 0;
-        
-        if (value === '' || value === '-') {
-            setGradeInput(value);
-        } else {
-            const numValue = parseInt(value);
-            if (!isNaN(numValue)) {
-                const clampedValue = Math.min(Math.max(numValue, min), max);
-                setGradeInput(clampedValue);
-            }
-        }
-    };
-
-    // Handle grade submission
-    const handleSubmitGrade = () => {
-        const finalGrade = typeof gradeInput === 'string' ? parseInt(gradeInput) : gradeInput;
-
-        if (finalGrade === null || isNaN(finalGrade)) {
-            alert('Please assign a valid numerical grade.');
-            return;
-        }
-
-        onUpdateGrade({
-            submissionId: submission.id,
-            gradeData: {
-                grade: finalGrade,
-                feedback: feedback
-            }
-        });
-    };
-
-    // Handle AI analysis request
-    const handleRequestAnalysis = () => {
-        onRequestAnalysis(submission.id);
-    };
-
-    // Handle attachment download
-    const handleDownloadAttachment = (attachmentId: string, fileName: string) => {
-        onDownloadAttachment({
-            submissionId: submission.id,
-            attachmentId
-        });
-    };
-
-    // Helper functions
-    const formattedDate = (date: string) => 
-        new Date(date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
-
-    const getStatusBadge = (status: SubmissionStatus) => {
-        switch (status) {
-            case 'SUBMITTED': return <Badge className="bg-green-600 text-white hover:bg-green-700 font-semibold">Submitted</Badge>;
-            case 'LATE_SUBMITTED': return <Badge className="bg-red-600 text-white hover:bg-red-700 font-semibold">Late</Badge>;
-            case 'GRADED': return <Badge className="bg-blue-600 text-white hover:bg-blue-700 font-semibold">Graded</Badge>;
-            case 'RETURNED': return <Badge className="bg-yellow-600 text-white hover:bg-yellow-700 font-semibold">Returned</Badge>;
-            default: return <Badge variant="secondary">Draft</Badge>;
-        }
-    };
-
-    // AI Analysis Display Logic
-    const aiScore = aiAnalysis.result?.aiProbability?.value 
-        ? Math.round(parseFloat(aiAnalysis.result.aiProbability.value) * 100)
-        : null;
+  const handleSubmitGrade = () => {
+    console.log("Submitting grade for submission:", data.submission?.id);
+    if (!data.submission) return;
     
-    const aiColor = aiScore !== null ? (aiScore > 50 ? 'text-destructive' : aiScore > 10 ? 'text-yellow-500' : 'text-green-500') : 'text-muted-foreground';
-    const aiIcon = aiScore !== null && aiScore > 50 ? <MonitorCheck className="h-5 w-5 text-destructive" /> : <MonitorCheck className="h-5 w-5 text-blue-500" />;
+    onUpdateGrade({
+      submissionId: data.submission.id,
+      gradeValue,
+      maxScore: data.maxPoints.toString(),
+      feedback,
+    });
+  };
 
-    return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
-            <div className="max-w-6xl mx-auto space-y-6">
-                
-                {/* Header */}
-                <div className="flex justify-between items-center pb-4 border-b border-border">
-                    <h1 className="text-3xl font-extrabold text-foreground">
-                        Review: {task.title}
-                    </h1>
-                    <Button onClick={onBack} variant="outline" className="gap-2 shadow-sm">
-                        <ArrowLeft className="h-4 w-4" /> Back to Inventory
-                    </Button>
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatShortDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'GRADED':
+        return 'default';
+      case 'SUBMITTED':
+        return 'secondary';
+      case 'LATE_SUBMITTED':
+        return 'destructive';
+      case 'NOT_SUBMITTED':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const formatStatusText = (status: string) => {
+    return status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+
+  console.log("Submission data:", data);
+  // AI Analysis Modal Component
+  const AIAnalysisModal = () => (
+    <Dialog open={showAIAnalysisModal} onOpenChange={setShowAIAnalysisModal}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Brain className="h-6 w-6 text-purple-600" />
+              <div>
+                <DialogTitle className="text-2xl">AI Detection Analysis Report</DialogTitle>
+                <DialogDescription>
+                  Detailed analysis of submission content authenticity
+                </DialogDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAIAnalysisModal(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+
+        {data.submission?.aiAnalysis && (
+          <div className="space-y-6">
+            {/* Summary Header */}
+            <div className={`p-4 rounded-lg border ${
+              data.submission.aiAnalysis.isLikelyAI 
+                ? 'bg-red-50 border-red-200' 
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-full ${
+                    data.submission.aiAnalysis.isLikelyAI 
+                      ? 'bg-red-100' 
+                      : 'bg-green-100'
+                  }`}>
+                    {data.submission.aiAnalysis.isLikelyAI ? (
+                      <Cpu className="h-5 w-5 text-red-600" />
+                    ) : (
+                      <User className="h-5 w-5 text-green-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">
+                      {data.submission.aiAnalysis.isLikelyAI 
+                        ? 'AI-Generated Content Detected' 
+                        : 'Human-Written Content Confirmed'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Analysis conducted on {formatDate(data.submission.aiAnalysis.analyzedAt)}
+                    </p>
+                  </div>
                 </div>
-                
-                {/* Student Info Card */}
-                <Card className="p-6 shadow-xl bg-white dark:bg-gray-800 border-t-4 border-primary">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                        <div className="flex items-center space-x-4 md:col-span-1">
-                            <img src={student.avatarUrl} alt={student.name} className="w-16 h-16 rounded-full object-cover border-4 border-primary/50" />
-                            <div>
-                                <p className="text-lg font-bold text-primary">{student.name}</p>
-                                <p className="text-sm text-muted-foreground">Student ID: {student.id}</p>
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground uppercase">Submission Status</p>
-                            {getStatusBadge(submission.status)}
-                        </div>
-                        
-                        <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground uppercase">Max Points</p>
-                            <p className="text-xl font-extrabold text-gray-800 dark:text-gray-100">{task.maxPoints}</p>
-                        </div>
-
-                        <div className="space-y-1 md:text-right">
-                            <p className="text-xs text-muted-foreground uppercase">Submitted On</p>
-                            <p className="font-medium text-sm">{formattedDate(submission.submittedAt)}</p>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Main Content */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column: Submission Content */}
-                    <Card className="lg:col-span-2 p-6 shadow-xl space-y-4">
-                        <h2 className="text-xl font-extrabold border-b pb-3 text-foreground">Submission Content</h2>
-                        
-                        {/* Instructions */}
-                        <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                            <h3 className="font-semibold mb-2 flex items-center gap-2 text-primary">
-                                <FileText className="h-4 w-4" /> Task Instructions:
-                            </h3>
-                            <p className="text-sm text-muted-foreground italic whitespace-pre-wrap">{task.instructions}</p>
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="prose dark:prose-invert max-w-none text-foreground whitespace-pre-wrap border p-4 rounded-lg bg-white dark:bg-gray-900">
-                            {submission.content}
-                        </div>
-
-                        {/* Attachments */}
-                        {submission.attachments.length > 0 && (
-                            <div className="pt-4 border-t border-border">
-                                <h3 className="font-semibold mb-3">Attached Files ({submission.attachments.length})</h3>
-                                <div className="space-y-2">
-                                    {submission.attachments.map((file, index) => (
-                                        <div key={index} className="flex justify-between items-center p-3 text-sm bg-muted/50 rounded border border-border">
-                                            <span className="flex items-center gap-2 font-medium">
-                                                <Paperclip className="h-4 w-4 text-primary" /> {file.name}
-                                            </span>
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                className="gap-2"
-                                                onClick={() => handleDownloadAttachment(file.storagePath, file.name)}
-                                                disabled={isDownloadingAttachment}
-                                            >
-                                                {isDownloadingAttachment ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Download className="h-4 w-4" />
-                                                )}
-                                                Download
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </Card>
-                    
-                    {/* Right Column: Grading & Analysis */}
-                    <div className="space-y-6">
-                        {/* Grading Card */}
-                        <Card className="p-6 shadow-xl bg-white dark:bg-gray-800 border-l-4 border-green-500">
-                            <h3 className="text-lg font-extrabold mb-4 border-b pb-2 text-green-600 dark:text-green-400 flex items-center gap-2">
-                                <CheckCircle className="h-5 w-5" /> Final Grade
-                            </h3>
-                            
-                            <div className="space-y-3">
-                                <Label htmlFor="grade-input" className="font-semibold">
-                                    Assign Grade (0 - {task.maxPoints})
-                                </Label>
-                                <Input 
-                                    type="number" 
-                                    id="grade-input" 
-                                    placeholder="Enter score" 
-                                    className="text-xl font-extrabold" 
-                                    max={task.maxPoints} 
-                                    min={0} 
-                                    value={gradeInput} 
-                                    onChange={handleGradeChange} 
-                                    disabled={isUpdatingGrade}
-                                />
-                            </div>
-                            
-                            <div className="space-y-3 mt-4">
-                                <Label htmlFor="feedback-input" className="font-semibold">Teacher Feedback</Label>
-                                <Textarea 
-                                    id="feedback-input" 
-                                    rows={5} 
-                                    placeholder="Provide constructive feedback..." 
-                                    value={feedback} 
-                                    onChange={(e) => setFeedback(e.target.value)}
-                                    disabled={isUpdatingGrade}
-                                />
-                            </div>
-                            
-                            <Button 
-                                onClick={handleSubmitGrade}
-                                disabled={isUpdatingGrade || !gradeInput}
-                                className="w-full mt-4 bg-green-600 hover:bg-green-700 shadow-md"
-                            >
-                                {isUpdatingGrade ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                        Submitting...
-                                    </>
-                                ) : (
-                                    'Submit Grade'
-                                )}
-                            </Button>
-                        </Card>
-
-                        {/* AI Analysis Card */}
-                        <Card className="p-6 shadow-xl bg-gray-100 dark:bg-gray-700 border-l-4 border-blue-500">
-                            <h3 className="text-lg font-extrabold mb-4 flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                {aiIcon} AI Detection Analysis
-                            </h3>
-                            {aiAnalysis.status === 'COMPLETED' && aiScore !== null ? (
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center border-b pb-2">
-                                        <span className="text-muted-foreground">Likely AI Generated:</span>
-                                        <span className={`text-2xl font-extrabold ${aiColor}`}>{aiScore}%</span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground pt-2">
-                                        Segments flagged: {aiAnalysis.result?.detectedSegments?.length || 0} instances detected.
-                                    </p>
-                                    <Button 
-                                        variant="secondary" 
-                                        size="sm" 
-                                        className="w-full"
-                                        onClick={() => setIsModalOpen(true)}
-                                        disabled={!aiAnalysis.result?.detectedSegments?.length}
-                                    >
-                                        Review AI Segments ({aiAnalysis.result?.detectedSegments?.length || 0})
-                                    </Button>
-                                </div>
-                            ) : aiAnalysis.status === 'PENDING' ? (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Analysis in progress...
-                                    </div>
-                                    <Button variant="secondary" size="sm" className="w-full" disabled>
-                                        Analyzing...
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <p className="text-muted-foreground text-sm">No analysis available.</p>
-                                    <Button 
-                                        variant="secondary" 
-                                        size="sm" 
-                                        className="w-full"
-                                        onClick={handleRequestAnalysis}
-                                        disabled={isRequestingAnalysis}
-                                    >
-                                        {isRequestingAnalysis ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                                Requesting...
-                                            </>
-                                        ) : (
-                                            'Request AI Analysis'
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-                        </Card>
-                    </div>
-                </div>
+                <Badge 
+                  variant={data.submission.aiAnalysis.isLikelyAI ? "destructive" : "default"}
+                  className="px-4 py-2 text-sm"
+                >
+                  {data.submission.aiAnalysis.isLikelyAI ? 'AI CONTENT' : 'HUMAN CONTENT'}
+                </Badge>
+              </div>
             </div>
 
-            {/* AI Segments Modal */}
-            {aiAnalysis.result?.detectedSegments && (
-                <AISegmentsModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    segments={aiAnalysis.result.detectedSegments}
-                    submissionContent={submission.content}
-                />
-            )}
+            {/* Analysis Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 bg-white border rounded-lg shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Activity className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm font-medium">AI Probability</p>
+                </div>
+                <p className="text-2xl font-bold">{data.submission.aiAnalysis.probability}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Likelihood of AI generation
+                </p>
+              </div>
+
+              <div className="p-4 bg-white border rounded-lg shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="h-4 w-4 text-green-600" />
+                  <p className="text-sm font-medium">Confidence Score</p>
+                </div>
+                <p className="text-2xl font-bold">{data.submission.aiAnalysis.percentage}%</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Analysis confidence level
+                </p>
+              </div>
+
+              <div className="p-4 bg-white border rounded-lg shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-purple-600" />
+                  <p className="text-sm font-medium">Confidence Level</p>
+                </div>
+                <p className="text-lg font-bold capitalize">
+                  {data.submission.aiAnalysis.confidenceLevel}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Result reliability rating
+                </p>
+              </div>
+
+              <div className="p-4 bg-white border rounded-lg shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <Cpu className="h-4 w-4 text-orange-600" />
+                  <p className="text-sm font-medium">Detection Model</p>
+                </div>
+                <p className="text-lg font-bold">{data.submission.aiAnalysis.modelUsed}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  AI detection system used
+                </p>
+              </div>
+            </div>
+
+            {/* Detailed Information */}
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  Analysis Reference
+                </h4>
+                <div className="p-2 bg-white border rounded">
+                  <code className="text-sm font-mono break-all">
+                    {data.submission.aiAnalysis.analysisId}
+                  </code>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Unique identifier for this analysis session
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-lg border ${
+                data.submission.aiAnalysis.isLikelyAI 
+                  ? 'bg-yellow-50 border-yellow-200' 
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold mb-2">Important Considerations</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li className="flex items-start gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0"></div>
+                        <span>
+                          AI detection tools have varying accuracy rates and may produce false positives or false negatives.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0"></div>
+                        <span>
+                          Human-written content may be flagged as AI-generated if it follows predictable patterns.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0"></div>
+                        <span>
+                          Consider the analysis as one factor among many when evaluating academic integrity.
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0"></div>
+                        <span>
+                          Always review the student's writing style and compare with previous submissions.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Segments Analysis (if available) */}
+              // Update the Segment Analysis section in the AIAnalysisModal component
+{data.submission.aiAnalysis.segments && data.submission.aiAnalysis.segments.length > 0 && (
+  <div className="space-y-4">
+    <div className="p-4 bg-gray-50 rounded-lg">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-semibold flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          Segment Analysis
+        </h4>
+        <Badge variant="outline">
+          {data.submission.aiAnalysis.segments.length} segments analyzed
+        </Badge>
+      </div>
+      
+      <div className="space-y-3">
+        {data.submission.aiAnalysis.segments.map((segment, index) => (
+          <div 
+            key={index} 
+            className={`p-4 rounded-lg border ${
+              segment.isLikelyAI 
+                ? 'bg-red-50 border-red-200' 
+                : 'bg-green-50 border-green-200'
+            }`}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold">Segment {index + 1}</span>
+                  <Badge variant={segment.isLikelyAI ? "destructive" : "default"}>
+                    {segment.isLikelyAI ? 'AI-GENERATED' : 'HUMAN-WRITTEN'}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Activity className="h-3 w-3" />
+                    <span>Position: {segment.startIndex}-{segment.endIndex}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <BarChart3 className="h-3 w-3" />
+                    <span>AI Probability: {(parseFloat(segment.aiProbability || segment.aiProbability || '0') * 100).toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Segment Text Content */}
+            <div className="mb-3">
+              <p className="text-sm font-medium mb-1">Text Content:</p>
+              <div className="p-3 bg-white/80 rounded border">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  "{segment.text}"
+                </p>
+              </div>
+            </div>
+            
+            {/* Segment Analysis Details */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+             
+              
+              <div className="p-2 bg-white/50 rounded">
+                <p className="font-medium text-xs mb-1">AI Percentage</p>
+                <p className="text-lg font-bold">
+                  {segment.percentage || 'N/A'}
+                </p>
+              </div>
+              
+              {/* Reasoning if available */}
+              {segment.reasoning && (
+                <div className="col-span-2 p-2 bg-blue-50 rounded border border-blue-100">
+                  <p className="font-medium text-xs mb-1">Analysis Reasoning</p>
+                  <p className="text-sm text-blue-700">{segment.reasoning}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    
+    {/* Summary Statistics for Segments */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="p-4 bg-white border rounded-lg">
+        <p className="text-sm font-medium mb-2">AI-Generated Segments</p>
+        <p className="text-2xl font-bold text-red-600">
+          {data.submission.aiAnalysis.segments.filter(s => s.isLikelyAI).length}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          of {data.submission.aiAnalysis.segments.length} total segments
+        </p>
+      </div>
+      
+      <div className="p-4 bg-white border rounded-lg">
+        <p className="text-sm font-medium mb-2">Average AI Probability</p>
+        <p className="text-2xl font-bold">
+          {(
+            data.submission.aiAnalysis.segments.reduce((sum, seg) => 
+              sum + parseFloat(seg.probability || seg.probability || '0'), 0
+            ) / data.submission.aiAnalysis.segments.length * 100
+          ).toFixed(1)}%
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Across all segments
+        </p>
+      </div>
+      
+      <div className="p-4 bg-white border rounded-lg">
+        <p className="text-sm font-medium mb-2">Human-Written Segments</p>
+        <p className="text-2xl font-bold text-green-600">
+          {data.submission.aiAnalysis.segments.filter(s => !s.isLikelyAI).length}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          of {data.submission.aiAnalysis.segments.length} total segments
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setShowAIAnalysisModal(false)}
+              >
+                Close Report
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("Export AI Analysis Report");
+                  // Future: Implement export functionality
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export Report
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Submissions
+          </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            {data.name} - Submission Review
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span>Student: {data.studentName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Hash className="h-4 w-4" />
+              <span>Task ID: {data.id}</span>
+            </div>
+          </div>
         </div>
-    );
+        
+        {/* Quick Stats */}
+        <div className="flex flex-wrap gap-4">
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
+            <Award className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium">
+              Max: {data.maxPoints} pts
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg">
+            <Calendar className="h-4 w-4 text-green-600" />
+            <span className="text-sm font-medium">
+              Deadline: {formatShortDate(data.deadline)}
+            </span>
+          </div>
+          <Badge 
+            variant={getStatusBadgeVariant(data.submission?.status || 'NOT_SUBMITTED')}
+            className="px-3 py-2"
+          >
+            {formatStatusText(data.submission?.status || 'Not Submitted')}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content - 2/3 width */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Task Overview Card */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Task Overview</h2>
+              <Badge variant="outline" className="capitalize">
+                {data.deliveryMode}
+              </Badge>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Unit Information */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Unit Information</h3>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="font-medium">{data.unit}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Associated Unit</p>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Instructions</h3>
+                </div>
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {data.instructions}
+                  </p>
+                </div>
+              </div>
+
+              {/* Task Details Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Max Points</p>
+                  <p className="text-lg font-bold">{data.maxPoints}</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Delivery Mode</p>
+                  <p className="text-lg font-bold capitalize">{data.deliveryMode}</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Deadline</p>
+                  <p className="text-lg font-bold">{new Date(data.deadline).toLocaleDateString()}</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge variant={data.isOverdue ? "destructive" : "default"}>
+                    {data.isOverdue ? "Overdue" : "Active"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Student Submission Section */}
+          {data.submission && (
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Student Submission</h2>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4" />
+                    <span>Submitted: {formatShortDate(data.submission.submittedAt)}</span>
+                  </div>
+                  <Badge variant={getStatusBadgeVariant(data.submission.status)}>
+                    {formatStatusText(data.submission.status)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Team Submission Info (if applicable) */}
+                {data.submission.isTeamSubmission && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-blue-800">
+                        Team Submission: {data.submission.teamName}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submission Content */}
+                <div>
+                  <h3 className="font-semibold mb-3">Submission Content</h3>
+                  <div className="p-4 bg-muted/50 rounded-lg border">
+                    <p className="whitespace-pre-wrap">
+                      {data.submission.content || "No content provided"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Attachments */}
+                {data.submission.attachments.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold">Attachments</h3>
+                      <span className="text-sm text-muted-foreground">
+                        {data.submission.attachments.length} file(s)
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {data.submission.attachments.map((attachment, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-4 w-4 text-blue-500" />
+                            <div>
+                              <p className="font-medium">{attachment.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Storage Path: {attachment.storagePath}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onDownloadAttachment(attachment)}
+                            disabled={isDownloadingAttachment}
+                            className="gap-2"
+                          >
+                            <Download className="h-4 w-4" />
+                            {isDownloadingAttachment ? 'Downloading...' : 'Download'}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Grade Information (if graded) */}
+                {data.submission.grade && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Award className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold text-blue-800">Current Grade</h3>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold text-blue-800">
+                          {data.submission.grade.value} / {data.maxPoints}
+                        </p>
+                        <p className="text-sm text-blue-600">
+                          {percentage.toFixed(1)}% achieved
+                        </p>
+                      </div>
+                      <Badge variant={percentage >= 70 ? "default" : "secondary"}>
+                        {percentage >= 70 ? "Passing" : "Needs Improvement"}
+                      </Badge>
+                    </div>
+                    {data.submission.teacherFeedback && (
+                      <div className="mt-3 pt-3 border-t border-blue-200">
+                        <p className="text-sm font-medium text-blue-800 mb-1">Feedback:</p>
+                        <p className="text-sm text-blue-700">{data.submission.teacherFeedback}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Sidebar - 1/3 width */}
+        <div className="space-y-6">
+          {/* Grading Section */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Grade Submission</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Enter Grade</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    value={gradeValue}
+                    onChange={(e) => setGradeValue(e.target.value)}
+                    placeholder="0"
+                    className="flex-1"
+                    min="0"
+                    max={data.maxPoints}
+                  />
+                  <span className="text-muted-foreground">/ {data.maxPoints}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Calculated Percentage</label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    value={percentage.toFixed(1)}
+                    readOnly
+                    className="flex-1 bg-muted"
+                  />
+                  <span>%</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Feedback for Student</label>
+                <Textarea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Provide constructive feedback to help the student improve..."
+                  rows={6}
+                  className="resize-none"
+                />
+              </div>
+
+              <Button
+                onClick={handleSubmitGrade}
+                disabled={isUpdatingGrade || !gradeValue}
+                className="w-full gap-2"
+              >
+                {isUpdatingGrade ? (
+                  <>
+                    <Clock className="h-4 w-4 animate-spin" />
+                    Updating Grade...
+                  </>
+                ) : (
+                  <>
+                    <Award className="h-4 w-4" />
+                    {data.submission?.grade ? 'Update Grade' : 'Submit Grade'}
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
+
+          {/* AI Analysis Card */}
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Brain className="h-5 w-5 text-purple-600" />
+              <h2 className="text-xl font-bold">AI Content Analysis</h2>
+            </div>
+            
+            {data.submission?.aiAnalysis ? (
+              <div className="space-y-4">
+                <div className="p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium">Status</p>
+                    <Badge variant={data.submission.aiAnalysis.isLikelyAI ? "destructive" : "default"}>
+                      {data.submission.aiAnalysis.isLikelyAI ? 'AI Detected' : 'Human Content'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Analyzed: {formatShortDate(data.submission.aiAnalysis.analyzedAt)}
+                    </p>
+                    <span className="text-xs font-medium">
+                      {data.submission.aiAnalysis.percentage}% confidence
+                    </span>
+                  </div>
+                </div>
+                
+                <Button
+                  onClick={() => setShowAIAnalysisModal(true)}
+                  variant="outline"
+                  className="w-full gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Full Analysis Report
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  No AI analysis has been performed on this submission.
+                </p>
+                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <p className="text-sm text-yellow-700">
+                    AI analysis can help detect AI-generated content. This feature requires manual activation.
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Quick Information Panel */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Submission Details</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Student</span>
+                </div>
+                <span className="font-medium">{data.studentName}</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Task ID</span>
+                </div>
+                <span className="font-medium text-xs">{data.id}</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Deadline</span>
+                </div>
+                <span className="font-medium">{new Date(data.deadline).toLocaleDateString()}</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <File className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Delivery Mode</span>
+                </div>
+                <Badge variant="outline" className="capitalize">
+                  {data.deliveryMode}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Max Points</span>
+                </div>
+                <span className="font-medium">{data.maxPoints}</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Submission Status</span>
+                </div>
+                <Badge variant={getStatusBadgeVariant(data.submission?.status || 'NOT_SUBMITTED')}>
+                  {formatStatusText(data.submission?.status || 'Not Submitted')}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Task Status</span>
+                </div>
+                <Badge variant={data.isOverdue ? "destructive" : "default"}>
+                  {data.isOverdue ? "Overdue" : "Active"}
+                </Badge>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* AI Analysis Modal */}
+      <AIAnalysisModal />
+    </div>
+  );
 }

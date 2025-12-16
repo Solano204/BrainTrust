@@ -1,91 +1,69 @@
-// File: utils/tokenManager.ts
+// utils/tokenManager.ts
 'use server';
 
 import { cookies } from 'next/headers';
-import { AUTH_CONFIG } from '../types/authentication';
+import { UserSession } from '@/app/types/authentication';
 
-// --- Server Action Functions (Must be async) ---
+const ACCESS_TOKEN_COOKIE = 'access_token';
+const REFRESH_TOKEN_COOKIE = 'refresh_token';
+const USER_DATA_COOKIE = 'user_data';
 
 export async function setTokens(
   accessToken: string, 
   refreshToken: string, 
-  userId: string,
-  userData?: any
-): Promise<void> {
-  const cookieStore = cookies(); // cookies() is now guaranteed to be available
-  const accessTokenExpires = new Date(Date.now() + AUTH_CONFIG.ACCESS_TOKEN_EXPIRY);
-  const refreshTokenExpires = new Date(Date.now() + AUTH_CONFIG.REFRESH_TOKEN_EXPIRY);
-
-  // HttpOnly cookies for security
-  (await
-        // HttpOnly cookies for security
-        cookieStore).set('accessToken', accessToken, {
-    expires: accessTokenExpires,
+  userId: string, 
+  userData: UserSession
+) {
+  const cookieStore = await cookies();
+  
+  // Set access token (short-lived)
+  cookieStore.set(ACCESS_TOKEN_COOKIE, accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
+    maxAge: 15 * 60, // 15 minutes
     path: '/',
   });
-
-  (await cookieStore).set('refreshToken', refreshToken, {
-    expires: refreshTokenExpires,
+  
+  // Set refresh token (long-lived)
+  cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60, // 7 days
     path: '/',
   });
-
-  (await cookieStore).set('userId', userId, {
-    expires: refreshTokenExpires,
-    httpOnly: true,
+  
+  // Store user data (not HttpOnly so client can read)
+  cookieStore.set(USER_DATA_COOKIE, JSON.stringify(userData), {
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60,
     path: '/',
   });
-
-  if (userData) {
-    (await cookieStore).set('userData', JSON.stringify(userData), {
-      expires: refreshTokenExpires,
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-    });
-  }
 }
 
 export async function getAccessToken(): Promise<string | null> {
-  const cookieStore = cookies();
-  return (await cookieStore).get('accessToken')?.value || null;
+  const cookieStore = await cookies();
+  return cookieStore.get(ACCESS_TOKEN_COOKIE)?.value || null;
 }
 
 export async function getRefreshToken(): Promise<string | null> {
-  const cookieStore = cookies();
-  return (await cookieStore).get('refreshToken')?.value || null;
+  const cookieStore = await cookies();
+  return cookieStore.get(REFRESH_TOKEN_COOKIE)?.value || null;
 }
 
-export async function getUserId(): Promise<string | null> {
-  const cookieStore = cookies();
-  return (await cookieStore).get('userId')?.value || null;
-}
-
-export async function getUserData(): Promise<any> {
-  const cookieStore = cookies();
-  const userData = (await cookieStore).get('userData')?.value;
+export async function getUserData(): Promise<UserSession | null> {
+  const cookieStore = await cookies();
+  const userData = cookieStore.get(USER_DATA_COOKIE)?.value;
   return userData ? JSON.parse(userData) : null;
 }
 
-export async function clearTokens(): Promise<void> {
-  const cookieStore = cookies();
+export async function clearTokens() {
+  const cookieStore = await cookies();
   
-  (await cookieStore).delete('accessToken');
-  (await cookieStore).delete('refreshToken');
-  (await cookieStore).delete('userId');
-  (await cookieStore).delete('userData');
-}
-
-// 💡 The previously non-async function must now be async
-export async function isAuthenticated(): Promise<boolean> {
-  const accessToken = await getAccessToken(); // Use the exported function
-  return !!accessToken;
+  cookieStore.delete(ACCESS_TOKEN_COOKIE);
+  cookieStore.delete(REFRESH_TOKEN_COOKIE);
+  cookieStore.delete(USER_DATA_COOKIE);
 }

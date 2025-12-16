@@ -1,5 +1,5 @@
-// File: src/app/infraestructure/api/types/backend-types.ts
 "use server";
+// File: src/app/infraestructure/api/gradebook/student-gradebook-api.ts
 
 import axios from "axios";
 import { GradeDTO } from "./student-submission";
@@ -39,6 +39,10 @@ export interface StudentGradebook {
   studentName: string;
   courseId: string;
   tasks: StudentGradebookTask[];
+  calculatedTotal: string;
+  finalGrade: string;
+  finalFeedback: string;
+  lastCalculated: string;
 }
 
 export interface StudentGradebookTask {
@@ -52,15 +56,15 @@ export interface StudentGradebookTask {
   gradedAt?: string;
 }
 
-
-// File: src/app/infraestructure/api/gradebook/student-gradebook-api.ts
-
-
 // Mock data for student gradebook
 const MOCK_STUDENT_GRADEBOOK: StudentGradebook = {
   studentId: "student-1",
   studentName: "Alice Johnson",
   courseId: "crs-101",
+  calculatedTotal: "87.5%",
+  finalGrade: "88%",
+  finalFeedback: "Excellent performance",
+  lastCalculated: "2024-03-25T10:00:00Z",
   tasks: [
     {
       id: "task-101",
@@ -115,11 +119,11 @@ const MOCK_STUDENT_GRADEBOOK: StudentGradebook = {
 };
 
 // Utility to simulate network delay
-const simulateDelay = (ms: number = 500) =>
+const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 // Flag to enable/disable mocking
-const isMockEnabled = process.env.NEXT_PUBLIC_MOCK_ENABLED === 'true';
+const isMockEnabled = false;
 
 // API client configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -141,7 +145,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-const handleApiError = (error: unknown) => {
+const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || error.message;
     throw new Error(errorMessage);
@@ -149,57 +153,130 @@ const handleApiError = (error: unknown) => {
   throw error;
 };
 
-// Mappers for backend to frontend types
-const mapBackendGradebookToFrontend = (backendData: GradebookDTO[]): StudentGradebook => {
-  // This would need to be adjusted based on your actual backend structure
-  // For now, returning a simplified version
+// Helper function to convert Map to object if needed
+const convertMapToObject = (mapData: any): Record<string, any> => {
+  if (!mapData) return {};
+  
+  if (mapData instanceof Map || mapData.constructor?.name === 'Map') {
+    return Object.fromEntries(mapData);
+  }
+  
+  if (typeof mapData === 'object' && mapData !== null) {
+    return mapData;
+  }
+  
+  return {};
+};
+
+// Helper function to extract task name from ID
+const extractTaskName = (taskId: string): string => {
+  if (taskId.includes('assign_')) {
+    const num = taskId.split('_').pop();
+    return `Assignment ${num}`;
+  } else if (taskId.includes('quiz_')) {
+    const num = taskId.split('_').pop();
+    return `Quiz ${num}`;
+  } else if (taskId.includes('task_')) {
+    const num = taskId.split('_').pop();
+    return `Task ${num}`;
+  }
+  return taskId;
+};
+
+// COMPLETE Mapper for backend gradebook to frontend
+const mapBackendGradebookToFrontend = (backendData: GradebookDTO): StudentGradebook => {
+  if (!backendData) {
+    return {
+      studentId: "",
+      studentName: "",
+      courseId: "",
+      tasks: [],
+      calculatedTotal: "0%",
+      finalGrade: "N/A",
+      finalFeedback: "",
+      lastCalculated: ""
+    };
+  }
+
   return {
-    studentId: backendData[0]?.studentId || "",
-    studentName: backendData[0]?.studentName || "Student",
-    courseId: backendData[0]?.courseId || "",
-    tasks: [] // You'll need to populate this from assignment and quiz data
+    studentId: backendData.studentId || "",
+    studentName: backendData.studentName || "Student",
+    courseId: backendData.courseId || "",
+    calculatedTotal: backendData.calculatedTotal || "0%",
+    finalGrade: backendData.finalGrade || "N/A",
+    finalFeedback: backendData.finalFeedback || "",
+    lastCalculated: backendData.lastCalculated || "",
+    tasks: [] // Tasks will be populated from unit grades
   };
 };
 
-const mapBackendUnitGradesToFrontend = (backendData: UnitGradeDTO[], courseId: string, studentId: string): StudentGradebook => {
+// COMPLETE Mapper for backend unit grades to frontend tasks
+const mapBackendUnitGradesToFrontendTasks = (backendData: UnitGradeDTO[]): StudentGradebookTask[] => {
   const tasks: StudentGradebookTask[] = [];
 
+  if (!backendData || !Array.isArray(backendData)) {
+    return tasks;
+  }
+
   backendData.forEach((unitGrade: UnitGradeDTO) => {
+    const unitName = unitGrade.unitName || "Unknown Unit";
+    
     // Map assignment grades
-    if (unitGrade.assignmentGrades) {
-      Object.entries(unitGrade.assignmentGrades).forEach(([assignmentId, grade]: [string, any]) => {
-        tasks.push({
-          id: assignmentId,
-          name: `Assignment - ${assignmentId}`,
-          unitName: unitGrade.unitName,
-          maxPoints: parseFloat(grade.maxScore),
-          score: parseFloat(grade.value),
-          type: 'ASSIGNMENT'
-        });
+    const assignmentGrades = convertMapToObject(unitGrade.assignmentGrades);
+    if (assignmentGrades && typeof assignmentGrades === 'object') {
+      Object.entries(assignmentGrades).forEach(([assignmentId, grade]: [string, any]) => {
+        if (grade && typeof grade === 'object') {
+          tasks.push({
+            id: assignmentId,
+            name: extractTaskName(assignmentId),
+            unitName: unitName,
+            maxPoints: parseFloat(grade.maxScore) || 100,
+            score: grade.value ? parseFloat(grade.value) : null,
+            type: 'ASSIGNMENT',
+            // Note: You'll need to get submittedAt/gradedAt from your backend
+            // submittedAt: grade.submittedAt,
+            // gradedAt: grade.gradedAt
+          });
+        }
       });
     }
     
     // Map quiz grades
-    if (unitGrade.quizGrades) {
-      Object.entries(unitGrade.quizGrades).forEach(([quizId, grade]: [string, any]) => {
-        tasks.push({
-          id: quizId,
-          name: `Quiz - ${quizId}`,
-          unitName: unitGrade.unitName,
-          maxPoints: parseFloat(grade.maxScore),
-          score: parseFloat(grade.value),
-          type: 'QUIZ'
-        });
+    const quizGrades = convertMapToObject(unitGrade.quizGrades);
+    if (quizGrades && typeof quizGrades === 'object') {
+      Object.entries(quizGrades).forEach(([quizId, grade]: [string, any]) => {
+        if (grade && typeof grade === 'object') {
+          tasks.push({
+            id: quizId,
+            name: extractTaskName(quizId),
+            unitName: unitName,
+            maxPoints: parseFloat(grade.maxScore) || 100,
+            score: grade.value ? parseFloat(grade.value) : null,
+            type: 'QUIZ',
+            // Note: You'll need to get submittedAt/gradedAt from your backend
+            // submittedAt: grade.submittedAt,
+            // gradedAt: grade.gradedAt
+          });
+        }
       });
     }
   });
 
-  return {
-    studentId,
-    studentName: backendData[0]?.studentName || "Student",
-    courseId,
-    tasks
-  };
+  return tasks;
+};
+
+// COMPLETE Mapper for combined gradebook data
+const mapCompleteBackendDataToFrontend = (
+  gradebookData: GradebookDTO,
+  unitGradesData: UnitGradeDTO[]
+): StudentGradebook => {
+  // Start with base gradebook mapping
+  const studentGradebook = mapBackendGradebookToFrontend(gradebookData);
+  
+  // Add tasks from unit grades
+  studentGradebook.tasks = mapBackendUnitGradesToFrontendTasks(unitGradesData);
+  
+  return studentGradebook;
 };
 
 /**
@@ -214,29 +291,23 @@ export async function fetchStudentGradebook(courseId: string, studentId: string)
   }
 
   try {
-    // Option 1: Use gradebook endpoint
-    const response = await apiClient.get<GradebookDTO[]>(`/api/gradebook/course/${courseId}`);
-    const gradebooks = response.data;
+    // Get the base gradebook info
+    const gradebookResponse = await apiClient.get<GradebookDTO>(`/api/gradebook/course/${courseId}/student/${studentId}`);
+    const gradebookData = gradebookResponse.data;
     
-    // Find the specific student's gradebook
-    const studentGradebook = gradebooks.find(gb => gb.studentId === studentId);
+    console.log("GRADEBOOK DATA FROM BACKEND:", gradebookData);
     
-    if (!studentGradebook) {
-      return {
-        studentId,
-        studentName: "Student",
-        courseId,
-        tasks: []
-      };
-    }
-
-    // For a complete gradebook, we might need to combine with assignment and quiz data
-    // This is a simplified version - you might need additional API calls
-    return mapBackendGradebookToFrontend([studentGradebook]);
+    // Try to get unit grades for detailed task information
+    let unitGradesData: UnitGradeDTO[] = [];
+    // Map complete data to frontend format
+    const gradebook = mapCompleteBackendDataToFrontend(gradebookData, unitGradesData);
+    
+    console.log("COMPLETE STUDENT GRADEBOOK:", gradebook);
+    return gradebook;
     
   } catch (error) {
     console.error("Error fetching student gradebook from backend:", error);
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -268,11 +339,33 @@ export async function fetchStudentGradebookByUnitGrades(courseId: string, studen
       unitGrade.studentId === studentId
     );
     
-    return mapBackendUnitGradesToFrontend(studentUnitGrades, courseId, studentId);
+    // Try to get gradebook data for final grades
+    let gradebookData: GradebookDTO | null = null;
+    try {
+      const gradebookResponse = await apiClient.get<GradebookDTO>(`/api/gradebook/course/${courseId}/student/${studentId}`);
+      gradebookData = gradebookResponse.data;
+    } catch (gradebookError) {
+      console.warn("Could not fetch gradebook data, will create from unit grades:", gradebookError);
+      // Create a basic gradebook from unit grades
+      gradebookData = {
+        id: `temp-${studentId}-${courseId}`,
+        courseId,
+        courseName: units[0]?.courseName || "Course",
+        studentId,
+        studentName: studentUnitGrades[0]?.studentName || "Student",
+        lastCalculated: new Date().toISOString(),
+        calculatedTotal: "0%",
+        finalGrade: "N/A",
+        finalFeedback: ""
+      };
+    }
+    
+    const gradebook = mapCompleteBackendDataToFrontend(gradebookData, studentUnitGrades);
+    return gradebook;
     
   } catch (error) {
     console.error("Error fetching student gradebook via unit grades:", error);
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -317,7 +410,7 @@ export async function fetchStudentFinalGrade(courseId: string, studentId: string
     };
     
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -343,7 +436,7 @@ export async function assignFinalGrade(
       feedback: feedback || ""
     });
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -369,13 +462,17 @@ export async function assignUnitFinalGrade(
       feedback: feedback || ""
     });
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
  * Get unit grades for a specific unit
  */
+
+
+// CURRENTLY WORKS
+
 export async function fetchUnitGrades(unitId: string): Promise<UnitGradeDTO[]> {
   if (isMockEnabled) {
     await simulateDelay(500);
@@ -405,9 +502,18 @@ export async function fetchUnitGrades(unitId: string): Promise<UnitGradeDTO[]> {
 
   try {
     const response = await apiClient.get<UnitGradeDTO[]>(`/api/unit-grades/unit/${unitId}`);
-    return response.data;
+    console.log(`Returning unit grades for unit ${unitId}`, response.data);
+    
+    // Ensure assignmentGrades and quizGrades are properly typed
+    const unitGrades = response.data.map((unitGrade: any) => ({
+      ...unitGrade,
+      assignmentGrades: unitGrade.assignmentGrades || {},
+      quizGrades: unitGrade.quizGrades || {}
+    }));
+    
+    return unitGrades;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -444,7 +550,7 @@ export async function exportStudentGrades(courseId: string, studentId: string): 
     });
     return response.data;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
@@ -498,8 +604,9 @@ export async function fetchCourseGradebooks(courseId: string): Promise<Gradebook
 
   try {
     const response = await apiClient.get<GradebookDTO[]>(`/api/gradebook/course/${courseId}`);
+    console.log(`Returning course gradebooks for course ${courseId}`, response.data);
     return response.data;
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }

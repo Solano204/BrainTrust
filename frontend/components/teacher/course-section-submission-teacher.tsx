@@ -14,105 +14,134 @@ import {
   BarChart3,
   FileText,
   HelpCircle,
-  Users,
   Calendar,
   Clock,
+  BookOpen,
+  ArrowLeft,
+  AlertCircle,
 } from "lucide-react";
-import { SubmissionId, UserId } from "@/app/domain/valueObjects";
-import { SubmissionDetailView } from "./task-view-submission-teacher";
-import { QuizSubmissionsView } from "./quiz-view-submission-teacher";
+import { v4 as uuidv4 } from 'uuid';
 import {
   useTaskInventoryManagement,
   useTaskInventoryMutations,
+  // useTaskInventoryMutations,
 } from "@/app/presentation/hooks/task/task-inventory-hooks";
-import { useQuizzesByCourse, useQuizzesByCourseWithoutDetails } from "@/components/teacher/hooks/quiz-hooks";
-import {
-  TaskType,
-} from "@/app/domain/entities/CourseEntities";
-import { useSubmissionQuizByStudentAndQuiz } from "@/app/infraestructure/api/course/teacher/submission/quiz-submissions-hooks";
+import { useQuizzesByCourseWithoutDetails } from "@/components/teacher/hooks/quiz-hooks";
+import { useCourseAllUnits } from "@/components/teacher/hooks/courses-hooks";
+import { StudentSubmissionQuiz, SubmissionTask } from "../student/api/student-submission";
+import { SubmissionDetailView } from "./task-view-submission-teacher";
+import { QuizSubmissionsView } from "./quiz-view-submission-teacher";
 
 interface CourseTaskOverviewProps {
   courseId: string;
 }
 
-// Combined interface for displaying both tasks and quizzes
-interface CombinedTaskItem {
+// Separate interfaces for different submission types
+interface TaskItem {
   id: string;
-  title: string;
-  unit: string;
-  type: TaskType;
-  deadline: string;
-  isOverdue: boolean;
-  courseId: string;
-  // Task specific
-  taskId?: string;
-  studentId?: string;
-  // Quiz specific
-  quizId?: string;
-  timeLimit?: number;
-  questions?: any[];
-  maxGrade?: number;
-  dueDate?: string;
+  type: "ASSIGNMENT";
+  data: SubmissionTask;
+  uniqueKey: string;
 }
+
+interface QuizItem {
+  id: string;
+  type: "QUIZ";
+  data: StudentSubmissionQuiz;
+  uniqueKey: string;
+}
+
+// Separate display property functions for each type
+const getTaskDisplayProperties = (item: TaskItem) => {
+  return {
+    title: item.data.name,
+    studentName: item.data.studentName || "—",
+    deadline: item.data.deadline || "No deadline",
+    isOverdue: item.data.isOverdue,
+    submission: item.data.submission,
+    maxPoints: item.data.maxPoints,
+    instructions: item.data.instructions,
+    unit: item.data.unit,
+    attachments: item.data.submission?.attachments || [],
+    aiAnalysis: item.data.submission?.aiAnalysis,
+    teacherFeedback: item.data.submission?.teacherFeedback,
+  };
+};
+
+const getQuizDisplayProperties = (item: QuizItem) => {
+  return {
+    title: item.data.title,
+    studentName: item.data.studentName || "—",
+    deadline: "No deadline", // Quizzes might not have deadlines in the same way
+    isOverdue: item.data.isOverdue,
+    submission: item.data.submission,
+    maxGrade: item.data.maxGrade,
+    studentId: item.data.studentId,
+    unitId: item.data.unitId,
+    
+  };
+};
+
+// Helper function to get display properties based on type
+const getDisplayProperties = (item: TaskItem | QuizItem) => {
+  if (item.type === "ASSIGNMENT") {
+    return getTaskDisplayProperties(item);
+  } else {
+    return getQuizDisplayProperties(item);
+  }
+};
 
 export function CourseTaskOverviewTeacher({
   courseId,
 }: CourseTaskOverviewProps) {
+  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState<UserId | null>(
-    null
-  );
-  const [viewingQuiz, setViewingQuiz] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<SubmissionTask | null>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<StudentSubmissionQuiz | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Use existing hooks
+  // Fetch all units for the course
+  const {
+    units: courseUnits,
+    isLoading: isLoadingUnits,
+    error: unitsError,
+  } = useCourseAllUnits(courseId);
+
+  // Use existing hooks with selected unit
   const {
     tasks,
     isLoadingTasks,
     tasksError,
-    searchTerm,
-    setSearchTerm,
     selectedSubmissionId,
-    submissionDetail,
-    isLoadingDetail,
-    detailError,
+    // isLoadingDetail,
+    // detailError,
     handleViewSubmission,
     handleBackFromDetail,
-  } = useTaskInventoryManagement(courseId);
+  } = useTaskInventoryManagement(courseId, selectedUnitId);
 
-  const { updateGrade, requestAnalysis, downloadAttachment } =
+
+  console.log("tasks", tasks);
+  const { updateGrade } =
     useTaskInventoryMutations();
 
+  // Fetch quizzes for the selected unit
   const { data: quizzes = [], isLoading: isLoadingQuizzes } =
-    useQuizzesByCourseWithoutDetails(courseId);
-  // NEW: Get single quiz submission for specific student and quiz
-  const { data: singleQuizSubmission, isLoading: isLoadingSingleSubmission } =
-    useSubmissionQuizByStudentAndQuiz(selectedQuizId);
+    useQuizzesByCourseWithoutDetails(courseId, selectedUnitId);
 
-  // Combine tasks and quizzes for display
-  const combinedItems: CombinedTaskItem[] = useMemo(() => {
-    const taskItems: CombinedTaskItem[] = tasks.map((task) => ({
+  // Combine tasks and quizzes for display with proper typing
+  const combinedItems: (TaskItem | QuizItem)[] = useMemo(() => {
+    const taskItems: TaskItem[] = tasks.map((task) => ({
       id: task.id,
-      title: task.title,
-      unit: task.unit,
-      type: task.type,
-      deadline: task.deadline,
-      isOverdue: task.isOverdue,
-      courseId: task.courseId,
-      taskId: task.taskId,
-      studentId: task.studentId,
+      type: "ASSIGNMENT" as const,
+      data: task,
+      uniqueKey: uuidv4(),
     }));
 
-    const quizItems: CombinedTaskItem[] = quizzes.map((quiz) => ({
+    const quizItems: QuizItem[] = quizzes.map((quiz) => ({
       id: quiz.id,
-      title: quiz.title,
-      unit: quiz.unit,
-      type: "QUIZ" as TaskType,
-      deadline: quiz.deadline,
-      isOverdue: quiz.isOverdue,
-      courseId: quiz.courseId,
-      quizId: quiz.quizId,
-      studentId: quiz.studentId,
+      type: "QUIZ" as const,
+      data: quiz,
+      uniqueKey: uuidv4(),
     }));
 
     return [...taskItems, ...quizItems];
@@ -121,12 +150,16 @@ export function CourseTaskOverviewTeacher({
   // Filter combined items based on search and active tab
   const filteredItems = useMemo(() => {
     return combinedItems.filter((item) => {
-      const matchesSearch = item.title
+      const displayProps = getDisplayProperties(item);
+      const matchesSearch = displayProps.title
         .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+        .includes(searchTerm.toLowerCase()) ||
+        displayProps.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+      
       const matchesType =
         activeTab === "all" ||
         item.type.toLowerCase() === activeTab.toLowerCase();
+      
       return matchesSearch && matchesType;
     });
   }, [combinedItems, searchTerm, activeTab]);
@@ -138,7 +171,10 @@ export function CourseTaskOverviewTeacher({
       (item) => item.type === "ASSIGNMENT"
     );
     const quizzes = combinedItems.filter((item) => item.type === "QUIZ");
-    const overdueTasks = combinedItems.filter((item) => item.isOverdue).length;
+    const overdueTasks = combinedItems.filter((item) => {
+      const displayProps = getDisplayProperties(item);
+      return displayProps.isOverdue;
+    }).length;
 
     return {
       totalTasks,
@@ -150,219 +186,349 @@ export function CourseTaskOverviewTeacher({
     };
   }, [combinedItems]);
 
-  const handleViewSubmissionWithCallback = (submissionId: SubmissionId) => {
-    handleViewSubmission(submissionId);
+  const handleSelectUnit = (unitId: string) => {
+    setSelectedUnitId(unitId);
+    setActiveTab("all");
+    setSelectedTask(null);
+    setSelectedQuiz(null);
+    setSearchTerm("");
   };
 
-  const handleViewQuizSubmissions = (quizId: string, studentId?: UserId) => {
-    setSelectedQuizId(quizId);
-    setSelectedStudentId(studentId || null);
+  const handleBackToUnits = () => {
+    setSelectedUnitId(null);
+    setSelectedTask(null);
+    setSelectedQuiz(null);
   };
 
-  const handleViewQuizDetails = (quizId: string) => {
-    setViewingQuiz(quizId);
+  // Handle task selection
+  const handleViewTask = (task: SubmissionTask) => {
+    setSelectedTask(task);
+  };
+
+  // Handle quiz selection
+  const handleViewQuiz = (quiz: StudentSubmissionQuiz) => {
+    setSelectedQuiz(quiz);
+  };
+
+  const handleBackFromTask = () => {
+    setSelectedTask(null);
   };
 
   const handleBackFromQuiz = () => {
-    setSelectedQuizId(null);
-    setSelectedStudentId(null);
-    setViewingQuiz(null);
+    setSelectedQuiz(null);
   };
 
-  // File: src/app/features/courses/components/CourseTaskOverview.tsx
-
-  // Add these methods inside your CourseTaskOverviewTeacher component, before the return statement:
-
-  const getTaskIcon = (type: TaskType) => {
+  // UI helper functions
+  const getTaskIcon = (type: "ASSIGNMENT" | "QUIZ") => {
     switch (type) {
       case "ASSIGNMENT":
         return <FileText className="h-4 w-4" />;
       case "QUIZ":
         return <HelpCircle className="h-4 w-4" />;
-      case "FORUM":
-        return <Users className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
   };
 
-  const getTaskColor = (type: TaskType) => {
+  const getTaskColor = (type: "ASSIGNMENT" | "QUIZ") => {
     switch (type) {
       case "ASSIGNMENT":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "QUIZ":
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "FORUM":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
-  const getStatusColor = (isOverdue: boolean) => {
-    return isOverdue ? "text-destructive" : "text-green-600";
-  };
+  const getStatusBadge = (isOverdue: boolean, submission?: any) => {
+    if (isOverdue && !submission) {
+      return (
+        <Badge variant="destructive" className="text-xs">
+          Overdue
+        </Badge>
+      );
+    }
 
-  const getStatusText = (isOverdue: boolean) => {
-    return isOverdue ? "Overdue" : "Active";
-  };
+    if (submission) {
+      switch (submission.status) {
+        case "GRADED":
+          return (
+            <Badge
+              variant="default"
+              className="text-xs bg-green-100 text-green-800"
+            >
+              Graded
+            </Badge>
+          );
+        case "SUBMITTED":
+          return (
+            <Badge
+              variant="secondary"
+              className="text-xs bg-blue-100 text-blue-800"
+            >
+              Submitted
+            </Badge>
+          );
+        case "LATE_SUBMITTED":
+          return (
+            <Badge variant="destructive" className="text-xs">
+              Late
+            </Badge>
+          );
+        default:
+          return (
+            <Badge variant="outline" className="text-xs">
+              Submitted
+            </Badge>
+          );
+      }
+    }
 
-  // Also add this method for the mobile view status display:
-  const getStatusBadge = (isOverdue: boolean) => {
-    return isOverdue ? (
-      <Badge variant="destructive" className="text-xs">
-        Overdue
-      </Badge>
-    ) : (
+    return (
       <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
         Active
       </Badge>
     );
   };
 
-  // ... (getTaskIcon, getTaskColor, getStatusColor functions remain the same)
+  const getGradeDisplay = (submission: any, maxPoints: number) => {
+    if (!submission?.grade) return null;
 
-  const getActionButton = (item: CombinedTaskItem) => {
+    const gradeValue = submission.grade.value;
+    const maxScore = maxPoints || submission.grade.maxScore || 1;
+    
+    // Handle both string and number grade values
+    const numericValue = typeof gradeValue === 'string' ? parseFloat(gradeValue) : gradeValue;
+    const percentage = (numericValue / maxScore) * 100;
+    
+    return (
+      <div className="flex items-center gap-2">
+        <span className="font-semibold">
+          {numericValue}/{maxScore}
+        </span>
+        <Badge
+          variant={percentage >= 70 ? "default" : "destructive"}
+          className="text-xs"
+        >
+          {percentage.toFixed(1)}%
+        </Badge>
+      </div>
+    );
+  };
+
+  const getActionButton = (item: TaskItem | QuizItem) => {
     if (item.type === "ASSIGNMENT") {
       return (
         <Button
-          onClick={() => handleViewSubmissionWithCallback(item.id)}
+          onClick={() => handleViewTask(item.data)}
           variant="ghost"
           size="sm"
           className="text-primary hover:bg-primary/10 transition-colors"
-          title="View Submissions"
+          title="View Submission Details"
         >
           <Eye className="h-5 w-5" />
+          <span className="sr-only">View Assignment</span>
         </Button>
       );
     } else {
       return (
         <Button
-          onClick={() =>
-            handleViewQuizSubmissions(item.quizId || item.id, item.studentId)
-          }
+          onClick={() => handleViewQuiz(item.data)}
           variant="ghost"
           size="sm"
           className="text-green-600 hover:bg-green-100 transition-colors"
-          title="View Quiz Submission"
+          title="View Quiz Details"
         >
           <Eye className="h-5 w-5" />
+          <span className="sr-only">View Quiz</span>
         </Button>
       );
     }
   };
 
-  const getActionButtonMobile = (item: CombinedTaskItem) => {
+  const getActionButtonMobile = (item: TaskItem | QuizItem) => {
     if (item.type === "ASSIGNMENT") {
       return (
         <Button
-          onClick={() => handleViewSubmissionWithCallback(item.id)}
+          onClick={() => handleViewTask(item.data)}
           size="sm"
           className="flex-1 gap-2"
         >
           <Eye className="h-4 w-4" />
-          View Submissions
+          View Assignment
         </Button>
       );
     } else {
       return (
         <Button
-          onClick={() =>
-            handleViewQuizSubmissions(item.quizId || item.id, item.studentId)
-          }
+          onClick={() => handleViewQuiz(item.data)}
           size="sm"
           className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
         >
           <Eye className="h-4 w-4" />
-          View Quiz Results
+          View Quiz
         </Button>
       );
     }
   };
 
-  const isLoading = isLoadingTasks || isLoadingQuizzes || isLoadingQuizzesComplete;
+  const isLoading = isLoadingTasks || isLoadingQuizzes;
 
-  // Show loading state for single submission
-  if (selectedQuizId && selectedStudentId && isLoadingSingleSubmission) {
+  // Show unit selection if no unit is selected
+  if (!selectedUnitId) {
     return (
-      <div className="p-8 text-center min-h-[40vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-xl text-primary">Loading Quiz Submission...</p>
+      <div className="p-4 md:p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Course Units
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Select a unit to view tasks and quizzes
+            </p>
+          </div>
+        </div>
+
+        {/* Units Grid */}
+        {isLoadingUnits ? (
+          <Card className="p-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading units...</p>
+          </Card>
+        ) : unitsError ? (
+          <Card className="p-6 bg-destructive/10 border-destructive">
+            <div className="flex items-center gap-3 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              <div>
+                <h3 className="font-semibold">Error loading units</h3>
+                <p className="text-sm">{unitsError.message}</p>
+              </div>
+            </div>
+          </Card>
+        ) : courseUnits.length === 0 ? (
+          <Card className="p-8 text-center text-muted-foreground">
+            <BookOpen className="h-12 w-12 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No Units Available</h3>
+            <p>There are no units in this course yet.</p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courseUnits.map((unit) => (
+              <Card
+                key={unit.id}
+                className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group"
+                onClick={() => handleSelectUnit(unit.id)}
+              >
+                <div className="space-y-4">
+                  {/* Unit Number */}
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-sm">
+                      Unit {unit.numUnity}
+                    </Badge>
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                    </div>
+                  </div>
+
+                  {/* Unit Name and Description */}
+                  <div>
+                    <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
+                      {unit.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {unit.description}
+                    </p>
+                  </div>
+
+                  {/* Action Button */}
+                  <Button className="w-full gap-2" variant="default">
+                    <Eye className="h-4 w-4" />
+                    View Tasks & Quizzes
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
-  // Show submission detail view
-  if (submissionDetail) {
+  // Show task detail view with complete data
+  if (selectedTask) {
     return (
       <SubmissionDetailView
-        data={submissionDetail}
-        onBack={handleBackFromDetail}
+        data={selectedTask}
+        onBack={handleBackFromTask}
         onUpdateGrade={updateGrade.mutate}
-        onRequestAnalysis={requestAnalysis.mutate}
-        onDownloadAttachment={downloadAttachment.mutate}
+        // onRequestAnalysis={requestAnalysis.mutate}
+        // onDownloadAttachment={downloadAttachment.mutate}
         isUpdatingGrade={updateGrade.isPending}
-        isRequestingAnalysis={requestAnalysis.isPending}
-        isDownloadingAttachment={downloadAttachment.isPending}
-      />
-    );
-  }
-
-  // Show SINGLE quiz submission view
-  if (selectedQuizId && selectedStudentId && singleQuizSubmission) {
-    console.log("selectedQuizId", selectedQuizId);
-    console.log("quizzesCompleete", quizzesCompleete);
-    const quiz = quizzesCompleete.find((q) => q.id === selectedQuizId);
-
-    console.log("quiz", quiz);
-    return (
-      <QuizSubmissionsView
-        quizId={selectedQuizId}
-        courseId={courseId}
-        // quiz={quiz}
-        submission={singleQuizSubmission} // SINGLE submission, not array
-        quiz={quiz}
-        onBack={handleBackFromQuiz}
+        // isRequestingAnalysis={requestAnalysis.isPending}
+        // isDownloadingAttachment={downloadAttachment.isPending}
       />
     );
   }
 
   // Show quiz detail view
-//   if (viewingQuiz) {
-//     const quiz = quizzes.find((q) => q.id === viewingQuiz);
-//     return quiz ? <QuizView 
-//     quiz={quiz} onClose={handleBackFromQuiz} /> : null;
-//   }
+  if (selectedQuiz) {
+
+    console.log("selectedQuiz", selectedQuiz.submission);
+    return (
+      <QuizSubmissionsView
+        submissionId={selectedQuiz.submission?.id || ""}
+        onBack={handleBackFromQuiz}
+      />
+    );
+  }
+
+  // Get the selected unit name for display
+  const selectedUnit = courseUnits.find((unit) => unit.id === selectedUnitId);
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Header with Statistics */}
+      {/* Header with Back Button and Unit Info */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Course Tasks & Quizzes
-          </h1>
-          <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <BarChart3 className="h-4 w-4" />
-              Total: {stats.totalTasks} items
-            </span>
-            <span className="flex items-center gap-1">
-              <FileText className="h-4 w-4" />
-              Assignments: {stats.totalAssignments}
-            </span>
-            <span className="flex items-center gap-1">
-              <HelpCircle className="h-4 w-4" />
-              Quizzes: {stats.totalQuizzes}
-            </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              Overdue: {stats.overdueTasks}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              Completion: {stats.completionRate}%
-            </span>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToUnits}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Units
+          </Button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+              {selectedUnit?.name || "Unit Tasks & Quizzes"}
+            </h1>
+            {stats && (
+              <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <BarChart3 className="h-4 w-4" />
+                  Total: {stats.totalTasks} items
+                </span>
+                <span className="flex items-center gap-1">
+                  <FileText className="h-4 w-4" />
+                  Assignments: {stats.totalAssignments}
+                </span>
+                <span className="flex items-center gap-1">
+                  <HelpCircle className="h-4 w-4" />
+                  Quizzes: {stats.totalQuizzes}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  Overdue: {stats.overdueTasks}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Completion: {stats.completionRate}%
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -373,7 +539,7 @@ export function CourseTaskOverviewTeacher({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search tasks or quizzes..."
+              placeholder="Search by task name or student..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -381,6 +547,19 @@ export function CourseTaskOverviewTeacher({
           </div>
         </div>
       </Card>
+
+      {/* Error Display */}
+      {tasksError && (
+        <Card className="p-6 bg-destructive/10 border-destructive">
+          <div className="flex items-center gap-3 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            <div>
+              <h3 className="font-semibold">Error loading tasks</h3>
+              <p className="text-sm">{tasksError.message}</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Tabs for All, Assignments and Quizzes */}
       <Tabs
@@ -417,7 +596,11 @@ export function CourseTaskOverviewTeacher({
             </div>
           ) : filteredItems.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
-              No items found matching criteria.
+              <div className="flex flex-col items-center gap-3">
+                <HelpCircle className="h-12 w-12" />
+                <h3 className="text-lg font-semibold">No items found</h3>
+                <p>Try adjusting your search or filter criteria</p>
+              </div>
             </Card>
           ) : (
             <>
@@ -431,7 +614,7 @@ export function CourseTaskOverviewTeacher({
                           Title
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Unit / Module
+                          Student Name
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
                           Type
@@ -442,58 +625,95 @@ export function CourseTaskOverviewTeacher({
                         <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
                           Status
                         </th>
+                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
+                          Grade
+                        </th>
                         <th className="px-6 py-4 text-center text-sm font-bold uppercase text-muted-foreground">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredItems.map((item) => (
-                        <tr
-                          key={item.id}
-                          className="border-b border-border hover:bg-muted/30 transition-colors"
-                        >
-                          <td className="px-6 py-4 font-medium">
-                            {item.title}
-                          </td>
-                          <td className="px-6 py-4 text-muted-foreground">
-                            {item.unit}
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge
-                              variant="secondary"
-                              className={`${getTaskColor(item.type)} gap-1`}
-                            >
-                              {getTaskIcon(item.type)}
-                              {item.type}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={
-                                item.isOverdue
-                                  ? "text-destructive font-semibold"
-                                  : ""
-                              }
-                            >
-                              {item.deadline}
-                              {item.isOverdue && (
-                                <span className="ml-1 text-xs">(OVERDUE)</span>
+                      {filteredItems.map((item) => {
+                        const displayProps = getDisplayProperties(item);
+                        return (
+                          <tr
+                            key={item.uniqueKey}
+                            className="border-b border-border hover:bg-muted/30 transition-colors"
+                          >
+                            <td className="px-6 py-4 font-medium">
+                              {displayProps.title}
+                            </td>
+                            <td className="px-6 py-4">
+                              {displayProps.studentName}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge
+                                variant="secondary"
+                                className={`${getTaskColor(item.type)} gap-1`}
+                              >
+                                {getTaskIcon(item.type)}
+                                {item.type}
+                                {item.type === "ASSIGNMENT" && " #" + item.data.deliveryMode }
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={
+                                  displayProps.isOverdue
+                                    ? "text-destructive font-semibold"
+                                    : ""
+                                }
+                              >
+                                {displayProps.deadline}
+                                {displayProps.isOverdue && (
+                                  <span className="ml-1 text-xs">(OVERDUE)</span>
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              {getStatusBadge(
+                                displayProps.isOverdue,
+                                displayProps.submission
                               )}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={getStatusColor(item.isOverdue)}>
-                              {item.isOverdue ? "Overdue" : "Active"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-center gap-3">
-                              {getActionButton(item)}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4">
+                              {displayProps.submission?.grade ? (
+                                item.type === "ASSIGNMENT" ? (
+                                  getGradeDisplay(
+                                    displayProps.submission,
+                                    displayProps.submission.grade.maxScore || 0
+                                  )
+                                ) : (
+                                  // For quizzes
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold">
+                                      {displayProps.submission.grade.value}/{displayProps.submission.grade.maxScore || 0}
+                                    </span>
+                                    <Badge
+                                      variant={
+                                        (Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) >= 0.7 
+                                          ? "default" 
+                                          : "destructive"
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {((Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) * 100).toFixed(1)}%
+                                    </Badge>
+                                  </div>
+                                )
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-center">
+                                {getActionButton(item)}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -501,63 +721,100 @@ export function CourseTaskOverviewTeacher({
 
               {/* Mobile Card View */}
               <div className="space-y-4 lg:hidden">
-                {filteredItems.map((item) => (
-                  <Card key={item.id} className="p-4 shadow-md">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg mb-1">
-                            {item.title}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {item.unit}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className={`${getTaskColor(item.type)} gap-1`}
-                        >
-                          {getTaskIcon(item.type)}
-                          {item.type}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1">
-                            Deadline
+                {filteredItems.map((item) => {
+                  const displayProps = getDisplayProperties(item);
+                  return (
+                    <Card
+                      key={item.uniqueKey}
+                      className="p-4 shadow-md hover:shadow-lg transition-shadow"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg mb-1">
+                              {displayProps.title}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              Student: {displayProps.studentName}
+                            </p>
                           </div>
-                          <div
-                            className={`text-sm font-medium ${
-                              item.isOverdue ? "text-destructive" : ""
-                            }`}
+                          <Badge
+                            variant="secondary"
+                            className={`${getTaskColor(item.type)} gap-1`}
                           >
-                            {item.deadline}
-                            {item.isOverdue && (
-                              <div className="text-xs">(OVERDUE)</div>
-                            )}
-                          </div>
+                            {getTaskIcon(item.type)}
+                            {item.type}
+                          </Badge>
                         </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground mb-1">
-                            Status
-                          </div>
-                          <div
-                            className={`text-sm font-medium ${getStatusColor(
-                              item.isOverdue
-                            )}`}
-                          >
-                            {item.isOverdue ? "Overdue" : "Active"}
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="flex gap-2 pt-2">
-                        {getActionButtonMobile(item)}
+                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">
+                              Deadline
+                            </div>
+                            <div
+                              className={`text-sm font-medium ${
+                                displayProps.isOverdue ? "text-destructive" : ""
+                              }`}
+                            >
+                              {displayProps.deadline}
+                              {displayProps.isOverdue && (
+                                <div className="text-xs">(OVERDUE)</div>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">
+                              Status
+                            </div>
+                            <div className="text-sm">
+                              {getStatusBadge(
+                                displayProps.isOverdue,
+                                displayProps.submission
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {displayProps.submission?.grade && (
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-1">
+                              Grade
+                            </div>
+                            <div>
+                              {item.type === "ASSIGNMENT" ? (
+                                getGradeDisplay(
+                                  displayProps.submission,
+                                  displayProps.submission.grade.maxScore || 0
+                                )
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold">
+                                    {displayProps.submission.grade.value}/{displayProps.submission.grade.maxScore || 0}
+                                  </span>
+                                  <Badge
+                                    variant={
+                                      (Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) >= 0.7 
+                                        ? "default" 
+                                        : "destructive"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {((Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) * 100).toFixed(1)}%
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 pt-3">
+                          {getActionButtonMobile(item)}
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
             </>
           )}

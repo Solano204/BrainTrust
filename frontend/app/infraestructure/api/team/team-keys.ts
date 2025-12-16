@@ -14,7 +14,7 @@ export const teamKeys = {
   
   // Individual team
   details: () => [...teamKeys.all, "detail"] as const,
-  detail: (courseId: CourseId, teamName: string) => [...teamKeys.details(), courseId, teamName] as const,
+  detail: (teamId: string) => [...teamKeys.details(), teamId] as const,
   
   // Team mutations
   mutations: () => [...teamKeys.all, "mutation"] as const,
@@ -26,7 +26,7 @@ export const teamKeys = {
   members: () => [...teamKeys.all, "members"] as const,
   addMembers: () => [...teamKeys.members(), "add"] as const,
   removeMember: () => [...teamKeys.members(), "remove"] as const,
-  
+    userTeam: (userId: string) => [...teamKeys.all, "userTeam", userId] as const,
   // Available users
   availableUsers: () => [...teamKeys.all, "availableUsers"] as const,
   availableUsersByCourse: (courseId: CourseId) => [...teamKeys.availableUsers(), courseId] as const,

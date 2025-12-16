@@ -6,6 +6,10 @@ import { Quiz } from "@/app/domain/entities/CourseEntities";
 import { quizKeys } from "@/app/infraestructure/api/calendar/task-keys";
 import { fetchQuizDetail, fetchQuizzesByMonth, fetchThisWeekQuizzes } from "@/components/teacher-student/api/quiz";
 
+
+
+// CURRENTLY WORKS
+
 export function useQuizzesByMonth(
   userId: string | null, 
   monthStart: string, 
@@ -19,6 +23,10 @@ export function useQuizzesByMonth(
   });
 }
 
+
+// CURRENTLY WORKS
+
+
 export function useThisWeekQuizzes(
   userId: string | null, 
   weekStart: string, 
@@ -31,6 +39,9 @@ export function useThisWeekQuizzes(
     staleTime: 2 * 60 * 1000, // 2 minutes for week data
   });
 }
+
+
+// THIS CURRENTLY WORKS
 
 export function useQuizDetail(
   quizId: string | null, 

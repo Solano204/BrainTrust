@@ -1,100 +1,93 @@
-// File: src/app/features/courses/api/team-api.ts
+// File: src/app/features/courses/api/group.ts
 "use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CourseId, UserId } from "@/app/domain/valueObjects/CourseValues";
+import { Team, TeamWithIds } from "@/app/domain/entities/CourseEntities";
 
 // =====================================================
 // CONFIGURATION
 // =====================================================
 
-/**
- * Flag to enable/disable mocking.
- * Set to true to use mock data, false to use the real backend.
- */
-const isMockEnabled = true;
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // =====================================================
-// MOCK DATA
+// TYPES AND INTERFACES (Matching Backend DTOs)
 // =====================================================
 
-const MOCK_TEAMS: Team[] = [
-  {
-    teamId: "team-1",
-    courseId: "crs-101",
-    name: "JavaScript Ninjas",
-    description: "Team for advanced JavaScript projects and collaboration",
-    leaderId: "student-1",
-    members: new Set(["student-1", "student-2", "student-3", "student-4"]),
-    maxMembers: 5,
-    active: true,
-    createdAt: new Date("2024-01-15"),
-    logo: "https://placehold.co/100x100/4F46E5/FFFFFF?text=JS+Ninjas"
-  },
-  {
-    teamId: "team-2",
-    courseId: "crs-101",
-    name: "Code Beginners",
-    description: "Support group for students new to programming",
-    leaderId: "student-5",
-    members: new Set(["student-5", "student-6", "student-7"]),
-    maxMembers: 4,
-    active: true,
-    createdAt: new Date("2024-01-16"),
-    logo: "https://placehold.co/100x100/10B981/FFFFFF?text=Beginners"
-  },
-  {
-    teamId: "team-3",
-    courseId: "crs-202",
-    name: "Math Wizards",
-    description: "Advanced mathematics study group",
-    leaderId: "student-math-1",
-    members: new Set(["student-math-1", "student-math-2", "student-math-3"]),
-    maxMembers: 6,
-    active: true,
-    createdAt: new Date("2024-01-10"),
-    logo: "https://placehold.co/100x100/EF4444/FFFFFF?text=Math+Wiz"
-  },
-  {
-    teamId: "team-4",
-    courseId: "crs-202",
-    name: "Algebra Alliance",
-    description: "Focused on linear algebra concepts",
-    leaderId: null,
-    members: new Set(["student-math-4", "student-math-5"]),
-    maxMembers: 4,
-    active: false,
-    createdAt: new Date("2024-01-12"),
-    logo: "https://placehold.co/100x100/F59E0B/FFFFFF?text=Algebra"
-  }
-];
+export interface GroupMemberDTO {
+  userId: string;
+  personId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+}
 
-const MOCK_AVAILABLE_USERS = [
-  { id: "student-1", name: "Alice Johnson", email: "alice@university.edu" },
-  { id: "student-2", name: "Bob Smith", email: "bob@university.edu" },
-  { id: "student-3", name: "Carol Davis", email: "carol@university.edu" },
-  { id: "student-4", name: "David Wilson", email: "david@university.edu" },
-  { id: "student-5", name: "Eva Brown", email: "eva@university.edu" },
-  { id: "student-6", name: "Frank Miller", email: "frank@university.edu" },
-  { id: "student-7", name: "Grace Lee", email: "grace@university.edu" },
-  { id: "student-8", name: "Henry Taylor", email: "henry@university.edu" },
-  { id: "student-math-1", name: "Ivan Chen", email: "ivan@university.edu" },
-  { id: "student-math-2", name: "Julia Martinez", email: "julia@university.edu" },
-  { id: "student-math-3", name: "Kevin Anderson", email: "kevin@university.edu" },
-  { id: "student-math-4", name: "Lisa Garcia", email: "lisa@university.edu" },
-  { id: "student-math-5", name: "Mike Thompson", email: "mike@university.edu" }
-];
+export interface StudentGroupDTO {
+  id: string;
+  courseId: string;
+  courseName: string;
+  name: string;
+  description: string;
+  members: GroupMemberDTO[];
+  memberCount: number;
+  createdAt: string;
+  active: boolean;
+}
+
+export interface UserWithoutGroupDTO {
+  userId: string;
+  personId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  role: string;
+  studentRefId: string;
+}
+
+export interface CreateStudentGroupWithMembersCommand {
+  courseId: string;
+  name: string;
+  description: string;
+  memberIds: string[];
+}
+
+export interface CreateStudentGroupCommand {
+  courseId: string;
+  name: string;
+  description: string;
+}
+
+export interface AddMemberToGroupCommand {
+  groupId: string;
+  studentId: string;
+}
+
+export interface TeamsResponse {
+  teams: Team[];
+  totalCount: number;
+}
+
+export interface TeamResponse {
+  team: Team;
+}
+
+export interface AvailableUser {
+  id: UserId;
+  name: string;
+  email: string;
+}
+
+export interface AvailableUsersResponse {
+  users: AvailableUser[];
+}
 
 // =====================================================
 // UTILITIES
 // =====================================================
-
-const simulateDelay = (ms: number = 500) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -116,17 +109,11 @@ apiClient.interceptors.request.use(
   }
 );
 
-// =====================================================
-// UPDATED ERROR HANDLER WITH BETTER TYPING
-// =====================================================
-
-const handleApiError = (error: unknown): never => {
+const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
-    const errorResponse = error.response?.data as ErrorResponseDTO;
-    const errorMessage = errorResponse?.message || error.message;
+    const errorMessage = error.response?.data?.message || error.message;
     console.error("API Error:", errorMessage);
     
-    // Don't redirect for team-specific errors, only for auth errors
     if (error.response?.status === 401 || error.response?.status === 403) {
       redirect("/courses");
     }
@@ -140,372 +127,298 @@ const handleApiError = (error: unknown): never => {
   
   throw new Error("An unexpected error occurred");
 };
-// =====================================================
-// BACKEND DTO INTERFACES
-// =====================================================
-
-export interface GroupMemberDTO {
-  userId: UserId;
-  personId: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-}
-
-export interface StudentGroupDTO {
-  id: string;
-  courseId: CourseId;
-  courseName: string;
-  name: string;
-  description: string;
-  members: GroupMemberDTO[];
-  memberCount: number;
-  createdAt: string;
-  active: boolean;
-}
-
-export interface CourseEnrollmentDTO {
-  studentId: UserId;
-  studentName: string;
-  email?: string;
-  enrollmentDate: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
-}
-
-export interface SuccessResponseDTO {
-  success: boolean;
-  message: string;
-  data: any;
-}
-
-export interface ErrorResponseDTO {
-  success: false;
-  message: string;
-  error: string;
-  timestamp: string;
-}
 
 // =====================================================
-// COMMAND INTERFACES
+// MAPPERS
 // =====================================================
 
-export interface CreateStudentGroupWithMembersCommand {
-  courseId: CourseId;
-  name: string;
-  description: string;
-  memberIds: UserId[];
-}
-
-export interface AddGroupMemberCommand {
-  groupId: string;
-  studentId: UserId;
-}
-
-export interface UpdateStudentGroupCommand {
-  groupId: string;
-  name?: string;
-  description?: string;
-  active?: boolean;
-}
-
-export interface AutoGenerateTeamsCommand {
-  courseId: CourseId;
-  teamSize: number;
-  method: 'RANDOM' | 'BALANCED' | 'SKILL_BASED';
-  options?: {
-    preserveExisting?: boolean;
-    considerSkills?: boolean;
-    maxTeams?: number;
-  };
-}
-
-// =====================================================
-// RESPONSE TYPES
-// =====================================================
-
-export interface TeamsResponse {
-  teams: Team[];
-  totalCount: number;
-}
-
-export interface TeamResponse {
-  team: Team;
-  members: AvailableUser[];
-}
-
-export interface AvailableUsersResponse {
-  users: AvailableUser[];
-}
-
-export interface AutoGenerationResult {
-  generatedTeams: number;
-  totalMembersAssigned: number;
-  teams: Team[];
-  warnings: string[];
-}
-
-// =====================================================
-// UPDATED MAPPERS WITH EXPLICIT TYPES
-// =====================================================
-
-/**
- * Maps backend StudentGroupDTO to frontend Team interface
- */
 const mapStudentGroupDTOToTeam = (dto: StudentGroupDTO): Team => {
-  const members = new Set<UserId>(dto.members.map(member => member.userId));
 
   return {
     teamId: dto.id,
     courseId: dto.courseId,
     name: dto.name,
     description: dto.description || "",
-    members: members,
+    members: new Set(dto.members),
+    active: dto.active,
+    createdAt: new Date(dto.createdAt)
   };
 };
 
-/**
- * Maps Team to backend CreateStudentGroupWithMembersCommand
- */
-const mapTeamToCreateCommand = (team: Omit<Team, "createdAt">): CreateStudentGroupWithMembersCommand => {
+const mapUserWithoutGroupToAvailableUser = (user: UserWithoutGroupDTO): AvailableUser => {
   return {
-    courseId: team.courseId,
-    name: team.name,
-    description: team.description,
-    memberIds: Array.from(team.members)
-  };
-};
-
-/**
- * Maps CourseEnrollmentDTO to AvailableUser
- */
-const mapEnrollmentToAvailableUser = (enrollment: CourseEnrollmentDTO): AvailableUser => {
-  return {
-    id: enrollment.studentId,
-    name: enrollment.studentName,
-    email: enrollment.email || `${enrollment.studentName.toLowerCase().replace(' ', '.')}@university.edu`
+    id: user.userId,
+    name: user.fullName,
+    email: user.email
   };
 };
 
 // =====================================================
-// UPDATED API FUNCTIONS WITH EXPLICIT RETURN TYPES
+// API FUNCTIONS
 // =====================================================
 
 /**
- * Fetch teams by course
+ * GET /api/groups/course/{courseId}
+ * Fetch all groups for a specific course
  */
 export async function fetchTeamsByCourse(courseId: CourseId): Promise<TeamsResponse> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    const teams = MOCK_TEAMS.filter(team => team.courseId === courseId);
-    console.log(`MOCK: Returning ${teams.length} teams for course ${courseId}`);
-    
-    return {
-      teams,
-      totalCount: teams.length,
-    };
-  }
-
   try {
     if (!courseId) throw new Error("Course ID is required");
+    
     const response = await apiClient.get<StudentGroupDTO[]>(`/api/groups/course/${courseId}`);
-    const teams = response.data.map(mapStudentGroupDTOToTeam);
+    const teams = response.data.map(dto => mapStudentGroupDTOToTeam(dto));
     
     return {
       teams,
       totalCount: teams.length,
     };
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
+/**
+ * GET /api/groups/{groupId}
+ * Fetch a specific group by ID
+ */
+export async function fetchTeamById(groupId: string): Promise<Team> {
+  try {
+    if (!groupId) throw new Error("Group ID is required");
+    
+    const response = await apiClient.get<StudentGroupDTO>(`/api/groups/${groupId}`);
+    return mapStudentGroupDTOToTeam(response.data);
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
 
 /**
- * Create a new team with members
+ * GET /api/groups/user/{userId}
+ * Get all groups for a specific user
  */
-export async function createTeam(teamData: Omit<Team, "createdAt">): Promise<TeamResponse> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
+export async function getUserTeam(userId: UserId): Promise<Team | null> {
+  try {
+    if (!userId) throw new Error("User ID is required");
     
-    const existingTeam = MOCK_TEAMS.find(
-      team => team.courseId === teamData.courseId && team.name === teamData.name
-    );
+    const response = await apiClient.get<StudentGroupDTO[]>(`/api/groups/user/${userId}`);
     
-    if (existingTeam) {
-      throw new Error(`Team already exists: ${teamData.name}`);
+    if (response.data && response.data.length > 0) {
+      return mapStudentGroupDTOToTeam(response.data[0]);
     }
-
-    const newTeam: Team = {
-      ...teamData,
-    };
-
-    MOCK_TEAMS.push(newTeam);
     
-    const members = MOCK_AVAILABLE_USERS.filter(user => 
-      newTeam.members.has(user.id)
-    );
+    return null;
+  } catch (error) {
+    console.error("Error fetching user team:", error);
+    return null;
+  }
+}
+
+/**
+ * POST /api/groups/with-members
+ * Create a new group with initial members
+ */
+export async function createTeam(teamData: Omit<TeamWithIds, "teamId" | "createdAt">): Promise<TeamResponse> {
+  try {
+    const command: CreateStudentGroupWithMembersCommand = {
+      courseId: teamData.courseId,
+      name: teamData.name,
+      description: teamData.description,
+      memberIds: Array.from(teamData.members || []).map(member => member)
+    };
+    
+    const response = await apiClient.post<string>("/api/groups/with-members", command);
+    const teamId = response.data;
+    
+    // Fetch the created team
+    const createdTeam = await fetchTeamById(teamId);
     
     return {
-      team: newTeam,
-      members
+      team: createdTeam
     };
-  }
-
-  try {
-    const command: CreateStudentGroupWithMembersCommand = mapTeamToCreateCommand(teamData);
-    const response = await apiClient.post<SuccessResponseDTO>("/api/groups/with-members", command);
-    
-    return await fetchTeamByName(teamData.courseId, teamData.name);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
- * Add members to team
+ * POST /api/groups
+ * Create a new group without members
+ */
+export async function createEmptyTeam(courseId: CourseId, name: string, description: string): Promise<string> {
+  try {
+    const command: CreateStudentGroupCommand = {
+      courseId,
+      name,
+      description
+    };
+    
+    const response = await apiClient.post<string>("/api/groups", command);
+    return response.data; // Returns groupId
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+/**
+ * POST /api/groups/{groupId}/members
+ * Add a single member to a group
+ */
+export async function addSingleMember(groupId: string, studentId: UserId): Promise<void> {
+  try {
+    const command: AddMemberToGroupCommand = {
+      groupId,
+      studentId
+    };
+    
+    await apiClient.post(`/api/groups/${groupId}/members`, command);
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+/**
+ * POST /api/groups/{groupId}/members/bulk-add
+ * Add multiple members to a group
  */
 export async function addTeamMembers(
   courseId: CourseId,
-  teamName: string,
+  teamId: string,
   memberIds: UserId[]
 ): Promise<TeamResponse> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-    const teamIndex = MOCK_TEAMS.findIndex(
-      team => team.courseId === courseId && team.name === teamName
+  try {
+    await apiClient.post(
+      `/api/groups/${teamId}/members/bulk-add`,
+      memberIds,
+      {
+        params: { courseId }
+      }
     );
-
-    if (teamIndex === -1) {
-      throw new Error(`Team not found: ${teamName}`);
-    }
-
-    const team = MOCK_TEAMS[teamIndex];
     
-    memberIds.forEach(memberId => {
-      team.members.add(memberId);
-    });
-
-    const members = MOCK_AVAILABLE_USERS.filter(user => 
-      team.members.has(user.id) || memberIds.includes(user.id)
-    );
+    // Fetch updated team
+    const updatedTeam = await fetchTeamById(teamId);
     
     return {
-      team,
-      members
+      team: updatedTeam
     };
-  }
-
-  try {
-    const addMemberCommands: AddGroupMemberCommand[] = memberIds.map(memberId => ({
-      groupId: teamName,
-      studentId: memberId
-    }));
-
-    // Add each member
-    for (const command of addMemberCommands) {
-      await apiClient.post<SuccessResponseDTO>(`/api/groups/${teamName}/members`, command);
-    }
-    
-    return await fetchTeamById(courseId, teamName);
   } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-
-
-
-/**
- * Delete a team
- * Backend: DELETE /api/groups/{groupId}
- */
-export async function deleteTeam(courseId: CourseId, teamName: string): Promise<SuccessResponseDTO> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-    const teamIndex = MOCK_TEAMS.findIndex(
-      team => team.courseId === courseId && team.name === teamName
-    );
-
-    if (teamIndex === -1) {
-      throw new Error(`Team not found: ${teamName}`);
-    }
-
-    MOCK_TEAMS.splice(teamIndex, 1);
-    
-    console.log(`MOCK: Deleted team ${teamName} from course ${courseId}`);
-    
-    return {
-      success: true,
-      message: `Team ${teamName} successfully deleted`,
-      data: { courseId, teamName }
-    };
-  }
-
-  try {
-    // First get the team to find its ID (backend uses groupId which might be different from name)
-    const teamsResponse = await fetchTeamsByCourse(courseId);
-    const team = teamsResponse.teams.find(t => t.name === teamName);
-    
-    if (!team) {
-      throw new Error(`Team not found: ${teamName}`);
-    }
-    
-    // Use the team's ID for deletion (assuming backend uses ID, not name)
-    const response = await apiClient.delete<SuccessResponseDTO>(`/api/groups/${teamName}`);
-    
-    return response.data;
-  } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
- * Remove member from team
- * Backend: DELETE /api/groups/{groupId}/members/{studentId}
+ * DELETE /api/groups/{groupId}/members/{studentId}
+ * Remove a member from a group
  */
 export async function removeTeamMember(
   courseId: CourseId,
-  teamId: String,
+  teamId: string,
   memberId: UserId
 ): Promise<TeamResponse> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-    const teamIndex = MOCK_TEAMS.findIndex(
-      team => team.courseId === courseId && team.teamId === teamId
-    );
-
-    if (teamIndex === -1) {
-      throw new Error(`Team not found: ${teamId}`);
-    }
-
-    const team = MOCK_TEAMS[teamIndex];
-    team.members.delete(memberId);
-
-    console.log(`MOCK: Removed member ${memberId} from team ${teamId}`);
+  try {
+    await apiClient.delete(`/api/groups/${teamId}/members/${memberId}`);
     
-    const members = MOCK_AVAILABLE_USERS.filter(user => 
-      team.members.has(user.id)
-    );
+    // Fetch updated team
+    const updatedTeam = await fetchTeamById(teamId);
     
     return {
-      team,
-      members
+      team: updatedTeam
     };
-  }
-
-  try {
-    await apiClient.delete<SuccessResponseDTO>(`/api/groups/${teamId}/members/${memberId}`);
-    
-    // Return updated team
-    return await fetchTeamByName(courseId, teamId);
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
 }
 
 /**
- * Update team information (name, description, active status)
- * Backend: PUT /api/groups/{groupId}
+ * DELETE /api/groups/{groupId}/members/bulk-remove
+ * Remove multiple members from a group
+ */
+export async function bulkRemoveMembers(
+  courseId: CourseId,
+  teamId: string,
+  memberIds: UserId[]
+): Promise<TeamResponse> {
+  try {
+    await apiClient.delete(
+      `/api/groups/${teamId}/members/bulk-remove`,
+      {
+        params: { courseId },
+        data: memberIds
+      }
+    );
+    
+    // Fetch updated team
+    const updatedTeam = await fetchTeamById(teamId);
+    
+    return {
+      team: updatedTeam
+    };
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+/**
+ * DELETE /api/groups/{groupId}
+ * Delete a group
+ */
+export async function deleteTeam(courseId: CourseId, teamId: string): Promise<void> {
+  try {
+    await apiClient.delete(`/api/groups/${teamId}`);
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+/**
+ * GET /api/groups/course/{courseId}/users-without-group
+ * Get users who are not in any group for a course
+ */
+export async function fetchAvailableUsers(courseId: CourseId): Promise<AvailableUsersResponse> {
+  try {
+    if (!courseId) throw new Error("Course ID is required");
+    
+    const response = await apiClient.get<UserWithoutGroupDTO[]>(
+      `/api/groups/course/${courseId}/users-without-group`
+    );
+    
+    const users = response.data.map(user => mapUserWithoutGroupToAvailableUser(user));
+    
+    return {
+      users
+    };
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+/**
+ * POST /api/groups/course/{courseId}/check-students-in-groups
+ * Check which students are already in groups
+ */
+export async function checkStudentsInGroups(
+  courseId: CourseId,
+  studentIds: UserId[]
+): Promise<UserId[]> {
+  try {
+    const response = await apiClient.post<string[]>(
+      `/api/groups/course/${courseId}/check-students-in-groups`,
+      studentIds
+    );
+    
+    return response.data;
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+/**
+ * Update team info (name, description)
+ * Note: Backend doesn't have a direct update endpoint, so we simulate it
+ * by recreating the team or you can add a PUT endpoint to your backend
+ */
+/**
+ * PUT /api/groups/{groupId}/info
+ * Update team information (name, description)
  */
 export async function updateTeamInfo(
   courseId: CourseId,
@@ -516,210 +429,29 @@ export async function updateTeamInfo(
     active?: boolean;
   }
 ): Promise<TeamResponse> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-    const teamIndex = MOCK_TEAMS.findIndex(
-      team => team.courseId === courseId && team.teamId === teamId
-    );
-
-    if (teamIndex === -1) {
-      throw new Error(`Team not found: ${teamId}`);
-    }
-
-    const team = MOCK_TEAMS[teamIndex];
-    
-    // If updating name, check for conflicts
-    if (updates.) {
-      const nameExists = MOCK_TEAMS.some(
-        t => t.courseId === courseId && t.teamId !== teamId
-      );
-      
-      if (nameExists) {
-        throw new Error(`Team name already exists: ${updates.name}`);
-      }
-    }
-
-    // Apply updates
-    if (updates.name) team.name = updates.name;
-    if (updates.description !== undefined) team.description = updates.description;
-
-    console.log(`MOCK: Updated team ${teamId} info:`, updates);
-    
-    const members = MOCK_AVAILABLE_USERS.filter(user => 
-      team.members.has(user.id)
-    );
-    
-    return {
-      team,
-      members
-    };
-  }
-
   try {
-    const command: UpdateStudentGroupCommand = {
-      groupId: teamId, // Using team name as groupId, adjust if backend uses different ID
-      ...updates
+    if (!teamId) throw new Error("Team ID is required");
+    
+    // Only send name and description as per backend API
+    // Note: 'active' field is not included in UpdateGroupInfoRequest
+    const updateRequest = {
+      name: updates.name,
+      description: updates.description
     };
-
-    const response = await apiClient.put<SuccessResponseDTO>(`/api/groups/${teamId}`, command);
     
-    // Return updated team
-    const updatedTeamName = updates.name || teamId;
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-/**
- * Bulk update team properties
- * Extended version that can handle multiple property updates at once
- */
-export async function updateTeamProperties(
-  courseId: CourseId,
-  teamId: TeamId,
-  updates: {
-    name?: string;
-    description?: string;
-    maxMembers?: number;
-    active?: boolean;
-    leaderId?: UserId | null;
-  }
-): Promise<TeamResponse> {
-  if (isMockEnabled) {
-    await simulateDelay(800);
-    const teamIndex = MOCK_TEAMS.findIndex(
-      team => team.courseId === courseId && team.teamId === teamId
-    );
-
-    if (teamIndex === -1) {
-      throw new Error(`Team not found: ${teamId}`);
-    }
-
-    const team = MOCK_TEAMS[teamIndex];
-    
-    // Validate name change
-
-    // Validate leader assignment
-    if (updates.leaderId && !team.members.has(updates.leaderId)) {
-      throw new Error(`Cannot set leader: user ${updates.leaderId} is not a team member`);
-    }
-
-    // Validate member limit
-    if (updates.maxMembers && updates.maxMembers < team.members.size) {
-      throw new Error(`Cannot set max members to ${updates.maxMembers}: team currently has ${team.members.size} members`);
-    }
-
-    // Apply all updates
-    Object.assign(team, updates);
-
-    console.log(`MOCK: Updated team ${teamId} properties:`, updates);
-    
-    const members = MOCK_AVAILABLE_USERS.filter(user => 
-      team.members.has(user.id)
+    // Send update request to backend
+    await apiClient.put(
+      `/api/groups/${teamId}/info`,
+      updateRequest
     );
     
-    return {
-      team,
-      members
-    };
-  }
-
-  try {
-    // For backend, we might need to make multiple calls or have a bulk update endpoint
-    // For now, we'll handle basic updates through updateTeamInfo
-    const { leaderId, maxMembers, ...basicUpdates } = updates;
-    
-    let updatedTeam = await updateTeamInfo(courseId, teamId, basicUpdates);
-    
-    // Handle additional updates if needed
-    // Note: Backend might not support leaderId or maxMembers yet
-    
-    return updatedTeam;
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-
-/**
- * Fetch available users for course (users not in any team)
- * Backend: GET /api/courses/{courseId}/enrollments/available
- */
-export async function fetchAvailableUsers(courseId: CourseId): Promise<AvailableUsersResponse> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    
-    const enrolledStudents = MOCK_AVAILABLE_USERS.filter(user => 
-      user.id.startsWith('student-') && !user.id.startsWith('student-math-')
-    );
-    
-    // Filter out users already in teams for this course
-    const teamMembers = new Set<UserId>();
-    MOCK_TEAMS
-      .filter(team => team.courseId === courseId)
-      .forEach(team => {
-        team.members.forEach(memberId => teamMembers.add(memberId));
-      });
-    
-    const availableUsers = enrolledStudents.filter(user => !teamMembers.has(user.id));
+    // Fetch and return updated team
+    const updatedTeam = await fetchTeamById(teamId);
     
     return {
-      users: availableUsers,
-    };
-  }
-
-  try {
-    // Use the dedicated available enrollments endpoint
-    const response = await apiClient.get<CourseEnrollmentDTO[]>(`/api/courses/${courseId}/enrollments/available`);
-    
-    // The backend should already return only available (not in teams) active users
-    const availableUsers = response.data
-      .filter(enrollment => enrollment.status === 'ACTIVE')
-      .map(mapEnrollmentToAvailableUser);
-    
-    return {
-      users: availableUsers,
+      team: updatedTeam
     };
   } catch (error) {
-    return handleApiError(error);
+    return await handleApiError(error);
   }
-}
-
-
-// =====================================================
-// INTERFACES
-// =====================================================
-export type TeamId = string;
-export interface Team {
-  teamId: TeamId;
-  courseId: CourseId;
-  name: string;
-  description: string;
-  members: Set<UserId>;
-}
-
-export interface AvailableUser {
-  id: UserId;
-  name: string;
-  email: string;
-}
-
-export interface GroupMemberDTO {
-  userId: UserId;
-  personId: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-}
-
-export interface StudentGroupDTO {
-  id: string;
-  courseId: CourseId;
-  courseName: string;
-  name: string;
-  description: string;
-  members: GroupMemberDTO[];
-  memberCount: number;
-  createdAt: string;
-  active: boolean;
 }

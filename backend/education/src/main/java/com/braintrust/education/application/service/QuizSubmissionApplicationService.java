@@ -300,15 +300,13 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
     }
     */
 
-    /*
     @Override
     @Transactional(readOnly = true)
     public List<QuizSubmissionDTO> getSubmissionsByStudent(UserId studentId) {
         return submissionRepository.findByStudentId(studentId).stream()
-                .map(this::mapToDTO)
+                .map(this::mapToBasicDTO)
                 .collect(Collectors.toList());
     }
-    */
 
     /*
     @Override

@@ -1,16 +1,117 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Plus, Trash2, Printer, GripVertical, Paperclip, Upload, LinkIcon, X } from "lucide-react"
+import { Plus, Trash2, GripVertical, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Question, Quiz } from "@/app/domain/entities/CourseEntities"
+import { Question } from "@/app/domain/entities/CourseEntities"
+import { z } from "zod"
+import { useForm, Controller, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+// Zod validation schemas
+const multipleChoiceQuestionSchema = z.object({
+  id: z.string(),
+  type: z.literal("multiple-choice"),
+  question: z.string()
+    .min(5, "Question must be at least 5 characters")
+    .max(500, "Question must not exceed 500 characters")
+    .trim(),
+  options: z.array(z.string().min(1, "Option cannot be empty").trim())
+    .min(2, "Must have at least 2 options")
+    .max(10, "Cannot have more than 10 options"),
+  correctAnswer: z.number()
+    .min(0, "Must select a correct answer")
+    .int(),
+  points: z.number()
+    .min(1, "Points must be at least 1")
+    .max(1000, "Points cannot exceed 1000")
+    .int(),
+  text: z.string().optional(),
+  maxPoints: z.number().optional()
+})
+
+const openEndedQuestionSchema = z.object({
+  id: z.string(),
+  type: z.literal("open-ended"),
+  question: z.string()
+    .min(5, "Question must be at least 5 characters")
+    .max(500, "Question must not exceed 500 characters")
+    .trim(),
+  expectedAnswer: z.string()
+    .min(1, "Expected answer is required for grading reference")
+    .max(2000, "Expected answer must not exceed 2000 characters")
+    .trim()
+    .optional(),
+  points: z.number()
+    .min(1, "Points must be at least 1")
+    .max(1000, "Points cannot exceed 1000")
+    .int(),
+  text: z.string().optional(),
+  maxPoints: z.number().optional(),
+  options: z.array(z.string()).optional(),
+  correctAnswer: z.number().optional()
+})
+
+const questionSchema = z.discriminatedUnion("type", [
+  multipleChoiceQuestionSchema,
+  openEndedQuestionSchema
+])
+
+const quizFormSchema = z.object({
+  title: z.string()
+    .min(3, "Title must be at least 3 characters")
+    .max(200, "Title must not exceed 200 characters")
+    .trim(),
+  description: z.string()
+    .max(1000, "Description must not exceed 1000 characters")
+    .trim()
+    .optional(),
+  timeLimit: z.number()
+    .min(0, "Time limit cannot be negative")
+    .max(1440, "Time limit cannot exceed 24 hours (1440 minutes)")
+    .int()
+    .optional()
+    .or(z.literal(0)),
+  maxGrade: z.number()
+    .min(1, "Maximum grade must be at least 1")
+    .max(1000, "Maximum grade cannot exceed 1000")
+    .int(),
+  dueDate: z.string().optional(),
+  acceptLateSubmissions: z.boolean().default(true),
+  questions: z.array(questionSchema)
+    .min(1, "Quiz must have at least one question")
+    .max(100, "Quiz cannot have more than 100 questions")
+}).refine((data) => {
+  // Validate that all multiple-choice questions have filled options
+  return data.questions.every(q => {
+    if (q.type === "multiple-choice") {
+      return q.options.every(opt => opt.trim().length > 0)
+    }
+    return true
+  })
+}, {
+  message: "All multiple-choice options must be filled",
+  path: ["questions"]
+}).refine((data) => {
+  // Validate due date is in the future if provided
+  if (data.dueDate) {
+    const dueDateTime = new Date(data.dueDate)
+    return dueDateTime > new Date()
+  }
+  return true
+}, {
+  message: "Due date must be in the future",
+  path: ["dueDate"]
+})
+
+type QuizFormData = z.infer<typeof quizFormSchema>
 
 interface QuizCreatorProps {
   open: boolean
@@ -18,64 +119,47 @@ interface QuizCreatorProps {
   onSave: (quiz: any) => void
   unitId: string
   courseId: string
-  editMode?: boolean
-  initialData?: Quiz
 }
 
-export function QuizCreator({ open, onClose, onSave, unitId, courseId, editMode = false, initialData }: QuizCreatorProps) {
-  const [quizData, setQuizData] = useState({
-    title: "",
-    description: "",
-    timeLimit: "",
-    maxGrade: 100,
-    dueDate: "",
-    acceptLateSubmissions: true,
+export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCreatorProps) {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid },
+    reset,
+    setValue,
+    watch,
+    trigger
+  } = useForm<QuizFormData>({
+    resolver: zodResolver(quizFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      title: "",
+      description: "",
+      timeLimit: 0,
+      maxGrade: 100,
+      dueDate: "",
+      acceptLateSubmissions: true,
+      questions: [{
+        id: "" + new Date().getTime(),
+        type: "multiple-choice",
+        question: "",
+        options: ["", "", "", ""],
+        correctAnswer: 0,
+        points: 10,
+        text: "",
+        maxPoints: 0
+      }]
+    }
   })
 
-  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; type: string }[]>([])
-  const [urls, setUrls] = useState<string[]>([])
-  const [newUrl, setNewUrl] = useState("")
+  const { fields, append, remove, update } = useFieldArray({
+    control,
+    name: "questions"
+  })
 
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      id: "" + new Date().getTime(),
-      type: "multiple-choice",
-      question: "",
-      options: ["", "", "", ""],
-      correctAnswer: 0,
-      points: 10,
-      text: "",
-      maxPoints: 0
-    },
-  ])
-
-  // Load initial data when in edit mode
-  useEffect(() => {
-    if (editMode && initialData) {
-      setQuizData({
-        title: initialData.title,
-        description: initialData.description,
-        timeLimit: initialData.timeLimit.toString(),
-        maxGrade: initialData.maxGrade,
-        dueDate: initialData.dueDate || "",
-        acceptLateSubmissions: initialData.acceptLateSubmissions,
-      })
-      
-      // Load questions if they exist
-      if (initialData.questions && initialData.questions.length > 0) {
-        setQuestions(initialData.questions.map(q => ({
-          ...q,
-          // Ensure consistent data structure
-          options: q.options || [],
-          correctAnswer: q.correctAnswer || 0,
-          points: q.points || 10,
-          // Initialize expectedAnswer if available (important for open-ended editing)
-          expectedAnswer: q.expectedAnswer || "" 
-        })))
-      }
-      
-    }
-  }, [editMode, initialData])
+  const watchedQuestions = watch("questions")
+  const totalPoints = watchedQuestions.reduce((sum, q) => sum + (q.points || 0), 0)
 
   const addQuestion = (type: "multiple-choice" | "open-ended") => {
     const newQuestion: Question = {
@@ -89,72 +173,84 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId, editMode 
         options: ["", "", "", ""],
         correctAnswer: 0,
       }),
-      // Default empty string for open-ended expected answer
       ...(type === "open-ended" && {
         expectedAnswer: ""
       })
     }
-    setQuestions([...questions, newQuestion])
+    append(newQuestion as any)
   }
 
-  const updateQuestion = (id: string, updates: Partial<Question>) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)))
+  const updateQuestion = (index: number, updates: Partial<Question>) => {
+    const currentQuestion = watchedQuestions[index]
+    update(index, { ...currentQuestion, ...updates } as any)
+    trigger(`questions.${index}`)
   }
 
-  const deleteQuestion = (id: string) => {
-    setQuestions(questions.filter((q) => q.id !== id))
+  const deleteQuestion = (index: number) => {
+    remove(index)
+    trigger("questions")
   }
 
-  const updateOption = (questionId: string, optionIndex: number, value: string) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === questionId && q.options) {
-          const newOptions = [...q.options]
-          newOptions[optionIndex] = value
-          return { ...q, options: newOptions }
-        }
-        return q
-      }),
-    )
-  }
-
-  const handleSave = () => {
-    const quiz = {
-      title: quizData.title,
-      description: quizData.description,
-      timeLimit: Number.parseInt(quizData.timeLimit) || 0,
-      maxGrade: quizData.maxGrade,
-      dueDate: quizData.dueDate || null,
-      acceptLateSubmissions: quizData.acceptLateSubmissions,
-      questions: questions.map(q => ({
-          ...q,
-          // Clean up unnecessary fields for specific types before saving if needed, 
-          // but mainly ensuring the structure is consistent:
-          options: q.type === 'multiple-choice' ? q.options : undefined,
-          correctAnswer: q.type === 'multiple-choice' ? q.correctAnswer : undefined,
-          expectedAnswer: q.type === 'open-ended' ? q.expectedAnswer : undefined
-      })),
-      supportMaterials: {
-        files: uploadedFiles,
-        urls: urls
-      },
-      ...(editMode && initialData && { id: initialData.id })
+  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
+    const currentQuestion = watchedQuestions[questionIndex]
+    if (currentQuestion.type === "multiple-choice" && currentQuestion.options) {
+      const newOptions = [...currentQuestion.options]
+      newOptions[optionIndex] = value
+      updateQuestion(questionIndex, { options: newOptions })
     }
-    onSave(quiz) // Execute the save function passed from parent
+  }
+
+  const addOption = (questionIndex: number) => {
+    const currentQuestion = watchedQuestions[questionIndex]
+    if (currentQuestion.type === "multiple-choice" && currentQuestion.options) {
+      updateQuestion(questionIndex, { options: [...currentQuestion.options, ""] })
+    }
+  }
+
+  const removeOption = (questionIndex: number, optionIndex: number) => {
+    const currentQuestion = watchedQuestions[questionIndex]
+    if (currentQuestion.type === "multiple-choice" && currentQuestion.options && currentQuestion.options.length > 2) {
+      const newOptions = currentQuestion.options.filter((_, i) => i !== optionIndex)
+      const newCorrectAnswer = currentQuestion.correctAnswer === optionIndex 
+        ? 0 
+        : (currentQuestion.correctAnswer || 0) > optionIndex 
+        ? (currentQuestion.correctAnswer || 0) - 1 
+        : currentQuestion.correctAnswer
+      updateQuestion(questionIndex, { 
+        options: newOptions, 
+        correctAnswer: newCorrectAnswer 
+      })
+    }
+  }
+
+  const onSubmit = (data: QuizFormData) => {
+    const quiz = {
+      title: data.title,
+      description: data.description,
+      timeLimit: data.timeLimit || 0,
+      maxGrade: data.maxGrade,
+      dueDate: data.dueDate || null,
+      acceptLateSubmissions: data.acceptLateSubmissions,
+      questions: data.questions.map(q => ({
+        ...q,
+        options: q.type === 'multiple-choice' ? q.options : undefined,
+        correctAnswer: q.type === 'multiple-choice' ? q.correctAnswer : undefined,
+        expectedAnswer: q.type === 'open-ended' ? q.expectedAnswer : undefined
+      }))
+    }
+    onSave(quiz)
     handleClose()
   }
 
   const handleClose = () => {
-    if (!editMode) {
-      setQuizData({
-        title: "",
-        description: "",
-        timeLimit: "",
-        maxGrade: 100,
-        dueDate: "",
-        acceptLateSubmissions: true,
-      })
-      setQuestions([{
+    reset({
+      title: "",
+      description: "",
+      timeLimit: 0,
+      maxGrade: 100,
+      dueDate: "",
+      acceptLateSubmissions: true,
+      questions: [{
         id: "" + new Date().getTime(),
         type: "multiple-choice",
         question: "",
@@ -163,204 +259,168 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId, editMode 
         points: 10,
         text: "",
         maxPoints: 0
-      }])
-      setUploadedFiles([])
-      setUrls([])
-    }
-    setNewUrl("")
+      }]
+    })
     onClose()
   }
 
-  // --- File/URL Handlers (Omitted for brevity, kept for completeness) ---
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files) {
-      const newFiles = Array.from(files).map((file) => ({
-        name: file.name,
-        type: "file",
-      }))
-      setUploadedFiles([...uploadedFiles, ...newFiles])
+  const getQuestionError = (index: number, field?: string) => {
+    if (!errors.questions) return null
+    const questionErrors = errors.questions[index]
+    if (!questionErrors) return null
+    if (field && typeof questionErrors === 'object' && field in questionErrors) {
+      return (questionErrors as any)[field]?.message
     }
-  }
-
-  const removeFile = (index: number) => {
-    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))
-  }
-
-  const addUrl = () => {
-    if (newUrl.trim()) {
-      setUrls([...urls, newUrl.trim()])
-      setNewUrl("")
+    if (typeof questionErrors === 'object' && 'message' in questionErrors) {
+      return questionErrors.message
     }
-  }
-
-  const removeUrl = (index: number) => {
-    setUrls(urls.filter((_, i) => i !== index))
-  }
-  // --- End File/URL Handlers ---
-
-  const handlePrint = () => {
-    const printWindow = window.open("", "_blank")
-    if (!printWindow) return
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${quizData.title || "Quiz"}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-            h1 { color: #1e40af; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
-            .quiz-info { background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; }
-            .question { margin: 30px 0; page-break-inside: avoid; }
-            .question-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-            .question-number { font-weight: bold; color: #1e40af; }
-            .question-points { color: #6b7280; font-size: 14px; }
-            .question-text { font-size: 16px; margin-bottom: 15px; line-height: 1.6; }
-            .options { margin-left: 20px; }
-            .option { margin: 10px 0; display: flex; align-items: center; }
-            .option-letter { display: inline-block; width: 30px; font-weight: bold; }
-            .answer-space { border-bottom: 1px solid #d1d5db; min-height: 80px; margin-top: 10px; }
-            @media print { body { padding: 20px; } }
-          </style>
-        </head>
-        <body>
-          <h1>${quizData.title || "Quiz"}</h1>
-          <div class="quiz-info">
-            <p><strong>Description:</strong> ${quizData.description || "N/A"}</p>
-            <p><strong>Time Limit:</strong> ${quizData.timeLimit || "No limit"}</p>
-            <p><strong>Total Points:</strong> ${questions.reduce((sum, q) => sum + q.points, 0)}</p>
-          </div>
-          ${questions
-            .map(
-              (q, index) => `
-            <div class="question">
-              <div class="question-header">
-                <span class="question-number">Question ${index + 1}</span>
-                <span class="question-points">${q.points} points</span>
-              </div>
-              <div class="question-text">${q.question || "Question text"}</div>
-              ${
-                q.type === "multiple-choice" && q.options
-                  ? `
-                <div class="options">
-                  ${q.options
-                    .map(
-                      (opt, i) => `
-                    <div class="option">
-                      <span class="option-letter">${String.fromCharCode(65 + i)})</span>
-                      <span>${opt || `Option ${i + 1}`}</span>
-                    </div>
-                  `,
-                    )
-                    .join("")}
-                </div>
-              `
-                  : `<div class="answer-space"></div>`
-              }
-            </div>
-          `,
-            )
-            .join("")}
-        </body>
-      </html>
-    `
-
-    printWindow.document.write(printContent)
-    printWindow.document.close()
-    printWindow.print()
+    return null
   }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] md:max-w-6xl">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl sm:text-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span>{editMode ? "Edit Quiz" : "Create Quiz / Exam"}</span>
-            <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2 bg-transparent w-full sm:w-auto">
-              <Printer className="h-4 w-4" />
-              Print Exam
-            </Button>
-          </DialogTitle>
+          <DialogTitle className="text-2xl">Create Quiz / Exam</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           {/* Quiz Settings */}
-          <Card className="p-4 sm:p-6 bg-blue-50 dark:bg-blue-950/20">
-            <h3 className="text-base sm:text-lg font-semibold mb-4">Quiz Settings</h3>
+          <Card className="p-6 bg-blue-50 dark:bg-blue-950/20">
+            <h3 className="text-lg font-semibold mb-4">Quiz Settings</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="quiz-title">Quiz Title</Label>
-                <Input
-                  id="quiz-title"
-                  value={quizData.title}
-                  onChange={(e) => setQuizData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter quiz title"
+                <Label htmlFor="quiz-title">Quiz Title *</Label>
+                <Controller
+                  name="title"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      id="quiz-title"
+                      placeholder="Enter quiz title"
+                      className={errors.title ? "border-red-500" : ""}
+                    />
+                  )}
                 />
+                {errors.title && (
+                  <p className="text-sm text-red-500">{errors.title.message}</p>
+                )}
               </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="time-limit">Time Limit (minutes)</Label>
-                <Input
-                  id="time-limit"
-                  value={quizData.timeLimit}
-                  onChange={(e) => setQuizData(prev => ({ ...prev, timeLimit: e.target.value }))}
-                  placeholder="e.g., 60"
-                  type="number"
+                <Controller
+                  name="timeLimit"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      id="time-limit"
+                      placeholder="e.g., 60"
+                      type="number"
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
+                      className={errors.timeLimit ? "border-red-500" : ""}
+                    />
+                  )}
                 />
+                {errors.timeLimit && (
+                  <p className="text-sm text-red-500">{errors.timeLimit.message}</p>
+                )}
               </div>
+              
               <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="quiz-description">Description</Label>
-                <Textarea
-                  id="quiz-description"
-                  value={quizData.description}
-                  onChange={(e) => setQuizData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter quiz description"
-                  rows={2}
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <Textarea
+                      {...field}
+                      id="quiz-description"
+                      placeholder="Enter quiz description"
+                      rows={2}
+                      className={errors.description ? "border-red-500" : ""}
+                    />
+                  )}
                 />
+                {errors.description && (
+                  <p className="text-sm text-red-500">{errors.description.message}</p>
+                )}
               </div>
+              
               <div className="space-y-2 md:col-span-1">
-                <Label htmlFor="max-grade-quiz">Maximum Grade</Label>
-                <Input
-                  id="max-grade-quiz"
-                  type="number"
-                  value={quizData.maxGrade}
-                  onChange={(e) => setQuizData(prev => ({ ...prev, maxGrade: Number.parseInt(e.target.value) || 0 }))}
-                  min="1"
+                <Label htmlFor="max-grade-quiz">Maximum Grade *</Label>
+                <Controller
+                  name="maxGrade"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      id="max-grade-quiz"
+                      type="number"
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      min="1"
+                      className={errors.maxGrade ? "border-red-500" : ""}
+                    />
+                  )}
                 />
+                {errors.maxGrade && (
+                  <p className="text-sm text-red-500">{errors.maxGrade.message}</p>
+                )}
               </div>
+              
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="due-date">Due Date</Label>
-                <Input
-                  id="due-date"
-                  type="datetime-local"
-                  value={quizData.dueDate}
-                  onChange={(e) => setQuizData(prev => ({ ...prev, dueDate: e.target.value }))}
+                <Controller
+                  name="dueDate"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      id="due-date"
+                      type="datetime-local"
+                      className={errors.dueDate ? "border-red-500" : ""}
+                    />
+                  )}
                 />
+                {errors.dueDate && (
+                  <p className="text-sm text-red-500">{errors.dueDate.message}</p>
+                )}
               </div>
             </div>
           </Card>
 
           {/* Questions */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h3 className="text-base sm:text-lg font-semibold">
-                Questions ({questions.length}) - Total Points: {questions.reduce((sum, q) => sum + q.points, 0)}
-              </h3>
-              <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">
+                  Questions ({fields.length}) - Total Points: {totalPoints}
+                </h3>
+                {errors.questions && typeof errors.questions === 'object' && 'message' in errors.questions && (
+                  <p className="text-sm text-red-500 mt-1">{errors.questions.message as string}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => addQuestion("multiple-choice")}
-                  className="gap-2 w-full sm:w-auto"
+                  className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
                   Multiple Choice
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => addQuestion("open-ended")}
-                  className="gap-2 w-full sm:w-auto"
+                  className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
                   Open Answer
@@ -368,114 +428,159 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId, editMode 
               </div>
             </div>
 
-            {questions.map((question, index) => (
-              <Card key={question.id} className="p-4 sm:p-6">
-                <div className="space-y-4">
-                  {/* Question Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex items-start gap-2 sm:gap-3 flex-1">
-                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0 mt-1" />
-                      <div className="flex-1 space-y-2 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant={question.type === "multiple-choice" ? "default" : "secondary"}>
-                            Question {index + 1}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {question.type === "multiple-choice" ? "Multiple Choice" : "Open Answer"}
-                          </Badge>
+            {fields.map((field, index) => {
+              const question = watchedQuestions[index]
+              const questionError = getQuestionError(index, 'question')
+              const optionsError = getQuestionError(index, 'options')
+              const expectedAnswerError = getQuestionError(index, 'expectedAnswer')
+              const pointsError = getQuestionError(index, 'points')
+              
+              return (
+                <Card key={field.id} className={`p-6 ${questionError || optionsError || expectedAnswerError || pointsError ? 'border-red-300' : ''}`}>
+                  <div className="space-y-4">
+                    {/* Question Header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1">
+                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0 mt-1" />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={question.type === "multiple-choice" ? "default" : "secondary"}>
+                              Question {index + 1}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {question.type === "multiple-choice" ? "Multiple Choice" : "Open Answer"}
+                            </Badge>
+                          </div>
+                          <Input
+                            value={question.question}
+                            onChange={(e) => updateQuestion(index, { question: e.target.value })}
+                            placeholder="Enter your question"
+                            className={questionError ? "border-red-500" : ""}
+                          />
+                          {questionError && (
+                            <p className="text-sm text-red-500">{questionError}</p>
+                          )}
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <Input
-                          value={question.question}
-                          onChange={(e) => updateQuestion(question.id, { question: e.target.value })}
-                          placeholder="Enter your question"
-                          className="text-sm sm:text-base"
+                          type="number"
+                          value={question.points}
+                          onChange={(e) => updateQuestion(index, { points: parseInt(e.target.value) || 1 })}
+                          className={`w-20 ${pointsError ? "border-red-500" : ""}`}
+                          min="1"
                         />
+                        <span className="text-sm text-muted-foreground">pts</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteQuestion(index)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 justify-end sm:justify-start">
-                      <Input
-                        type="number"
-                        value={question.points}
-                        onChange={(e) => updateQuestion(question.id, { points: Number.parseInt(e.target.value) || 0 })}
-                        className="w-16 sm:w-20"
-                        min="1"
-                      />
-                      <span className="text-xs sm:text-sm text-muted-foreground">pts</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteQuestion(question.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
+                    {pointsError && (
+                      <p className="text-sm text-red-500 ml-8">{pointsError}</p>
+                    )}
 
-                  {/* Multiple Choice Options */}
-                  {question.type === "multiple-choice" && question.options && (
-                    <div className="space-y-3 ml-0 sm:ml-8">
-                      <Label className="text-xs sm:text-sm text-muted-foreground">Answer Options</Label>
-                      {question.options.map((option, optIndex) => (
-                        <div key={optIndex} className="flex items-center gap-2 sm:gap-3">
-                          <input
-                            type="radio"
-                            name={`correct-${question.id}`}
-                            checked={question.correctAnswer === optIndex}
-                            onChange={() => updateQuestion(question.id, { correctAnswer: optIndex })}
-                            className="h-4 w-4 text-blue-600 flex-shrink-0"
-                          />
-                          <span className="font-semibold text-xs sm:text-sm w-5 sm:w-6 flex-shrink-0">
-                            {String.fromCharCode(65 + optIndex)})
-                          </span>
-                          <Input
-                            value={option}
-                            onChange={(e) => updateOption(question.id, optIndex, e.target.value)}
-                            placeholder={`Option ${optIndex + 1}`}
-                            className="flex-1 text-sm"
-                          />
+                    {/* Multiple Choice Options */}
+                    {question.type === "multiple-choice" && question.options && (
+                      <div className="space-y-3 ml-8">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm text-muted-foreground">Answer Options *</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addOption(index)}
+                            className="gap-1 h-7 text-xs"
+                            disabled={question.options.length >= 10}
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Option
+                          </Button>
                         </div>
-                      ))}
-                      <p className="text-xs text-muted-foreground ml-0 sm:ml-9">
-                        Select the correct answer by clicking the radio button
-                      </p>
-                    </div>
-                  )}
+                        {question.options.map((option, optIndex) => (
+                          <div key={optIndex} className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name={`correct-${field.id}`}
+                              checked={question.correctAnswer === optIndex}
+                              onChange={() => updateQuestion(index, { correctAnswer: optIndex })}
+                              className="h-4 w-4 text-blue-600 flex-shrink-0"
+                            />
+                            <span className="font-semibold text-sm w-6 flex-shrink-0">
+                              {String.fromCharCode(65 + optIndex)})
+                            </span>
+                            <Input
+                              value={option}
+                              onChange={(e) => updateOption(index, optIndex, e.target.value)}
+                              placeholder={`Option ${optIndex + 1}`}
+                              className={`flex-1 ${!option.trim() && optionsError ? "border-red-500" : ""}`}
+                            />
+                            {question.options && question.options.length > 2 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeOption(index, optIndex)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                        {optionsError && (
+                          <p className="text-sm text-red-500">{optionsError}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground ml-9">
+                          Select the correct answer by clicking the radio button
+                        </p>
+                      </div>
+                    )}
 
-                  {/* 🔥 Open-Ended Answer Space (UPDATED) */}
-                  {question.type === "open-ended" && (
-                    <div className="ml-0 sm:ml-8">
-                      <Label htmlFor={`expected-answer-${question.id}`} className="text-xs sm:text-sm font-semibold text-primary/80 mb-2 block">
-                        Model Answer / Expected Response (For Grading Reference)
-                      </Label>
-                      <Textarea
-                        id={`expected-answer-${question.id}`}
-                        value={question.expectedAnswer || ''}
-                        onChange={(e) => updateQuestion(question.id, { expectedAnswer: e.target.value })}
-                        placeholder="Enter the expected answer or key points here for reference (students won't see this)."
-                        rows={3}
-                        className="bg-gray-50 dark:bg-gray-900/50 border-primary/30"
-                      />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        This model answer will be used for manual grading or AI comparison.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                    {/* Open-Ended Answer Space */}
+                    {question.type === "open-ended" && (
+                      <div className="ml-8">
+                        <Label htmlFor={`expected-answer-${field.id}`} className="text-sm font-semibold text-primary/80 mb-2 block">
+                          Model Answer / Expected Response (For Grading Reference)
+                        </Label>
+                        <Textarea
+                          id={`expected-answer-${field.id}`}
+                          value={question.expectedAnswer || ''}
+                          onChange={(e) => updateQuestion(index, { expectedAnswer: e.target.value })}
+                          placeholder="Enter the expected answer or key points here for reference (students won't see this)."
+                          rows={3}
+                          className={`bg-gray-50 dark:bg-gray-900/50 border-primary/30 ${expectedAnswerError ? "border-red-500" : ""}`}
+                        />
+                        {expectedAnswerError && (
+                          <p className="text-sm text-red-500 mt-1">{expectedAnswerError}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2">
+                          This model answer will be used for manual grading or AI comparison.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
 
-            {questions.length === 0 && (
-              <Card className="p-8 sm:p-12 text-center">
-                <p className="text-sm sm:text-base text-muted-foreground mb-4">
+            {fields.length === 0 && (
+              <Card className="p-12 text-center">
+                <p className="text-muted-foreground mb-4">
                   No questions yet. Add your first question to get started.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                  <Button variant="outline" onClick={() => addQuestion("multiple-choice")} className="gap-2">
+                <div className="flex gap-2 justify-center">
+                  <Button type="button" variant="outline" onClick={() => addQuestion("multiple-choice")} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Multiple Choice
                   </Button>
-                  <Button variant="outline" onClick={() => addQuestion("open-ended")} className="gap-2">
+                  <Button type="button" variant="outline" onClick={() => addQuestion("open-ended")} className="gap-2">
                     <Plus className="h-4 w-4" />
                     Open Answer
                   </Button>
@@ -484,17 +589,15 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId, editMode 
             )}
           </div>
 
-        
-        </div>
-
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={handleClose} className="w-full sm:w-auto bg-transparent">
-            Cancel
-          </Button>
-          <Button onClick={handleSave} className="w-full sm:w-auto">
-            {editMode ? "Save Changes" : "Create Quiz"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!isValid}>
+              Create Quiz
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
