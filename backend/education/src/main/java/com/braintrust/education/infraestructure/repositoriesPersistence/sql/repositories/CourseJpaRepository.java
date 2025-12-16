@@ -1,6 +1,8 @@
 package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
 
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,23 +14,17 @@ import java.util.Optional;
 @Repository
 public interface CourseJpaRepository extends JpaRepository<CourseJpaEntity, String> {
 
-    /*
-    Optional<CourseJpaEntity> findByCode(String code);
-    */
-
     @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId AND e.status = 'ACTIVE'")
     List<CourseJpaEntity> findByStudentId(@Param("studentId") String studentId);
 
+    @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId AND e.status = 'ACTIVE'")
+    Page<CourseJpaEntity> findByStudentId(@Param("studentId") String studentId, Pageable pageable);
+
     List<CourseJpaEntity> findByTeacherId(String teacherId);
+    Page<CourseJpaEntity> findByTeacherId(String teacherId, Pageable pageable);
 
-
-    /*
     List<CourseJpaEntity> findByActiveTrue();
-    */
-
-    /*
-    List<CourseJpaEntity> findByGradeAndGroup(String grade, String group);
-    */
+    Page<CourseJpaEntity> findByActiveTrue(Pageable pageable);
 
     boolean existsByCode(String code);
 

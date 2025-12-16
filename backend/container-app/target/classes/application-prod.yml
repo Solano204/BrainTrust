@@ -48,6 +48,95 @@ spring:
         order_inserts: true
         order_updates: true
 
+# ==========================================
+# 🆕 GOOGLE GEMINI AI CONFIGURATION
+# ==========================================
+google:
+  ai:
+    # Uses env var GOOGLE_AI_API_KEY, defaults to empty if not set
+    api-key: ${GOOGLE_AI_API_KEY:AIzaSyA8qlM_Rxa0Fi33Zl-h8Km6nWfe_0URf-U}
+    # Model for text extraction (PDF processing)
+    extraction-model: ${GOOGLE_AI_EXTRACTION_MODEL:gemini-2.5-flash}
+    # Model for AI detection analysis
+    detection-model: ${GOOGLE_AI_DETECTION_MODEL:gemini-2.5-flash}
+    # Model for general queries (optional)
+    model: ${GOOGLE_AI_MODEL:gemini-2.5-flash}
+
+# ==========================================
+# 🆕 AI SERVICE CONFIGURATION
+# ==========================================
+ai:
+  # Provider selection for different services
+  provider: ${AI_PROVIDER:GoogleGeminiAIProvider} # Options: GoogleGeminiAIProvider, MockPythonAIDetectionProvider, MockTextExtractionProvider
+
+  # Text extraction provider (for PDF processing)
+  text-extraction:
+    provider: ${TEXT_EXTRACTION_PROVIDER:MockTextExtractionProvider} # Options: GoogleGeminiAIProvider, MockTextExtractionProvider
+
+  # Default model type for AI detection
+  model-default-type: ${AI_MODEL_DEFAULT_TYPE:ENSEMBLE}
+
+  # AI detection service settings
+  detection:
+    enabled: ${AI_DETECTION_ENABLED:true}
+    timeout-ms: ${AI_DETECTION_TIMEOUT:30000}
+    rate-limit-per-minute: ${AI_DETECTION_RATE_LIMIT:60}
+
+  # Text extraction service settings
+  extraction:
+    enabled: ${AI_EXTRACTION_ENABLED:true}
+    timeout-ms: ${AI_EXTRACTION_TIMEOUT:30000}
+    max-file-size-mb: ${AI_EXTRACTION_MAX_FILE_SIZE:10}
+    rate-limit-per-minute: ${AI_EXTRACTION_RATE_LIMIT:30}
+
+# ==========================================
+# 🆕 SUBMISSION AI ANALYSIS CONFIGURATION
+# ==========================================
+submission:
+  ai-analysis:
+    enabled: ${SUBMISSION_AI_ANALYSIS_ENABLED:true}
+    min-text-length: ${AI_ANALYSIS_MIN_TEXT_LENGTH:50}
+    max-text-length: ${AI_ANALYSIS_MAX_TEXT_LENGTH:100000}
+    # Only analyze DIGITAL format submissions
+    allowed-formats: ${AI_ANALYSIS_ALLOWED_FORMATS:DIGITAL}
+
+  # Rate limiting for submission processing
+  storage:
+    max-concurrent: ${SUBMISSION_STORAGE_MAX_CONCURRENT:20}
+  extraction:
+    max-concurrent: ${SUBMISSION_EXTRACTION_MAX_CONCURRENT:10}
+  analysis:
+    max-concurrent: ${SUBMISSION_ANALYSIS_MAX_CONCURRENT:50}
+
+# ==========================================
+# 🆕 MOCK PROVIDER CONFIGURATION (for testing)
+# ==========================================
+mock:
+  # Text extraction mock settings
+  text-extraction:
+    simulate-delay: ${MOCK_EXTRACTION_SIMULATE_DELAY:true}
+    delay-min-ms: ${MOCK_EXTRACTION_DELAY_MIN:800}
+    delay-max-ms: ${MOCK_EXTRACTION_DELAY_MAX:2500}
+    simulate-ocr-errors: ${MOCK_EXTRACTION_SIMULATE_OCR_ERRORS:true}
+    ocr-error-rate: ${MOCK_EXTRACTION_OCR_ERROR_RATE:0.05}
+    availability-rate: ${MOCK_EXTRACTION_AVAILABILITY_RATE:0.95}
+
+  # AI detection mock settings
+  ai-detection:
+    simulate-delay: ${MOCK_DETECTION_SIMULATE_DELAY:true}
+    delay-min-ms: ${MOCK_DETECTION_DELAY_MIN:500}
+    delay-max-ms: ${MOCK_DETECTION_DELAY_MAX:1500}
+    availability-rate: ${MOCK_DETECTION_AVAILABILITY_RATE:0.90}
+
+# ==========================================
+# 🔄 EXISTING LEGACY AI SERVICES (Python Modules)
+# ==========================================
+ai-python:
+  analyze:
+    url: ${AI_PYTHON_ANALYZE_URL:http://localhost:8001/analyze}
+  extract:
+    url: ${AI_PYTHON_EXTRACT_URL:http://localhost:8000/extract}
+
 server:
   port: ${SERVER_PORT:8080}
   tomcat:
@@ -88,14 +177,6 @@ security:
     enabled: ${IP_WHITELIST_ENABLED:false}
     admin-ips: ${ADMIN_IPS:}
 
-ai:
-  python:
-    analyze:
-      url: ${AI_PYTHON_ANALYZE_URL:http://localhost:8001/analyze}
-    extract:
-      url: ${AI_PYTHON_EXTRACT_URL:http://localhost:8000/extract}
-  model-default-type: ${AI_MODEL_DEFAULT_TYPE:ENSEMBLE}
-
 document:
   storage:
     strategy: ${DOCUMENT_STORAGE_STRATEGY:parallel}
@@ -121,7 +202,10 @@ logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
     com.braintrust: ${LOG_LEVEL:INFO}
+    com.braintrust.aidetectition: ${AI_LOG_LEVEL:DEBUG}
+    com.braintrust.education: ${EDUCATION_LOG_LEVEL:INFO}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.springframework.web: ${WEB_LOG_LEVEL:INFO}
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
@@ -140,3 +224,29 @@ management:
     export:
       prometheus:
         enabled: ${PROMETHEUS_ENABLED:true}
+    enable:
+      http: true
+      jvm: true
+      system: true
+      process: true
+      logback: true
+      executor: true
+
+# ==========================================
+# 🏗️ SERVICE SPECIFIC CONFIGURATIONS
+# ==========================================
+braintrust:
+  services:
+    ai-detection:
+      base-path: /api/ai-analysis
+      health-check-interval: 30000
+      retry-attempts: 3
+      retry-delay-ms: 1000
+    submission:
+      base-path: /api/submissions
+      max-attachments-per-submission: 5
+      allowed-mime-types: application/pdf,image/jpeg,image/png,text/plain
+    assignment:
+      base-path: /api/assignments
+    course:
+      base-path: /api/courses

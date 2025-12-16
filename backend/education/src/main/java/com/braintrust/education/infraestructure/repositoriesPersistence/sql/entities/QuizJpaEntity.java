@@ -8,7 +8,8 @@ import java.util.List;
 @Entity
 @Table(name = "quizzes", indexes = {
         @Index(name = "idx_quiz_course", columnList = "course_id"),
-        @Index(name = "idx_quiz_active", columnList = "active")
+        @Index(name = "idx_quiz_active", columnList = "active"),
+        @Index(name = "idx_quiz_unit", columnList = "unit_id") // ✅ Added index for unit
 })
 public class QuizJpaEntity {
 
@@ -25,10 +26,8 @@ public class QuizJpaEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-
-    @Column(name = "unit_id", length = 50) // ✅ ADD THIS - can be nullable
+    @Column(name = "unit_id", length = 50)
     private String unitId;
-
 
     @Column(name = "available_from")
     private LocalDateTime availableFrom;
@@ -40,25 +39,24 @@ public class QuizJpaEntity {
     private Integer timeLimitMinutes;
 
     @Column(name = "max_attempts", nullable = false)
-    private int maxAttempts;
+    private int maxAttempts = 1;
 
     @Column(name = "shuffle_questions", nullable = false)
-    private boolean shuffleQuestions;
+    private boolean shuffleQuestions = false;
 
     @Column(name = "show_correct_answers", nullable = false)
-    private boolean showCorrectAnswers;
+    private boolean showCorrectAnswers = true;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "active", nullable = false)
-    private boolean active;
+    private boolean active = true;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "quiz_id", nullable = false)
+    // ✅ FIXED: Proper OneToMany mapping with cascade and orphanRemoval
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<QuizQuestionJpaEntity> questions = new ArrayList<>();
 
-    // Constructors, getters, setters...
     public QuizJpaEntity() {}
 
     public QuizJpaEntity(String id, String courseId, String unitId, String title, String description,
@@ -67,7 +65,7 @@ public class QuizJpaEntity {
                          boolean showCorrectAnswers, LocalDateTime createdAt, boolean active) {
         this.id = id;
         this.courseId = courseId;
-        this.unitId = unitId; // ✅ ADD THIS
+        this.unitId = unitId;
         this.title = title;
         this.description = description;
         this.availableFrom = availableFrom;
@@ -80,10 +78,19 @@ public class QuizJpaEntity {
         this.active = active;
     }
 
+    // ✅ Helper method to add question with bidirectional relationship
+    public void addQuestion(QuizQuestionJpaEntity question) {
+        questions.add(question);
+        question.setQuiz(this);
+    }
 
-    // Getters/Setters
+    // ✅ Helper method to remove question
+    public void removeQuestion(QuizQuestionJpaEntity question) {
+        questions.remove(question);
+        question.setQuiz(null);
+    }
 
-    public String getUnitId() { return unitId; }
+    // Getters and Setters (all existing ones remain the same)
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getCourseId() { return courseId; }
@@ -92,6 +99,8 @@ public class QuizJpaEntity {
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getUnitId() { return unitId; }
+    public void setUnitId(String unitId) { this.unitId = unitId; }
     public LocalDateTime getAvailableFrom() { return availableFrom; }
     public void setAvailableFrom(LocalDateTime availableFrom) { this.availableFrom = availableFrom; }
     public LocalDateTime getAvailableUntil() { return availableUntil; }
@@ -106,10 +115,16 @@ public class QuizJpaEntity {
     public void setShowCorrectAnswers(boolean showCorrectAnswers) { this.showCorrectAnswers = showCorrectAnswers; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public void setUnitId(String unitId) { this.unitId = unitId; }
-
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
     public List<QuizQuestionJpaEntity> getQuestions() { return questions; }
-    public void setQuestions(List<QuizQuestionJpaEntity> questions) { this.questions = questions; }
+    public void setQuestions(List<QuizQuestionJpaEntity> questions) {
+        this.questions = questions;
+        // Ensure bidirectional relationship
+        if (questions != null) {
+            for (QuizQuestionJpaEntity question : questions) {
+                question.setQuiz(this);
+            }
+        }
+    }
 }

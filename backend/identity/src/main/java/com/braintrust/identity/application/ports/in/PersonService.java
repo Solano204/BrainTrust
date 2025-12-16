@@ -4,6 +4,8 @@ import com.braintrust.identity.application.dtos.commands.*;
 import com.braintrust.identity.application.dtos.dtos.PersonDTO;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -23,5 +25,5 @@ public interface PersonService {
 
     PersonDTO getPersonByUserId(UserId userId);
 
-    List<PersonDTO> getAllPersons();
+    Page<PersonDTO> getAllPersons(Pageable pageable);
 }

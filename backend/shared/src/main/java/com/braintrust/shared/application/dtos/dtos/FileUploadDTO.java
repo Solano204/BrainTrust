@@ -1,4 +1,4 @@
-package com.braintrust.education.application.dtos.dtos;
+package com.braintrust.shared.application.dtos.dtos;
 
 public record FileUploadDTO(
         String fileName,

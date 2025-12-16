@@ -20,5 +20,7 @@ public record AssignmentDTO(
         boolean canAcceptSubmissions,
         String targetType,
         boolean isTeamAssignment,
-        List<DocumentDTO> attachments
+        String submissionFormat, // ✅ NEW: Submission format
+        List<DocumentDTO> attachments,
+        List<String> links
 ) {}

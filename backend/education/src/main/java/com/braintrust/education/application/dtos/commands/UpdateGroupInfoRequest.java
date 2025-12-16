@@ -1,4 +1,7 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class UpdateGroupInfoRequest {
-}
+
+public record UpdateGroupInfoRequest(
+        String name,
+        String description
+) {}

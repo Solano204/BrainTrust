@@ -7,6 +7,8 @@ import com.braintrust.education.domain.model.QuizSubmissionStatus;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,17 +19,40 @@ import java.util.List;
 @RequestMapping("/api/quiz-submissions")
 public class QuizSubmissionController {
 
+    private static final Logger log = LoggerFactory.getLogger(QuizSubmissionController.class);
+
     private final QuizSubmissionService submissionService;
 
     public QuizSubmissionController(QuizSubmissionService submissionService) {
         this.submissionService = submissionService;
     }
 
+
+
     @PostMapping("/submit-with-answers")
-    public ResponseEntity<String> submitQuizWithAnswers(@RequestBody SubmitQuizWithAnswersCommand command) {
+    public ResponseEntity<QuizSubmissionDetailDTO> submitQuizWithAnswers(@RequestBody SubmitQuizWithAnswersCommand command) {
         QuizSubmissionId id = submissionService.submitQuizWithAnswers(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id.getValue());
+        QuizSubmissionDetailDTO submissionDetail = submissionService.getSubmissionDetailById(id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(submissionDetail);
     }
+
+    @PostMapping("/{submissionId}/grade")
+    public ResponseEntity<QuizSubmissionDetailDTO> gradeSubmission(
+            @PathVariable String submissionId,
+            @RequestBody GradeQuizSubmissionCommand command) {
+
+        if (!submissionId.equals(command.quizSubmissionId())) {
+            throw new IllegalArgumentException("Submission ID mismatch");
+        }
+
+        submissionService.gradeQuizSubmission(command);
+        QuizSubmissionDetailDTO gradedSubmission = submissionService.getSubmissionDetailById(
+                QuizSubmissionId.fromString(submissionId)
+        );
+        return ResponseEntity.ok(gradedSubmission);
+    }
+
+
 
     /*
     @PostMapping("/start")
@@ -55,12 +80,56 @@ public class QuizSubmissionController {
     }
     */
 
-    @PostMapping("/{submissionId}/grade")
-    public ResponseEntity<Void> gradeSubmission(
-            @PathVariable String submissionId,
-            @RequestBody GradeQuizSubmissionCommand command) {
-        submissionService.gradeQuizSubmission(command);
-        return ResponseEntity.ok().build();
+    @GetMapping("/quiz/{quizId}/student/{studentId}/detail")
+    public ResponseEntity<QuizSubmissionDetailDTO> getStudentQuizSubmissionDetail(
+            @PathVariable String quizId,
+            @PathVariable String studentId) {
+
+        log.debug("Getting detailed submission for Quiz: {}, Student: {}", quizId, studentId);
+
+        QuizSubmissionDetailDTO submission = submissionService.getStudentQuizSubmissionDetail(quizId, studentId);
+
+        if (submission != null) {
+            return ResponseEntity.ok(submission);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+    // ✅ NEW: Get quiz submissions by course and unit with basic info
+    @GetMapping("/course/{courseId}/unit/{unitId}/basic")
+    public ResponseEntity<List<QuizSubmissionBasicDTO>> getSubmissionsByCourseAndUnitBasic(
+            @PathVariable String courseId,
+            @PathVariable String unitId) {
+
+        log.debug("Fetching basic quiz submissions for Course: {}, Unit: {}", courseId, unitId);
+
+        List<QuizSubmissionBasicDTO> submissions = submissionService.getSubmissionsByCourseAndUnitBasic(
+                CourseId.fromString(courseId),
+                UnitId.fromString(unitId)
+        );
+
+        return ResponseEntity.ok(submissions);
+    }
+
+    // ✅ NEW: Get quiz submissions by student, course and unit with basic info
+    @GetMapping("/student/{studentId}/course/{courseId}/unit/{unitId}/basic")
+    public ResponseEntity<List<QuizSubmissionBasicDTO>> getSubmissionsByStudentAndCourseAndUnitBasic(
+            @PathVariable String studentId,
+            @PathVariable String courseId,
+            @PathVariable String unitId) {
+
+        log.debug("Fetching basic quiz submissions for Student: {}, Course: {}, Unit: {}",
+                studentId, courseId, unitId);
+
+        List<QuizSubmissionBasicDTO> submissions = submissionService.getSubmissionsByStudentAndCourseAndUnitBasic(
+                UserId.fromString(studentId),
+                CourseId.fromString(courseId),
+                UnitId.fromString(unitId)
+        );
+
+        return ResponseEntity.ok(submissions);
     }
 
     @GetMapping("/{submissionId}")
@@ -90,7 +159,6 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
-
     /**
      * ✅ NEW: Get all quiz submissions for a course with basic info
      */
@@ -101,7 +169,6 @@ public class QuizSubmissionController {
         );
         return ResponseEntity.ok(submissions);
     }
-
 
     /*
     @GetMapping("/quiz/{quizId}")

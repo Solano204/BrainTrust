@@ -1,4 +1,9 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class RemoveAttachmentCommand {
-}
+
+import jakarta.validation.constraints.NotBlank;
+
+public record RemoveAttachmentCommand(
+        @NotBlank(message = "Document name is required")
+        String documentName
+) {}

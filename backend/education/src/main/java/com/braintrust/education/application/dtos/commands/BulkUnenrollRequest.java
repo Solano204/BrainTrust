@@ -1,4 +1,5 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class BulkUnenrollRequest {
-}
+import java.util.List;
+
+public record BulkUnenrollRequest(List<String> studentIds) {}

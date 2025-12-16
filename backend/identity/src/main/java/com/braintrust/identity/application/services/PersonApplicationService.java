@@ -13,6 +13,9 @@ import com.braintrust.identity.domain.model.Person;
 import com.braintrust.identity.domain.valueobjects.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +47,50 @@ public class PersonApplicationService implements PersonService {
         this.personRepository = personRepository;
         log.info("✅ PersonApplicationService initialized with Virtual Threads support");
     }
+
+
+
+
+    // ✅ OPTIONAL: Add search methods for persons if needed
+    @Transactional(readOnly = true)
+    public Page<PersonDTO> searchPersonsByName(String name, Pageable pageable) {
+        log.debug("🔍 Searching persons by name: '{}' with pagination", name);
+
+        // Since we don't have direct search in the PersonRepository yet,
+        // we'll implement it by fetching all and filtering (not efficient for large datasets)
+        // For production, you should add proper search methods to the repository
+
+        try {
+            Page<Person> allPersonsPage = personRepository.findAll(pageable);
+
+            List<PersonDTO> filteredPersons = allPersonsPage.getContent().stream()
+                    .filter(person ->
+                            person.getFullName().toLowerCase().contains(name.toLowerCase()) ||
+                                    person.getFirstName().toLowerCase().contains(name.toLowerCase()) ||
+                                    person.getLastName().toLowerCase().contains(name.toLowerCase())
+                    )
+                    .map(this::mapToPersonDTO)
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(filteredPersons, pageable, allPersonsPage.getTotalElements());
+
+        } catch (Exception e) {
+            log.error("❌ Failed to search persons by name: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to search persons", e);
+        }
+    }
+
+    // ✅ OPTIONAL: For better performance, add this method to PersonRepository interface
+    // and implement it in JpaPersonRepositoryAdapter
+    @Transactional(readOnly = true)
+    public Page<PersonDTO> findPersonsByNameContaining(String name, Pageable pageable) {
+        log.debug("🔍 Finding persons by name containing: '{}'", name);
+
+        // Note: This requires adding a search method to PersonRepository
+        // For now, we'll use the existing getAllPersons and filter
+        return searchPersonsByName(name, pageable);
+    }
+
 
     /**
      * ✅ CREATE PERSON
@@ -207,29 +254,35 @@ public class PersonApplicationService implements PersonService {
         );
     }
 
+    // ✅ NEW: Paginated method
     @Override
     @Transactional(readOnly = true)
-    public List<PersonDTO> getAllPersons() {
-        log.debug("📊 Fetching all person records");
+    public Page<PersonDTO> getAllPersons(Pageable pageable) {
+        log.debug("📊 Fetching paginated persons. Page: {}, Size: {}, Sort: {}",
+                pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         long startTime = System.currentTimeMillis();
 
         try {
-            List<Person> persons = personRepository.findAll();
+            Page<Person> personPage = personRepository.findAll(pageable);
 
-            List<PersonDTO> dtos = persons.stream()
+            List<PersonDTO> dtos = personPage.getContent().stream()
                     .map(this::mapToPersonDTO)
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved {} persons in {}ms", dtos.size(), duration);
+            log.info("✅ Retrieved page {} of {} persons (total: {}) in {}ms",
+                    pageable.getPageNumber(), dtos.size(),
+                    personPage.getTotalElements(), duration);
 
-            return dtos;
+            return new PageImpl<>(dtos, pageable, personPage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to fetch all persons: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to fetch persons", e);
+            log.error("❌ Failed to fetch paginated persons: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch paginated persons", e);
         }
     }
+
+
 
     // ------------------------------------------------------------------
     // ✅ PRIVATE HELPER METHODS

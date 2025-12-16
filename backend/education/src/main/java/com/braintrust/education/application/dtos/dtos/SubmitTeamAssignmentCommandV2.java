@@ -1,6 +1,6 @@
 package com.braintrust.education.application.dtos.dtos;
 
-import com.braintrust.aidetectition.application.dtos.dtos.FrontendDocumentDTO;
+import com.braintrust.aidetectition.application.dtos.commands.FrontendDocumentDTO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 

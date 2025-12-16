@@ -125,17 +125,80 @@ public class UnitGradeEntityMapper {
         }
 
         try {
-            Map<String, Map<String, BigDecimal>> serializedMap = objectMapper.readValue(
-                    json, new TypeReference<Map<String, Map<String, BigDecimal>>>() {});
+            Map<String, Object> rawMap = objectMapper.readValue(
+                    json, new TypeReference<Map<String, Object>>() {});
 
-            return serializedMap.entrySet().stream()
-                    .collect(Collectors.toMap(
-                            e -> keyMapper.apply(e.getKey()),
-                            e -> new Grade(e.getValue().get("value"), e.getValue().get("maxScore"))
-                    ));
+            Map<T, Grade> result = new HashMap<>();
+
+            for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+                try {
+                    T key = keyMapper.apply(entry.getKey());
+                    Object value = entry.getValue();
+
+                    Grade grade;
+                    if (value instanceof Map) {
+                        // Case 1: Nested object format {"value": 85, "maxScore": 100}
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> nestedMap = (Map<String, Object>) value;
+                        BigDecimal gradeValue = toBigDecimal(nestedMap.get("value"));
+                        BigDecimal maxScore = toBigDecimal(nestedMap.get("maxScore"));
+
+                        if (gradeValue == null) {
+                            log.warn("Missing 'value' in grade for key: {}", entry.getKey());
+                            continue;
+                        }
+
+                        // Provide default maxScore if null
+                        if (maxScore == null) {
+                            maxScore = BigDecimal.valueOf(100);
+                            log.debug("Using default maxScore of 100 for key: {}", entry.getKey());
+                        }
+
+                        grade = new Grade(gradeValue, maxScore);
+                    } else {
+                        // Case 2: Direct value format (just a number)
+                        // Use the value directly and use default maxScore of 100
+                        BigDecimal gradeValue = toBigDecimal(value);
+                        if (gradeValue == null) {
+                            log.warn("Invalid grade value for key: {}", entry.getKey());
+                            continue;
+                        }
+
+                        log.debug("Found old format grade for key: {}. Converting to new format with default maxScore.", entry.getKey());
+                        grade = new Grade(gradeValue, BigDecimal.valueOf(100));
+                    }
+
+                    result.put(key, grade);
+                } catch (Exception e) {
+                    log.warn("Failed to parse grade for key: {}", entry.getKey(), e);
+                    // Continue processing other entries
+                }
+            }
+
+            return result;
         } catch (JsonProcessingException e) {
-            log.error("Failed to deserialize grades map", e);
+            log.error("Failed to deserialize grades map. JSON: {}", json, e);
             throw new RuntimeException("Failed to deserialize grades map", e);
         }
+    }
+
+    private BigDecimal toBigDecimal(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof BigDecimal) {
+            return (BigDecimal) obj;
+        }
+        if (obj instanceof Number) {
+            return BigDecimal.valueOf(((Number) obj).doubleValue());
+        }
+        if (obj instanceof String) {
+            try {
+                return new BigDecimal((String) obj);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
     }
 }

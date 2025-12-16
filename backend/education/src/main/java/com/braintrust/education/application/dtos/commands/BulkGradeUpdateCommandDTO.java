@@ -1,4 +1,7 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class BulkGradeUpdateCommandDTO {
-}
+public record BulkGradeUpdateCommandDTO(
+        String studentId,
+        String gradeValue,
+        String feedback
+) {}

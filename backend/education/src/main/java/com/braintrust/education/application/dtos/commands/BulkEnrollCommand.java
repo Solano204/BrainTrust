@@ -1,4 +1,5 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class BulkEnrollCommand {
-}
+import java.util.List;
+
+public record BulkEnrollCommand(String courseId, List<String> studentIds) {}

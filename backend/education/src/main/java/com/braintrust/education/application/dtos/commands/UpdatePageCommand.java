@@ -1,4 +1,7 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class UpdatePageCommand {
-}
+public record UpdatePageCommand(
+        String pageId,
+        String title,
+        String content
+) {}

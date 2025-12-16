@@ -161,7 +161,7 @@ public class AnalysisController {
 
         // ⬅️ CRITICAL FIX 2: Call the service, which now returns a List
         List<AnalysisResultDTO> results = analysisService.getAnalysisBySubmission(
-                SubmissionId.fromString(submissionId)
+                submissionId
         );
 
         if (results.isEmpty()) {

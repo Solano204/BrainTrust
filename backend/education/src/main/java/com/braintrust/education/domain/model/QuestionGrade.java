@@ -1,4 +1,4 @@
-package com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities;
+package com.braintrust.education.domain.model;
 
 
 import com.braintrust.education.domain.valueobjects.QuizQuestionId;

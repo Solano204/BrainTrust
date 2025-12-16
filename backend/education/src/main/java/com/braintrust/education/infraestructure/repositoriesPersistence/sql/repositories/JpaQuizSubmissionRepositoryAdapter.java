@@ -6,6 +6,7 @@ import com.braintrust.education.domain.model.QuizSubmissionStatus;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.QuizId;
 import com.braintrust.education.domain.valueobjects.QuizSubmissionId;
+import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.QuizSubmissionEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.QuizSubmissionJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -18,16 +19,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-// other imports...
 
 @Repository
 @Transactional(readOnly = true)
 public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionRepository {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(JpaQuizSubmissionRepositoryAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(JpaQuizSubmissionRepositoryAdapter.class);
     private final QuizSubmissionJpaRepository jpaRepository;
     private final QuizSubmissionEntityMapper mapper;
 
@@ -43,6 +40,27 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
     public List<QuizSubmission> findByCourseIdOrderBySubmittedAtDesc(CourseId courseId) {
         log.debug("Finding quiz submissions by Course ID: {} ordered by submitted date", courseId.getValue());
         return jpaRepository.findByCourseIdOrderBySubmittedAtDesc(courseId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<QuizSubmission> findByCourseIdAndUnitIdOrderBySubmittedAtDesc(CourseId courseId, UnitId unitId) {
+        log.debug("Finding quiz submissions by Course ID: {} and Unit ID: {} ordered by submitted date",
+                courseId.getValue(), unitId.getValue());
+        return jpaRepository.findByCourseIdAndUnitIdOrderBySubmittedAtDesc(courseId.getValue(), unitId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<QuizSubmission> findByStudentIdAndCourseIdAndUnitIdOrderBySubmittedAtDesc(UserId studentId, CourseId courseId, UnitId unitId) {
+        log.debug("Finding quiz submissions by Student ID: {}, Course ID: {} and Unit ID: {} ordered by submitted date",
+                studentId.getValue(), courseId.getValue(), unitId.getValue());
+        return jpaRepository.findByStudentIdAndCourseIdAndUnitIdOrderBySubmittedAtDesc(
+                        studentId.getValue(), courseId.getValue(), unitId.getValue())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());

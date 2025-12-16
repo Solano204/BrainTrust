@@ -1,4 +1,12 @@
 package com.braintrust.education.application.dtos.commands;
 
-public class UpdateCourseInformationCommand {
-}
+// For comprehensive course update
+public record UpdateCourseInformationCommand(
+        String courseId,
+        String name,
+        String description,
+        String grade,
+        String group,
+        String imageUrl,
+        boolean active
+) {}
