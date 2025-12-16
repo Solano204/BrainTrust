@@ -2,22 +2,19 @@ package com.braintrust.containerapp.rest.course;
 
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.*;
-import com.braintrust.education.application.dtos.dtos.FinalGradeDTO;
 import com.braintrust.education.application.ports.in.GradebookService;
 import com.braintrust.education.application.ports.in.SubmissionService;
 import com.braintrust.education.application.ports.in.QuizSubmissionService;
 import com.braintrust.education.domain.valueobjects.*;
+import com.braintrust.identity.application.dtos.commands.AssignFinalGradeCommand;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -250,17 +247,43 @@ public class GradebookController {
     // 📍 GRADEBOOK QUERIES
     // ========================================
 
-//    @GetMapping("/course/{courseId}/student/{studentId}")
-//    public ResponseEntity<GradebookDTO> getGradebookByStudent(
-//            @PathVariable String courseId,
-//            @PathVariable String studentId) {
-//
-//        GradebookDTO dto = gradebookService.getGradebookByStudent(
-//                CourseId.fromString(courseId),
-//                UserId.fromString(studentId)
-//        );
-//        return ResponseEntity.ok(dto);
-//    }
+    @GetMapping("/course/{courseId}/student/{studentId}")
+    public ResponseEntity<GradebookDTO> getGradebookByStudent(
+            @PathVariable String courseId,
+            @PathVariable String studentId) {
+
+        GradebookDTO dto = gradebookService.getGradebookByStudent(
+                CourseId.fromString(courseId),
+                UserId.fromString(studentId)
+        );
+        return ResponseEntity.ok(dto);
+    }
+
+
+    @PutMapping("/course/{courseId}/bulk-grades")
+    public ResponseEntity<SuccessResponseDTO> bulkUpdateCourseGrades(
+            @PathVariable String courseId,
+            @RequestBody BulkUpdateCourseGradesCommand command) {
+
+        log.info("Bulk updating grades for {} students in course {}",
+                command.grades().size(), courseId);
+
+        // Ensure the courseId in path matches the command
+        BulkUpdateCourseGradesCommand finalCommand = new BulkUpdateCourseGradesCommand(
+                courseId,
+                command.grades()
+        );
+
+        gradebookService.bulkUpdateCourseGrades(finalCommand);
+
+        return ResponseEntity.ok(new SuccessResponseDTO(
+                true,
+                String.format("Bulk updated %d grades for course %s",
+                        command.grades().size(), courseId),
+                null
+        ));
+    }
+
 
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<GradebookDTO>> getGradebooksByCourse(

@@ -71,7 +71,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     courseId: "COURSE-DES-401s",
     unitId: "UNIT-3",
     description: "Create detailed wireframes for a mobile banking application focusing on user experience and accessibility",
-    createdAt: "2025-11-01T10:00:00Z",
+    createdAt: "2025-11-26T10:00:00Z",
     urls: [
       "https://figma.com/design/banking-wireframes",
       "https://material.io/design"
@@ -80,7 +80,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
       {
         name: "design-guidelines.pdf",
         storagePath: "/attachments/design-guidelines.pdf",
-        createdAt: "2025-11-01T10:00:00Z"
+        createdAt: "2025-11-29T10:00:00Z"
       }
     ],
     links: [
@@ -88,7 +88,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     ],
     deliveryMode: "INDIVIDUAL",
     // Original: 2024-03-15 -> Updated: 2025-11-14 (Upcoming)
-    dueDate: "2025-11-14T23:59:00Z", 
+    dueDate: "2025-11-26T23:59:00Z", 
     maxScore: { value: 100, maxPoints: 100 },
     instructions: "Design wireframes for 5 key screens: login, dashboard, account overview, money transfer, and settings.",
     submissions: [],
@@ -118,7 +118,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     ],
     deliveryMode: "INDIVIDUAL",
     // Original: 2024-03-18 -> Updated: 2025-11-17 (Upcoming)
-    dueDate: "2025-11-17T23:59:00Z",
+    dueDate: "2025-11-27T23:59:00Z",
     maxScore: { value: 100, maxPoints: 100 },
     instructions: "Complete all 10 problems from the attached PDF. Show all your work and reasoning.",
     submissions: [],
@@ -168,7 +168,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     timeLimit: 60,
     passingScore: 65,
     // Original: 2024-03-19 -> Updated: 2025-11-19 (Upcoming)
-    dueDate: "2025-11-19T23:59:00Z", 
+    dueDate: "2025-11-29T23:59:00Z", 
     acceptLateSubmissions: true,
     idUser: "user-001",
     questions: [

@@ -1,36 +1,34 @@
 // app/api/auth/initialize/route.ts
 import { authService } from '@/app/domain/services/authService';
-import { clearTokens, getAccessToken, getRefreshToken } from '@/app/utils/tokenManager';
-import { NextRequest, NextResponse } from 'next/server';
+import { getUserData, getAccessToken, getRefreshToken } from '@/app/utils/tokenManager';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const accessToken = await getAccessToken();
     
-    console.log('accessToken:', accessToken);
     if (!accessToken) {
-      return NextResponse.json({ authenticated: false }, { status: 400 });
+      return NextResponse.json({ authenticated: false });
     }
 
-    // Validate the token
+    // Validate the token with backend
     const user = await authService.validateToken(accessToken);
     
     if (!user) {
-      await clearTokens();
-      return NextResponse.json({ authenticated: false }, { status: 200 });
+      return NextResponse.json({ authenticated: false });
     }
 
     const refreshToken = await getRefreshToken();
+    const userData = await getUserData();
     
     return NextResponse.json({
       authenticated: true,
-      user,
+      user: userData || user,
       accessToken,
       refreshToken,
     });
   } catch (error) {
     console.error('Auth initialization error:', error);
-    await clearTokens();
-    return NextResponse.json({ authenticated: false }, { status: 200 });
+    return NextResponse.json({ authenticated: false });
   }
 }

@@ -7,7 +7,8 @@ import jakarta.validation.constraints.Size;
 public record CreateAssignmentCommand(
         @NotBlank(message = "Course ID is required")
         String courseId,
-  @NotBlank(message = "Course ID is required")
+
+        @NotBlank(message = "Unit ID is required")
         String unitId,
 
         @NotBlank(message = "Title is required")
@@ -28,8 +29,8 @@ public record CreateAssignmentCommand(
         @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions,
 
-        // ✅ NEW: Assignment target type
-        String targetType // "INDIVIDUAL" or "TEAM"
+        String targetType, // "INDIVIDUAL" or "TEAM"
 
-
+        // ✅ NEW: Submission format field
+        String submissionFormat // "DIGITAL" or "NOTEBOOK"
 ) {}

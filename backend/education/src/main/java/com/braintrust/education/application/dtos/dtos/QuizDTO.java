@@ -18,5 +18,6 @@ public record QuizDTO(
         int questionCount,
         String createdAt,
         boolean active,
-        boolean availableNow
+        boolean availableNow,
+        String unitId
 ) {}

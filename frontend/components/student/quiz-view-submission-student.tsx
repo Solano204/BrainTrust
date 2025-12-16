@@ -1,5 +1,4 @@
 // components/Student/QuizView.tsx
-
 "use client";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +17,12 @@ import {
   Send,
   ArrowLeft,
   ArrowRight,
+  BookOpen,
+  Award,
+  Calendar,
+  Timer,
+  Eye,
+  FileQuestion,
 } from "lucide-react";
 import { Quiz, QuizAnswer, SubmissionQuiz } from "@/app/domain/entities/CourseEntities";
 import {
@@ -68,26 +73,137 @@ export const QuizView: React.FC<QuizViewProps> = ({
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [showTimeUpDialog, setShowTimeUpDialog] = useState(false);
+  const [showStartDialog, setShowStartDialog] = useState(false);
 
-  // Initialize answers from existing submission
+  console.log("existingSubmission", existingSubmission);
+  // Initialize answers from existing submission OR start fresh if no submission
   useEffect(() => {
     if (existingSubmission?.quizData?.answers) {
+      // If there's an existing submission, load those answers
       const initialAnswers: QuizAnswers = {};
       existingSubmission.quizData.answers.forEach(answer => {
         initialAnswers[answer.questionId] = answer;
       });
       setAnswers(initialAnswers);
+    } else {
+      // If no existing submission, show start dialog and initialize empty answers
+      setShowStartDialog(true);
+      
+      // Initialize empty answers for all questions
+      const initialAnswers: QuizAnswers = {};
+      quiz.questions.forEach(question => {
+        initialAnswers[question.id] = {
+          questionId: question.id,
+          questionText: question.question,
+          questionType: question.type,
+          studentAnswer: question.type === "multiple-choice" ? -1 : "",
+          points: 0,
+          maxPoints: question.points,
+          isCorrect: undefined,
+        };
+      });
+      setAnswers(initialAnswers);
     }
-  }, [existingSubmission]);
+  }, [existingSubmission, quiz.questions]);
+
+
+  function gradeQuizAnswers(
+  questions: any[],
+  studentAnswers: Record<string, any>
+): QuizAnswer[] {
+  const gradedAnswers: QuizAnswer[] = [];
+
+  for (const question of questions) {
+    const studentAnswer = studentAnswers[question.id];
+    
+    if (!studentAnswer) {
+      // No answer provided
+      gradedAnswers.push({
+        questionId: question.id,
+        questionText: question.question,
+        questionType: question.type,
+        studentAnswer: question.type === 'multiple_choice' ? -1 : '',
+        correctAnswer: question.correctAnswer,
+        points: 0,
+        maxPoints: question.points,
+        isCorrect: false,
+        feedback: 'No answer provided',
+      });
+      continue;
+    }
+
+    let isCorrect = false;
+    let points = 0;
+    let feedback = '';
+
+    if (question.type === 'multiple_choice') {
+      // For multiple choice: compare numbers directly
+      const studentChoice = Number(studentAnswer.studentAnswer);
+      const correctChoice = Number(question.correctAnswer);
+      
+      isCorrect = studentChoice === correctChoice;
+      points = isCorrect ? question.points : 0;
+      feedback = isCorrect 
+        ? 'Correct!' 
+        : `Incorrect. The correct answer is option ${correctChoice + 1}.`;
+
+    } else if (question.type === 'open_ended') {
+      // For open-ended: normalize and compare strings
+      const studentText = String(studentAnswer.studentAnswer || '').trim().toLowerCase();
+      const correctText = String(question.correctAnswer || '').trim().toLowerCase();
+      
+      // CRITICAL FIX: Proper string comparison
+      // Option 1: Exact match (case-insensitive, whitespace normalized)
+      isCorrect = studentText === correctText;
+      
+      // Option 2: Fuzzy match (allows minor differences)
+      // You can use this if you want to be more lenient:
+      // const similarity = calculateSimilarity(studentText, correctText);
+      // isCorrect = similarity > 0.9; // 90% similarity threshold
+      
+      if (isCorrect) {
+        points = question.points;
+        feedback = 'Correct!';
+      } else if (studentText === '') {
+        points = 0;
+        feedback = 'No answer provided';
+      } else {
+        points = 0;
+        feedback = `Incorrect. Expected: "${question.correctAnswer}"`;
+      }
+    }
+
+    gradedAnswers.push({
+      questionId: question.id,
+      questionText: question.question,
+      questionType: question.type,
+      studentAnswer: studentAnswer.studentAnswer,
+      correctAnswer: question.correctAnswer,
+      points,
+      maxPoints: question.points,
+      isCorrect,
+      feedback,
+    });
+  }
+
+  return gradedAnswers;
+}
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;
   const isFirstQuestion = currentQuestionIndex === 0;
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = Object.keys(answers).filter(key => {
+    const answer = answers[key];
+    if (answer.questionType === "multiple-choice") {
+      return answer.studentAnswer !== -1;
+    } else {
+      return answer.studentAnswer !== "";
+    }
+  }).length;
   const unansweredCount = quiz.questions.length - answeredCount;
 
-  // Timer effect
+  // Timer effect - only run if there's no existing submission
   useEffect(() => {
     if (existingSubmission || timeRemaining <= 0) return;
 
@@ -157,6 +273,11 @@ export const QuizView: React.FC<QuizViewProps> = ({
     }
   };
 
+  // Start the quiz
+  const handleStartQuiz = () => {
+    setShowStartDialog(false);
+  };
+
   // Manual submit
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -191,16 +312,104 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
   return (
     <>
+      {/* Start Quiz Dialog */}
+      <Dialog open={showStartDialog} onOpenChange={setShowStartDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-blue-500" />
+              Start Quiz
+            </DialogTitle>
+            <DialogDescription>
+              Are you ready to begin "{quiz.title}"?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Quiz Details */}
+            <Card>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Duration:</span>
+                  <Badge variant="outline" className="gap-1">
+                    <Timer className="h-3 w-3" />
+                    {quiz.timeLimit} minutes
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Questions:</span>
+                  <Badge variant="outline" className="gap-1">
+                    <FileQuestion className="h-3 w-3" />
+                    {quiz.questions.length} questions
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Max Score:</span>
+                  <Badge variant="outline" className="gap-1">
+                    <Award className="h-3 w-3" />
+                    {quiz.maxGrade} points
+                  </Badge>
+                </div>
+                {quiz.dueDate && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Due Date:</span>
+                    <Badge variant="outline" className="gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(quiz.dueDate).toLocaleDateString()}
+                    </Badge>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Instructions */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                Important Instructions:
+              </h4>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• Timer will start immediately when you begin</li>
+                <li>• You can flag questions for review</li>
+                <li>• Navigate freely between questions</li>
+                <li>• Answers are saved as you go</li>
+                <li>• Submit before time runs out</li>
+              </ul>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowStartDialog(false);
+                onExit?.();
+              }}
+            >
+              Exit
+            </Button>
+            <Button onClick={handleStartQuiz} className="gap-2">
+              <CheckCircle className="h-4 w-4" />
+              Start Quiz
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Quiz Interface */}
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Quiz Header */}
           <Card className="shadow-lg mb-6 border-l-4 border-blue-500">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="space-y-2">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {quiz.title}
-                  </h1>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {quiz.title}
+                    </h1>
+                    <Badge variant="secondary">Student View</Badge>
+                  </div>
                   <p className="text-gray-600 dark:text-gray-300">
                     {quiz.description}
                   </p>
@@ -226,6 +435,31 @@ export const QuizView: React.FC<QuizViewProps> = ({
                       {quiz.questions.length}
                     </div>
                     <Progress value={progress} className="w-32" />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {answeredCount} answered • {unansweredCount} unanswered
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quiz Info Bar */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t">
+                <div className="text-center">
+                  <div className="text-sm font-medium">Time Limit</div>
+                  <div className="text-lg font-semibold">{quiz.timeLimit} min</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium">Max Score</div>
+                  <div className="text-lg font-semibold">{quiz.maxGrade}</div>
+                </div>
+                <div className="text-center">
+                  {/* <div className="text-sm font-medium">Passing Score</div> */}
+                  {/* <div className="text-lg font-semibold">{quiz.passingScore}%</div> */}
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium">Due Date</div>
+                  <div className="text-lg font-semibold">
+                    {quiz.dueDate ? new Date(quiz.dueDate).toLocaleDateString() : 'No due date'}
                   </div>
                 </div>
               </div>
@@ -237,34 +471,46 @@ export const QuizView: React.FC<QuizViewProps> = ({
             <div className="lg:col-span-1">
               <Card className="shadow-lg sticky top-4">
                 <CardHeader>
-                  <CardTitle className="text-lg">Questions</CardTitle>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    Questions
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-4 lg:grid-cols-2 gap-2">
-                    {quiz.questions.map((question, index) => (
-                      <Button
-                        key={question.id}
-                        variant={
-                          currentQuestionIndex === index
-                            ? "default"
-                            : answers[question.id]
-                            ? "secondary"
-                            : "outline"
-                        }
-                        size="sm"
-                        className={`relative h-12 ${
-                          flaggedQuestions.has(question.id)
-                            ? "border-yellow-400 border-2"
-                            : ""
-                        }`}
-                        onClick={() => setCurrentQuestionIndex(index)}
-                      >
-                        {index + 1}
-                        {flaggedQuestions.has(question.id) && (
-                          <Flag className="h-3 w-3 absolute -top-1 -right-1 text-yellow-500 fill-yellow-500" />
-                        )}
-                      </Button>
-                    ))}
+                    {quiz.questions.map((question, index) => {
+                      const answer = answers[question.id];
+                      const isAnswered = answer && (
+                        answer.questionType === "multiple-choice" 
+                          ? answer.studentAnswer !== -1
+                          : answer.studentAnswer !== ""
+                      );
+                      
+                      return (
+                        <Button
+                          key={question.id}
+                          variant={
+                            currentQuestionIndex === index
+                              ? "default"
+                              : isAnswered
+                              ? "secondary"
+                              : "outline"
+                          }
+                          size="sm"
+                          className={`relative h-12 ${
+                            flaggedQuestions.has(question.id)
+                              ? "border-yellow-400 border-2"
+                              : ""
+                          }`}
+                          onClick={() => setCurrentQuestionIndex(index)}
+                        >
+                          {index + 1}
+                          {flaggedQuestions.has(question.id) && (
+                            <Flag className="h-3 w-3 absolute -top-1 -right-1 text-yellow-500 fill-yellow-500" />
+                          )}
+                        </Button>
+                      );
+                    })}
                   </div>
 
                   <div className="mt-4 space-y-2 text-sm">
@@ -277,8 +523,24 @@ export const QuizView: React.FC<QuizViewProps> = ({
                       <span>Answered</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-gray-200 rounded border"></div>
+                      <span>Unanswered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <Flag className="h-3 w-3 text-yellow-500" />
                       <span>Flagged</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="mt-4 pt-4 border-t space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Answered:</span>
+                      <span className="font-medium">{answeredCount}/{quiz.questions.length}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Flagged:</span>
+                      <span className="font-medium">{flaggedQuestions.size}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -303,7 +565,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
                           {currentQuestion.points !== 1 ? "s" : ""}
                         </Badge>
                         {flaggedQuestions.has(currentQuestion.id) && (
-                          <Flag className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <Badge variant="outline" className="text-sm gap-1">
+                            <Flag className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                            Flagged
+                          </Badge>
                         )}
                       </div>
                       <h2 className="text-xl font-semibold">
@@ -315,9 +580,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
                       variant="outline"
                       size="sm"
                       onClick={() => toggleFlag(currentQuestion.id)}
+                      className="gap-2"
                     >
                       <Flag
-                        className={`h-4 w-4 mr-2 ${
+                        className={`h-4 w-4 ${
                           flaggedQuestions.has(currentQuestion.id)
                             ? "text-yellow-500 fill-yellow-500"
                             : ""
@@ -325,7 +591,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
                       />
                       {flaggedQuestions.has(currentQuestion.id)
                         ? "Unflag"
-                        : "Flag"}
+                        : "Flag for Review"}
                     </Button>
                   </div>
 
@@ -347,33 +613,48 @@ export const QuizView: React.FC<QuizViewProps> = ({
                         {currentQuestion.options?.map((option, index) => (
                           <div
                             key={index}
-                            className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                            className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
+                              answers[currentQuestion.id]?.studentAnswer === index
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                : ""
+                            }`}
                           >
                             <RadioGroupItem
                               value={index.toString()}
                               id={`option-${index}`}
+                              className="h-5 w-5"
                             />
                             <Label
                               htmlFor={`option-${index}`}
                               className="flex-1 cursor-pointer text-sm"
                             >
-                              {option}
+                              <div className="flex items-start gap-3">
+                                <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
+                                  {String.fromCharCode(65 + index)}
+                                </span>
+                                <span className="flex-1">{option}</span>
+                              </div>
                             </Label>
                           </div>
                         ))}
                       </RadioGroup>
                     ) : (
-                      <Textarea
-                        placeholder="Type your answer here... Be as detailed and specific as possible."
-                        value={
-                          answers[currentQuestion.id]?.studentAnswer?.toString() || ""
-                        }
-                        onChange={(e) =>
-                          handleAnswerChange(currentQuestion.id, e.target.value)
-                        }
-                        rows={8}
-                        className="resize-none"
-                      />
+                      <div className="space-y-3">
+                        <Textarea
+                          placeholder="Type your answer here... Be as detailed and specific as possible. You can include formulas, explanations, or any relevant information."
+                          value={
+                            answers[currentQuestion.id]?.studentAnswer?.toString() || ""
+                          }
+                          onChange={(e) =>
+                            handleAnswerChange(currentQuestion.id, e.target.value)
+                          }
+                          rows={10}
+                          className="resize-none font-mono text-sm"
+                        />
+                        <div className="text-right text-xs text-muted-foreground">
+                          Character count: {answers[currentQuestion.id]?.studentAnswer?.toString().length || 0}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -396,7 +677,9 @@ export const QuizView: React.FC<QuizViewProps> = ({
                     variant="outline"
                     onClick={() => setShowExitConfirm(true)}
                     disabled={isSubmitting}
+                    className="gap-2"
                   >
+                    <ArrowLeft className="h-4 w-4" />
                     Exit Quiz
                   </Button>
 
@@ -425,7 +708,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
                       className="gap-2"
                       size="lg"
                     >
-                      Next
+                      Next Question
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   )}
@@ -433,10 +716,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </div>
 
               {/* Time Warning */}
-              {timeRemaining < 300 && (
+              {timeRemaining < 300 && timeRemaining > 0 && (
                 <Card className="border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
                   <CardContent className="p-4 flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <Clock className="h-5 w-5 text-red-500 animate-pulse" />
                     <div>
                       <p className="font-medium text-red-700 dark:text-red-300">
                         Time is running out!
@@ -447,6 +730,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
                           : `${Math.ceil(
                               timeRemaining / 60
                             )} minutes remaining`}
+                        {unansweredCount > 0 && ` • ${unansweredCount} unanswered questions`}
                       </p>
                     </div>
                   </CardContent>
@@ -461,18 +745,22 @@ export const QuizView: React.FC<QuizViewProps> = ({
       <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Exit Quiz?</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              Exit Quiz?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Your progress will be saved, but you'll need to complete the quiz
-              later. Are you sure you want to exit?
+              later. You have answered {answeredCount} out of {quiz.questions.length} questions.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Continue Quiz</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleExitConfirm}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 gap-2"
             >
+              <ArrowLeft className="h-4 w-4" />
               Exit Quiz
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -483,7 +771,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
       <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Submit Quiz?</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-green-500" />
+              Submit Quiz?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {unansweredCount > 0 ? (
                 <>
@@ -495,12 +786,17 @@ export const QuizView: React.FC<QuizViewProps> = ({
                 "Are you ready to submit your quiz? You won't be able to make changes after submission."
               )}
             </AlertDialogDescription>
+            {timeRemaining > 0 && (
+              <div className="mt-2 text-sm">
+                <p>Time remaining: {formatTime(timeRemaining)}</p>
+              </div>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Review Questions</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 gap-2"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -509,7 +805,10 @@ export const QuizView: React.FC<QuizViewProps> = ({
                   Submitting...
                 </>
               ) : (
-                "Submit Quiz"
+                <>
+                  <Send className="h-4 w-4" />
+                  Submit Quiz
+                </>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -534,6 +833,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
               variant="outline"
               onClick={handleTimeUpSubmit}
               disabled={isSubmitting}
+              className="w-full"
             >
               {isSubmitting ? (
                 <>
@@ -550,8 +850,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
     </>
   );
 };
-
-// Quiz Results Component
+// Quiz Results Component - Updated to show individual question grades
 interface QuizResultsProps {
   quiz: Quiz;
   submission: SubmissionQuiz;
@@ -565,16 +864,62 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   userAnswers,
   onExit
 }) => {
-  const score: number = Number(submission.grade?.value) || 0;
-  const maxScore = Number(submission.grade?.maxScore) || quiz.questions.reduce((total, q) => total + q.points, 0);
-  const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0;
-  const passed = percentage >= quiz.passingScore;
+  // Use the grade from submission (teacher's final grade)
+  const finalScore = submission.grade?.value || 0;
+  const maxScore = submission.grade?.maxScore || quiz.questions.reduce((total, q) => total + q.points, 0);
+  const percentage = maxScore > 0 ? (finalScore / maxScore) * 100 : 0;
+  const passed = percentage >= (70);
 
-  // Use quizData if available, otherwise fall back to basic data
+  // Use quizData if available
   const hasDetailedData = submission.quizData;
   const quizAnswers = submission.quizData?.answers || [];
 
-  console.log("QUIZ ANSWERS:", quizAnswers);
+  // Helper function to format student answer
+  const formatStudentAnswer = (question: any, answer: any) => {
+    if (!answer?.studentAnswer && answer?.studentAnswer !== 0) {
+      return 'No answer provided';
+    }
+    
+    if (question.type === 'multiple-choice') {
+      const optionIndex = Number(answer.studentAnswer);
+      if (question.options && question.options[optionIndex] !== undefined) {
+        return question.options[optionIndex];
+      }
+      return `Option ${optionIndex + 1}`;
+    } else {
+      return String(answer.studentAnswer || '');
+    }
+  };
+
+  // Helper function to format correct answer
+  const formatCorrectAnswer = (question: any, detailedAnswer: any) => {
+    if (detailedAnswer?.correctAnswer !== undefined) {
+      if (question.type === 'multiple-choice') {
+        const correctIndex = Number(detailedAnswer.correctAnswer);
+        if (question.options && question.options[correctIndex] !== undefined) {
+          return question.options[correctIndex];
+        }
+        return `Option ${correctIndex + 1}`;
+      } else {
+        return String(detailedAnswer.correctAnswer || '');
+      }
+    }
+    
+    if (question.correctAnswer !== undefined) {
+      if (question.type === 'multiple-choice') {
+        const correctIndex = Number(question.correctAnswer);
+        if (question.options && question.options[correctIndex] !== undefined) {
+          return question.options[correctIndex];
+        }
+        return `Option ${correctIndex + 1}`;
+      } else {
+        return String(question.correctAnswer || '');
+      }
+    }
+    
+    return 'Not available';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
       <div className="max-w-4xl mx-auto">
@@ -599,7 +944,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-md mx-auto">
               <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{score}</p>
+                <p className="text-2xl font-bold text-blue-600">{finalScore}</p>
                 <p className="text-sm text-muted-foreground">Your Score</p>
               </div>
               <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
@@ -629,7 +974,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Questions Review */}
+        {/* Questions Review with Individual Grades */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Question Review</CardTitle>
@@ -639,75 +984,164 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               const detailedAnswer = quizAnswers.find(a => a.questionId === question.id);
               const userAnswer = userAnswers[question.id];
               
+              const studentAnswerText = formatStudentAnswer(question, userAnswer || detailedAnswer);
+              const correctAnswerText = formatCorrectAnswer(question, detailedAnswer);
+              
+              // Check if question needs review (undefined isCorrect)
+              const needsReview = detailedAnswer && detailedAnswer?.isCorrect === undefined;
+              
               return (
                 <div key={question.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold">Question {index + 1}</h3>
-                    <div className="flex gap-2">
-                      <Badge variant="outline">
-                        {question.points} point{question.points !== 1 ? 's' : ''}
-                      </Badge>
+                    <div>
+                      <h3 className="font-semibold">Question {index + 1}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{question.question}</p>
+                    </div>
+                    <div className="flex gap-2 flex-col items-end">
                       {detailedAnswer && (
-                        <Badge variant={detailedAnswer.isCorrect ? "default" : "destructive"}>
-                          {detailedAnswer.points}/{detailedAnswer.maxPoints}
-                        </Badge>
+                        <>
+                          {/* Show individual question score */}
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant={detailedAnswer.points === detailedAnswer.maxPoints ? "default" : "secondary"}
+                              className="text-sm"
+                            >
+                              Score: {detailedAnswer.points}/{detailedAnswer.maxPoints}
+                            </Badge>
+                          </div>
+                          
+                          {/* Show if it was auto-graded or teacher-graded */}
+                          {detailedAnswer.feedback && (
+                            <Badge variant="outline" className="text-xs">
+                              Teacher Reviewed
+                            </Badge>
+                          )}
+                          
+                          {needsReview ? (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                              Pending Review
+                            </Badge>
+                          ) : (
+                            <Badge 
+                              variant={detailedAnswer.isCorrect ? "default" : "destructive"}
+                              className="text-xs"
+                            >
+                              {detailedAnswer.isCorrect ? "Correct" : "Incorrect"}
+                            </Badge>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
-
-                  <p className="mb-4 font-medium">{question.question}</p>
                   
                   <div className="space-y-3">
                     {/* Student Answer */}
                     <div>
                       <strong className="text-sm block mb-1">Your answer:</strong>
                       <div className={`p-3 rounded border ${
-                        detailedAnswer?.isCorrect 
-                          ? "bg-green-50 border-green-200" 
-                          : "bg-red-50 border-red-200"
+                        needsReview
+                          ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700"
+                          : detailedAnswer?.isCorrect 
+                          ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800" 
+                          : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
                       }`}>
-                        <p className="text-sm">
-                          {userAnswer?.studentAnswer?.toString() || 'No answer provided'}
+                        <p className="text-sm font-medium">
+                          {studentAnswerText}
                         </p>
+                        {question.type === 'multiple-choice' && userAnswer?.studentAnswer !== undefined && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Selected option {Number(userAnswer.studentAnswer) + 1}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Correct Answer & Feedback */}
-                    {detailedAnswer && (
-                      <>
-                        {detailedAnswer.correctAnswer !== undefined && (
+                    {/* Needs Review Notice */}
+                    {needsReview && (
+                      <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-300">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                           <div>
-                            <strong className="text-sm block mb-1">Correct answer:</strong>
-                            <div className="p-3 rounded border bg-blue-50 border-blue-200">
-                              <p className="text-sm text-green-600">
-                                {question.type === 'multiple-choice' 
-                                  ? question.options?.[detailedAnswer.correctAnswer as number]
-                                  : detailedAnswer.correctAnswer
-                                }
-                              </p>
-                            </div>
+                            <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
+                              This answer is pending teacher review
+                            </p>
+                            <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
+                              Your answer may be correct but uses different wording. Your teacher will review it and assign the appropriate grade.
+                            </p>
                           </div>
-                        )}
-                        
-                        {detailedAnswer.feedback && (
-                          <div>
-                            <strong className="text-sm block mb-1">Feedback:</strong>
-                            <div className="p-3 rounded border bg-yellow-50 border-yellow-200">
-                              <p className="text-sm">{detailedAnswer.feedback}</p>
-                            </div>
-                          </div>
-                        )}
-                      </>
+                        </div>
+                      </div>
                     )}
 
-                    {/* Fallback for non-detailed data */}
-                    {!detailedAnswer && question.correctAnswer !== undefined && (
-                      <div>
-                        <strong className="text-sm block mb-1">Correct answer:</strong>
-                        <div className="p-3 rounded border bg-blue-50 border-blue-200">
-                          <p className="text-sm text-green-600">
-                            {question.options?.[question.correctAnswer]}
+                    {/* Expected Answer */}
+                    <div>
+                      <strong className="text-sm block mb-1">Expected answer:</strong>
+                      <div className="p-3 rounded border bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                          {correctAnswerText}
+                        </p>
+                        {question.type === 'multiple-choice' && detailedAnswer?.correctAnswer !== undefined && (
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                            Option {Number(detailedAnswer.correctAnswer) + 1}
                           </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Question Options (for multiple choice) */}
+                    {question.type === 'multiple-choice' && question.options && question.options.length > 0 && (
+                      <div>
+                        <strong className="text-sm block mb-1">All options:</strong>
+                        <div className="space-y-1">
+                          {question.options.map((option, optIndex) => {
+                            const isStudentChoice = userAnswer?.studentAnswer === optIndex;
+                            const isCorrectAnswer = detailedAnswer?.correctAnswer === optIndex.toString() || 
+                                                   Number(detailedAnswer?.correctAnswer) === optIndex;
+                            
+                            return (
+                              <div 
+                                key={optIndex}
+                                className={`p-2 rounded text-sm ${
+                                  isStudentChoice && isCorrectAnswer
+                                    ? 'bg-green-100 border border-green-300 dark:bg-green-900/30 dark:border-green-700'
+                                    : isStudentChoice
+                                    ? 'bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700'
+                                    : isCorrectAnswer
+                                    ? 'bg-blue-100 border border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
+                                    : 'bg-gray-100 dark:bg-gray-800'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                    {String.fromCharCode(65 + optIndex)}
+                                  </span>
+                                  <span className="flex-1">{option}</span>
+                                  <div className="flex gap-1">
+                                    {isStudentChoice && (
+                                      <Badge variant="outline" className="text-xs">
+                                        Your choice
+                                      </Badge>
+                                    )}
+                                    {isCorrectAnswer && (
+                                      <Badge variant="default" className="text-xs">
+                                        Correct
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Teacher Feedback for this question */}
+                    {detailedAnswer?.feedback && (
+                      <div>
+                        <strong className="text-sm block mb-1">Teacher Feedback:</strong>
+                        <div className="p-3 rounded border bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800">
+                          <p className="text-sm text-purple-800 dark:text-purple-200">{detailedAnswer.feedback}</p>
                         </div>
                       </div>
                     )}
@@ -728,7 +1162,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-600">
-                    {quizAnswers.filter(a => a.isCorrect).length}
+                    {quizAnswers.filter(a => a.isCorrect === true).length}
                   </p>
                   <p className="text-sm text-muted-foreground">Correct Answers</p>
                 </div>
@@ -739,10 +1173,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   <p className="text-sm text-muted-foreground">Incorrect Answers</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {Math.round((quizAnswers.filter(a => a.isCorrect).length / quizAnswers.length) * 100)}%
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {quizAnswers.filter(a =>   a.isCorrect === undefined).length}
                   </p>
-                  <p className="text-sm text-muted-foreground">Accuracy</p>
+                  <p className="text-sm text-muted-foreground">Pending Review</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-purple-600">
@@ -755,9 +1189,35 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           </Card>
         )}
 
+        {/* Final Grade Notice */}
+        <Card className="shadow-lg mt-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <Award className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-2">
+                  Final Grade
+                </h3>
+                <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                  Your final grade for this quiz is <strong>{finalScore} / {maxScore}</strong> ({Math.round(percentage)}%).
+                  {quizAnswers.filter(a => a.isCorrect === undefined).length > 0 && (
+                    <> Some answers are pending teacher review and your grade may be updated once reviewed.</>
+                  )}
+                </p>
+                {submission.status === "GRADED" && (
+                  <Badge variant="default" className="bg-blue-600">
+                    Graded by Teacher
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Action Button */}
         <div className="text-center mt-6">
-          <Button onClick={onExit} size="lg">
+          <Button onClick={onExit} size="lg" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
             Return to Course
           </Button>
         </div>

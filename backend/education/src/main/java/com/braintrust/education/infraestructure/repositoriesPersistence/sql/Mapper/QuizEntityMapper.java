@@ -9,20 +9,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-// other imports...
 
 @Component
 public class QuizEntityMapper {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(QuizEntityMapper.class);
-
+    private static final Logger log = LoggerFactory.getLogger(QuizEntityMapper.class);
     private final ObjectMapper objectMapper;
 
     public QuizEntityMapper(ObjectMapper objectMapper) {
@@ -35,7 +32,7 @@ public class QuizEntityMapper {
         QuizJpaEntity entity = new QuizJpaEntity(
                 quiz.getId().getValue(),
                 quiz.getCourseId().getValue(),
-                quiz.getUnitId() != null ? quiz.getUnitId().getValue() : null, // ✅ Added unitId
+                quiz.getUnitId() != null ? quiz.getUnitId().getValue() : null,
                 quiz.getTitle(),
                 quiz.getDescription(),
                 quiz.getAvailableFrom(),
@@ -48,10 +45,10 @@ public class QuizEntityMapper {
                 quiz.isActive()
         );
 
-        // Map questions
+        // ✅ FIXED: Map questions with bidirectional relationship
         if (quiz.getQuestions() != null && !quiz.getQuestions().isEmpty()) {
             List<QuizQuestionJpaEntity> questionEntities = quiz.getQuestions().stream()
-                    .map(this::toQuestionEntity)
+                    .map(question -> toQuestionEntity(question, entity)) // Pass parent entity
                     .collect(Collectors.toList());
             entity.setQuestions(questionEntities);
         }
@@ -59,39 +56,7 @@ public class QuizEntityMapper {
         return entity;
     }
 
-    public Quiz toDomain(QuizJpaEntity entity) {
-        log.debug("Mapping Quiz JPA Entity {} to Domain", entity.getId());
-
-        QuizId id = QuizId.fromString(entity.getId());
-        CourseId courseId = CourseId.fromString(entity.getCourseId());
-        UnitId unitId = entity.getUnitId() != null ? UnitId.fromString(entity.getUnitId()) : null; // ✅ Added unitId
-
-        List<QuizQuestion> questions = new ArrayList<>();
-        if (entity.getQuestions() != null) {
-            questions = entity.getQuestions().stream()
-                    .map(this::toDomainQuestion)
-                    .collect(Collectors.toList());
-        }
-
-        return Quiz.reconstitute(
-                id,
-                courseId,
-                unitId, // ✅ Added unitId parameter
-                entity.getTitle(),
-                entity.getDescription(),
-                entity.getAvailableFrom(),
-                entity.getAvailableUntil(),
-                entity.getTimeLimitMinutes(),
-                entity.getMaxAttempts(),
-                entity.isShuffleQuestions(),
-                entity.isShowCorrectAnswers(),
-                entity.getCreatedAt(),
-                questions,
-                entity.isActive()
-        );
-    }
-
-    private QuizQuestionJpaEntity toQuestionEntity(QuizQuestion question) {
+    private QuizQuestionJpaEntity toQuestionEntity(QuizQuestion question, QuizJpaEntity parentQuiz) {
         String optionsJson = null;
         try {
             if (question.getOptions() != null && !question.getOptions().isEmpty()) {
@@ -110,13 +75,49 @@ public class QuizEntityMapper {
             throw new RuntimeException("Failed to serialize question options", e);
         }
 
-        return new QuizQuestionJpaEntity(
+        QuizQuestionJpaEntity entity = new QuizQuestionJpaEntity(
                 question.getId().getValue(),
                 question.getQuestionText(),
                 question.getType().name(),
                 question.getPoints(),
                 optionsJson,
                 question.getCorrectAnswer()
+        );
+
+        // ✅ Set the bidirectional relationship
+        entity.setQuiz(parentQuiz);
+        return entity;
+    }
+
+    public Quiz toDomain(QuizJpaEntity entity) {
+        log.debug("Mapping Quiz JPA Entity {} to Domain", entity.getId());
+
+        QuizId id = QuizId.fromString(entity.getId());
+        CourseId courseId = CourseId.fromString(entity.getCourseId());
+        UnitId unitId = entity.getUnitId() != null ? UnitId.fromString(entity.getUnitId()) : null;
+
+        List<QuizQuestion> questions = new ArrayList<>();
+        if (entity.getQuestions() != null) {
+            questions = entity.getQuestions().stream()
+                    .map(this::toDomainQuestion)
+                    .collect(Collectors.toList());
+        }
+
+        return Quiz.reconstitute(
+                id,
+                courseId,
+                unitId,
+                entity.getTitle(),
+                entity.getDescription(),
+                entity.getAvailableFrom(),
+                entity.getAvailableUntil(),
+                entity.getTimeLimitMinutes(),
+                entity.getMaxAttempts(),
+                entity.isShuffleQuestions(),
+                entity.isShowCorrectAnswers(),
+                entity.getCreatedAt(),
+                questions,
+                entity.isActive()
         );
     }
 
@@ -153,17 +154,11 @@ public class QuizEntityMapper {
         );
     }
 
-
-
-    /**
-     * ✅ Map to basic quiz without questions
-     */
     public Quiz mapToBasicQuiz(QuizJpaEntity entity) {
         QuizId id = QuizId.fromString(entity.getId());
         CourseId courseId = CourseId.fromString(entity.getCourseId());
         UnitId unitId = entity.getUnitId() != null ? UnitId.fromString(entity.getUnitId()) : null;
 
-        // Create quiz WITHOUT questions
         return Quiz.reconstitute(
                 id,
                 courseId,
@@ -177,10 +172,8 @@ public class QuizEntityMapper {
                 entity.isShuffleQuestions(),
                 entity.isShowCorrectAnswers(),
                 entity.getCreatedAt(),
-                new ArrayList<>(), // Empty questions list
+                new ArrayList<>(),
                 entity.isActive()
         );
     }
-
-
 }

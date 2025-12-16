@@ -4,7 +4,6 @@ import com.braintrust.education.application.ports.out.StudentGroupRepository;
 import com.braintrust.education.domain.model.StudentGroup;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.StudentGroupId;
-
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.StudentGroupEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.StudentGroupJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -17,9 +16,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-// other imports...
 
 @Repository
 @Transactional(readOnly = true)

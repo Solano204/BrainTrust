@@ -1,9 +1,7 @@
 package com.braintrust.containerapp.rest.course;
 
 import com.braintrust.education.application.dtos.commands.*;
-import com.braintrust.education.application.dtos.dtos.SubmissionAnalyticsDTO;
-import com.braintrust.education.application.dtos.dtos.SubmissionBasicDTO;
-import com.braintrust.education.application.dtos.dtos.SubmissionDTO;
+import com.braintrust.education.application.dtos.dtos.*;
 import com.braintrust.education.application.ports.in.SubmissionService;
 import com.braintrust.education.domain.model.SubmissionStatus;
 import com.braintrust.education.domain.valueobjects.*;
@@ -38,11 +36,37 @@ public class SubmissionController {
         this.submissionService = submissionService;
     }
 
-    // ------------------------------------------------------------------
-    // ✅ INDIVIDUAL SUBMISSION
-    // ------------------------------------------------------------------
+
+    @PostMapping(value = "/individual/frontend", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SubmissionDTO> submitIndividualAssignmentFrontend(
+            @RequestBody SubmitAssignmentFrontendDTO command
+    ) {
+        log.info("Frontend extraction - Assignment {} by Student {} with {} documents",
+                command.assignmentId(), command.studentId(),
+                command.frontendDocuments() != null ? command.frontendDocuments().size() : 0);
+
+        SubmissionId submissionId = submissionService.submitAssignmentFrontend(command);
+        SubmissionDTO createdSubmission = submissionService.getSubmissionById(submissionId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSubmission);
+    }
+
+    @PostMapping(value = "/team/frontend", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<SubmissionDTO> submitTeamAssignmentFrontend(
+            @RequestBody SubmitTeamAssignmentFrontendDTO command
+    ) {
+        log.info("Team frontend extraction - Assignment {} by Group {} with {} documents",
+                command.assignmentId(), command.groupId(),
+                command.frontendDocuments() != null ? command.frontendDocuments().size() : 0);
+
+        SubmissionId submissionId = submissionService.submitTeamAssignmentFrontend(command);
+        SubmissionDTO createdSubmission = submissionService.getSubmissionById(submissionId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSubmission);
+    }
+
     @PostMapping(value = "/individual", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SuccessResponseDTO> submitIndividualAssignment(
+    public ResponseEntity<SubmissionDTO> submitIndividualAssignment(
             @ModelAttribute SubmitAssignmentCommand command
     ) {
         log.info("Request to submit INDIVIDUAL assignment {} by Student {} with {} attachments",
@@ -50,18 +74,15 @@ public class SubmissionController {
                 command.attachments() != null ? command.attachments().size() : 0);
 
         SubmissionId submissionId = submissionService.submitAssignment(command);
+        SubmissionDTO createdSubmission = submissionService.getSubmissionById(submissionId);
 
         log.info("Individual assignment submitted. Submission ID: {}", submissionId.getValue());
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Individual assignment submitted successfully", submissionId.getValue()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSubmission);
     }
 
-    // ------------------------------------------------------------------
-    // ✅ TEAM SUBMISSION (NEW ENDPOINT)
-    // ------------------------------------------------------------------
     @PostMapping(value = "/team", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<SuccessResponseDTO> submitTeamAssignment(
+    public ResponseEntity<SubmissionDTO> submitTeamAssignment(
             @ModelAttribute SubmitTeamAssignmentCommand command
     ) {
         log.info("Request to submit TEAM assignment {} for Group {} with {} attachments",
@@ -69,23 +90,24 @@ public class SubmissionController {
                 command.attachments() != null ? command.attachments().size() : 0);
 
         SubmissionId submissionId = submissionService.submitTeamAssignment(command);
+        SubmissionDTO createdSubmission = submissionService.getSubmissionById(submissionId);
 
         log.info("Team assignment submitted. Submission ID: {} for Group {}",
                 submissionId.getValue(), command.groupId());
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponseDTO(true, "Team assignment submitted successfully", submissionId.getValue()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSubmission);
     }
 
-    // ------------------------------------------------------------------
-    // ✅ GRADE SUBMISSION (ENHANCED FOR TEAMS)
-    // ------------------------------------------------------------------
     @PutMapping("/{submissionId}/grade")
-    public ResponseEntity<SuccessResponseDTO> gradeSubmission(
+    public ResponseEntity<SubmissionDTO> gradeSubmission(
             @PathVariable String submissionId,
             @RequestBody GradeSubmissionCommand command
     ) {
         log.info("Grading Submission ID: {}. Score: {}", submissionId, command.maxScore());
+
+        if (!submissionId.equals(command.submissionId())) {
+            throw new IllegalArgumentException("Submission ID mismatch");
+        }
 
         SubmissionId submissionIdObj = SubmissionId.fromString(submissionId);
 
@@ -99,14 +121,55 @@ public class SubmissionController {
             submissionService.gradeSubmission(command);
         }
 
+        SubmissionDTO gradedSubmission = submissionService.getSubmissionById(submissionIdObj);
+
         log.debug("Submission ID {} graded and finalized. (Team: {})",
                 submissionId, isTeamSubmission ? "Yes" : "No");
 
-        return ResponseEntity.ok(new SuccessResponseDTO(true,
-                isTeamSubmission ? "Team submission graded and applied to all members"
-                        : "Individual submission graded successfully",
-                null));
+        return ResponseEntity.ok(gradedSubmission);
     }
+
+
+
+    // ✅ NEW: Get submissions by course and unit (for teachers)
+    @GetMapping("/course/{courseId}/unit/{unitId}")
+    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByCourseAndUnit(
+            @PathVariable String courseId,
+            @PathVariable String unitId) {
+
+        log.debug("Fetching submissions for Course ID: {} and Unit ID: {}", courseId, unitId);
+
+        List<SubmissionDTO> submissions = submissionService.getSubmissionsByCourseAndUnit(
+                CourseId.fromString(courseId),
+                UnitId.fromString(unitId)
+        );
+
+        return ResponseEntity.ok(submissions);
+    }
+
+    // ✅ NEW: Get submissions by course, unit and student (for students)
+    @GetMapping("/student/{studentId}/course/{courseId}/unit/{unitId}")
+    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByStudentAndCourseAndUnit(
+            @PathVariable String studentId,
+            @PathVariable String courseId,
+            @PathVariable String unitId) {
+
+        log.debug("Fetching submissions for Student: {}, Course: {}, Unit: {}",
+                studentId, courseId, unitId);
+
+        List<SubmissionDTO> submissions = submissionService.getSubmissionsByStudentAndCourseAndUnit(
+                UserId.fromString(studentId),
+                CourseId.fromString(courseId),
+                UnitId.fromString(unitId)
+        );
+
+        return ResponseEntity.ok(submissions);
+    }
+
+
+
+
+
 
 
     // NEW: Get submissions by course with basic information

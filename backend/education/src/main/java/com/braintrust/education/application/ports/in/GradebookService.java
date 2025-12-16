@@ -28,6 +28,7 @@ public interface GradebookService {
     // ✅ NEW: Final grade assignment methods
     void assignFinalGrade(CourseId courseId, UserId studentId, BigDecimal finalGrade, String feedback);
     FinalGradeDTO getFinalGrade(CourseId courseId, UserId studentId);
+    void bulkUpdateCourseGrades(BulkUpdateCourseGradesCommand command);
 
     // 🎯 Called by other services to sync grades INTO gradebook
     void syncAssignmentGrade(CourseId courseId, UserId studentId, AssignmentId assignmentId);

@@ -10,8 +10,10 @@ public class QuizQuestionJpaEntity {
     @Column(name = "id", length = 50)
     private String id;
 
-    @Column(name = "quiz_id", length = 50, insertable = false, updatable = false)
-    private String quizId;
+    // ✅ FIXED: Proper ManyToOne relationship with QuizJpaEntity
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_id", nullable = false)
+    private QuizJpaEntity quiz;
 
     @Column(name = "question_text", columnDefinition = "TEXT", nullable = false)
     private String questionText;
@@ -23,7 +25,7 @@ public class QuizQuestionJpaEntity {
     private int points;
 
     @Column(name = "options_json", columnDefinition = "TEXT")
-    private String optionsJson; // JSON string for QuestionOption list
+    private String optionsJson;
 
     @Column(name = "correct_answer", columnDefinition = "TEXT")
     private String correctAnswer;
@@ -40,11 +42,13 @@ public class QuizQuestionJpaEntity {
         this.correctAnswer = correctAnswer;
     }
 
-    // Getters/Setters
+    // ✅ Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-    public String getQuizId() { return quizId; }
-    public void setQuizId(String quizId) { this.quizId = quizId; }
+
+    public QuizJpaEntity getQuiz() { return quiz; }
+    public void setQuiz(QuizJpaEntity quiz) { this.quiz = quiz; }
+
     public String getQuestionText() { return questionText; }
     public void setQuestionText(String questionText) { this.questionText = questionText; }
     public String getQuestionType() { return questionType; }

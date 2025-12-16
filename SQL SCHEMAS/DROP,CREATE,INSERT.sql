@@ -243,8 +243,10 @@ CREATE INDEX idx_submission_assignment ON submissions(assignment_id);
 CREATE INDEX idx_submission_student ON submissions(student_id);
 CREATE INDEX idx_submission_status ON submissions(status);
 CREATE INDEX idx_submission_team ON submissions(team_id);
+DROP TABLE IF EXISTS quiz_submissions CASCADE;
 
 -- Table: quiz_submissions
+-- In your CREATE TABLE quiz_submissions section, add the column:
 CREATE TABLE quiz_submissions (
     id VARCHAR(50) PRIMARY KEY,
     quiz_id VARCHAR(50) NOT NULL,
@@ -257,10 +259,14 @@ CREATE TABLE quiz_submissions (
     grade_value NUMERIC(10,2),
     grade_max_score NUMERIC(10,2),
     auto_graded BOOLEAN NOT NULL,
+    question_grades_json TEXT, -- ✅ ADD THIS COLUMN
     FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+
+ALTER TABLE quiz_submissions ADD COLUMN question_grades_json TEXT DEFAULT '[]';
+UPDATE quiz_submissions SET question_grades_json = '[]' WHERE question_grades_json IS NULL;
 -- Create indexes for quiz_submissions
 CREATE INDEX idx_qsubm_quiz ON quiz_submissions(quiz_id);
 CREATE INDEX idx_qsubm_student ON quiz_submissions(student_id);
@@ -376,9 +382,30 @@ CREATE TABLE IF NOT EXISTS analysis_requests (
 
 ALTER TABLE users ALTER COLUMN role TYPE TEXT;
 
+-- Drop the old table if exists
+DROP TABLE IF EXISTS assignment_links;
 
+-- Create the new table with proper structure
+CREATE TABLE assignment_links (
+    id VARCHAR(50) PRIMARY KEY,
+    assignment_id VARCHAR(50) NOT NULL,
+    link_url VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_assignment_links_assignment 
+        FOREIGN KEY (assignment_id) 
+        REFERENCES assignments(id) 
+        ON DELETE CASCADE
+);
 
+-- Create index for better query performance
+CREATE INDEX idx_assignment_links_assignment ON assignment_links(assignment_id);
+CREATE INDEX idx_assignment_links_url ON assignment_links(link_url);
 
+ALTER TABLE assignments 
+ADD COLUMN submission_format VARCHAR(20) NOT NULL DEFAULT 'DIGITAL';
+
+-- Add an index for better query performance
+CREATE INDEX idx_assignment_submission_format ON assignments(submission_format);
 -- Insert sample data for persons (20 records)
 INSERT INTO persons (id, first_name, last_name, gender, phone, registration_date, image_path, address_street, address_colony, address_municipality, address_state, address_postal_code) VALUES
 ('person_001', 'John', 'Smith', 'Male', '555-0101', '2023-01-15', '/images/john.jpg', '123 Main St', 'Downtown', 'Springfield', 'Illinois', '62701'),

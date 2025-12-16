@@ -1,9 +1,10 @@
 package com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.repositories;
 
+import com.braintrust.aidetectition.application.dtos.commands.FrontendDocumentDTO;
+import com.braintrust.aidetectition.application.dtos.commands.FrontendDocumentDTOSub;
 import com.braintrust.aidetectition.application.ports.out.DocumentStorageService;
 import com.braintrust.aidetectition.domain.model.DocumentMetadata;
 import com.braintrust.aidetectition.domain.valueobjects.SubmissionId;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,6 @@ import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,8 +29,6 @@ import java.util.stream.Collectors;
  */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
 
 // other imports...
 
@@ -101,6 +99,169 @@ public class LocalFileStorageService implements DocumentStorageService {
                 }
             });
             throw new RuntimeException("Failed to store one or more documents: " + e.getMessage(), e);
+        }
+
+        return results;
+    }
+
+
+    // ========================================
+    // ✅ OPTION 2: Frontend Extraction (NEW)
+    // ========================================
+    @Override
+    public List<DocumentMetadata> storeDocumentFromFrontend(String targetId,
+                                                            List<FrontendDocumentDTO> frontendDocuments) {
+        List<DocumentMetadata> results = new ArrayList<>();
+
+        try {
+            Path storageDir = Paths.get(baseStoragePath);
+            Files.createDirectories(storageDir);
+
+            for (FrontendDocumentDTO frontendDoc : frontendDocuments) {
+                // 1. Create a text file for the extracted content
+                String originalFilename = frontendDoc.originalFilename();
+                String uniqueIdentifier = UUID.randomUUID().toString();
+
+                // Create a .txt file for extracted text
+                String txtFilename = targetId + "_" + uniqueIdentifier + "_" +
+                        sanitizeFilename(originalFilename) + "_extracted.txt";
+                Path txtFilePath = storageDir.resolve(txtFilename);
+
+                // 2. Store only the extracted text (not the original file)
+                Files.writeString(txtFilePath, "");
+
+                // 3. Create metadata WITH extracted text
+                DocumentMetadata metadata = new DocumentMetadata(
+                        originalFilename,
+                        frontendDocuments.getFirst().uploadedUrl(), // Points to extracted text file
+                        LocalDateTime.now()
+//                        frontendDoc.extractedText(), // Keep text in memory too
+  //                      frontendDoc.fileSize(),
+    //                    frontendDoc.mimeType()
+                );
+                results.add(metadata);
+            }
+
+        } catch (Exception e) {
+            // Cleanup on failure
+            results.forEach(m -> {
+                try {
+                    Files.deleteIfExists(Paths.get(m.getStoragePath()));
+                } catch (IOException ioE) {
+                    // Log warning
+                }
+            });
+            throw new RuntimeException("Failed to store frontend documents: " + e.getMessage(), e);
+        }
+
+        return results;
+    }
+
+    @Override
+    public List<DocumentMetadata> storeDocumentFromFrontendSub(String targetId,
+                                                            List<FrontendDocumentDTOSub> frontendDocuments) {
+        List<DocumentMetadata> results = new ArrayList<>();
+
+        try {
+            Path storageDir = Paths.get(baseStoragePath);
+            Files.createDirectories(storageDir);
+
+            for (FrontendDocumentDTOSub frontendDoc : frontendDocuments) {
+                // 1. Create a text file for the extracted content
+                String originalFilename = frontendDoc.originalFilename();
+                String uniqueIdentifier = UUID.randomUUID().toString();
+
+                // Create a .txt file for extracted text
+                String txtFilename = targetId + "_" + uniqueIdentifier + "_" +
+                        sanitizeFilename(originalFilename) + "_extracted.txt";
+                Path txtFilePath = storageDir.resolve(txtFilename);
+
+                // 2. Store only the extracted text (not the original file)
+                Files.writeString(txtFilePath, "");
+
+                // 3. Create metadata WITH extracted text
+                DocumentMetadata metadata = new DocumentMetadata(
+                        originalFilename,
+                        frontendDocuments.getFirst().uploadedUrl(), // Points to extracted text file
+                        LocalDateTime.now()
+//                        frontendDoc.extractedText(), // Keep text in memory too
+  //                      frontendDoc.fileSize(),
+    //                    frontendDoc.mimeType()
+                );
+                results.add(metadata);
+            }
+
+        } catch (Exception e) {
+            // Cleanup on failure
+            results.forEach(m -> {
+                try {
+                    Files.deleteIfExists(Paths.get(m.getStoragePath()));
+                } catch (IOException ioE) {
+                    // Log warning
+                }
+            });
+            throw new RuntimeException("Failed to store frontend documents: " + e.getMessage(), e);
+        }
+
+        return results;
+    }
+
+
+    @Override
+    public List<DocumentMetadata> storeDocumentHybrid(String targetId,
+                                                      List<MultipartFile> files,
+    List<String> extractedTexts) {
+        List<DocumentMetadata> results = new ArrayList<>();
+
+        try {
+            Path storageDir = Paths.get(baseStoragePath);
+            Files.createDirectories(storageDir);
+
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                String extractedText = extractedTexts.get(i);
+
+                if (file.isEmpty()) continue;
+
+                // 1. Store original file
+                String originalFilename = file.getOriginalFilename();
+                String uniqueIdentifier = UUID.randomUUID().toString();
+                String originalFilenameStored = targetId + "_" + uniqueIdentifier + "_" +
+                        sanitizeFilename(originalFilename);
+                Path originalFilePath = storageDir.resolve(originalFilenameStored);
+                Files.copy(file.getInputStream(), originalFilePath, StandardCopyOption.REPLACE_EXISTING);
+
+                // 2. Store extracted text if provided
+                String extractedTextPath = null;
+                if (extractedText != null && !extractedText.trim().isEmpty()) {
+                    String extractedFilename = originalFilenameStored + "_extracted.txt";
+                    Path extractedFilePath = storageDir.resolve(extractedFilename);
+                    Files.writeString(extractedFilePath, extractedText);
+                    extractedTextPath = extractedFilePath.toString();
+                }
+
+                // 3. Create metadata
+                DocumentMetadata metadata = new DocumentMetadata(
+                        originalFilename,
+                        originalFilePath.toString(),
+                        LocalDateTime.now()
+//                        extractedText,
+//                        file.getSize(),
+//                        file.getContentType()
+                );
+                results.add(metadata);
+            }
+
+        } catch (Exception e) {
+            // Cleanup on failure
+            results.forEach(m -> {
+                try {
+                    Files.deleteIfExists(Paths.get(m.getStoragePath()));
+                } catch (IOException ioE) {
+                    // Log warning
+                }
+            });
+            throw new RuntimeException("Failed to store hybrid documents: " + e.getMessage(), e);
         }
 
         return results;

@@ -1,13 +1,12 @@
 package com.braintrust.containerapp.rest.course;
 
-import com.braintrust.education.application.dtos.commands.AddUnitGradeFeedbackCommand;
-import com.braintrust.education.application.dtos.commands.AssignFinalGradeCommand;
-import com.braintrust.education.application.dtos.dtos.FinalGradeDTO;
+import com.braintrust.identity.application.dtos.commands.AssignFinalGradeCommand;
+import com.braintrust.education.application.dtos.commands.BulkUpdateUnitGradesCommand;
 import com.braintrust.education.application.dtos.dtos.UnitGradeDTO;
 import com.braintrust.education.application.ports.in.UnitGradeService;
 import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.RequiredArgsConstructor;
+import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +43,31 @@ public class UnitGradeController {
 
         return ResponseEntity.ok().build();
     }
+
+
+    @PutMapping("/unit/{unitId}/bulk-grades")
+    public ResponseEntity<SuccessResponseDTO> bulkUpdateUnitGrades(
+            @PathVariable String unitId,
+            @RequestBody BulkUpdateUnitGradesCommand command) {
+
+
+
+        // Ensure the unitId in path matches the command
+        BulkUpdateUnitGradesCommand finalCommand = new BulkUpdateUnitGradesCommand(
+                unitId,
+                command.grades()
+        );
+
+        unitGradeService.bulkUpdateUnitGrades(finalCommand);
+
+        return ResponseEntity.ok(new SuccessResponseDTO(
+                true,
+                String.format("Bulk updated %d grades for unit %s",
+                        command.grades().size(), unitId),
+                null
+        ));
+    }
+
 
 //    @GetMapping("/unit/{unitId}/student/{studentId}/final-grade")
 //    public ResponseEntity<FinalGradeDTO> getFinalGrade(

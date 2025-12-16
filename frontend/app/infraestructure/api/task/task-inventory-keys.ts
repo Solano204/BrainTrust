@@ -10,7 +10,7 @@ export const taskInventoryKeys = {
   
   // Task inventory by course
   inventory: () => [...taskInventoryKeys.all, "inventory"] as const,
-  inventoryByCourse: (courseId: CourseId) => [...taskInventoryKeys.inventory(), courseId] as const,
+  inventoryByCourse: (courseId: CourseId, unitId: string) => [...taskInventoryKeys.inventory(), courseId, unitId] as const,
   
   // Submission details
   submissions: () => [...taskInventoryKeys.all, "submission"] as const,

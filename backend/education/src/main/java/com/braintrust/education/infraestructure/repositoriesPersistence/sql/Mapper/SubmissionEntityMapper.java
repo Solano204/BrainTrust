@@ -18,12 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 // other imports...
-
 @Component
 public class SubmissionEntityMapper {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(SubmissionEntityMapper.class);
+    private static final Logger log = LoggerFactory.getLogger(SubmissionEntityMapper.class);
 
     /**
      * Converts a Submission Domain Model to a JPA Entity.
@@ -51,20 +49,39 @@ public class SubmissionEntityMapper {
                 gradeValue,
                 gradeMaxScore,
                 submission.getTeacherFeedback(),
-                submission.getTeamId() != null ? submission.getTeamId().getValue() : null // ✅ Added teamId
+                submission.getTeamId() != null ? submission.getTeamId().getValue() : null
         );
 
-        // Map attachments
+        // Map attachments - THIS IS WHERE THE FIX IS NEEDED
         if (submission.getAttachments() != null && !submission.getAttachments().isEmpty()) {
             log.trace("Mapping {} attached documents.", submission.getAttachments().size());
+
+            // Create document entities and SET THE SUBMISSION RELATIONSHIP
             List<DocumentJpaEntity> documentEntities = submission.getAttachments().stream()
-                    .map(this::toDocumentEntity)
+                    .map(doc -> toDocumentEntity(doc, entity)) // Pass the submission entity
                     .collect(Collectors.toList());
+
             entity.setDocuments(documentEntities);
         } else {
             entity.setDocuments(new ArrayList<>());
             log.trace("No attachments found for submission.");
         }
+
+        return entity;
+    }
+
+    /**
+     * Converts a Document domain object to DocumentJpaEntity with proper relationship
+     */
+    private DocumentJpaEntity toDocumentEntity(Document doc, SubmissionJpaEntity submissionEntity) {
+        log.trace("Mapping Document entity for storage path: {}", doc.getStoragePath());
+
+        // Create document entity with the submission relationship
+        DocumentJpaEntity entity = new DocumentJpaEntity(
+                doc.getName(),
+                doc.getStoragePath(),
+                submissionEntity  // This sets the relationship
+        );
 
         return entity;
     }
@@ -96,7 +113,7 @@ public class SubmissionEntityMapper {
                     .collect(Collectors.toList());
         }
 
-        if( entity.getTeamId() == null) {
+        if (entity.getTeamId() == null) {
             return Submission.reconstitute(
                     id,
                     assignmentId,
@@ -109,6 +126,7 @@ public class SubmissionEntityMapper {
                     entity.getTeacherFeedback()
             );
         }
+
         return Submission.reconstitute(
                 id,
                 assignmentId,
@@ -119,22 +137,8 @@ public class SubmissionEntityMapper {
                 status,
                 grade,
                 entity.getTeacherFeedback(),
-                StudentGroupId.fromString( entity.getTeamId())
-
+                StudentGroupId.fromString(entity.getTeamId())
         );
-    }
-
-    // ------------------------------------------------------------------
-    // ✅ DOCUMENT MAPPING HELPERS
-    // ------------------------------------------------------------------
-
-    private DocumentJpaEntity toDocumentEntity(Document doc) {
-        log.trace("Mapping Document entity for storage path: {}", doc.getStoragePath());
-        DocumentJpaEntity entity = new DocumentJpaEntity();
-        entity.setName(doc.getName());
-        entity.setStoragePath(doc.getStoragePath());
-        // JPA handles the foreign key (submission_id)
-        return entity;
     }
 
     private Document toDomainDocument(DocumentJpaEntity entity) {

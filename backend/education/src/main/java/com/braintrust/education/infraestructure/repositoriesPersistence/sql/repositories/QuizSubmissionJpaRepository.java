@@ -16,9 +16,7 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
     List<QuizSubmissionJpaEntity> findByQuizId(String quizId);
     */
 
-    /*
     List<QuizSubmissionJpaEntity> findByStudentId(String studentId);
-    */
 
     /*
     List<QuizSubmissionJpaEntity> findByQuizIdAndStudentId(String quizId, String studentId);
@@ -29,6 +27,27 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
             "WHERE q.courseId = :courseId " +
             "ORDER BY qs.submittedAt DESC NULLS LAST, qs.startedAt DESC")
     List<QuizSubmissionJpaEntity> findByCourseIdOrderBySubmittedAtDesc(@Param("courseId") String courseId);
+
+    // NEW: Find submissions by course and unit
+    @Query("SELECT qs FROM QuizSubmissionJpaEntity qs " +
+            "JOIN QuizJpaEntity q ON qs.quizId = q.id " +
+            "WHERE q.courseId = :courseId AND q.unitId = :unitId " +
+            "ORDER BY qs.submittedAt DESC NULLS LAST, qs.startedAt DESC")
+    List<QuizSubmissionJpaEntity> findByCourseIdAndUnitIdOrderBySubmittedAtDesc(
+            @Param("courseId") String courseId,
+            @Param("unitId") String unitId
+    );
+
+    // NEW: Find submissions by student, course and unit
+    @Query("SELECT qs FROM QuizSubmissionJpaEntity qs " +
+            "JOIN QuizJpaEntity q ON qs.quizId = q.id " +
+            "WHERE qs.studentId = :studentId AND q.courseId = :courseId AND q.unitId = :unitId " +
+            "ORDER BY qs.submittedAt DESC NULLS LAST, qs.startedAt DESC")
+    List<QuizSubmissionJpaEntity> findByStudentIdAndCourseIdAndUnitIdOrderBySubmittedAtDesc(
+            @Param("studentId") String studentId,
+            @Param("courseId") String courseId,
+            @Param("unitId") String unitId
+    );
 
     @Query("SELECT s FROM QuizSubmissionJpaEntity s " +
             "WHERE s.quizId = :quizId AND s.studentId = :studentId " +

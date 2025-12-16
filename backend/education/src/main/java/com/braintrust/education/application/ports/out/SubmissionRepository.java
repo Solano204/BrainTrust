@@ -24,11 +24,13 @@ public interface SubmissionRepository {
     List<Submission> findByAssignmentId(AssignmentId assignmentId);
 
     List<Submission> findByStudentId(UserId studentId);
+    // In QuizSubmissionRepository interface - add these methods
 
     List<Submission> findByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId);
 
     // In SubmissionRepository interface
     List<Submission> findByCourseId(CourseId courseId);
+
     /*
     Optional<Submission> findLatestByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId);
     */

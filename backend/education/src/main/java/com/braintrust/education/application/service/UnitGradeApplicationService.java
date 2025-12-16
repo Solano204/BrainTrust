@@ -60,6 +60,54 @@ public class UnitGradeApplicationService implements UnitGradeService {
         this.userService = userService; // ✅ NEW
     }
 
+
+    @Override
+    public void bulkUpdateUnitGrades(BulkUpdateUnitGradesCommand command) {
+        UnitId unitId = UnitId.fromString(command.unitId());
+
+        log.info("Bulk updating grades for {} students in unit {}",
+                command.grades().size(), unitId.getValue());
+
+        try {
+            int successCount = 0;
+            int failureCount = 0;
+
+            for (UpdateStudentGradeCommand gradeCommand : command.grades()) {
+                try {
+                    UserId studentId = UserId.fromString(gradeCommand.studentId());
+                    BigDecimal finalGrade = new BigDecimal(gradeCommand.gradeValue());
+                    String feedback = gradeCommand.feedback();
+
+                    // Assign final grade for each student
+                    assignFinalGrade(unitId, studentId, finalGrade, feedback);
+                    successCount++;
+
+                    log.debug("✅ Updated unit grade for student {}: {}",
+                            studentId.getValue(), finalGrade);
+
+                } catch (Exception e) {
+                    failureCount++;
+                    log.error("❌ Failed to update grade for student {} in unit {}: {}",
+                            gradeCommand.studentId(), unitId.getValue(), e.getMessage());
+                }
+            }
+
+            log.info("Bulk unit grade update completed: {} succeeded, {} failed",
+                    successCount, failureCount);
+
+            if (failureCount > 0) {
+                throw new RuntimeException(String.format(
+                        "Bulk update partially failed: %d succeeded, %d failed",
+                        successCount, failureCount));
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to bulk update unit grades for unit {}: {}",
+                    unitId.getValue(), e.getMessage(), e);
+            throw new RuntimeException("Failed to bulk update unit grades", e);
+        }
+    }
+
     @Override
     public void addAssignmentGradeToUnit(UnitId unitId, UserId studentId, AssignmentId assignmentId, Grade grade) {
         log.info("➕ Adding assignment grade to unit {} for student {}: {}/{}",

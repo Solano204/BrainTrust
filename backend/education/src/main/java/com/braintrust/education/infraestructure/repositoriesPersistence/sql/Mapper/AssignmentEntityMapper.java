@@ -4,23 +4,23 @@ import com.braintrust.education.application.ports.out.UnitRepository;
 import com.braintrust.education.domain.model.Assignment;
 import com.braintrust.education.domain.model.AssignmentTargetType;
 import com.braintrust.education.domain.model.CourseUnit;
+import com.braintrust.education.domain.model.SubmissionFormat;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
-import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseUnitJpaEntity;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentLinkJpaEntity;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.DocumentJpaEntity;
-import com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories.CourseUnitRepositoryAdapter;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-// other imports...
-@Component
 
+@Component
 public class AssignmentEntityMapper {
 
     private static final Logger log =
@@ -36,7 +36,7 @@ public class AssignmentEntityMapper {
      * Converts a Domain Assignment model to a JPA Entity.
      */
     public AssignmentJpaEntity toEntity(Assignment assignment) {
-        log.debug("Mapping Assignment Domain ID {} to JPA Entity.", assignment.getId().getValue());
+        log.info("Mapping Assignment Domain ID {} to JPA Entity.", assignment.getId().getValue());
 
         // ✅ Find the CourseUnit entity by UnitId
         CourseUnit unitEntity = null;
@@ -51,7 +51,7 @@ public class AssignmentEntityMapper {
         AssignmentJpaEntity entity = new AssignmentJpaEntity(
                 assignment.getId().getValue(),
                 assignment.getCourseId().getValue(),
-                unitEntity.getId().toString(), // ✅ Now passing the CourseUnit entity, not just the ID
+                unitEntity.getId().toString(),
                 assignment.getTitle(),
                 assignment.getDescription(),
                 assignment.getCreatedAt(),
@@ -59,10 +59,10 @@ public class AssignmentEntityMapper {
                 assignment.getMaxScore().getMaxPoints(),
                 assignment.getInstructions(),
                 assignment.isActive(),
-                assignment.getTargetType().name()
+                assignment.getTargetType().name(),
+                assignment.getSubmissionFormat().name() // ✅ NEW: Map submission format
         );
-
-        // Map attachments with bidirectional relationship
+        // ✅ Map attachments with bidirectional relationship
         if (assignment.getAttachments() != null && !assignment.getAttachments().isEmpty()) {
             log.trace("Mapping {} attachments for Assignment ID {}.",
                     assignment.getAttachmentCount(), assignment.getId().getValue());
@@ -76,6 +76,20 @@ public class AssignmentEntityMapper {
             log.trace("No attachments found for Assignment ID {}.", assignment.getId().getValue());
         }
 
+        // ✅ UPDATED - Map links to AssignmentLinkJpaEntity (using Set)
+        if (assignment.getLinks() != null && !assignment.getLinks().isEmpty()) {
+            log.trace("Mapping {} links for Assignment ID {}.",
+                    assignment.getLinkCount(), assignment.getId().getValue());
+
+            Set<AssignmentLinkJpaEntity> linkEntities = assignment.getLinks().stream()
+                    .map(linkUrl -> new AssignmentLinkJpaEntity(entity, linkUrl))
+                    .collect(Collectors.toSet());
+            entity.setLinks(linkEntities);
+        } else {
+            entity.setLinks(new HashSet<>());
+            log.trace("No links found for Assignment ID {}.", assignment.getId().getValue());
+        }
+
         return entity;
     }
 
@@ -83,7 +97,7 @@ public class AssignmentEntityMapper {
      * Converts an Assignment JPA Entity back to a Domain Assignment model.
      */
     public Assignment toDomain(AssignmentJpaEntity entity) {
-        log.debug("Mapping Assignment JPA Entity ID {} to Domain Model.", entity.getId());
+        log.info("Mapping Assignment JPA Entity ID {} to Domain Model.", entity.getId());
 
         AssignmentId id = AssignmentId.fromString(entity.getId());
         CourseId courseId = CourseId.fromString(entity.getCourseId());
@@ -105,25 +119,40 @@ public class AssignmentEntityMapper {
                     .collect(Collectors.toList());
         }
 
+        // ✅ UPDATED - Map links from AssignmentLinkJpaEntity (Set) to domain
+        List<String> links = new ArrayList<>();
+        if (entity.getLinks() != null && !entity.getLinks().isEmpty()) {
+            log.trace("Mapping {} links from entity.", entity.getLinks().size());
+            links = entity.getLinks().stream()
+                    .map(AssignmentLinkJpaEntity::getLinkUrl)
+                    .collect(Collectors.toList());
+        }
+
         // Convert targetType string to enum
         AssignmentTargetType targetType = AssignmentTargetType.valueOf(entity.getTargetType());
-
+        SubmissionFormat submissionFormat;
+        try {
+            submissionFormat = SubmissionFormat.valueOf(entity.getSubmissionFormat());
+        } catch (IllegalArgumentException e) {
+            submissionFormat = SubmissionFormat.DIGITAL; // Default if invalid
+        }
         return Assignment.reconstitute(
                 id,
                 courseId,
-                unitId, // ✅ Now properly passing the UnitId
+                unitId,
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getCreatedAt(),
                 documents,
+                links,
                 entity.getDueDate(),
                 maxScore,
                 entity.getInstructions(),
-                Collections.emptyList(),  // Submissions are empty
+                Collections.emptyList(),
                 entity.isActive(),
-                targetType
-        );
-    }
+                targetType,
+                submissionFormat // ✅ NEW: Include submission format
+        );}
 
     // ------------------------------------------------------------------
     // ✅ DOCUMENT MAPPING HELPERS
@@ -135,7 +164,7 @@ public class AssignmentEntityMapper {
         DocumentJpaEntity entity = new DocumentJpaEntity();
         entity.setName(doc.getName());
         entity.setStoragePath(doc.getStoragePath());
-        entity.setAssignment(assignment); // ✅ Set the bidirectional relationship
+        entity.setAssignment(assignment);
         return entity;
     }
 

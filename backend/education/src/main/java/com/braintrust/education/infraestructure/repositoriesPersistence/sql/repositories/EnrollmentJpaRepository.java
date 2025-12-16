@@ -1,6 +1,5 @@
 package com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories;
 
-
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.EnrollmentJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +22,11 @@ public interface EnrollmentJpaRepository extends JpaRepository<EnrollmentJpaEnti
     List<EnrollmentJpaEntity> findActiveByCourseId(@Param("courseId") String courseId);
 
     boolean existsByCourseIdAndStudentId(String courseId, String studentId);
+
+    // NEW METHOD: Count enrollments by course and status
+    long countByCourseIdAndStatus(String courseId, String status);
+
+    // NEW METHOD: Find student IDs by course and status
+    @Query("SELECT e.studentId FROM EnrollmentJpaEntity e WHERE e.courseId = :courseId AND e.status = :status")
+    List<String> findStudentIdsByCourseIdAndStatus(@Param("courseId") String courseId, @Param("status") String status);
 }

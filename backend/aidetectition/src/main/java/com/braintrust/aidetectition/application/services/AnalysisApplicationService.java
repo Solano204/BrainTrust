@@ -1,63 +1,40 @@
 package com.braintrust.aidetectition.application.services;
 
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzeSubmissionCommand;
-import com.braintrust.aidetectition.application.dtos.commands.AnalyzePdfSubmissionCommand;
-import com.braintrust.aidetectition.application.dtos.dtoResponse.*;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.AnalysisResultDTO;
+import com.braintrust.aidetectition.application.dtos.dtoResponse.DetectedSegmentDTO;
 import com.braintrust.aidetectition.application.ports.in.AnalysisService;
 import com.braintrust.aidetectition.application.ports.out.AIDetectionProvider;
 import com.braintrust.aidetectition.application.ports.out.AnalysisRequestRepository;
 import com.braintrust.aidetectition.domain.exceptions.AnalysisAlreadyExistsException;
 import com.braintrust.aidetectition.domain.exceptions.AnalysisNotFoundException;
 import com.braintrust.aidetectition.domain.model.AnalysisRequest;
-import com.braintrust.aidetectition.domain.valueobjects.AnalysisId;
-import com.braintrust.aidetectition.domain.valueobjects.DetectionResult;
-import com.braintrust.aidetectition.domain.valueobjects.ModelType;
-import com.braintrust.aidetectition.domain.valueobjects.SubmissionId;
+import com.braintrust.aidetectition.domain.valueobjects.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-
-/**
- * ✅ PRODUCTION-READY Service with Virtual Threads
- *
- * Key improvements:
- * 1. All HTTP requests run on Virtual Threads (configured in Tomcat)
- * 2. Concurrent operations use CompletableFuture with VT executor
- * 3. No Structured Concurrency (Preview API) - only stable APIs
- * 4. Rate limiting with Semaphore when needed
- *
- * Performance benefits:
- * - Handle 10,000+ concurrent requests
- * - Simple, synchronous code style
- * - Automatic thread management by JVM
- */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// other imports...
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class AnalysisApplicationService implements AnalysisService {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(AnalysisApplicationService.class);
+    private static final Logger log = LoggerFactory.getLogger(AnalysisApplicationService.class);
 
     private final AnalysisRequestRepository analysisRepository;
     private final AIDetectionProvider aiDetectionProvider;
 
-    // ✅ Rate limiter for external AI service (max 50 concurrent calls)
+    // Rate limiter for AI service calls (max 50 concurrent calls)
     private final Semaphore aiServiceRateLimiter = new Semaphore(50);
-
 
     public AnalysisApplicationService(
             AnalysisRequestRepository analysisRepository,
@@ -66,14 +43,12 @@ public class AnalysisApplicationService implements AnalysisService {
         this.analysisRepository = analysisRepository;
         this.aiDetectionProvider = aiDetectionProvider;
 
-        log.info("✅ AnalysisApplicationService initialized with Virtual Threads support");
+        log.info("✅ AnalysisApplicationService initialized - TEXT ONLY analysis");
     }
 
     /**
-     * ✅ ANALYZE TEXT SUBMISSION
-     *
-     * This method already runs on a Virtual Thread (via Tomcat configuration).
-     * The I/O operations (DB queries, AI service calls) will park the VT automatically.
+     * ✅ ANALYZE TEXT SUBMISSION - Simplified version
+     * Only handles text content analysis, no PDF extraction
      */
     @Override
     public AnalysisId analyzeSubmission(AnalyzeSubmissionCommand command) throws JsonProcessingException {
@@ -81,6 +56,9 @@ public class AnalysisApplicationService implements AnalysisService {
         long startTime = System.currentTimeMillis();
 
         log.info("🚀 Starting text analysis for Submission ID: {}", submissionId.getValue());
+
+        // Validate input
+        validateContent(command.content());
 
         try {
             // ✅ PHASE 1: Check for existing pending analysis
@@ -95,163 +73,46 @@ public class AnalysisApplicationService implements AnalysisService {
             // ✅ PHASE 2: Create and save analysis request
             AnalysisRequest analysisRequest = AnalysisRequest.create(submissionId, command.content());
             AnalysisRequest savedRequest = analysisRepository.save(analysisRequest);
+
             log.debug("📝 AnalysisRequest saved with ID: {}", savedRequest.getId().getValue());
+            log.info("📊 Content length: {} characters", command.content().length());
 
-            // ✅ PHASE 3: Call AI service (with rate limiting)
-            ModelType modelType = command.preferredModel() != null
-                    ? ModelType.valueOf(command.preferredModel())
-                    : ModelType.ENSEMBLE;
+            // ✅ PHASE 3: Determine model to use
+            ModelType modelType = determineModelType(command.preferredModel());
+            log.info("🤖 Using AI model: {} for analysis", modelType);
 
-            log.info("🤖 Dispatching to AI Provider using model: {}", modelType);
-
+            // ✅ PHASE 4: Call AI service for text analysis
             DetectionResult result = callAIServiceWithRateLimit(() ->
                     aiDetectionProvider.analyzeContent(command.content(), modelType)
             );
 
-            // ✅ PHASE 4: Update analysis with result
+            // ✅ PHASE 5: Update analysis with result
             analysisRequest.completeAnalysis(result);
             analysisRepository.save(analysisRequest);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Analysis {} completed in {}ms. Probability: {}%",
+            log.info("✅ Analysis {} completed in {}ms. AI Probability: {}%",
                     analysisRequest.getId().getValue(),
                     duration,
                     result.getProbability().getPercentage());
 
+            // Log detailed results
+            logAnalysisResult(analysisRequest, result);
+
             return savedRequest.getId();
 
         } catch (AnalysisAlreadyExistsException e) {
-            throw e; // Re-throw domain exceptions
+            // Re-throw domain exceptions
+            throw e;
 
         } catch (Exception e) {
             log.error("❌ Analysis failed for Submission {}: {}",
                     submissionId.getValue(), e.getMessage(), e);
-            throw new RuntimeException("Analysis failed: " + e.getMessage(), e);
-        }
-    }
 
-    /**
-     * ✅ ANALYZE PDF BATCH WITH VIRTUAL THREADS
-     *
-     * This method processes multiple PDFs concurrently using CompletableFuture.
-     * Each PDF analysis runs on its own Virtual Thread.
-     */
-    @Override
-    public List<AnalysisId> analyzePdfSubmission(AnalyzePdfSubmissionCommand command) {
-        SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
-        long startTime = System.currentTimeMillis();
+            // Find and mark any pending analysis as failed
+            markPendingAnalysesAsFailed(submissionId, e.getMessage());
 
-        log.info("📄 Starting batch PDF analysis for Submission ID: {} with {} files",
-                submissionId.getValue(), command.pdfFiles().size());
-
-        try {
-            // ✅ PHASE 1: Check for existing pending analysis
-            List<AnalysisRequest> existing = analysisRepository.findBySubmissionId(submissionId);
-            boolean isPending = existing.stream().anyMatch(AnalysisRequest::isPending);
-
-            if (isPending) {
-                log.warn("❌ Analysis already in progress for Submission ID {}", submissionId.getValue());
-                throw new AnalysisAlreadyExistsException("Analysis already in progress for this submission");
-            }
-
-            // ✅ PHASE 2: Create analysis requests for all files (batch save)
-            List<AnalysisRequest> analysisRequests = command.pdfFiles().stream()
-                    .map(pdfFile -> AnalysisRequest.create(
-                            submissionId,
-                            "PDF file: " + pdfFile.getOriginalFilename()
-                    ))
-                    .collect(Collectors.toList());
-
-            analysisRequests = analysisRepository.saveAll(analysisRequests);
-            log.debug("📝 Created {} analysis requests", analysisRequests.size());
-
-            // ✅ PHASE 3: Process ALL PDFs via external AI service
-            // The AI service already processes them as a batch
-            ModelType modelType = ModelType.valueOf(command.preferredModel());
-
-            log.debug("🤖 Dispatching {} files to AI service", command.pdfFiles().size());
-
-            List<DetectionResult> results = callAIServiceWithRateLimit(() ->
-                    aiDetectionProvider.analyzePdfFile(command.pdfFiles(), modelType)
-            );
-
-            // ✅ PHASE 4: Match results with requests and update
-            List<AnalysisId> analysisIds = new ArrayList<>();
-
-            for (int i = 0; i < Math.min(analysisRequests.size(), results.size()); i++) {
-                AnalysisRequest request = analysisRequests.get(i);
-                DetectionResult result = results.get(i);
-
-                request.completeAnalysis(result);
-                analysisIds.add(request.getId());
-            }
-
-            // ✅ PHASE 5: Batch save all completed analyses
-            analysisRepository.saveAll(analysisRequests);
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Batch PDF analysis completed in {}ms. Processed {} files",
-                    duration, analysisIds.size());
-
-            return analysisIds;
-
-        } catch (AnalysisAlreadyExistsException e) {
-            throw e;
-
-        } catch (Exception e) {
-            log.error("❌ Batch PDF analysis failed: {}", e.getMessage(), e);
-
-            // Mark all pending requests as failed
-            List<AnalysisRequest> existingRequests = analysisRepository.findBySubmissionId(submissionId);
-            for (AnalysisRequest request : existingRequests) {
-                if (request.isPending()) {
-                    request.markAsFailed("Batch analysis failed: " + e.getMessage());
-                }
-            }
-
-            try {
-                analysisRepository.saveAll(existingRequests);
-            } catch (Exception saveEx) {
-                log.error("Failed to save failed analysis requests", saveEx);
-            }
-
-            throw new RuntimeException("AI Detection service failed to process PDF files", e);
-        }
-    }
-
-    /**
-     * ✅ RETRY FAILED ANALYSIS
-     */
-    @Override
-    public void retryAnalysis(AnalysisId analysisId) throws Exception {
-        log.info("🔄 Attempting to retry analysis for ID: {}", analysisId.getValue());
-
-        AnalysisRequest analysisRequest = findAnalysisRequestByIdOrThrow(analysisId);
-
-        if (!analysisRequest.getStatus().name().equals("FAILED")) {
-            log.warn("❌ Cannot retry analysis ID {} because status is {}",
-                    analysisId.getValue(), analysisRequest.getStatus());
-            throw new IllegalStateException("Only failed analyses can be retried");
-        }
-
-        try {
-            DetectionResult result = callAIServiceWithRateLimit(() ->
-                    aiDetectionProvider.analyzeContent(
-                            analysisRequest.getContentToAnalyze(),
-                            ModelType.ENSEMBLE
-                    )
-            );
-
-            analysisRequest.completeAnalysis(result);
-            analysisRepository.save(analysisRequest);
-
-            log.info("✅ Analysis ID {} successfully retried", analysisId.getValue());
-
-        } catch (Exception e) {
-            log.error("❌ Retry for Analysis ID {} failed", analysisId.getValue(), e);
-            analysisRequest.markAsFailed("Retry failed: " + e.getMessage());
-            analysisRepository.save(analysisRequest);
-            throw e;
+            throw new RuntimeException("AI text analysis failed: " + e.getMessage(), e);
         }
     }
 
@@ -269,10 +130,16 @@ public class AnalysisApplicationService implements AnalysisService {
             throw new IllegalStateException("Cannot cancel completed analysis");
         }
 
+        if (!analysisRequest.isPending()) {
+            log.warn("❌ Analysis ID {} is not in PENDING state (current: {})",
+                    analysisId.getValue(), analysisRequest.getStatus());
+            throw new IllegalStateException("Only pending analyses can be cancelled");
+        }
+
         analysisRequest.markAsFailed("Cancelled by user");
         analysisRepository.save(analysisRequest);
 
-        log.info("✅ Analysis ID {} marked as cancelled", analysisId.getValue());
+        log.info("✅ Analysis ID {} successfully cancelled", analysisId.getValue());
     }
 
     /**
@@ -280,10 +147,17 @@ public class AnalysisApplicationService implements AnalysisService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<AnalysisResultDTO> getAnalysisBySubmission(SubmissionId submissionId) {
-        log.debug("📊 Fetching analysis by Submission ID: {}", submissionId.getValue());
+    public List<AnalysisResultDTO> getAnalysisBySubmission(String submissionId) {
+        log.debug("📊 Fetching analysis results for Submission ID: {}", submissionId);
 
-        List<AnalysisRequest> analyses = analysisRepository.findBySubmissionId(submissionId);
+        List<AnalysisRequest> analyses = analysisRepository.findBySubmissionId(SubmissionId.fromString(submissionId));
+
+        if (analyses.isEmpty()) {
+            log.info("No analyses found for Submission ID: {}", submissionId);
+        } else {
+            log.info("Found {} analysis results for Submission ID: {}",
+                    analyses.size(), submissionId);
+        }
 
         return analyses.stream()
                 .map(this::mapToAnalysisResultDTO)
@@ -295,20 +169,57 @@ public class AnalysisApplicationService implements AnalysisService {
     // ========================================
 
     /**
-     * ✅ Call AI service with rate limiting using Semaphore
-     *
-     * The Semaphore limits concurrent calls to the AI service.
-     * Virtual Threads will park when waiting for a permit.
+     * ✅ Validate content before analysis
      */
-    private <T> T callAIServiceWithRateLimit(Callable<T> task) throws Exception {
-        aiServiceRateLimiter.acquire();
-        try {
-            return task.call();
-        } finally {
-            aiServiceRateLimiter.release();
+    private void validateContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
+
+        if (content.length() < 10) {
+            throw new IllegalArgumentException("Content must be at least 10 characters");
+        }
+
+        if (content.length() > 100000) {
+            throw new IllegalArgumentException("Content exceeds maximum length of 100,000 characters");
         }
     }
 
+    /**
+     * ✅ Determine which model to use
+     */
+    private ModelType determineModelType(String preferredModel) {
+        if (preferredModel != null && !preferredModel.trim().isEmpty()) {
+            try {
+                return ModelType.valueOf(preferredModel.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid model type '{}', defaulting to ENSEMBLE", preferredModel);
+            }
+        }
+
+        // Default to ENSEMBLE model
+        return ModelType.ENSEMBLE;
+    }
+
+    /**
+     * ✅ Call AI service with rate limiting
+     */
+    private <T> T callAIServiceWithRateLimit(Callable<T> task) throws Exception {
+        log.debug("Acquiring AI service rate limiter permit...");
+        aiServiceRateLimiter.acquire();
+
+        try {
+            log.debug("AI service rate limiter permit acquired. Executing task...");
+            return task.call();
+        } finally {
+            aiServiceRateLimiter.release();
+            log.debug("AI service rate limiter permit released.");
+        }
+    }
+
+    /**
+     * ✅ Find analysis request or throw exception
+     */
     private AnalysisRequest findAnalysisRequestByIdOrThrow(AnalysisId analysisId) {
         return analysisRepository.findById(analysisId)
                 .orElseThrow(() -> {
@@ -317,6 +228,55 @@ public class AnalysisApplicationService implements AnalysisService {
                 });
     }
 
+    /**
+     * ✅ Mark pending analyses as failed
+     */
+    private void markPendingAnalysesAsFailed(SubmissionId submissionId, String errorMessage) {
+        try {
+            List<AnalysisRequest> pendingRequests = analysisRepository.findBySubmissionId(submissionId)
+                    .stream()
+                    .filter(AnalysisRequest::isPending)
+                    .collect(Collectors.toList());
+
+            for (AnalysisRequest request : pendingRequests) {
+                request.markAsFailed(errorMessage);
+            }
+
+            if (!pendingRequests.isEmpty()) {
+                analysisRepository.saveAll(pendingRequests);
+                log.info("Marked {} pending analyses as FAILED for Submission ID: {}",
+                        pendingRequests.size(), submissionId.getValue());
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to mark pending analyses as failed", e);
+        }
+    }
+
+    /**
+     * ✅ Log detailed analysis results
+     */
+    private void logAnalysisResult(AnalysisRequest analysisRequest, DetectionResult result) {
+        if (result != null) {
+            log.info("📋 Analysis Result Summary:");
+            log.info("   - Analysis ID: {}", analysisRequest.getId().getValue());
+            log.info("   - AI Probability: {}%",
+                    result.getProbability().getPercentage().setScale(2, RoundingMode.HALF_UP));
+            log.info("   - Model Used: {}", result.getModelUsed());
+            log.info("   - Confidence Level: {}", result.getConfidenceLevel());
+            log.info("   - Likely AI: {}", result.isLikelyAI());
+            log.info("   - Detected Segments: {}", result.getDetectedSegments().size());
+
+            // Log metadata if available
+            if (!result.getMetadata().isEmpty()) {
+                log.info("   - Metadata Keys: {}", result.getMetadata().keySet());
+            }
+        }
+    }
+
+    /**
+     * ✅ Map domain model to DTO
+     */
     private AnalysisResultDTO mapToAnalysisResultDTO(AnalysisRequest analysisRequest) {
         DetectionResult result = analysisRequest.getResult();
 
@@ -354,5 +314,47 @@ public class AnalysisApplicationService implements AnalysisService {
                 segmentDTOs,
                 metadata
         );
+    }
+
+    /**
+     * ✅ Get AI service health (optional utility method)
+     */
+    public Map<String, Object> getServiceHealth() {
+        boolean isAvailable = aiDetectionProvider.isServiceAvailable();
+        BigDecimal healthScore = aiDetectionProvider.getServiceHealth();
+        List<ModelType> availableModels = aiDetectionProvider.getAvailableModels();
+
+        return Map.of(
+                "service_available", isAvailable,
+                "health_score", healthScore,
+                "available_models", availableModels.stream()
+                        .map(ModelType::name)
+                        .collect(Collectors.toList()),
+                "rate_limiter_available_permits", aiServiceRateLimiter.availablePermits(),
+                "rate_limiter_queue_length", aiServiceRateLimiter.getQueueLength()
+        );
+    }
+
+    /**
+     * ✅ Get model performance (optional utility method)
+     */
+    public Map<String, Object> getModelPerformance(String modelName) {
+        try {
+            ModelType modelType = ModelType.valueOf(modelName.toUpperCase());
+            var performance = aiDetectionProvider.getModelPerformance(modelType);
+
+            return Map.of(
+                    "model", modelType.name(),
+                    "version", performance.getVersion(),
+                    "precision", performance.getPrecision(),
+                    "recall", performance.getRecall(),
+                    "f1_score", performance.getF1Score(),
+                    "accuracy", performance.getAccuracy()
+            );
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid model name: {}", modelName);
+            return Map.of("error", "Invalid model name: " + modelName);
+        }
     }
 }

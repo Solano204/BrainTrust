@@ -4,7 +4,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Course } from "@/app/domain/entities/CourseEntities";
 import { courseKeys } from "@/app/infraestructure/api/course/course-keys";
-import { fetchStudentCourses } from "@/app/infraestructure/api/course/student/student-api";
+import { fetchStudentCourses } from "@/components/student/api/student-courses";
 
 export function useStudentCourses(studentId: string | null) {
   return useQuery<Course[]>({

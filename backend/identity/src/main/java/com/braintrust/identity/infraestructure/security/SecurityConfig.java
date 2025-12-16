@@ -56,6 +56,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints - Authentication
                         .requestMatchers(
+                                "/api/**",
+
+                                "/**",
                                 "/api/users/register/**",
                                 "/api/users/authenticate",
 
@@ -65,6 +68,8 @@ public class SecurityConfig {
 
                         // ✅ FIXED: Public endpoints - Documentation (Swagger UI)
                         .requestMatchers(
+                                "/api/**",
+                                "/**",
                                 "/complete",
                                 "/v3/api-docs/**",           // OpenAPI JSON/YAML
                                 "/swagger-ui/**",            // Swagger UI resources

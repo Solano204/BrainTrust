@@ -10,7 +10,8 @@ import java.util.List;
 public record CreateAssignmentWithAttachmentsCommand(
         @NotBlank(message = "Course ID is required")
         String courseId,
-@NotBlank(message = "Course ID is required")
+
+        @NotBlank(message = "Unit ID is required")
         String unitId,
 
         @NotBlank(message = "Title is required")
@@ -31,10 +32,10 @@ public record CreateAssignmentWithAttachmentsCommand(
         @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions,
 
-        // ✅ Attachments
         List<MultipartFile> attachments,
+        List<String> links,
+        String targetType, // "INDIVIDUAL" or "TEAM"
 
-        // ✅ NEW: Assignment target type
-        String targetType // "INDIVIDUAL" or "TEAM"
-
+        // ✅ NEW: Submission format field
+        String submissionFormat // "DIGITAL" or "NOTEBOOK"
 ) {}

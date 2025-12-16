@@ -139,11 +139,46 @@ public class GradebookApplicationService implements GradebookService {
         log.info("Assigning final grade {} for student {} in course {}",
                 finalGrade, studentId.getValue(), courseId.getValue());
 
+        // 1. Get or create gradebook and assign final grade
         Gradebook gradebook = getOrCreateGradebook(courseId, studentId);
         gradebook.assignFinalGrade(finalGrade, feedback);
         gradebookRepository.save(gradebook);
 
+        // 2. ✅ NEW: Update enrollment final grade
+        updateEnrollmentFinalGrade(courseId, studentId, finalGrade);
+
         log.info("Final grade assigned for course");
+    }
+
+    /**
+     * ✅ NEW: Update enrollment with final grade
+     */
+    private void updateEnrollmentFinalGrade(CourseId courseId, UserId studentId, BigDecimal finalGrade) {
+        try {
+            // Find the enrollment
+            Optional<Enrollment> enrollmentOpt = enrollmentRepository.findByCourseAndStudent(courseId, studentId);
+
+            if (enrollmentOpt.isPresent()) {
+                Enrollment enrollment = enrollmentOpt.get();
+
+                // Create a Grade object (assuming max score is 100 for final grades)
+                Grade grade = new Grade(finalGrade, new BigDecimal("100"));
+
+                // Complete the enrollment with the final grade
+                enrollment.complete(grade);
+                enrollmentRepository.save(enrollment);
+
+                log.info("✅ Enrollment final grade updated for student {} in course {}: {}",
+                        studentId.getValue(), courseId.getValue(), finalGrade);
+            } else {
+                log.warn("⚠️ No enrollment found for student {} in course {}, cannot update enrollment final grade",
+                        studentId.getValue(), courseId.getValue());
+            }
+        } catch (Exception e) {
+            log.error("❌ Failed to update enrollment final grade for student {} in course {}: {}",
+                    studentId.getValue(), courseId.getValue(), e.getMessage(), e);
+            // Don't throw - we don't want to fail the gradebook update if enrollment update fails
+        }
     }
 
     // ✅ NEW: Get final grade for course
@@ -163,6 +198,56 @@ public class GradebookApplicationService implements GradebookService {
                 gradebook.getFinalFeedback(),
                 gradebook.getLastCalculated().toString()
         );
+    }
+
+
+
+
+    @Override
+    public void bulkUpdateCourseGrades(BulkUpdateCourseGradesCommand command) {
+        CourseId courseId = CourseId.fromString(command.courseId());
+
+        log.info("Bulk updating final grades for {} students in course {}",
+                command.grades().size(), courseId.getValue());
+
+        try {
+            int successCount = 0;
+            int failureCount = 0;
+
+            for (UpdateStudentGradeCommand gradeCommand : command.grades()) {
+                try {
+                    UserId studentId = UserId.fromString(gradeCommand.studentId());
+                    BigDecimal finalGrade = new BigDecimal(gradeCommand.gradeValue());
+                    String feedback = gradeCommand.feedback();
+
+                    // Assign final grade for each student
+                    assignFinalGrade(courseId, studentId, finalGrade, feedback);
+                    successCount++;
+
+                    log.debug("✅ Updated course final grade for student {}: {}",
+                            studentId.getValue(), finalGrade);
+
+                } catch (Exception e) {
+                    failureCount++;
+                    log.error("❌ Failed to update final grade for student {} in course {}: {}",
+                            gradeCommand.studentId(), courseId.getValue(), e.getMessage());
+                }
+            }
+
+            log.info("Bulk course grade update completed: {} succeeded, {} failed",
+                    successCount, failureCount);
+
+            if (failureCount > 0) {
+                throw new RuntimeException(String.format(
+                        "Bulk update partially failed: %d succeeded, %d failed",
+                        successCount, failureCount));
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to bulk update course grades for course {}: {}",
+                    courseId.getValue(), e.getMessage(), e);
+            throw new RuntimeException("Failed to bulk update course grades", e);
+        }
     }
 
     /**
