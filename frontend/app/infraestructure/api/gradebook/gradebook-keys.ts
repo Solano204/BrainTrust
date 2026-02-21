@@ -1,4 +1,3 @@
-// File: src/app/infraestructure/api/gradebook/gradebook-keys.ts
 export const gradebookKeys = {
   all: ["gradebook"] as const,
   course: (courseId: string) => [...gradebookKeys.all, "course", courseId] as const,

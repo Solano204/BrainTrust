@@ -10,16 +10,14 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-// other imports...
+
 
 @Component
 public class CourseUnitEntityMapper {
 
     private static final Logger log =
             LoggerFactory.getLogger(CourseUnitEntityMapper.class);
-    /**
-     * Converts a CourseUnit domain model to a CourseUnitJpaEntity.
-     */
+
     public CourseUnitJpaEntity toEntity(CourseUnit unit) {
         log.debug("Mapping CourseUnit Domain ID {} to JPA Entity (Course ID: {}).",
                 unit.getId().getValue(), unit.getCourseId().getValue());
@@ -34,9 +32,7 @@ public class CourseUnitEntityMapper {
         );
     }
 
-    /**
-     * Converts a CourseUnitJpaEntity back to a CourseUnit domain model.
-     */
+
     public CourseUnit toDomain(CourseUnitJpaEntity entity) {
         log.debug("Mapping CourseUnit JPA Entity {} back to Domain Model (Course ID: {}).",
                 entity.getId(), entity.getCourseId());

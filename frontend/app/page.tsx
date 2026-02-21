@@ -7,20 +7,15 @@ import { TimelineSection } from "@/components/teacher-student/timeline-section-s
 import { CoursesSectionTeacher } from "@/components/teacher/courses-section-teacher"
 import { useState, useEffect } from "react"
 import { useAuth } from "./context/AuthContext";
-import { RouteGuard } from "./auth/RouteGuard";
-import { PERMISSIONS } from "./types/authentication";
 import { CoursesSectionStudent } from "@/components/student/courses-section-student";
-// import { GeneralCalendar } from "@/components/general-calendar";
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeView, setActiveView] = useState("Dashboard")
   const { user, isAuthenticated, isLoading } = useAuth()
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      // This will be handled by RouteGuard, but we add extra protection
       window.location.href = '/auth/login'
     }
   }, [isAuthenticated, isLoading])
@@ -39,7 +34,6 @@ export default function DashboardPage() {
 
   return (
       <div className="flex min-h-screen bg-background">
-        {/* Sidebar */}
         <DashboardSidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
@@ -48,13 +42,10 @@ export default function DashboardPage() {
           userRole={user?.role}
         />
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col lg:ml-64">
-          {/* Header */}
           <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
 
         
-          {/* Dashboard Content */}
           <main className="flex-1 p-4 md:p-6 lg:p-8 lg:pt-20 space-y-6">
             {activeView === "Dashboard" && (
               <>
@@ -77,10 +68,6 @@ export default function DashboardPage() {
               </>
             )}
 
-            {/* {activeView === "Calendar" && (
-              <GeneralCalendar 
-              />
-            )} */}
 
           </main>
         </div>

@@ -5,7 +5,6 @@ import java.util.Arrays;
 public enum DocumentType {
     INSTRUCTION, SUBMISSION, MATERIAL;
 
-    // ✅ Add safe parsing method to the enum itself
     public static DocumentType fromString(String value) {
         if (value == null) {
             throw new IllegalArgumentException("Document type cannot be null");

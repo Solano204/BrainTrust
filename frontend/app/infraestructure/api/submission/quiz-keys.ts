@@ -1,4 +1,3 @@
-// File: src/app/infraestructure/api/submission/quiz-keys.ts
 
 export const quizKeys = {
   all: ["quizzes"] as const,
@@ -13,7 +12,7 @@ submissionDetail: (submissionId: string) =>
   submissions: () => [...quizKeys.all, "submissions"] as const,
   quizSubmissions: (quizId: string) =>
     [...quizKeys.submissions(), quizId] as const,
-  // NEW KEYS FOR SUBMISSIONQUIZ
+
   submissionQuizzes: (quizId: string) =>
     [...quizKeys.all, "submission-quizzes", quizId] as const,
   submissionQuizDetail: (submissionId: string) =>

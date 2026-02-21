@@ -20,16 +20,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to Cloudinary
     const result = await new Promise<any>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: folder,
-          resource_type: 'raw', // Important for documents
+          resource_type: 'raw',
           type: 'upload',
         },
         (error, result) => {

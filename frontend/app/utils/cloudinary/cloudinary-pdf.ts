@@ -1,15 +1,9 @@
-// lib/cloudinary-documents.ts
 
-/**
- * Upload a document file directly to Cloudinary
- * Works in both client and server environments
- */
 export async function uploadDocumentFile(
   file: File,
   folder: string = "documents"
 ): Promise<{ url: string; publicId: string; format: string }> {
   try {
-    // Check if we have Cloudinary credentials
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -21,7 +15,6 @@ export async function uploadDocumentFile(
     formData.append('file', file);
     formData.append('folder', folder);
     
-    // If using unsigned upload (recommended for client-side)
     if (uploadPreset) {
       formData.append('upload_preset', uploadPreset);
       
@@ -45,8 +38,6 @@ export async function uploadDocumentFile(
         format: data.format,
       };
     } else {
-      // Fallback: use signed upload via API route
-      // Create absolute URL for fetch
       const baseUrl = typeof window !== 'undefined' 
         ? window.location.origin 
         : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -73,16 +64,12 @@ export async function uploadDocumentFile(
   }
 }
 
-/**
- * Get the text content from a PDF file
- */
 export async function getPdfContent(file: File): Promise<string> {
   try {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Create absolute URL
-    const baseUrl = typeof window !== 'undefined' 
+    const baseUrl = typeof window !== 'undefined'
       ? window.location.origin 
       : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -103,9 +90,6 @@ export async function getPdfContent(file: File): Promise<string> {
   }
 }
 
-/**
- * Get PDF content from a Cloudinary URL
- */
 export async function getPdfContentFromUrl(pdfUrl: string): Promise<string> {
   try {
     const baseUrl = typeof window !== 'undefined' 
@@ -133,20 +117,9 @@ export async function getPdfContentFromUrl(pdfUrl: string): Promise<string> {
 }
 
 
-
-/**
- * Delete a document from Cloudinary using its public ID
- */
-/**
- * Delete a document from Cloudinary using its public ID
- */
-/**
- * Delete a document from Cloudinary using its public ID
- */
 export async function deleteDocumentFromCloudinary(publicId: string): Promise<boolean> {
   try {
-    // Create absolute URL for both client and server
-    const baseUrl = typeof window !== 'undefined' 
+    const baseUrl = typeof window !== 'undefined'
       ? window.location.origin 
       : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     
@@ -170,11 +143,6 @@ export async function deleteDocumentFromCloudinary(publicId: string): Promise<bo
   }
 }
 
-
-/**
- * Delete a document from Cloudinary using its URL
- * Extracts the public ID from the URL automatically
- */
 export async function deleteDocumentByUrl(cloudinaryUrl: string): Promise<boolean> {
   try {
     const publicId = extractPublicIdFromUrl(cloudinaryUrl);
@@ -189,9 +157,6 @@ export async function deleteDocumentByUrl(cloudinaryUrl: string): Promise<boolea
   }
 }
 
-/**
- * Delete multiple documents from Cloudinary
- */
 export async function deleteMultipleDocuments(publicIds: string[]): Promise<{ success: number; failed: number }> {
   try {
     const response = await fetch('/api/delete-documents-batch', {
@@ -215,11 +180,6 @@ export async function deleteMultipleDocuments(publicIds: string[]): Promise<{ su
 }
 
 
-/**
- * Helper function to extract public ID from Cloudinary URL
- * Example URL: https://res.cloudinary.com/demo/raw/upload/v1234567890/documents/my-file.pdf
- * Returns: documents/my-file
- */
 export function extractPublicIdFromUrl(url: string): string | null {
   try {
     const urlParts = url.split('/');
@@ -227,11 +187,9 @@ export function extractPublicIdFromUrl(url: string): string | null {
     
     if (uploadIndex === -1) return null;
     
-    // Get everything after 'upload/vXXXXXXXXXX/'
     const pathParts = urlParts.slice(uploadIndex + 2); // Skip 'upload' and version
     const fullPath = pathParts.join('/');
     
-    // Remove file extension
     const publicId = fullPath.replace(/\.[^/.]+$/, '');
     
     return publicId;

@@ -10,8 +10,8 @@ public record QuestionResponseDTO(
         String questionType,
         int points,
         List<QuestionOptionDTO> options,
-        List<Integer> selectedOptions, // Student's selected options
-        String textAnswer, // Student's text answer
-        String correctAnswer, // Correct answer (for teacher view)
-        boolean isCorrect // Whether the answer is correct
+        List<Integer> selectedOptions,
+        String textAnswer,
+        String correctAnswer,
+        boolean isCorrect
 ) {}

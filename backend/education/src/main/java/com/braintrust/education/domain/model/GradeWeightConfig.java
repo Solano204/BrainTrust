@@ -27,7 +27,6 @@ public class GradeWeightConfig {
         }
     }
 
-    // Getters
     public BigDecimal getAssignmentWeight() { return assignmentWeight; }
     public BigDecimal getQuizWeight() { return quizWeight; }
     public BigDecimal getUnitWeight() { return unitWeight; }

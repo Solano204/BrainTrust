@@ -5,7 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 
-// 📍 identity/domain/model/User.java - AGGREGATE ROOT
+
 public class User extends AggregateRoot<UserId> {
     private PersonId personId;
     private Email email;
@@ -13,9 +13,8 @@ public class User extends AggregateRoot<UserId> {
     private Role role;
     private boolean active;
     private LocalDateTime createdAt;
-    private String studentId; // Solo para estudiantes
+    private String studentId;
 
-    // Constructor privado - encapsulación
     private User(UserId id, PersonId personId, Email email, Password password, Role role) {
         this.id = id;
         this.personId = personId;
@@ -26,7 +25,6 @@ public class User extends AggregateRoot<UserId> {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Factory Methods - diferentes formas de crear usuarios
     public static User createTeacher(Person person, Email email, Password password) {
         UserId userId = UserId.generate();
         return new User(userId, person.getId(), email, password, Role.TEACHER);
@@ -52,7 +50,6 @@ public class User extends AggregateRoot<UserId> {
     }
 
 
-    // ✅ ADD THIS STATIC METHOD FOR RECONSTITUTION
     public static User reconstitute(
             UserId id,
             PersonId personId,
@@ -70,10 +67,8 @@ public class User extends AggregateRoot<UserId> {
         return user;
     }
 
-
-    // Comportamiento de dominio rico - sin events
     public void changePassword(Password newPassword) {
-        if (newPassword == null) { // VALIDACIÓN AGREGADA
+        if (newPassword == null) {
             throw new IllegalArgumentException("Password cannot be null");
         }
         if (!this.active) {
@@ -83,7 +78,7 @@ public class User extends AggregateRoot<UserId> {
     }
 
     public void changeEmail(Email newEmail) {
-        if (newEmail == null) { // VALIDACIÓN AGREGADA
+        if (newEmail == null) {
             throw new IllegalArgumentException("Email cannot be null");
         }
         if (!this.active) {
@@ -110,13 +105,13 @@ public class User extends AggregateRoot<UserId> {
         return this.active && this.password.matches(plainPassword, encoder);
     }
 
-    // Getters con contrato definido
+
     public PersonId getPersonId() { return personId; }
     public Email getEmail() { return email; }
     public Role getRole() { return role; }
     public boolean isActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public String getStudentId() { return studentId; }
-    public Password getPassword() { return password; } // ✅ ADD THIS
-    // No exponemos el password directamente por seguridad
+    public Password getPassword() { return password; }
+
 }

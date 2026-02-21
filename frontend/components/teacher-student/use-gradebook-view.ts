@@ -1,4 +1,3 @@
-// File: src/app/infraestructure/hooks/gradebook/use-gradebook-view.ts
 "use client";
 
 import { useState } from 'react';

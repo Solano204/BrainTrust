@@ -7,6 +7,6 @@ public record QuizAnswerDTO(
         String questionText,
         List<Integer> selectedOptions,
         String textAnswer,
-        boolean correct, // Only shown after grading
+        boolean correct,
         int pointsEarned
 ) {}

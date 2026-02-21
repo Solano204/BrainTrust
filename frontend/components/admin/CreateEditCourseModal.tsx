@@ -37,7 +37,6 @@ interface CreateEditCourseModalProps {
   onSuccess?: () => void;
 }
 
-// Helper function to get initials from full name
 const getInitials = (fullName: string): string => {
   const parts = fullName.split(" ");
   return parts.length > 1
@@ -65,7 +64,6 @@ export function CreateEditCourseModal({
     imageUrl: "",
   });
 
-  // Image upload states
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
@@ -81,7 +79,6 @@ export function CreateEditCourseModal({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const teachersListRef = useRef<HTMLDivElement>(null);
 
-  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(teacherSearch);
@@ -91,7 +88,6 @@ export function CreateEditCourseModal({
     return () => clearTimeout(timer);
   }, [teacherSearch]);
 
-  // Fetch teachers with pagination
   const {
     data: teachersData,
     isLoading: loadingTeachers,
@@ -113,7 +109,6 @@ export function CreateEditCourseModal({
   const startItem = Math.min(teacherPage * teacherPageSize + 1, totalElements);
   const endItem = Math.min((teacherPage + 1) * teacherPageSize, totalElements);
 
-  // Initialize form data when modal opens or course changes
   useEffect(() => {
     if (isOpen) {
       if (course) {
@@ -127,14 +122,11 @@ export function CreateEditCourseModal({
           imageUrl: course.urlImage || "",
         });
 
-        // Set image preview for edit mode
         setImagePreview(course.urlImage || "");
         setImageFile(null);
 
-        // Find teacher and set search field - REMOVED dependency on teachers array
         setTeacherSearch(`Teacher ID: ${course.teacherId}`);
       } else {
-        // Reset for new course
         setFormData({
           code: "",
           name: "",
@@ -149,9 +141,8 @@ export function CreateEditCourseModal({
         setImageFile(null);
       }
     }
-  }, [isOpen, course]); // FIXED: Removed teachers and refetchTeachers from dependencies
+  }, [isOpen, course]);
 
-  // Update teacher search display when teachers data loads and we have a selected teacherId
   useEffect(() => {
     if (formData.teacherId && teachers.length > 0) {
       const teacher = teachers.find((t) => t.userId === formData.teacherId);
@@ -161,7 +152,6 @@ export function CreateEditCourseModal({
     }
   }, [teachers, formData.teacherId]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -181,7 +171,6 @@ export function CreateEditCourseModal({
     };
   }, [showTeacherDropdown]);
 
-  // Focus search input when dropdown opens
   useEffect(() => {
     if (showTeacherDropdown && searchInputRef.current) {
       setTimeout(() => {
@@ -190,7 +179,6 @@ export function CreateEditCourseModal({
     }
   }, [showTeacherDropdown]);
 
-  // Reset when closing modal
   useEffect(() => {
     if (!isOpen) {
       setTeacherSearch("");
@@ -202,7 +190,6 @@ export function CreateEditCourseModal({
     }
   }, [isOpen]);
 
-  // Handle image change from upload component
   const handleImageChange = (
     imageData: { file: File; previewUrl: string; validationType: string } | null
   ) => {
@@ -237,13 +224,10 @@ export function CreateEditCourseModal({
           imageFile,
         });
       } else {
-        // For create, we need to upload the image first if there is one
         let finalImageUrl = formData.imageUrl;
 
         if (imageFile) {
           // TODO: Implement image upload to your backend
-          // const uploadedUrl = await uploadImageFile(imageFile);
-          // finalImageUrl = uploadedUrl;
           console.log("Image file ready for upload:", imageFile);
         }
 
@@ -281,17 +265,14 @@ export function CreateEditCourseModal({
   const handleSearchChange = (value: string) => {
     setTeacherSearch(value);
     
-    // FIXED: Don't clear teacherId immediately when typing
-    // Only clear it if the search is empty or doesn't match any teacher
+
     if (!value.trim()) {
       setFormData({ ...formData, teacherId: "" });
     }
   };
 
-  // FIXED: Added function to handle input focus
   const handleSearchFocus = () => {
     setShowTeacherDropdown(true);
-    // Clear the search to allow selecting a new teacher
     if (formData.teacherId) {
       setTeacherSearch("");
       setDebouncedSearch("");
@@ -438,7 +419,6 @@ export function CreateEditCourseModal({
               />
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
@@ -455,7 +435,6 @@ export function CreateEditCourseModal({
               />
             </div>
 
-            {/* Grade and Group */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -489,7 +468,6 @@ export function CreateEditCourseModal({
               </div>
             </div>
 
-            {/* Teacher Selection */}
             <div className="relative" ref={dropdownRef}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <span className="flex items-center gap-2">
@@ -525,7 +503,6 @@ export function CreateEditCourseModal({
                 </div>
               </div>
 
-              {/* Selected Teacher Display */}
               {selectedTeacher && !showTeacherDropdown && (
                 <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
                   <div className="flex items-center justify-between">
@@ -563,7 +540,6 @@ export function CreateEditCourseModal({
                 </div>
               )}
 
-              {/* Teacher Dropdown */}
               {showTeacherDropdown && (
                 <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-h-[400px] overflow-hidden flex flex-col">
                   {/* Header */}
@@ -774,7 +750,6 @@ export function CreateEditCourseModal({
               )}
             </div>
 
-            {/* Image Upload Component - Only show for new courses */}
             {!isEdit && (
               <ImageUploadWithValidation
                 currentImageUrl={imagePreview}

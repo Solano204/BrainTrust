@@ -1,5 +1,3 @@
-// FILE: src/app/features/courses/teacher/quiz-view-information-teacher.tsx
-// REPLACE the entire file with this:
 
 "use client";
 
@@ -52,7 +50,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
   const quizData = quiz || initialQuiz;
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(userType === 'teacher');
   
-  // Edit mode states
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState({
     title: quizData.title,
@@ -63,7 +60,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     acceptLateSubmissions: quizData.acceptLateSubmissions,
   });
 
-  // Questions edit state
   const [editQuestions, setEditQuestions] = useState<Question[]>([]);
   const [deletedQuestionIds, setDeletedQuestionIds] = useState<string[]>([]);
   const [isEditingQuestions, setIsEditingQuestions] = useState(false);
@@ -86,7 +82,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
   const multipleChoiceCount = editQuestions.filter(q => q.type === 'multiple-choice').length;
   const openEndedCount = editQuestions.filter(q => q.type === 'open-ended').length;
 
-  // Save quiz settings
   const handleSaveSettings = async () => {
     try {
       await updateQuiz.mutateAsync({
@@ -107,10 +102,8 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // 🔥 UPDATED: Save questions using complete update
   const handleSaveQuestions = async () => {
     try {
-      // Step 1: Delete removed questions
       if (deletedQuestionIds.length > 0) {
         await deleteQuestionsBulk.mutateAsync({
           quizId: quizData.id,
@@ -118,11 +111,9 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
         });
       }
 
-      // Step 2: Separate new questions from existing
       const newQuestions = editQuestions.filter(q => q.id.startsWith("temp_"));
       const existingQuestions = editQuestions.filter(q => !q.id.startsWith("temp_"));
 
-      // Step 3: Add new questions
       if (newQuestions.length > 0) {
         const questionsToAdd = newQuestions.map(q => ({
           question: q.question,
@@ -139,7 +130,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
         });
       }
 
-      // Step 4: Update existing questions - USING COMPLETE BULK UPDATE
       if (existingQuestions.length > 0) {
       const updates = existingQuestions.map(q => ({
         questionId: q.id,
@@ -167,9 +157,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // 🆕 SPECIALIZED UPDATE METHODS
-
-  // Update only points for all questions
   const handleBulkUpdatePoints = async (newPoints: number) => {
     try {
       const pointUpdates: Record<string, number> = {};
@@ -190,7 +177,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // Update only text for a specific question
   const handleUpdateQuestionText = async (questionId: string, newText: string) => {
     try {
       await updateQuestionsTextBulk.mutateAsync({
@@ -203,7 +189,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // Update only answer for open-ended question
   const handleUpdateQuestionAnswer = async (questionId: string, newAnswer: string) => {
     try {
       await updateQuestionsAnswersBulk.mutateAsync({
@@ -216,7 +201,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // Update only options for multiple-choice question
   const handleUpdateQuestionOptions = async (
     questionId: string, 
     options: string[], 
@@ -235,7 +219,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // Change question type
   const handleChangeQuestionType = async (
     questionId: string, 
     newType: 'multiple-choice' | 'open-ended'
@@ -251,7 +234,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   };
 
-  // Question operations
   const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
     const newQuestion: Question = {
       id: "temp_" + new Date().getTime(),
@@ -558,7 +540,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Description Card */}
             <Card className="p-6">
@@ -582,7 +563,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
               )}
             </Card>
 
-            {/* Questions Section */}
             <Card className="p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                 <div className="flex items-center gap-2">
@@ -773,7 +753,7 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
                           </div>
                         </Card>
                       ) : (
-                        // VIEW MODE
+
                         <>
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">

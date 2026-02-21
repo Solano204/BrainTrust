@@ -9,6 +9,6 @@ public record QuizQuestionDTO(
         String questionText,
         String questionType,
         int points,
-        List<QuestionOptionDTO> options, // For multiple choice
-        String correctAnswer // Hidden for students
+        List<QuestionOptionDTO> options,
+        String correctAnswer
 ) {}

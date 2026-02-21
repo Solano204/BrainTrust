@@ -5,7 +5,7 @@ import com.braintrust.shared.domain.exception.NotFoundException;
 
 import java.util.Map;
 
-// 📍 identity/domain/exceptions/PersonNotFoundException.java
+
 public class PersonNotFoundException extends NotFoundException {
 
     public PersonNotFoundException(String message) {

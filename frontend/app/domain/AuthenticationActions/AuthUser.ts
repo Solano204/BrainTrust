@@ -1,4 +1,4 @@
-// app/utils/Domain/AuthenticationActions/AuthUser.ts
+
 "use server";
 import { UserRole } from "@/app/types/authentication";
 import { cookies } from "next/headers";
@@ -14,8 +14,7 @@ export async function getAuthUser(): Promise<Session> {
     const token = cookieStore.get("session")?.value;
     const id = cookieStore.get("sessionId")?.value;
 
-    // For mock data, if we don't have cookies but have localStorage data (client-side)
-    // This is a hybrid approach for testing
+
     if (!token || !id) {
       return { idUser: "", token: "" };
     }
@@ -35,8 +34,6 @@ export async function getAuthUserRole(): Promise<UserRole | null> {
     const user = await getAuthUser();
     if (!user.idUser || !user.token) return null;
 
-    // In real app, decode JWT or call backend
-    // For mock, check localStorage
     return null; // Will be handled by client-side context
   } catch (error) {
     console.error('Error getting user role:', error);
@@ -51,7 +48,6 @@ export async function isUserAdmin(): Promise<boolean> {
     
     if (!user.idUser || !user.token) return false;
 
-    // Mock admin check - in real app, verify with backend
     const tokenAccess = (await cookies()).get("session")?.value;
     const sessionId = (await cookies()).get("sessionId")?.value;
 
@@ -72,7 +68,6 @@ export async function getPhotoUser(): Promise<string> {
   }
 }
 
-// Helper functions for cookie management
 export async function setAuthCookies(userId: string, token: string, photo?: string): Promise<void> {
   const cookieStore = await cookies();
   const expires = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000); // 4 days

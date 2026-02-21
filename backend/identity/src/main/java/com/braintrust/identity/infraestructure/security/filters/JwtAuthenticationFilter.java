@@ -1,6 +1,5 @@
 package com.braintrust.identity.infraestructure.security.filters;
 
-// 📍 shared/infrastructure/security/filters/JwtAuthenticationFilter.java
 
 import com.braintrust.identity.infraestructure.security.services.JwtService;
 import jakarta.servlet.FilterChain;
@@ -25,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-// other imports...
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -50,7 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        // Skip filter for public endpoints
         if (isPublicEndpoint(request)) {
             filterChain.doFilter(request, response);
             return;

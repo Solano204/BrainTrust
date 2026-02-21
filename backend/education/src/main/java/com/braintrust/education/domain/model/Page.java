@@ -53,9 +53,6 @@ public class Page extends AggregateRoot<PageId> {
 
 
     public void removeLink(String url) {
-        // Make sure externalLinks is a mutable list in your domain model
-        // If it's currently: private final List<String> externalLinks = new ArrayList<>();
-        // Then this will work:
         externalLinks.remove(url);
         this.lastModified = LocalDateTime.now();
     }
@@ -73,7 +70,7 @@ public class Page extends AggregateRoot<PageId> {
             throw new IllegalArgumentException("Title cannot be empty");
         }
         this.title = title.trim();
-        this.content = content; // content can be null or empty
+        this.content = content;
         this.lastModified = LocalDateTime.now();
     }
 
@@ -131,7 +128,6 @@ public class Page extends AggregateRoot<PageId> {
         attachments.add(document);
     }
 
-    // Getters
     public CourseId getCourseId() { return courseId; }
     public UnitId getUnitId() { return unitId; }
     public String getTitle() { return title; }

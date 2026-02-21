@@ -24,10 +24,6 @@ import {
     Clock
 } from "lucide-react"
 
-// ==========================================
-// 🎯 TIPOS
-// ==========================================
-
 type CourseStatus = 'ACTIVE' | 'ARCHIVED' | 'DRAFT'
 
 interface Course {
@@ -48,10 +44,6 @@ interface Course {
     endDate: string
     createdAt: string
 }
-
-// ==========================================
-// 🗄️ DATOS MOCK
-// ==========================================
 
 const mockCourses: Course[] = [
     {
@@ -127,10 +119,6 @@ const mockCourses: Course[] = [
         createdAt: '2025-01-10T11:00:00'
     }
 ]
-
-// ==========================================
-// 📊 Stats Cards
-// ==========================================
 
 function CourseStatsCards({ courses }: { courses: Course[] }) {
     const stats = useMemo(() => ({
@@ -222,10 +210,6 @@ function CourseStatsCards({ courses }: { courses: Course[] }) {
         </div>
     )
 }
-
-// ==========================================
-// 📝 Course Form Modal
-// ==========================================
 
 interface CourseFormModalProps {
     open: boolean
@@ -436,10 +420,6 @@ function CourseFormModal({ open, onClose, initialData, onSave, isSaving }: Cours
         </div>
     )
 }
-
-// ==========================================
-// 🎯 COMPONENTE PRINCIPAL
-// ==========================================
 
 export default function AdminCoursesModule() {
     const [courses] = useState<Course[]>(mockCourses)
@@ -702,7 +682,6 @@ export default function AdminCoursesModule() {
                 </TabsContent>
             </Tabs>
 
-            {/* Form Modal */}
             <CourseFormModal
                 open={showFormModal}
                 onClose={() => {

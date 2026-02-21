@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// other imports...
+
 @RestController
 @RequestMapping("/api/pages")
 public class PageController {
@@ -32,11 +32,6 @@ public class PageController {
     public PageController(PageService pageService) {
         this.pageService = pageService;
     }
-
-    // ------------------------------------------------------------------
-    // ✅ LINK MANAGEMENT ENDPOINTS (Fixed for records)
-    // ------------------------------------------------------------------
-
 
     @PostMapping(value = "/frontend", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PageDTO> createPageFrontend(
@@ -66,7 +61,7 @@ public class PageController {
         log.info("Request to add link to Page ID: {}", pageId);
         pageService.addLinkToPage(
                 PageId.fromString(pageId),
-                command.linkUrl()  // Changed from getLinkUrl() to linkUrl()
+                command.linkUrl()
         );
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Link added successfully", null)
@@ -79,7 +74,6 @@ public class PageController {
             @PathVariable String pageId,
             @RequestBody UpdatePageCommand command) {
 
-        // Validate that the pageId in path matches the one in command
         if (!pageId.equals(pageId)) {
             throw new IllegalArgumentException("Page ID mismatch between path and request body");
         }
@@ -146,10 +140,10 @@ public class PageController {
             @Valid @RequestBody AddMultipleLinksCommand command
     ) {
         log.info("Request to add {} links to Page ID: {}",
-                command.links().size(), pageId);  // Changed from getLinks() to links()
+                command.links().size(), pageId);
         pageService.addLinksToPage(
                 pageId,
-                command.links()  // Changed from getLinks() to links()
+                command.links()
         );
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Links added successfully", null)
@@ -177,10 +171,10 @@ public class PageController {
             @Valid @RequestBody RemoveMultipleLinksCommand command
     ) {
         log.info("Request to remove {} links from Page ID: {}",
-                command.links().size(), pageId);  // Changed from getLinks() to links()
+                command.links().size(), pageId);
         pageService.removeLinksFromPage(
                 PageId.fromString(pageId),
-                command.links()  // Changed from getLinks() to links()
+                command.links()
         );
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Links removed successfully", null)
@@ -196,10 +190,6 @@ public class PageController {
         );
     }
 
-    // ------------------------------------------------------------------
-    // ✅ ATTACHMENT MANAGEMENT ENDPOINTS (Fixed for records)
-    // ------------------------------------------------------------------
-
     @PostMapping(value = "/{pageId}/attachments",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponseDTO> addAttachment(
@@ -209,7 +199,7 @@ public class PageController {
         log.info("Request to add attachment to Page ID: {}", pageId);
         pageService.addAttachmentToPage(
                 PageId.fromString(pageId),
-                command.file()  // Changed from getFile() to file()
+                command.file()
         );
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Attachment added successfully", null)
@@ -225,14 +215,13 @@ public class PageController {
         log.info("Request to add {} attachments to Page ID: {}",
                 command.files().size(), pageId);
 
-        // Convert MultipartFile to AddPageAttachmentCommand
         List<AddPageAttachmentCommand> attachmentCommands = command.files().stream()
                 .map(file -> {
                     String storagePath = generateStoragePath(pageId, file);
                     return new AddPageAttachmentCommand(
                             pageId,
-                            file.getOriginalFilename(), // documentName
-                            storagePath                  // storagePath
+                            file.getOriginalFilename(),
+                            storagePath
                     );
                 })
                 .collect(Collectors.toList());
@@ -257,14 +246,6 @@ public class PageController {
                 pageId, timestamp, safeFilename);
     }
 
-
-    // In PageController.java
-
-// Add these imports at the top
-
-// Add these new endpoints to the PageController class
-
-    // ✅ Bulk attachments via JSON for pages
     @PostMapping(value = "/{pageId}/attachments/bulk-json", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuccessResponseDTO> addBulkAttachmentsJson(
             @PathVariable String pageId,
@@ -283,7 +264,6 @@ public class PageController {
         );
     }
 
-    // ✅ Single attachment via JSON for pages
     @PostMapping(value = "/{pageId}/attachments/single-json", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuccessResponseDTO> addSingleAttachmentJson(
             @PathVariable String pageId,
@@ -309,7 +289,7 @@ public class PageController {
         log.info("Request to remove attachment from Page ID: {}", pageId);
         pageService.removeAttachmentFromPage(
                 PageId.fromString(pageId),
-                command.documentName()  // Changed from getDocumentName() to documentName()
+                command.documentName()
         );
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Attachment removed successfully", null)
@@ -322,10 +302,10 @@ public class PageController {
             @Valid @RequestBody RemoveMultipleAttachmentsCommand command
     ) {
         log.info("Request to remove {} attachments from Page ID: {}",
-                command.documentNames().size(), pageId);  // Changed from getDocumentNames() to documentNames()
+                command.documentNames().size(), pageId);
         pageService.removeAttachmentsFromPage(
                 PageId.fromString(pageId),
-                command.documentNames()  // Changed from getDocumentNames() to documentNames()
+                command.documentNames()
         );
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Attachments removed successfully", null)
@@ -341,9 +321,6 @@ public class PageController {
         );
     }
 
-    // ------------------------------------------------------------------
-    // ✅ EXISTING ENDPOINTS (Fixed for records)
-    // ------------------------------------------------------------------
 
     @PutMapping("/{pageId}/content")
     public ResponseEntity<Void> updateContent(
@@ -393,12 +370,10 @@ public class PageController {
                     .map(file -> {
                         String mockPath = "/uploads/pages/" + pageId + "/" +
                                 System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                        // Assuming AddPageAttachmentCommand is also a record
+
                         return new AddPageAttachmentCommand(pageId, file.getOriginalFilename(), mockPath);
                     }).collect(Collectors.toList());
 
-            // Note: You need to check if addAttachmentsToPage expects PageId or String
-            // If it expects PageId, convert it
             pageService.addAttachmentsToPage(pageId, attachmentCommands);
 
             log.info("✅ Successfully uploaded {} files to page {}", files.size(), pageId);
@@ -410,16 +385,4 @@ public class PageController {
         }
     }
 
-    // Note: You have duplicate endpoint for addLinksToPage - removing one
-    // The one above is already handling it with proper DTO
-    // Remove this duplicate if it exists:
-    /*
-    @PostMapping("/{pageId}/links/bulk")
-    public ResponseEntity<Void> addLinksToPage(
-            @PathVariable String pageId,
-            @RequestBody List<String> urls) {
-        pageService.addLinksToPage(pageId, urls);
-        return ResponseEntity.ok().build();
-    }
-    */
 }

@@ -53,7 +53,6 @@ public class CourseJpaEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // ✅ CRITICAL: These relationships make Enrollment and Unit part of the aggregate
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "course_id", nullable = false)
     private Set<EnrollmentJpaEntity> enrollments = new HashSet<>();
@@ -63,7 +62,6 @@ public class CourseJpaEntity {
     @OrderBy("numUnity ASC")
     private List<CourseUnitJpaEntity> units = new ArrayList<>();
 
-    // Constructors
     public CourseJpaEntity() {}
 
     public CourseJpaEntity(String id, String code, String name, String description,
@@ -81,7 +79,6 @@ public class CourseJpaEntity {
         this.createdAt = createdAt;
     }
 
-    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

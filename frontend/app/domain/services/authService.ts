@@ -1,4 +1,4 @@
-// services/authService.ts
+
 import { 
   LoginRequest, 
   RegisterRequest, 
@@ -36,10 +36,7 @@ class AuthService {
   }
 
   async logout(accessToken: string, refreshToken: string): Promise<void> {
-    // if (AUTH_CONFIG.MOCK_MODE) {
-    //   return this.mockLogout();
-    // }
-    // return this.realLogout(accessToken, refreshToken);
+
   }
 
   async validateToken(accessToken: string): Promise<UserSession | null> {
@@ -49,7 +46,6 @@ class AuthService {
     return this.realValidateToken(accessToken);
   }
 
-  // Real API implementations
   private async realLogin(credentials: LoginRequest): Promise<TokenResponse> {
     const response = await fetch(`${this.baseURL}/api/users/authenticate`, {
       method: 'POST',
@@ -67,7 +63,6 @@ class AuthService {
       throw new Error(result.failureReason || 'Login failed');
     }
 
-    // Map backend user to our UserSession format
     const userSession: UserSession = {
       id: result.user.id,
       email: result.user.email,
@@ -91,7 +86,6 @@ class AuthService {
   }
 
   private async realRegister(userData: RegisterRequest): Promise<TokenResponse> {
-    // Map frontend registration data to backend complete user command
     const [firstName, ...lastNameParts] = userData.name.split(' ');
     const lastName = lastNameParts.join(' ') || 'Unknown';
     
@@ -127,8 +121,7 @@ class AuthService {
     }
 
     const completeUser: CompleteUserDTO = await response.json();
-    
-    // After registration, automatically login
+
     return this.realLogin({
       email: userData.email,
       password: userData.password,
@@ -186,7 +179,6 @@ class AuthService {
       });
     } catch (error) {
       console.error('Logout API error:', error);
-      // Still proceed with client-side cleanup
     }
   }
 
@@ -224,7 +216,6 @@ class AuthService {
     }
   }
 
-  // Helper methods
   private getUserIdFromToken(token: string): string {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -247,7 +238,6 @@ class AuthService {
     }
   }
 
-  // Mock implementations (kept for compatibility)
   private async mockLogin(credentials: LoginRequest): Promise<TokenResponse> {
     await new Promise(resolve => setTimeout(resolve, 1000));
     

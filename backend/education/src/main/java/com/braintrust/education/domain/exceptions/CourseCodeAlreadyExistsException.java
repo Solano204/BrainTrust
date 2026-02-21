@@ -4,7 +4,7 @@ import com.braintrust.shared.domain.exception.DomainException;
 
 import java.util.Map;
 
-// Course-related exceptions
+
 public class CourseCodeAlreadyExistsException extends DomainException {
     public CourseCodeAlreadyExistsException(String message) {
         super(message, "COURSE_CODE_ALREADY_EXISTS");

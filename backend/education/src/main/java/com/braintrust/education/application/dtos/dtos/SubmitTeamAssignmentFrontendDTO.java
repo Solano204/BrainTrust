@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-// ✅ OPTION 2: DTO for team submission with frontend extraction
+
 public record SubmitTeamAssignmentFrontendDTO(
         @NotBlank(message = "Assignment ID is required")
         String assignmentId,
@@ -20,6 +20,5 @@ public record SubmitTeamAssignmentFrontendDTO(
         @Size(min = 10, message = "Content must be at least 10 characters")
         String content,
 
-        // ✅ ONLY extracted text and metadata from frontend
         List<FrontendDocumentDTOSub> frontendDocuments
 ) {}

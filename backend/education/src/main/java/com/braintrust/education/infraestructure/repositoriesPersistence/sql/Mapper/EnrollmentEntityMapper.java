@@ -15,16 +15,14 @@ import java.math.BigDecimal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-// other imports...
+
 
 @Component
 public class EnrollmentEntityMapper {
 
     private static final Logger log =
             LoggerFactory.getLogger(EnrollmentEntityMapper.class);
-    /**
-     * Converts an Enrollment Domain Model to a JPA Entity.
-     */
+
     public EnrollmentJpaEntity toEntity(Enrollment enrollment) {
         log.debug("Mapping Enrollment Domain ID {} to JPA Entity.", enrollment.getId().getValue());
 
@@ -48,9 +46,7 @@ public class EnrollmentEntityMapper {
         );
     }
 
-    /**
-     * Converts an Enrollment JPA Entity back to a Domain Enrollment model.
-     */
+
     public Enrollment toDomain(EnrollmentJpaEntity entity) {
         log.debug("Mapping Enrollment JPA Entity {} back to Domain Model.", entity.getId());
 

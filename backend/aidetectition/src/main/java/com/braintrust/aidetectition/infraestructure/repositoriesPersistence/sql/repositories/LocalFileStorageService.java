@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// other imports...
 
 @Service
 @Primary
@@ -42,9 +41,6 @@ public class LocalFileStorageService implements DocumentStorageService {
     @Value("${document.storage.local.base-path:./storage/documents}")
     private String baseStoragePath;
 
-    /**
-     * Stores a list of documents and returns their metadata.
-     */
     @Override
     public List<DocumentMetadata> storeDocument(String targetId, List<MultipartFile> files) {
         log.info("📁 Starting storage for {} documents associated with Submission ID: {}",
@@ -62,22 +58,18 @@ public class LocalFileStorageService implements DocumentStorageService {
                     continue;
                 }
 
-                // 1. Generate unique file name to avoid clashes: SubmissionId_UUID_OriginalName
                 String originalFilename = file.getOriginalFilename();
                 String uniqueIdentifier = UUID.randomUUID().toString();
                 String filename = targetId + "_" + uniqueIdentifier + "_" + sanitizeFilename(originalFilename);
                 Path filePath = storageDir.resolve(filename);
 
-                // 2. Store the file and calculate checksum
                 String checksum;
                 try (InputStream inputStream = file.getInputStream()) {
                     checksum = calculateChecksum(inputStream);
                 }
 
-                // Re-open input stream for copying
                 Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-                // 3. Collect Metadata
                 DocumentMetadata metadata = new DocumentMetadata(
                         originalFilename,
                         filePath.toString(),
@@ -90,7 +82,7 @@ public class LocalFileStorageService implements DocumentStorageService {
 
         } catch (Exception e) {
             log.error("❌ Failed to store documents for submission: {}.", targetId, e);
-            // Delete any files created during this failed transaction if possible
+
             results.forEach(m -> {
                 try {
                     Files.deleteIfExists(Paths.get(m.getStoragePath()));
@@ -104,10 +96,6 @@ public class LocalFileStorageService implements DocumentStorageService {
         return results;
     }
 
-
-    // ========================================
-    // ✅ OPTION 2: Frontend Extraction (NEW)
-    // ========================================
     @Override
     public List<DocumentMetadata> storeDocumentFromFrontend(String targetId,
                                                             List<FrontendDocumentDTO> frontendDocuments) {
@@ -118,37 +106,30 @@ public class LocalFileStorageService implements DocumentStorageService {
             Files.createDirectories(storageDir);
 
             for (FrontendDocumentDTO frontendDoc : frontendDocuments) {
-                // 1. Create a text file for the extracted content
+
                 String originalFilename = frontendDoc.originalFilename();
                 String uniqueIdentifier = UUID.randomUUID().toString();
 
-                // Create a .txt file for extracted text
                 String txtFilename = targetId + "_" + uniqueIdentifier + "_" +
                         sanitizeFilename(originalFilename) + "_extracted.txt";
                 Path txtFilePath = storageDir.resolve(txtFilename);
 
-                // 2. Store only the extracted text (not the original file)
                 Files.writeString(txtFilePath, "");
 
-                // 3. Create metadata WITH extracted text
                 DocumentMetadata metadata = new DocumentMetadata(
                         originalFilename,
-                        frontendDocuments.getFirst().uploadedUrl(), // Points to extracted text file
+                        frontendDocuments.getFirst().uploadedUrl(),
                         LocalDateTime.now()
-//                        frontendDoc.extractedText(), // Keep text in memory too
-  //                      frontendDoc.fileSize(),
-    //                    frontendDoc.mimeType()
                 );
                 results.add(metadata);
             }
 
         } catch (Exception e) {
-            // Cleanup on failure
             results.forEach(m -> {
                 try {
                     Files.deleteIfExists(Paths.get(m.getStoragePath()));
                 } catch (IOException ioE) {
-                    // Log warning
+
                 }
             });
             throw new RuntimeException("Failed to store frontend documents: " + e.getMessage(), e);
@@ -167,32 +148,25 @@ public class LocalFileStorageService implements DocumentStorageService {
             Files.createDirectories(storageDir);
 
             for (FrontendDocumentDTOSub frontendDoc : frontendDocuments) {
-                // 1. Create a text file for the extracted content
                 String originalFilename = frontendDoc.originalFilename();
                 String uniqueIdentifier = UUID.randomUUID().toString();
 
-                // Create a .txt file for extracted text
                 String txtFilename = targetId + "_" + uniqueIdentifier + "_" +
                         sanitizeFilename(originalFilename) + "_extracted.txt";
                 Path txtFilePath = storageDir.resolve(txtFilename);
 
-                // 2. Store only the extracted text (not the original file)
                 Files.writeString(txtFilePath, "");
 
-                // 3. Create metadata WITH extracted text
                 DocumentMetadata metadata = new DocumentMetadata(
                         originalFilename,
-                        frontendDocuments.getFirst().uploadedUrl(), // Points to extracted text file
+                        frontendDocuments.getFirst().uploadedUrl(),
                         LocalDateTime.now()
-//                        frontendDoc.extractedText(), // Keep text in memory too
-  //                      frontendDoc.fileSize(),
-    //                    frontendDoc.mimeType()
+
                 );
                 results.add(metadata);
             }
 
         } catch (Exception e) {
-            // Cleanup on failure
             results.forEach(m -> {
                 try {
                     Files.deleteIfExists(Paths.get(m.getStoragePath()));
@@ -223,7 +197,6 @@ public class LocalFileStorageService implements DocumentStorageService {
 
                 if (file.isEmpty()) continue;
 
-                // 1. Store original file
                 String originalFilename = file.getOriginalFilename();
                 String uniqueIdentifier = UUID.randomUUID().toString();
                 String originalFilenameStored = targetId + "_" + uniqueIdentifier + "_" +
@@ -231,7 +204,6 @@ public class LocalFileStorageService implements DocumentStorageService {
                 Path originalFilePath = storageDir.resolve(originalFilenameStored);
                 Files.copy(file.getInputStream(), originalFilePath, StandardCopyOption.REPLACE_EXISTING);
 
-                // 2. Store extracted text if provided
                 String extractedTextPath = null;
                 if (extractedText != null && !extractedText.trim().isEmpty()) {
                     String extractedFilename = originalFilenameStored + "_extracted.txt";
@@ -240,14 +212,10 @@ public class LocalFileStorageService implements DocumentStorageService {
                     extractedTextPath = extractedFilePath.toString();
                 }
 
-                // 3. Create metadata
                 DocumentMetadata metadata = new DocumentMetadata(
                         originalFilename,
                         originalFilePath.toString(),
                         LocalDateTime.now()
-//                        extractedText,
-//                        file.getSize(),
-//                        file.getContentType()
                 );
                 results.add(metadata);
             }
@@ -267,9 +235,6 @@ public class LocalFileStorageService implements DocumentStorageService {
         return results;
     }
 
-    /**
-     * Deletes all documents associated with a submission.
-     */
     @Override
     public boolean deleteDocument(SubmissionId submissionId) {
         log.warn("🗑️ Deleting ALL documents associated with submission: {}", submissionId.getValue());
@@ -277,7 +242,6 @@ public class LocalFileStorageService implements DocumentStorageService {
         try {
             Path storagePath = Paths.get(baseStoragePath);
 
-            // Find all files starting with the submissionId prefix
             List<Path> filesToDelete = Files.list(storagePath)
                     .filter(path -> path.getFileName().toString().startsWith(submissionId.getValue() + "_"))
                     .collect(Collectors.toList());
@@ -301,27 +265,17 @@ public class LocalFileStorageService implements DocumentStorageService {
         }
     }
 
-    // ========================================
-    // PRIVATE HELPER METHODS (Unchanged but adapted)
-    // ========================================
-
-    // NOTE: The previous retrieveDocument, getDocumentMetadata, documentExists,
-    // and getDownloadUrl methods must be REMOVED or updated to use the new list pattern
-    // if they were part of the old interface.
-    // Since they were removed from your new interface, they are omitted here.
 
     private String sanitizeFilename(String filename) {
         if (filename == null) {
-            return UUID.randomUUID().toString(); // Use UUID if filename is null
+            return UUID.randomUUID().toString();
         }
-        // Remove path separators and dangerous characters
         return filename.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 
     private String calculateChecksum(InputStream inputStream) {
         try {
-            // Reset InputStream is often required here but requires markSupported() check.
-            // Since we re-open the stream for Files.copy(), we don't worry about resetting here.
+
             MessageDigest digest = MessageDigest.getInstance("MD5");
             byte[] buffer = new byte[8192];
             int bytesRead;
@@ -330,7 +284,6 @@ public class LocalFileStorageService implements DocumentStorageService {
                 digest.update(buffer, 0, bytesRead);
             }
 
-            // Convert hash bytes to hex string
             byte[] hashBytes = digest.digest();
             StringBuilder sb = new StringBuilder();
             for (byte b : hashBytes) {

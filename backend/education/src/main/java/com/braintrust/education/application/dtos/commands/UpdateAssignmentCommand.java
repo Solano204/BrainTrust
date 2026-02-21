@@ -18,6 +18,5 @@ public record UpdateAssignmentCommand(
         @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions,
 
-        // ✅ NEW: Submission format field
-        String submissionFormat // "DIGITAL" or "NOTEBOOK"
+        String submissionFormat
 ) {}

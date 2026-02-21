@@ -22,13 +22,13 @@ public interface QuizJpaRepository extends JpaRepository<QuizJpaEntity, String> 
 
     List<QuizJpaEntity> findByCourseIdAndUnitIdIsNull(String courseId);
 
-    // In QuizJpaRepository interface
+
     List<QuizJpaEntity> findByCourseIdOrderByCreatedAtDesc(String courseId);
 
-    // Optional: Also add method to get active quizzes ordered by date
+
     List<QuizJpaEntity> findByCourseIdAndActiveTrueOrderByCreatedAtDesc(String courseId);
 
-    // FIXED: Month calendar queries for quizzes - removed DISTINCT and simplified ORDER BY
+
     @Query("""
         SELECT q FROM QuizJpaEntity q 
         WHERE q.courseId IN (
@@ -72,7 +72,6 @@ public interface QuizJpaRepository extends JpaRepository<QuizJpaEntity, String> 
             @Param("monthEnd") LocalDateTime monthEnd
     );
 
-    // FIXED: Week calendar queries for quizzes - removed DISTINCT and simplified ORDER BY
     @Query("""
         SELECT q FROM QuizJpaEntity q 
         WHERE q.courseId IN (

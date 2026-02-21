@@ -1,4 +1,4 @@
-// app/api/auth/clear-tokens/route.ts
+
 import { clearTokens } from '@/app/utils/tokenManager';
 import { NextResponse } from 'next/server';
 

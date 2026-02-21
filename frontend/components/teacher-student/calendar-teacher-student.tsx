@@ -1,4 +1,3 @@
-// File: src/app/features/calendar/components/CalendarView.tsx
 "use client";
 
 import * as React from "react";
@@ -39,7 +38,6 @@ import { useUserTeam } from "./hooks/team-hooks";
 
 export type CalendarResource = Assignment | Quiz;
 
-// Date utilities
 const dateFns = {
 
   format: (date: Date, formatStr: string) => {
@@ -112,7 +110,6 @@ const {
   isSameMonth,
 } = dateFns;
 
-// Helper functions
 const getResourceType = (resource: CalendarResource): CourseResourceType => {
   if ("questions" in resource) return "QUIZ";
   return "ASSIGNMENT";
@@ -168,7 +165,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
 
   const monthStartString = formatForAPI(currentMonth);
 
-  // SEPARATE API CALLS for tasks and quizzes
   const {
     data: tasks = [],
     isLoading: tasksLoading,
@@ -181,10 +177,8 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     error: quizzesError,
   } = useQuizzesByMonth(userId, monthStartString, userType);
 
-  // Get user's team for group assignments
   const { data: userTeam } = useUserTeam(userId);
 
-  // Only fetch quiz detail when needed
   const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(
     selectedResourceId && activeResource && "questions" in activeResource
       ? selectedResourceId
@@ -192,12 +186,10 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     userType
   );
 
-  // Combine tasks and quizzes for calendar display
   const allResources = React.useMemo(() => {
     return [...tasks, ...quizzes];
   }, [tasks, quizzes]);
 
-  // Group resources by date for calendar
   const eventsByDay = React.useMemo(() => {
     const grouped: { [dateKey: string]: CalendarResource[] } = {};
 
@@ -245,7 +237,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
   const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
     useQuizSubmission();
 
-  // UPDATED: Handle task submission with delivery mode detection
   const handleTaskSubmit = async (submissionData: {
   content: string;
   attachments: File[];
@@ -256,7 +247,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     const assignment = activeResource as Assignment;
     const submissionType = assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
     
-    // Get groupId for team submissions
     let groupId: string | undefined;
     if (submissionType === "TEAM" && userTeam) {
       groupId = userTeam.teamId;
@@ -294,7 +284,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     }
   };
 
-  // Find existing submission for a task
   const getExistingSubmission = (
     resourceId: string
   ): Submission | undefined => {
@@ -306,7 +295,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     return undefined;
   };
 
-  // Generate calendar grid
   const firstDayOfMonth = getStartOfMonth(currentMonth);
   const startDayOfGrid = startOfWeek(firstDayOfMonth);
   const calendarDays: Date[] = [];
@@ -355,7 +343,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
               ? resource.title.substring(0, 20) + "..."
               : resource.title;
 
-          // Check if student has already submitted
           const existingSubmission =
             userType === "student"
               ? getExistingSubmission(resource.id)
@@ -414,7 +401,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
       );
     }
 
-    // Student View - Show submission interfaces
     if (userType === "student") {
       if (resourceType === "ASSIGNMENT") {
         const assignment = activeResource as Assignment;
@@ -429,7 +415,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
                 onSubmit={handleTaskSubmit}
                 studentId={userId}
                 isSubmitting={isSubmittingTask}
-                // userTeam={userTeam}
               />
               <div className="text-center mt-4">
                 <Button
@@ -461,7 +446,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
         );
       }
     } else {
-      // Teacher View - Show resource details for grading
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
@@ -492,7 +476,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
       <Card className="max-w-7xl mx-auto p-6 space-y-4">
-        {/* Header */}
         <div className="flex justify-between items-center border-b pb-4">
           <Button onClick={goToToday} variant="outline" className="text-sm">
             Today
@@ -529,7 +512,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
@@ -567,7 +549,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           </Card>
         </div>
 
-        {/* Days of Week Header */}
         <div className="grid grid-cols-7 text-center font-bold text-sm uppercase tracking-wider text-muted-foreground border-b border-border/50">
           {dayNames.map((day) => (
             <div key={day} className="p-2">
@@ -576,12 +557,10 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           ))}
         </div>
 
-        {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-px border border-border/50 rounded-lg overflow-hidden bg-border/50">
           {calendarDays.map(renderDayCell)}
         </div>
 
-        {/* Legend */}
         <div className="flex flex-wrap gap-4 justify-center text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
@@ -603,7 +582,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           )}
         </div>
 
-        {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
@@ -615,7 +593,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           </div>
         )}
 
-        {/* Error State */}
         {hasError && (
           <div className="text-center py-8 text-destructive">
             Error loading calendar data. Please try again.
@@ -625,7 +602,6 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
         )}
       </Card>
 
-      {/* Detail Modal */}
       {renderDetailView()}
     </div>
   );

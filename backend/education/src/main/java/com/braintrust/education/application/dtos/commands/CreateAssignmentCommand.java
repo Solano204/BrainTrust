@@ -29,8 +29,7 @@ public record CreateAssignmentCommand(
         @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions,
 
-        String targetType, // "INDIVIDUAL" or "TEAM"
+        String targetType,
 
-        // ✅ NEW: Submission format field
-        String submissionFormat // "DIGITAL" or "NOTEBOOK"
+        String submissionFormat
 ) {}

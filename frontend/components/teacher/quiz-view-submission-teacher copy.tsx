@@ -150,7 +150,7 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content Column (2/3) */}
+
           <div className="lg:col-span-2 space-y-6">
             {/* Quiz Description */}
             {quiz.description && (
@@ -171,7 +171,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
               </Card>
             )}
 
-            {/* Questions Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -204,14 +203,12 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
                           </div>
                         </div>
 
-                        {/* Question Text */}
                         <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border">
                           <p className="text-foreground text-lg whitespace-pre-wrap leading-relaxed">
                             {question.question}
                           </p>
                         </div>
 
-                        {/* Multiple Choice Options with Correct Answers */}
                         {question.type === 'multiple-choice' && question.options && (
                           <div className="space-y-3 ml-4">
                             <h4 className="font-semibold mb-3 text-muted-foreground">Answer Options:</h4>
@@ -247,7 +244,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
                           </div>
                         )}
 
-                        {/* Open-Ended Question */}
                         {question.type === 'open-ended' && (
                           <div className="space-y-4 ml-4">
                             {/* Expected Answer (Teacher View) */}
@@ -268,7 +264,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
                               </div>
                             )}
 
-                            {/* Student Response Area */}
                             <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-border">
                               <div className="flex items-center gap-2 mb-2">
                                 <Badge variant="outline">
@@ -282,7 +277,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
                               </p>
                             </div>
 
-                            {/* No Expected Answer Message */}
                             {isTeacher && !question.expectedAnswer && (
                               <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
                                 <div className="flex items-center gap-2 mb-1">
@@ -314,9 +308,7 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
             </Card>
           </div>
 
-          {/* Sidebar Column (1/3) */}
           <div className="space-y-6">
-            {/* Quiz Details Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Quiz Details</CardTitle>
@@ -397,7 +389,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
               </CardContent>
             </Card>
 
-            {/* Availability Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Availability</CardTitle>
@@ -524,7 +515,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 pt-6 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
@@ -549,7 +539,6 @@ export function QuizView({ quiz, onClose }: QuizViewProps) {
   );
 }
 
-// Card components (if not imported)
 const CardHeader = ({ children, className }: { children: React.ReactNode, className?: string }) => (
   <div className={`p-6 border-b ${className}`}>
     {children}

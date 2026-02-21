@@ -89,16 +89,6 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
                 .map(mapper::toDomain);
     }
 
-    /*
-    @Override
-    public List<QuizSubmission> findByQuizId(QuizId quizId) {
-        log.debug("Finding submissions by Quiz ID: {}", quizId.getValue());
-        return jpaRepository.findByQuizId(quizId.getValue())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
 
     @Override
     public List<QuizSubmission> findByStudentId(UserId studentId) {
@@ -109,17 +99,6 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
                 .collect(Collectors.toList());
     }
 
-    /*
-    @Override
-    public List<QuizSubmission> findByQuizAndStudent(QuizId quizId, UserId studentId) {
-        log.debug("Finding submissions by Quiz ID: {} and Student ID: {}",
-                quizId.getValue(), studentId.getValue());
-        return jpaRepository.findByQuizIdAndStudentId(quizId.getValue(), studentId.getValue())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
 
     @Override
     public Optional<QuizSubmission> findLatestByQuizAndStudent(QuizId quizId, UserId studentId) {
@@ -129,16 +108,7 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
                 .map(mapper::toDomain);
     }
 
-    /*
-    @Override
-    public List<QuizSubmission> findByStatus(QuizSubmissionStatus status) {
-        log.debug("Finding submissions by status: {}", status.name());
-        return jpaRepository.findByStatus(status.name())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
+
 
     @Override
     public int countAttempts(QuizId quizId, UserId studentId) {
@@ -147,30 +117,4 @@ public class JpaQuizSubmissionRepositoryAdapter implements QuizSubmissionReposit
         return jpaRepository.countByQuizIdAndStudentId(quizId.getValue(), studentId.getValue());
     }
 
-    /*
-    @Override
-    public List<QuizSubmission> findInProgressSubmissions(UserId studentId) {
-        log.debug("Finding in-progress submissions for Student ID: {}", studentId.getValue());
-        return jpaRepository.findByStudentIdAndStatus(
-                        studentId.getValue(),
-                        QuizSubmissionStatus.IN_PROGRESS.name())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
-
-    /*
-    @Override
-    public List<QuizSubmission> findByCourseAndStudent(CourseId courseId, UserId studentId) {
-        log.debug("Finding quiz submissions by Course ID: {} and Student ID: {}",
-                courseId.getValue(), studentId.getValue());
-
-        // This requires a JOIN with quizzes to get the course_id
-        return jpaRepository.findByCourseIdAndStudentId(courseId.getValue(), studentId.getValue())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
 }

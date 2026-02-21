@@ -1,6 +1,5 @@
 package com.braintrust.aidetectition.application.dtos.dtoResponse;
 
-// 📍 aidetection/application/dtos/AnalysisStatisticsDTO.java
 public record AnalysisStatisticsDTO(
         String startDate,
         String endDate,

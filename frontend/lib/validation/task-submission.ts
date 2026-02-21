@@ -1,8 +1,7 @@
-// lib/validations/task-submission.ts
 import { z } from 'zod';
 
 export const VALIDATION_RULES = {
-  maxFileSize: 10 * 1024 * 1024, // 10MB
+  maxFileSize: 10 * 1024 * 1024,
   allowedFileTypes: [
     'application/pdf',
     'application/msword',
@@ -38,7 +37,6 @@ export const taskSubmissionSchema = z.object({
 
 export type TaskSubmissionFormData = z.infer<typeof taskSubmissionSchema>;
 
-// Helper para validar archivos
 export const validateFile = (file: File): string | null => {
   if (file.size > VALIDATION_RULES.maxFileSize) {
     return `File "${file.name}" exceeds maximum size of ${VALIDATION_RULES.maxFileSize / 1024 / 1024}MB`;

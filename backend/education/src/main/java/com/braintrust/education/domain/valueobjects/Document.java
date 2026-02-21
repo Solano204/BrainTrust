@@ -5,7 +5,7 @@ import com.braintrust.shared.domain.ValueObject;
 
 import java.time.LocalDateTime;
 
-// 📍 education/domain/model/Document.java - VALUE OBJECT
+
 public class Document extends ValueObject {
     private final String name;
     private final String storagePath;
@@ -24,7 +24,6 @@ public class Document extends ValueObject {
         return name.trim();
     }
 
-    // Getters
     public String getName() { return name; }
     public String getStoragePath() { return storagePath; }
     public LocalDateTime getCreatedAt() { return createdAt; }

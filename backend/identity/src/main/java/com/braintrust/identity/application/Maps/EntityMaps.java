@@ -1,5 +1,4 @@
-package com.braintrust.identity.application.Maps;// 📍 shared/infrastructure/mapping/EntityMaps.java
-
+package com.braintrust.identity.application.Maps;
 import com.braintrust.identity.application.dtos.dtos.AddressDTO;
 import com.braintrust.identity.application.dtos.dtos.PersonDTO;
 import com.braintrust.identity.application.dtos.dtos.UserDTO;
@@ -10,21 +9,13 @@ import com.braintrust.identity.domain.valueobjects.Address;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Mapper estático para convertir entidades de dominio a DTOs
- * Se puede llamar directamente: EntityMaps.toUserDTO(user, person)
- */
 public final class EntityMaps {
 
     private EntityMaps() {
-        // Clase de utilidad - no instanciable
+
     }
 
-    // 🏢 IDENTITY CONTEXT MAPPERS
 
-    /**
-     * Convierte User + Person a UserDTO
-     */
     public static UserDTO toUserDTO(User user, Person person) {
         if (user == null) {
             return null;
@@ -43,9 +34,6 @@ public final class EntityMaps {
         );
     }
 
-    /**
-     * Convierte User a UserDTO (sin Person)
-     */
     public static UserDTO toUserDTO(User user) {
         if (user == null) {
             return null;
@@ -57,14 +45,10 @@ public final class EntityMaps {
                 user.getRole().name(),
                 user.isActive(),
                 user.getCreatedAt(),
-                null, // person es null
-                user.getStudentId()
+                null,                 user.getStudentId()
         );
     }
 
-    /**
-     * Convierte Person a PersonDTO
-     */
     public static PersonDTO toPersonDTO(Person person) {
         if (person == null) {
             return null;
@@ -87,9 +71,6 @@ public final class EntityMaps {
         );
     }
 
-    /**
-     * Convierte Address a AddressDTO
-     */
     public static AddressDTO toAddressDTO(Address address) {
         if (address == null) {
             return null;
@@ -104,9 +85,7 @@ public final class EntityMaps {
         );
     }
 
-    /**
-     * Convierte lista de Users a lista de UserDTOs
-     */
+
     public static List<UserDTO> toUserDTOList(List<User> users) {
         if (users == null) {
             return List.of();

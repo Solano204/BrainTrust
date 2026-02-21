@@ -37,7 +37,7 @@ import {
 import { useAuth } from "@/app/context/AuthContext";
 
 interface PageViewProps {
-  page: Page;  // Keep this for initial data
+  page: Page;
   onClose: () => void;
 }
 
@@ -45,48 +45,39 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";
   
-  // ✅ FETCH LIVE DATA from React Query
   const { data: livePageData, isLoading: isLoadingPage } = usePage(initialPage.id);
   
-  // ✅ Use live data if available, fallback to initial
   const page = livePageData || initialPage;
   
   const linkMutations = usePageLinkMutations();
   const attachmentMutations = usePageAttachmentMutations();
   const { updatePage } = usePageMutations();
   
-  // Edit mode state
   const [isEditMode, setIsEditMode] = React.useState(false);
   
-  // Editable fields
   const [editData, setEditData] = React.useState({
     title: page.title,
     sectionContent: page.sectionContent
   });
   
-  // Single URL management
   const [newUrl, setNewUrl] = React.useState("");
   const [isAddingUrl, setIsAddingUrl] = React.useState(false);
   
-  // Multiple URLs management
   const [isAddingMultipleUrls, setIsAddingMultipleUrls] = React.useState(false);
   const [urlInput, setUrlInput] = React.useState("");
   const [selectedUrls, setSelectedUrls] = React.useState<string[]>([]);
   
-  // Attachment management
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
   const [isAddingFiles, setIsAddingFiles] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // ✅ Reset edit data when LIVE page data changes
   React.useEffect(() => {
     setEditData({
       title: page.title,
       sectionContent: page.sectionContent
     });
-  }, [page.title, page.sectionContent]);  // Watch live data
+  }, [page.title, page.sectionContent]);
 
-  // Validate URL
   const isValidUrl = (url: string): boolean => {
     try {
       new URL(url);
@@ -96,7 +87,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Add URL to list
   const handleAddUrlToList = () => {
     const trimmedUrl = urlInput.trim();
     if (!trimmedUrl) return;
@@ -115,12 +105,10 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     setUrlInput("");
   };
 
-  // Remove URL from list
   const removeSelectedUrl = (index: number) => {
     setSelectedUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle multiple URLs upload
   const handleMultipleUrlsUpload = async () => {
     if (!isTeacher || selectedUrls.length === 0) return;
 
@@ -137,7 +125,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle save edits
   const handleSaveEdits = async () => {
     if (!isTeacher) return;
 
@@ -155,7 +142,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle cancel edit
   const handleCancelEdit = () => {
     setEditData({
       title: page.title,
@@ -164,7 +150,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     setIsEditMode(false);
   };
 
-  // Handle single file upload
   const handleSingleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isTeacher) return;
     const file = e.target.files?.[0];
@@ -184,7 +169,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle multiple files upload
   const handleMultipleFilesUpload = async () => {
     if (!isTeacher || selectedFiles.length === 0) return;
 
@@ -200,18 +184,15 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle file selection for multiple upload
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setSelectedFiles(prev => [...prev, ...files]);
   };
 
-  // Remove file from selection
   const removeSelectedFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle remove attachment
   const handleRemoveAttachment = async (documentName: string) => {
     if (!isTeacher) return;
 
@@ -225,7 +206,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle add single URL
   const handleAddUrl = async () => {
     if (!newUrl.trim() || !isTeacher) return;
 
@@ -246,7 +226,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle remove URL
   const handleRemoveUrl = async (url: string) => {
     if (!isTeacher) return;
 
@@ -260,7 +239,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     }
   };
 
-  // Handle clear all URLs
   const handleClearAllUrls = async () => {
     if (!isTeacher) return;
     if (!confirm("Are you sure you want to remove all URLs?")) return;
@@ -273,7 +251,7 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
   };
 
   const isLoading = 
-    isLoadingPage ||  // ✅ Include page loading
+    isLoadingPage ||
     linkMutations.addLink.isPending ||
     linkMutations.addMultipleLinks.isPending ||
     linkMutations.removeLink.isPending ||
@@ -292,7 +270,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     });
   };
 
-  // Format content with paragraphs
   const formatContent = (content: string) => {
     return content.split('\n').map((line, index) => (
       <p key={index} className="mb-3 last:mb-0">
@@ -301,7 +278,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
     ));
   };
 
-  // ✅ Show loading state while fetching
   if (isLoadingPage && !livePageData) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 p-4 md:p-6 flex items-center justify-center">
@@ -544,7 +520,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
                   </div>
                 )}
 
-                {/* Existing Attachments List */}
                 {!page.attachments || page.attachments.length === 0 ? (
                   <div className="text-center py-12 border-2 border-dashed rounded-lg">
                     <Paperclip className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
@@ -602,7 +577,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
               </CardContent>
             </Card>
 
-            {/* URLS WITH MULTIPLE LINK SUPPORT */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -827,9 +801,7 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
             </Card>
           </div>
 
-          {/* Sidebar Column (1/3) */}
           <div className="space-y-6">
-            {/* Page Details Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Page Details</CardTitle>
@@ -900,7 +872,6 @@ export function PageView({ page: initialPage, onClose }: PageViewProps) {
               </CardContent>
             </Card>
 
-            {/* Additional Info Card */}
             <Card className="bg-muted/30">
               <CardHeader>
                 <CardTitle className="text-base">About This Page</CardTitle>

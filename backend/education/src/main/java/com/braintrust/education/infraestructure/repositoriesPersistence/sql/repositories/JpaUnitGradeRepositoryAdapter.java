@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-// other imports...
+
 
 @Repository
 @Transactional(readOnly = true)
@@ -93,7 +93,7 @@ public class JpaUnitGradeRepositoryAdapter implements UnitGradeRepository {
         log.debug("Finding unit grades by Course ID: {} and Student ID: {}",
                 courseId.getValue(), studentId.getValue());
 
-        // This requires a JOIN with units to get the course_id
+
         return jpaRepository.findByCourseIdAndStudentId(courseId.getValue(), studentId.getValue())
                 .stream()
                 .map(mapper::toDomain)

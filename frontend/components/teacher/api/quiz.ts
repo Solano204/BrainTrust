@@ -1,4 +1,3 @@
-// File: src/app/features/courses/api/quiz-api.ts
 "use server";
 
 import axios from "axios";
@@ -15,17 +14,11 @@ import {
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 import { QuestionId, QuizId, SubmissionStatus } from "@/app/domain/valueObjects/CourseValues";
 
-// ============================================
-// CONFIGURATION
-// ============================================
 
 const isMockEnabled = false; // Switch between mock and real API
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-// ============================================
-// BACKEND DTO TYPES
-// ============================================
 
 export interface QuizDTO {
   id: string;
@@ -211,10 +204,6 @@ export interface GradeQuizSubmissionCommand {
   totalPoints: number;
 }
 
-// ============================================
-// MOCK DATA
-// ============================================
-
 const MOCK_QUIZZES: Quiz[] = [
   {
     id: "quiz-2",
@@ -342,9 +331,6 @@ const MOCK_SUBMISSION_QUIZZES: SubmissionQuiz[] = [
   },
 ];
 
-// ============================================
-// UTILITIES
-// ============================================
 
 const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -378,23 +364,19 @@ const handleApiError = async (error: unknown): Promise<never> => {
   throw error;
 };
 
-// ============================================
-// MAPPERS - BACKEND TO FRONTEND
-// ============================================
-
 async function mapQuizFromBackend(dto: QuizDTO): Promise<Quiz> {
   return {
     id: dto.id,
     title: dto.title,
     description: dto.description,
     courseId: dto.courseId,
-    courseUnitId: "", // Will be populated from CompleteQuizDTO
+    courseUnitId: "",
     maxGrade: dto.totalPoints,
     timeLimit: dto.timeLimitMinutes,
-    passingScore: 70, // Default value
+    passingScore: 70,
     dueDate: dto.availableUntil,
-    acceptLateSubmissions: true, // Default value
-    questions: [], // Will be populated from CompleteQuizDTO
+    acceptLateSubmissions: true,
+    questions: [],
   };
 }
 
@@ -430,12 +412,12 @@ async function mapQuizInventoryFromBackend(dto: QuizDTO): Promise<QuizInventoryI
     id: dto.id,
     quizId: dto.id,
     title: dto.title,
-    unit: "", // Will be populated from course context
+    unit: "",
     type: "QUIZ",
     courseId: dto.courseId,
     deadline: dto.availableUntil,
     isOverdue: new Date(dto.availableUntil) < new Date(),
-    studentId: "current-student-id", // This should come from auth context
+    studentId: "current-student-id",
   };
 }
 
@@ -444,7 +426,7 @@ async function mapSubmissionQuizFromBackend(dto: QuizSubmissionDTO): Promise<Sub
     id: dto.id,
     quizId: dto.quizId,
     studentId: dto.studentId,
-    courseId: "", // Will be populated from context
+    courseId: "",
     studentName: dto.studentName,
     content: JSON.stringify(dto.answers),
     submittedAt: dto.submittedAt,
@@ -453,20 +435,20 @@ async function mapSubmissionQuizFromBackend(dto: QuizSubmissionDTO): Promise<Sub
       value: parseFloat(dto.grade.value),
       maxScore: parseFloat(dto.grade.maxScore)
     } : null,
-    teacherFeedback: "", // Will be populated from detail
+    teacherFeedback: "",
     quizData: {
       answers: dto.answers.map(a => ({
         questionId: a.questionId,
         questionText: a.questionText,
-        questionType: "multiple-choice", // Default, should be mapped properly
+        questionType: "multiple-choice",
         studentAnswer: a.selectedOptions.length > 0 ? a.selectedOptions[0] : a.textAnswer,
-        correctAnswer: "", // Will be populated from detail
+        correctAnswer: "",
         points: a.pointsEarned,
-        maxPoints: 0, // Will be populated from context
+        maxPoints: 0,
         isCorrect: a.correct,
-        feedback: "", // Will be populated from context
+        feedback: "",
       })),
-      timeSpent: 0, // Will be populated from context
+      timeSpent: 0,
       totalScore: dto.grade ? parseFloat(dto.grade.value) : 0,
       maxScore: dto.grade ? parseFloat(dto.grade.maxScore) : 0,
     },
@@ -478,7 +460,7 @@ async function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO):
     id: dto.id,
     quizId: dto.quizId,
     studentId: dto.studentId,
-    courseId: "", // Will be populated from context
+    courseId: "",
     studentName: dto.studentName,
     content: JSON.stringify(dto.questionResponses),
     submittedAt: dto.submittedAt,
@@ -487,7 +469,7 @@ async function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO):
       value: parseFloat(dto.grade.value),
       maxScore: parseFloat(dto.grade.maxScore)
     } : null,
-    teacherFeedback: "", // Will be populated from context
+    teacherFeedback: "",
     quizData: {
       answers: dto.questionResponses.map(qr => ({
         questionId: qr.questionId,
@@ -495,42 +477,33 @@ async function mapSubmissionQuizDetailFromBackend(dto: QuizSubmissionDetailDTO):
         questionType: qr.questionType .toLowerCase() as QuestionType,
         studentAnswer: qr.selectedOptions.length > 0 ? qr.selectedOptions[0] : qr.textAnswer,
         correctAnswer: qr.correctAnswer,
-        points: 0, // Will be calculated
+        points: 0,
         maxPoints: qr.points,
         isCorrect: qr.isCorrect,
-        feedback: "", // Will be populated from context
+        feedback: "",
       })),
-      timeSpent: 0, // Will be populated from context
+      timeSpent: 0,
       totalScore: dto.grade ? parseFloat(dto.grade.value) : 0,
       maxScore: dto.grade ? parseFloat(dto.grade.maxScore) : 0,
     },
   };
 }
 
-// ============================================
-// MAPPERS - FRONTEND TO BACKEND
-// ============================================
-
 async function mapCreateQuizToBackendCommand(data: Omit<Quiz, "id">): Promise<CreateQuizWithQuestionsCommand> {
-  // Validate required fields
   if (!data.courseId || !data.courseUnitId || !data.title) {
     throw new Error('Missing required quiz fields: courseId, courseUnitId, title');
   }
 
   const questions: QuizQuestionData[] = data.questions.map((q, index) => {
-    // Get question text with fallback
     const questionText = q.text || q.question;
     if (!questionText) {
       throw new Error(`Question ${index + 1} is missing text`);
     }
 
-    // Get points with fallback
     const points = q.points || q.maxPoints || 1;
 
-    // Map question type
     const questionType = q.type === 'multiple-choice' ? 'CLOSED_CHOICE' : 'OPEN_ENDED';
 
-    // Handle options for multiple-choice
     const options: QuestionOptionData[] = [];
     if (q.type === 'multiple-choice') {
       if (!q.options || q.options.length === 0) {
@@ -542,13 +515,11 @@ async function mapCreateQuizToBackendCommand(data: Omit<Quiz, "id">): Promise<Cr
         correct: optIndex === q.correctAnswer
       })));
 
-      // Validate that correctAnswer is set for multiple-choice
       if (q.correctAnswer === undefined || q.correctAnswer === null) {
         throw new Error(`Multiple-choice question ${index + 1} has no correct answer specified`);
       }
     }
 
-    // Handle correct answer
     let correctAnswer = '';
     if (q.type === 'multiple-choice') {
       correctAnswer = q.correctAnswer?.toString() || '';
@@ -582,12 +553,12 @@ async function mapUpdateQuizToBackendCommand(quizId: string, data: Partial<Omit<
     quizId,
     title: data.title || "",
     description: data.description || "",
-    availableFrom: new Date().toISOString(), // Default value
+    availableFrom: new Date().toISOString(),
     availableUntil: data.dueDate || new Date().toISOString(),
     timeLimitMinutes: data.timeLimit || 60,
-    maxAttempts: 3, // Default value
-    shuffleQuestions: false, // Default value
-    showCorrectAnswers: true, // Default value
+    maxAttempts: 3,
+    shuffleQuestions: false,
+    showCorrectAnswers: true,
   };
 }
 
@@ -598,7 +569,7 @@ async function mapSubmitQuizToBackendCommand(quizId: string, studentId: string, 
     answerMap.set(ans.questionId, {
       selectedOptions: typeof ans.answer === 'number' ? [ans.answer] : [],
       textAnswer: typeof ans.answer === 'string' ? ans.answer : "",
-      timeSpentSeconds: 0 // Default value
+      timeSpentSeconds: 0
     });
   });
 
@@ -608,15 +579,6 @@ async function mapSubmitQuizToBackendCommand(quizId: string, studentId: string, 
     answers: answerMap
   };
 }
-
-// ============================================
-// API FUNCTIONS
-// ============================================
-
-/**
- * Fetch quizzes by course
- */
-
 
 export async function fetchQuizzesByCourse(courseId: CourseId): Promise<Quiz[]> {
   if (isMockEnabled) {
@@ -635,9 +597,6 @@ export async function fetchQuizzesByCourse(courseId: CourseId): Promise<Quiz[]> 
   }
 }
 
-/**
- * Fetch quizzes by course without details (for inventory)
- */
 export async function fetchQuizzesByCourseWithoutDetails(courseId: CourseId): Promise<QuizInventoryItem[]> {
   if (isMockEnabled) {
     await simulateDelay();
@@ -655,9 +614,6 @@ export async function fetchQuizzesByCourseWithoutDetails(courseId: CourseId): Pr
   }
 }
 
-/**
- * Fetch quiz by ID
- */
 export async function fetchQuizById(quizId: QuizId): Promise<Quiz> {
   if (isMockEnabled) {
     const quiz = MOCK_QUIZZES.find((q) => q.id === quizId);
@@ -677,9 +633,6 @@ export async function fetchQuizById(quizId: QuizId): Promise<Quiz> {
   }
 }
 
-/**
- * Create a new quiz
- */
 export async function createQuiz(quizData: Omit<Quiz, "id">): Promise<Quiz> {
   if (isMockEnabled) {
     await simulateDelay(800);
@@ -696,7 +649,6 @@ export async function createQuiz(quizData: Omit<Quiz, "id">): Promise<Quiz> {
     const backendCommand = await mapCreateQuizToBackendCommand(quizData);
     const response = await apiClient.post<CompleteQuizDTO>("/api/quizzes/with-questions", backendCommand);
     
-    // Fetch the created quiz to get full details
     const quiz = await mapCompleteQuizFromBackend(response.data);
     return quiz;
   } catch (error) {
@@ -704,9 +656,6 @@ export async function createQuiz(quizData: Omit<Quiz, "id">): Promise<Quiz> {
   }
 }
 
-/**
- * Update an existing quiz
- */
 export async function updateQuiz(quizId: QuizId, quizData: Partial<Omit<Quiz, "id">>): Promise<Quiz> {
   if (isMockEnabled) {
     await simulateDelay(800);
@@ -723,7 +672,6 @@ export async function updateQuiz(quizId: QuizId, quizData: Partial<Omit<Quiz, "i
     const backendCommand = await mapUpdateQuizToBackendCommand(quizId, quizData);
     const response =  await apiClient.put <CompleteQuizDTO> (`/api/quizzes/${quizId}`, backendCommand);
     
-    // Fetch the updated quiz
     const quiz = await mapCompleteQuizFromBackend(response.data);
     return quiz;
   } catch (error) {
@@ -731,9 +679,6 @@ export async function updateQuiz(quizId: QuizId, quizData: Partial<Omit<Quiz, "i
   }
 }
 
-/**
- * Delete a quiz
- */
 export async function deleteQuiz(quizId: QuizId): Promise<void> {
   if (isMockEnabled) {
     await simulateDelay(800);
@@ -753,9 +698,6 @@ export async function deleteQuiz(quizId: QuizId): Promise<void> {
   }
 }
 
-/**
- * Fetch student submissions for a quiz
- */
 export async function fetchQuizSubmissions(quizId: QuizId): Promise<SubmissionQuiz[]> {
   if (isMockEnabled) {
     await simulateDelay();
@@ -773,9 +715,6 @@ export async function fetchQuizSubmissions(quizId: QuizId): Promise<SubmissionQu
   }
 }
 
-/**
- * Fetch specific student submission for a quiz
- */
 export async function fetchStudentQuizSubmission(quizId: QuizId, studentId: UserId): Promise<SubmissionQuiz> {
   if (isMockEnabled) {
     await simulateDelay(600);
@@ -788,7 +727,6 @@ export async function fetchStudentQuizSubmission(quizId: QuizId, studentId: User
   }
 
   try {
-    // This endpoint might need to be adjusted based on your backend
     const response = await apiClient.get<QuizSubmissionDetailDTO>(`/api/quiz-submissions/detail`);
     const submission = await mapSubmissionQuizDetailFromBackend(response.data);
     return submission;
@@ -797,11 +735,6 @@ export async function fetchStudentQuizSubmission(quizId: QuizId, studentId: User
   }
 }
 
-/**
- * Submit quiz answers
- */
-
-// CURRENTLY WORK
 export async function submitQuizAnswers(
   quizId: QuizId,
   studentId: UserId,
@@ -871,7 +804,6 @@ export async function submitQuizAnswers(
     const backendCommand = await mapSubmitQuizToBackendCommand(quizId, studentId, answers);
     const response = await apiClient.post<SuccessResponseDTO>("", backendCommand);
     
-    // Fetch the created submission
     const submissionId = response.data.data;
     const submissionResponse = await apiClient.get<QuizSubmissionDetailDTO>(`/api/quiz-submissions/${submissionId}/detail`);
     const submission = await mapSubmissionQuizDetailFromBackend(submissionResponse.data);
@@ -881,9 +813,6 @@ export async function submitQuizAnswers(
   }
 }
 
-/**
- * Grade a quiz submission
- */
 export async function gradeQuizSubmission(
   submissionId: string,
   grades: { questionId: QuestionId; score: number }[]
@@ -924,12 +853,11 @@ export async function gradeQuizSubmission(
     const backendCommand: GradeQuizSubmissionCommand = {
       quizSubmissionId: submissionId,
       earnedPoints: totalPoints,
-      totalPoints: 100, // This should be calculated from the quiz
+      totalPoints: 100,
     };
 
     await apiClient.post(`/api/quiz-submissions/${submissionId}/grade`, backendCommand);
     
-    // Fetch the graded submission
     const response = await apiClient.get<QuizSubmissionDetailDTO>(`/api/quiz-submissions/${submissionId}/detail`);
     const submission = await mapSubmissionQuizDetailFromBackend(response.data);
     return submission;
@@ -938,9 +866,6 @@ export async function gradeQuizSubmission(
   }
 }
 
-/**
- * Get quiz statistics
- */
 export async function getQuizStats(quizId: QuizId): Promise<{
   totalSubmissions: number;
   averageScore: number;
@@ -967,8 +892,6 @@ export async function getQuizStats(quizId: QuizId): Promise<{
   }
 
   try {
-    // Note: Your backend might not have a stats endpoint
-    // You might need to calculate from submission data
     const submissions = await fetchQuizSubmissions(quizId);
     const gradedSubmissions = submissions.filter((sub) => sub.grade !== null);
     const scores = gradedSubmissions.map((sub) => sub.grade?.value || 0);
@@ -985,9 +908,6 @@ export async function getQuizStats(quizId: QuizId): Promise<{
   }
 }
 
-/**
- * Fetch calendar quizzes for student
- */
 export async function fetchStudentCalendarQuizzes(
   studentId: UserId,
   period: 'week' | 'month',
@@ -1009,9 +929,6 @@ export async function fetchStudentCalendarQuizzes(
   }
 }
 
-/**
- * Fetch calendar quizzes for teacher
- */
 export async function fetchTeacherCalendarQuizzes(
   teacherId: UserId,
   period: 'week' | 'month',

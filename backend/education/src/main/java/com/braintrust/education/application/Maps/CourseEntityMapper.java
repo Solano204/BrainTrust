@@ -46,13 +46,11 @@ public class CourseEntityMapper {
                 LocalDateTime.now()
         );
 
-        // ✅ Convert enrollments from domain to JPA entities
         Set<EnrollmentJpaEntity> enrollmentEntities = course.getEnrollments().stream()
                 .map(enrollmentMapper::toEntity)
                 .collect(Collectors.toSet());
         entity.setEnrollments(enrollmentEntities);
 
-        // ✅ Convert units from domain to JPA entities
         List<CourseUnitJpaEntity> unitEntities = course.getUnits().stream()
                 .map(unitMapper::toEntity)
                 .collect(Collectors.toList());
@@ -66,12 +64,10 @@ public class CourseEntityMapper {
         CourseCode courseCode = new CourseCode(entity.getCode());
         UserId teacherId = UserId.fromString(entity.getTeacherId());
 
-        // ✅ Convert enrollments from JPA entities to domain
         Set<Enrollment> enrollments = entity.getEnrollments().stream()
                 .map(enrollmentMapper::toDomain)
                 .collect(Collectors.toSet());
 
-        // ✅ Convert units from JPA entities to domain
         List<CourseUnit> units = entity.getUnits().stream()
                 .map(unitMapper::toDomain)
                 .collect(Collectors.toList());

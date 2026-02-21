@@ -31,9 +31,6 @@ public class AssignmentController {
         this.assignmentService = assignmentService;
     }
 
-    // ------------------------------------------------------------------
-    // ✅ ASSIGNMENT COMMANDS (CUD Operations)
-    // ------------------------------------------------------------------
     @PostMapping
     public ResponseEntity<AssignmentDTO> createAssignment(@RequestBody CreateAssignmentCommand command) {
         log.info("Request to create new assignment for Course ID: {}", command.courseId());
@@ -75,9 +72,6 @@ public class AssignmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAssignment);
     }
 
-
-
-    // ✅ Bulk attachments via JSON (FrontendDocumentDTO) for existing assignments
     @PostMapping(value = "/{assignmentId}/attachments/bulk-json", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuccessResponseDTO> addBulkAttachmentsJson(
             @PathVariable String assignmentId,
@@ -96,7 +90,6 @@ public class AssignmentController {
         );
     }
 
-    // ✅ Single attachment via JSON
     @PostMapping(value = "/{assignmentId}/attachments/single-json", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuccessResponseDTO> addSingleAttachmentJson(
             @PathVariable String assignmentId,
@@ -162,7 +155,6 @@ public class AssignmentController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Assignment deactivated successfully", null));
     }
 
-    // NEW: Delete assignment only when there are no submissions
     @DeleteMapping("/{assignmentId}")
     public ResponseEntity<SuccessResponseDTO> deleteAssignment(@PathVariable String assignmentId) {
         log.info("Request to delete assignment ID: {}", assignmentId);
@@ -170,9 +162,6 @@ public class AssignmentController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Assignment deleted successfully", null));
     }
 
-    // ------------------------------------------------------------------
-    // ✅ ASSIGNMENT QUERIES
-    // ------------------------------------------------------------------
 
     @GetMapping("/{assignmentId}")
     public ResponseEntity<AssignmentDTO> getAssignmentById(@PathVariable String assignmentId) {
@@ -181,22 +170,6 @@ public class AssignmentController {
         return ResponseEntity.ok(assignment);
     }
 
-//    // 3. Get assignments by student and course (CRITICAL - student-submission-api needs this)
-//    @GetMapping("/student/{studentId}/course/{courseId}/unit/{unitId}")
-//    public ResponseEntity<List<AssignmentDTO>> getAssignmentsByStudentCourseUnit(
-//            @PathVariable String studentId,
-//            @PathVariable String courseId,
-//            @PathVariable String unitId) {
-//        log.debug("Fetching assignments for student {} course {} unit {}", studentId, courseId, unitId);
-//        List<AssignmentDTO> assignments = assignmentService.getAssignmentsByStudentCourseUnit(
-//                UserId.fromString(studentId),
-//                CourseId.fromString(courseId),
-//                UnitId.fromString(unitId)
-//        );
-//        return ResponseEntity.ok(assignments);z
-//    }
-
-    // 4. Get assignments by course and unit (teacher view - course-tasks-api needs this)
     @GetMapping("/course/{courseId}/unit/{unitId}")
     public ResponseEntity<List<AssignmentDTO>> getAssignmentsByCourseUnit(
             @PathVariable String courseId,
@@ -217,7 +190,6 @@ public class AssignmentController {
         return ResponseEntity.ok(assignments);
     }
 
-    // NEW: Get assignments for specific unit in a course
     @GetMapping("/course/unit/{unitId}")
     public ResponseEntity<List<AssignmentDTO>> getAssignmentsByUnit(
             @PathVariable String courseId,
@@ -229,48 +201,6 @@ public class AssignmentController {
         );
         return ResponseEntity.ok(assignments);
     }
-
-    /*
-    @GetMapping("/course/{courseId}/active")
-    public ResponseEntity<List<AssignmentDTO>> getActiveAssignmentsByCourse(@PathVariable String courseId) {
-        log.debug("Fetching active assignments only for Course ID: {}", courseId);
-        List<AssignmentDTO> assignments = assignmentService.getActiveAssignmentsByCourse(CourseId.fromString(courseId));
-        return ResponseEntity.ok(assignments);
-    }
-    */
-
-    /*
-    @GetMapping("/course/{courseId}/due-soon")
-    public ResponseEntity<List<AssignmentDTO>> getAssignmentsDueSoon(
-            @PathVariable String courseId,
-            @RequestParam(defaultValue = "7") int daysAhead
-    ) {
-        log.debug("Fetching assignments for Course ID {} due in {} days.", courseId, daysAhead);
-        List<AssignmentDTO> assignments = assignmentService.getAssignmentsDueSoon(
-                CourseId.fromString(courseId),
-                daysAhead
-        );
-        return ResponseEntity.ok(assignments);
-    }
-    */
-
-    /*
-    @GetMapping("/{assignmentId}/can-accept-submissions")
-    public ResponseEntity<Boolean> canAcceptSubmissions(@PathVariable String assignmentId) {
-        log.trace("Checking submission acceptance status for Assignment ID: {}", assignmentId);
-        boolean canAccept = assignmentService.canAcceptSubmissions(AssignmentId.fromString(assignmentId));
-        return ResponseEntity.ok(canAccept);
-    }
-    */
-
-    /*
-    @GetMapping("/{assignmentId}/attachment-count")
-    public ResponseEntity<Integer> getAttachmentCount(@PathVariable String assignmentId) {
-        log.trace("Counting attachments for Assignment ID: {}", assignmentId);
-        int count = assignmentService.getAttachmentCount(AssignmentId.fromString(assignmentId));
-        return ResponseEntity.ok(count);
-    }
-    */
 
     @GetMapping("/calendar/student/{studentId}/week")
     public ResponseEntity<List<AssignmentDTO>> getStudentWeekCalendar(
@@ -312,7 +242,7 @@ public class AssignmentController {
         return ResponseEntity.ok(assignments);
     }
 
-    // NEW: Month calendar endpoints for student and teacher
+
     @GetMapping("/calendar/student/{studentId}/month")
     public ResponseEntity<List<AssignmentDTO>> getStudentMonthCalendar(
             @PathVariable String studentId,
@@ -409,10 +339,6 @@ public class AssignmentController {
                 new SuccessResponseDTO(true, "All links cleared successfully", null)
         );
     }
-
-    // ------------------------------------------------------------------
-    // ✅ ATTACHMENT MANAGEMENT ENDPOINTS
-    // ------------------------------------------------------------------
 
     @PostMapping(value = "/{assignmentId}/attachments",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

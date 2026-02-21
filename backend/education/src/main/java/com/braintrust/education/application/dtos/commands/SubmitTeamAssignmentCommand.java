@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-// For team submissions
+
 public record SubmitTeamAssignmentCommand(
         @NotBlank(message = "Assignment ID is required")
         String assignmentId,

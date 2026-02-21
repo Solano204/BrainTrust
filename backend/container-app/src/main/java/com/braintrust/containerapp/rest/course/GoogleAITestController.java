@@ -15,10 +15,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Test endpoint for Google AI (Gemini) integration
- * Endpoint: POST /api/ai-test/ask
- */
+
 @Slf4j
 @RestController
 @RequestMapping("/api/ai-test")
@@ -37,14 +34,7 @@ public class GoogleAITestController {
         this.restTemplate = new RestTemplate();
     }
 
-    /**
-     * Test endpoint to ask questions to Google AI
-     *
-     * POST /api/ai-test/ask
-     * Body: { "question": "What is the capital of France?" }
-     *
-     * Response: { "answer": "...", "model": "gemini-2.5-flash" }
-     */
+
     @PostMapping("/ask")
     public ResponseEntity<Map<String, Object>> askQuestion(
             @RequestBody AskQuestionRequest request) {
@@ -60,7 +50,7 @@ public class GoogleAITestController {
                         ));
             }
 
-            // Build Google AI API request
+
             String url = String.format(
                     "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
                     model, apiKey
@@ -68,16 +58,14 @@ public class GoogleAITestController {
 
             Map<String, Object> requestBody = buildGeminiRequest(request.question());
 
-            // Set headers
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            // Call Google AI API
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
 
-            // Parse response
             String answer = extractAnswer(response.getBody());
 
 
@@ -98,10 +86,6 @@ public class GoogleAITestController {
         }
     }
 
-    /**
-     * Health check endpoint for Google AI integration
-     * GET /api/ai-test/health
-     */
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> healthCheck() {
         boolean isConfigured = apiKey != null && !apiKey.isEmpty();
@@ -114,7 +98,7 @@ public class GoogleAITestController {
         ));
     }
 
-    // Helper methods
+
 
     private Map<String, Object> buildGeminiRequest(String question) {
         Map<String, Object> request = new HashMap<>();
@@ -160,6 +144,5 @@ public class GoogleAITestController {
         }
     }
 
-    // Request DTO
     public record AskQuestionRequest(String question) {}
 }

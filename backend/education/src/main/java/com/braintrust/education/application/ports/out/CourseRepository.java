@@ -20,31 +20,16 @@ public interface CourseRepository {
     // Queries
     Optional<Course> findById(CourseId courseId);
 
-    /*
-    Optional<Course> findByCode(CourseCode code);
-    */
-
-    // ✅ NEW: Pagination methods
     Page<Course> findAll(Pageable pageable);
     Page<Course> findActiveCourses(Pageable pageable);
     Page<Course> findByTeacherId(UserId teacherId, Pageable pageable);
     Page<Course> findByStudentId(UserId studentId, Pageable pageable);
 
-    // ✅ OPTIONAL: For legacy compatibility
     List<Course> findAll();
     List<Course> findActiveCourses();
     List<Course> findByTeacherId(UserId teacherId);
 
-    // NEW: Find courses by student
     List<Course> findByStudentId(UserId studentId);
-
-    /*
-    List<Course> findActiveCourses();
-    */
-
-    /*
-    List<Course> findByGradeAndGroup(String grade, String group);
-    */
 
     boolean existsByCode(CourseCode code);
     Optional<Course> findByUnitId(UnitId unitId);

@@ -1,15 +1,14 @@
-// 💡 MOCK DATA: Simulating the full domain data for a list of courses
+
 
 import { CourseListItem } from "../Dtos/Course";
 import { Course, ResourceItem, SubmissionDetailData, TaskInventoryItem, TaskType } from "../entities/CourseEntities";
 
 
 export async function fetchCourseListMock(): Promise<Course[]> {
-    // Simulate API delay
+
     await new Promise(resolve => setTimeout(resolve, 600)); 
-    
-    // 🔥 MOCK_DATA now strictly conforms to the Course interface.
-    // Placeholders are used for the required domain fields.
+
+
     const MOCK_DATA: Course[] = [
       { 
           id: "COURSE-DES-401", 
@@ -81,7 +80,7 @@ export async function fetchCourseListMock(): Promise<Course[]> {
     return MOCK_DATA;
 }
 import { HelpCircle, MessageSquare, ClipboardList, FileText } from "lucide-react";
-// Import the types defined above (ResourceItem, CourseResourceType)
+
 
 const MOCK_RESOURCE_DATA: ResourceItem[] = [
     {
@@ -89,21 +88,21 @@ const MOCK_RESOURCE_DATA: ResourceItem[] = [
         name: "Task (Assignment)",
         description: "Create assignments with file submissions and grading.",
         type: 'ASSIGNMENT',
-        icon: ClipboardList, // 💡 Assigned specific icon
+        icon: ClipboardList,
     },
     {
         id: "quiz",
         name: "Quiz (Exam)",
         description: "Add questions and grade automatically.",
         type: 'QUIZ',
-        icon: HelpCircle, // 💡 Assigned specific icon
+        icon: HelpCircle,
     },
     {
         id: "page",
         name: "Page (Lesson)",
         description: "Enable debates and participation grading.",
         type: 'PAGE',
-        icon: MessageSquare, // 💡 Assigned specific icon
+        icon: MessageSquare,
     },
    
 ];
@@ -113,7 +112,6 @@ const MOCK_RESOURCE_DATA: ResourceItem[] = [
  * @returns A Promise resolving to an array of ResourceItem.
  */
 export async function fetchResourceTypesMock(): Promise<ResourceItem[]> {
-    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
     return MOCK_RESOURCE_DATA;
 }
@@ -122,7 +120,6 @@ export async function fetchResourceTypesMock(): Promise<ResourceItem[]> {
 import { MonitorCheck, Paperclip, Download } from 'lucide-react';
 import { CourseCode, CourseId } from "../valueObjects/CourseValues";
 
-// --- Placeholder/Simplified Domain Types (Based on your context) ---
 export type SubmissionId = string;
 export type AssignmentId = string;
 export type UserId = string;
@@ -131,10 +128,6 @@ export type Document = { name: string; storagePath: string; createdAt: string };
 export type Grade = { value: string; maxScore: string };
 
 
-// --- 1. Interface for the Table Rows ---
-
-
-// --- Mock Data ---
 const MOCK_STUDENTS = [
     { id: 'USER-001', name: 'Alice Johnson', avatarUrl: 'https://placehold.co/100x100/A3E635/000?text=AJ' },
     { id: 'USER-002', name: 'Bob Smith', avatarUrl: 'https://placehold.co/100x100/FDBA74/000?text=BS' },
@@ -147,7 +140,6 @@ const MOCK_ASSIGNMENTS = [
     { id: 'TASK-103', name: "Forum: Week 5 Discussion", unit: "Unit 2", maxPoints: 20, type: 'FORUM' as TaskType },
 ];
 
-// 🚀 MOCK FUNCTION 1: Generate Task Inventory List
 export function generateTaskInventoryMock(): TaskInventoryItem[] {
     const today = new Date();
     return MOCK_ASSIGNMENTS.map((task, index) => {
@@ -158,7 +150,7 @@ export function generateTaskInventoryMock(): TaskInventoryItem[] {
         const pendingSubmissions = Math.floor(Math.random() * 15);
         
         return {
-            id: `SUB-${task.id}-001`, // Use a mock submission ID for 'View' button
+            id: `SUB-${task.id}-001`,
             taskId: task.id,
             name: task.name,
             unit: task.unit,
@@ -169,7 +161,6 @@ export function generateTaskInventoryMock(): TaskInventoryItem[] {
     });
 }
 
-// 🚀 MOCK FUNCTION 2: Fetch Single Submission Detail
 export async function fetchSubmissionDetailMock(submissionId: SubmissionId): Promise<SubmissionDetailData> {
     await new Promise(resolve => setTimeout(resolve, 600));
 
@@ -228,8 +219,7 @@ const MOCK_COURSE_DATA: Course = {
   enrollments: Array.from({ length: 85 }, (_, i) => ({ // Mock 85 students
     id: `ENR-${i}`, courseId: "COURSE-DES-401", studentId: `USER-S${i}`, enrollmentDate: "2024-01-01", status: "ACTIVE", grade: null,
   })),
-  
-  // --- Units Data ---
+
   units: [
     {
         id: "UNIT-1", courseId: "COURSE-DES-401", name: "Introduction to UCD", numUnity: 1, description: "Learn the fundamentals of User-Centered Design", urlImage: null,
@@ -266,7 +256,7 @@ const MOCK_COURSE_DATA: Course = {
  * @returns A promise resolving to the Course entity.
  */
 export async function fetchCourseOverviewMock(courseId: CourseId): Promise<Course> {
-    // Simulate API delay
+
     await new Promise(resolve => setTimeout(resolve, 500)); 
     
     if (courseId !== MOCK_COURSE_DATA.id) {

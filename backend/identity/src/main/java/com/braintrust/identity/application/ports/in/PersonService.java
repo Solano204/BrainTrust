@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface PersonService {
 
-    // Commands
+
     PersonId createPerson(CreatePersonCommand command);
 
     void updatePersonalInfo(UpdatePersonInfoCommand command);
@@ -20,7 +20,6 @@ public interface PersonService {
 
     void updateImage(UpdateImageCommand command);
 
-    // Queries
     PersonDTO getPersonById(PersonId personId);
 
     PersonDTO getPersonByUserId(UserId userId);

@@ -49,7 +49,6 @@ public class AnalysisRequestJpaEntity {
     @Column(name = "analyzed_at")
     private LocalDateTime analyzedAt;
 
-    // Constructors
     public AnalysisRequestJpaEntity() {}
 
     public AnalysisRequestJpaEntity(String id, String submissionId, String contentToAnalyze,
@@ -69,7 +68,6 @@ public class AnalysisRequestJpaEntity {
         this.analyzedAt = analyzedAt;
     }
 
-    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

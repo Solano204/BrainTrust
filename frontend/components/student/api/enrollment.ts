@@ -7,15 +7,8 @@ import { redirect } from "next/navigation";
 import { Enrollment } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 
-// ============================================
-// CONFIGURATION
-// ============================================
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-// ============================================
-// BACKEND DTO TYPES
-// ============================================
 
 interface EnrollmentDTO {
   id: string;
@@ -26,7 +19,7 @@ interface EnrollmentDTO {
   studentEmail: string;
   studentRefId: string;
   enrollmentDate: string;
-  status: string; // ACTIVE, COMPLETED, CANCELLED
+  status: string;
   finalGrade: GradeDTO | null;
 }
 
@@ -68,10 +61,6 @@ interface SuccessResponseDTO {
   data: any;
 }
 
-// ============================================
-// UTILITIES
-// ============================================
-
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -100,10 +89,6 @@ const handleApiError = async (error: unknown): Promise<never> => {
   }
   throw error;
 };
-
-// ============================================
-// MAPPERS
-// ============================================
 
 function mapEnrollmentFromBackend(dto: EnrollmentDTO): Enrollment {
   return {
@@ -159,7 +144,6 @@ function mapStudentSearchResultToUser(dto: StudentSearchResultDTO): User {
       imagePath: "",
       address: null
     },
-    // Additional fields from search result
     studentRefId: dto.studentRefId,
     isAlreadyEnrolled: dto.isAlreadyEnrolled,
     enrollmentId: dto.enrollmentId,
@@ -167,16 +151,6 @@ function mapStudentSearchResultToUser(dto: StudentSearchResultDTO): User {
   };
 }
 
-// ============================================
-// API FUNCTIONS
-// ============================================
-
-/**
- * Fetch all enrollments for a specific course
- */
-
-
-// CURRENTLY WORKS
 
 export async function fetchEnrollmentsByCourse(courseId: CourseId): Promise<Enrollment[]> {
   try {
@@ -193,10 +167,6 @@ export async function fetchEnrollmentsByCourse(courseId: CourseId): Promise<Enro
   }
 }
 
-/**
- * Search students available for enrollment in a course
- * Uses the backend endpoint that filters out already enrolled students
- */
 export async function searchStudentsForEnrollment(
   courseId: CourseId,
   searchTerm: string
@@ -213,7 +183,6 @@ export async function searchStudentsForEnrollment(
       }
     );
     
-    // Backend already filters out enrolled students
     const availableStudents = response.data
       .filter(dto => !dto.isAlreadyEnrolled)
       .map(mapStudentSearchResultToUser);
@@ -226,9 +195,6 @@ export async function searchStudentsForEnrollment(
   }
 }
 
-/**
- * Enroll a single student in a course
- */
 export async function createEnrollment(enrollmentData: {
   courseId: CourseId;
   studentId: UserId;
@@ -256,9 +222,6 @@ export async function createEnrollment(enrollmentData: {
   }
 }
 
-/**
- * Bulk enroll multiple students in a course
- */
 export async function bulkEnrollStudents(
   courseId: CourseId,
   studentIds: UserId[]
@@ -273,8 +236,7 @@ export async function bulkEnrollStudents(
       request
     );
     
-    // Response data contains array of enrollment IDs
-    const enrollmentIds = Array.isArray(response.data.data) 
+    const enrollmentIds = Array.isArray(response.data.data)
       ? response.data.data 
       : [response.data.data];
     
@@ -289,27 +251,33 @@ export async function bulkEnrollStudents(
   }
 }
 
-/**
- * Unenroll a single student from a course
- */
 export async function deleteEnrollment(
-  courseId: CourseId,
-  studentId: UserId
+    courseId: CourseId,
+    studentId: UserId
 ): Promise<void> {
   try {
     await apiClient.delete(
-      `/api/courses/${courseId}/enrollments/${studentId}`
+        `/api/courses/${courseId}/enrollments/${studentId}`
     );
-    
-    console.log(`Unenrolled student ${studentId} from course ${courseId}`);
-  } catch (error) {
-    return await handleApiError(error);
+
+    console.log(
+        `Unenrolled student ${studentId} from course ${courseId}`
+    );
+  } catch (error: any) {
+    console.error("Error unenrolling student");
+
+    if (error.response) {
+      console.error("STATUS:", error.response.status);
+      console.error("DATA:", error.response.data);
+    } else {
+      console.error(error);
+    }
+
+    throw error;
   }
 }
 
-/**
- * Bulk unenroll multiple students from a course
- */
+
 export async function bulkUnenrollStudents(
   courseId: CourseId,
   studentIds: UserId[]
@@ -330,9 +298,7 @@ export async function bulkUnenrollStudents(
   }
 }
 
-/**
- * Get enrollment statistics for a course
- */
+
 export async function getEnrollmentStats(courseId: CourseId): Promise<{
   total: number;
   active: number;

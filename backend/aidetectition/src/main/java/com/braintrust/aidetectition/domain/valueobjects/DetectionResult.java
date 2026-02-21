@@ -6,12 +6,12 @@ import com.braintrust.shared.domain.ValueObject;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-// 📍 aidetection/domain/valueobjects/DetectionResult.java
+
 public class DetectionResult extends ValueObject {
     private final AIProbability probability;
     private final ModelType modelUsed;
     private final String analyzedContent;
-    private final List<DetectedSegment> detectedSegments; // ✅ NEW
+    private final List<DetectedSegment> detectedSegments;
     private final Map<String, Object> metadata;
 
     public DetectionResult(AIProbability probability, ModelType modelUsed,
@@ -24,7 +24,6 @@ public class DetectionResult extends ValueObject {
         this.metadata = metadata != null ? Map.copyOf(metadata) : Map.of();
     }
 
-    // Getters
     public AIProbability getProbability() { return probability; }
     public ModelType getModelUsed() { return modelUsed; }
     public String getAnalyzedContent() { return analyzedContent; }

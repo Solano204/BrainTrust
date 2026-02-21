@@ -10,14 +10,14 @@ import java.util.Optional;
 
 public interface PersonRepository {
 
-    // Commands
+
     Person save(Person person);
     void delete(Person person);
 
-    // Queries
+
     Optional<Person> findById(PersonId personId);
     List<Person> findAll();
 
-    // ✅ NEW: Pagination method
+
     Page<Person> findAll(Pageable pageable);
 }

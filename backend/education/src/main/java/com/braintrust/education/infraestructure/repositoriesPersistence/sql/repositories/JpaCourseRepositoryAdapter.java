@@ -36,11 +36,6 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
         log.info("Initialized JpaCourseRepositoryAdapter.");
     }
 
-    // ------------------------------------------------------------------
-    // ✅ COMMANDS (Mutating Operations)
-    // ------------------------------------------------------------------
-
-
     @Override
     public Page<Course> findAll(Pageable pageable) {
         log.debug("📊 Fetching paginated courses. Page: {}, Size: {}",
@@ -73,7 +68,6 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
         return entityPage.map(mapper::toDomain);
     }
 
-    // ✅ OPTIONAL: Legacy methods for backward compatibility
     @Override
     public List<Course> findAll() {
         log.debug("📊 Fetching all courses (without pagination)");
@@ -110,10 +104,6 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
         log.info("Course ID {} deleted successfully.", course.getId().getValue());
     }
 
-    // ------------------------------------------------------------------
-    // ✅ QUERIES (Read Operations)
-    // ------------------------------------------------------------------
-
     @Override
     public Optional<Course> findById(CourseId courseId) {
         log.debug("Querying database for Course ID: {}", courseId.getValue());
@@ -121,15 +111,6 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
                 .map(mapper::toDomain);
     }
 
-
-    /*
-    @Override
-    public Optional<Course> findByCode(CourseCode code) {
-        log.debug("Querying database for Course Code: {}", code.getValue());
-        return jpaRepository.findByCode(code.getValue())
-                .map(mapper::toDomain);
-    }
-    */
 
     @Override
     public List<Course> findByTeacherId(UserId teacherId) {
@@ -148,28 +129,6 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
-
-    /*
-    @Override
-    public List<Course> findActiveCourses() {
-        log.debug("Fetching all active courses.");
-        return jpaRepository.findByActiveTrue()
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
-
-    /*
-    @Override
-    public List<Course> findByGradeAndGroup(String grade, String group) {
-        log.debug("Fetching courses by Grade {} and Group {}.", grade, group);
-        return jpaRepository.findByGradeAndGroup(grade, group)
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
 
     @Override
     public boolean existsByCode(CourseCode code) {

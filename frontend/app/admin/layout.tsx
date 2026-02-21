@@ -1,7 +1,3 @@
-// ==========================================
-// ✅ ARCHIVO: src/app/admin/layout.tsx
-// Layout específico para el admin con sidebar
-// ==========================================
 
 "use client"
 
@@ -11,9 +7,6 @@ import { redirect } from "next/navigation"
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 
-// ==========================================
-// 🎯 FUNCIÓN NORMALIZE ROLE (MISMA QUE EN SIDEBAR Y PAGE)
-// ==========================================
 function normalizeRole(role: string | undefined): string {
     if (!role) return 'student';
     
@@ -43,7 +36,6 @@ export default function AdminLayout({
     const [activeView, setActiveView] = useState("Dashboard")
     const { user, isLoading } = useAuth()
 
-    // Verificar que el usuario sea admin
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -52,7 +44,6 @@ export default function AdminLayout({
         )
     }
 
-    // 🔧 VERIFICACIÓN MEJORADA CON NORMALIZACIÓN
     const normalizedRole = normalizeRole(user?.role);
     
     console.log('=== ADMIN LAYOUT DEBUG ===');
@@ -67,7 +58,7 @@ export default function AdminLayout({
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Sidebar */}
+
             <DashboardSidebar
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
@@ -76,15 +67,14 @@ export default function AdminLayout({
                 userRole={user?.role || 'admin'}
             />
 
-            {/* Main Content */}
             <div className="lg:pl-64">
-                {/* Header */}
+
                 <DashboardHeader
                     onMenuClick={() => setSidebarOpen(true)}
-                    // userRole={user?.role || 'admin'}
+
                 />
 
-                {/* Page Content */}
+
                 <main className="py-6">
                     {children}
                 </main>

@@ -3,11 +3,6 @@ import { Assignment, Page, CourseUnit, Question, Quiz, Submission, UnitResource,
 import { AssignmentId, Document, Score, UserId} from "../valueObjects/CourseValues";
 import { DeliveryMode } from "@/components/teacher/task-view-information-teacher";
 
-// --- Unit Interface (Re-defined for context, assuming import path works) ---
-
-// --- Mock Database (For Simulation) ---
-// Note: This uses the initialUnitData structure from your previous context.
-
 
 const MOCK_COURSE_ID = "COURSE-DES-401";
 const MOCK_UNIT_ID = "UNIT-1";
@@ -21,7 +16,7 @@ export const mockUnitsDatabase: CourseUnit[] = [
         numUnity: 1,
         urlImage: null,
         resources: [
-            // --- 1. Page (Video Lesson) ---
+
             {
                 id: "PAGE-101V",
                 courseId: MOCK_COURSE_ID, // Mapped new required field
@@ -36,7 +31,6 @@ export const mockUnitsDatabase: CourseUnit[] = [
                 urlsSupport: ["https://example.com/embed/empathy-vid"], // Mapped new required field (using old video url)
             } as Page,
 
-            // --- 2. Page (Document & Links) ---
             {
                 id: "PAGE-102D",
                 courseId: MOCK_COURSE_ID, // Mapped new required field
@@ -53,8 +47,7 @@ export const mockUnitsDatabase: CourseUnit[] = [
                 ] as Document[], // Mapped new required field (using old documents)
                 urlsSupport: ["https://example.com/external-reading"], // Mapped new required field
             } as Page,
-            
-            // --- 3. Assignment (Individual, Late Allowed) ---
+
             {
                 id: "ASSIGN-I1",
                 title: "Individual: Persona Creation",
@@ -72,7 +65,6 @@ export const mockUnitsDatabase: CourseUnit[] = [
                 allowLateSubmissions: true,
             } as Assignment,
 
-            // --- 4. Assignment (Group, Strict Due) ---
             {
                 id: "ASSIGN-G2",
                 title: "Group: Problem Statement Definition",
@@ -91,7 +83,6 @@ export const mockUnitsDatabase: CourseUnit[] = [
                 links: ["https://example.com/problem-statement-guidelines", "https://example.com/problem-statement-template"],
             } as Assignment,
 
-            // --- 5. Quiz (Concept Check) ---
             {
                 id: "QUIZ-C1",
                 description: "Quick quiz covering the core concepts of Empathy and Define phases.",
@@ -107,7 +98,6 @@ export const mockUnitsDatabase: CourseUnit[] = [
                 ] as Question[],
             } as Quiz,
 
-            // --- 6. Quiz (Application Test) ---
             {
                 id: "QUIZ-A2",
                 description: "Application-based quiz where you analyze a short scenario.",
@@ -126,7 +116,6 @@ export const mockUnitsDatabase: CourseUnit[] = [
     },
 ];
 
-// 🚀 MOCK FUNCTION
 /**
  * Simulates fetching CourseUnit data from an API based on CourseId and UnitId.
  * @param courseId The ID of the parent course.
@@ -137,11 +126,9 @@ export async function fetchUnitDataMock(
   courseId: CourseId,
   unitId: UnitId
 ): Promise<CourseUnit | null> {
-  // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   console.info(`Fetching data for Course ID: ${courseId}, Unit ID: ${unitId}`);
-  // Find the matching unit
   const unit = mockUnitsDatabase.find(
     (u) => u.id === unitId && u.courseId === courseId
   );
@@ -153,19 +140,18 @@ export async function fetchUnitDataMock(
 
 
 
-// --- UI DATA STRUCTURES ---
+
 
 interface StudentScore {
-    score: number | null; // Actual score (calification)
-    max: number;         // Max points for the task
-    // Placeholder for override status if needed: isOverride?: boolean;
+    score: number | null;
+    max: number;
 }
 
 interface StudentRow {
     studentId: UserId;
     name: string;
     totalPercentage: number | null;
-    scores: { [taskId: AssignmentId]: StudentScore }; // Map task ID to score details
+    scores: { [taskId: AssignmentId]: StudentScore };
 }
 
 interface TaskColumn {
@@ -181,7 +167,6 @@ export interface GradebookData {
     students: StudentRow[];
 }
 
-// --- MOCK DATA SOURCE ---
 
 const MOCK_RAW_CALIFICATIONS: calificationStudent[] = [
     // Alice Smith (USER-101)
@@ -200,9 +185,7 @@ const MOCK_RAW_CALIFICATIONS: calificationStudent[] = [
     { id: "S3-F1", student: { studentId: "USER-103", nameStudent: "Carlos Diaz", taskId: "SUB-009", calification: 25 }, task: { id: "UX-F", nameTask: "Final Project", maxPoints: 30, unitId: "U-5", unitName: "Final", CourseId: "C-UX",  }, total: null },
 ];
 
-/**
- * Transforms the raw list of calification records into a structured grid format (GradebookData).
- */
+
 export const transformCalifications = (rawCalifications: calificationStudent[]): GradebookData => {
     if (rawCalifications.length === 0) {
         return {  professor: "Professor Smith", tasks: [], students: [] };
@@ -215,7 +198,6 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
         const studentId = record.student.studentId;
         const taskId = record.task.id;
 
-        // 1. Populate Task Map (Columns)
         if (!taskMap.has(taskId)) {
             taskMap.set(taskId, {
                 id: taskId,
@@ -225,7 +207,6 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
             });
         }
 
-        // 2. Initialize Student Row
         if (!studentMap.has(studentId)) {
             studentMap.set(studentId, {
                 studentId: studentId,
@@ -235,7 +216,6 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
             });
         }
 
-        // 3. Add score to the student row
         studentMap.get(studentId)!.scores[taskId] = {
             score: record.student.calification,
             max: record.task.maxPoints || 0,
@@ -244,8 +224,7 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
 
     const tasks = Array.from(taskMap.values());
     const students = Array.from(studentMap.values());
-    
-    // 4. Calculate Final Totals
+
     students.forEach(student => {
         let pointsEarned = 0;
         let pointsPossibleGraded = 0;
@@ -264,15 +243,12 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
                     pointsEarned += scoreData.score;
                 }
             } else {
-                 // If a task exists but the student has no score record for it, treat as ungraded/missing
                  fullyGraded = false;
             }
         }
-        
-        // Calculate total percentage based on points graded so far
+
         if (pointsPossibleGraded > 0) {
             const percentage = (pointsEarned / pointsPossibleGraded) * 100;
-            // Only set total percentage if all defined tasks have a score (not null)
             student.totalPercentage = fullyGraded ? Math.round(percentage) : null;
         }
     });
@@ -284,7 +260,6 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
 
 export const generateMockCalifications = (): calificationStudent[] => {
   return [
-    // Alice Smith (USER-101)
     { 
       id: "S1-A1", 
       student: { 
@@ -340,7 +315,7 @@ export const generateMockCalifications = (): calificationStudent[] => {
       total: null 
     },
     
-    // Bob Johnson (USER-102)
+
     { 
       id: "S2-A1", 
       student: { 

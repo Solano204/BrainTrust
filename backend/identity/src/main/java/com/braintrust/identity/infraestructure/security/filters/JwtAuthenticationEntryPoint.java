@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.security.web.AuthenticationEntryPoint;
-// other imports...
+
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {

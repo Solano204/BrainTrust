@@ -22,7 +22,6 @@ public record CreatePageFrontendDTO(
         @Size(min = 10, message = "Content must be at least 10 characters")
         String content,
 
-        // ✅ Frontend-extracted documents (metadata + text)
         List<FrontendDocumentDTO> attachments,
 
         List<String> externalLinks,

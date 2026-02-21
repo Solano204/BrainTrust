@@ -1,4 +1,3 @@
-// components/dashboard-header.tsx
 "use client"
 
 import { Bell, MessageSquare, Search, Menu, LogOut, User, Settings } from "lucide-react"
@@ -30,17 +29,12 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
 const handleLogout = async () => {
   try {
-    // Perform logout
     await logout();
     
-    // Wait a bit for cookies to clear
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Force navigation to login page
     window.location.href = '/auth/login';
   } catch (error) {
     console.error('Logout failed:', error);
-    // Still try to navigate even if logout fails
     window.location.href = '/auth/login';
   }
 };
@@ -48,12 +42,10 @@ const handleLogout = async () => {
     <>
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="flex lg:h-28 xl:h-20 items-center gap-4 px-4 md:px-6 lg:px-8">
-          {/* Mobile Menu Button */}
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Welcome Message */}
           <div className="flex-1">
             <h1 className="text-lg md:text-xl font-semibold text-foreground">
               Welcome back, <span className="text-primary">{user?.name || 'User'}</span>
@@ -66,7 +58,6 @@ const handleLogout = async () => {
             </p>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-2">
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="relative">
@@ -85,7 +76,7 @@ const handleLogout = async () => {
             </Button>
 
             {/* Settings */}
-            <Button 
+            <Button
               variant="ghost" 
               size="icon"
               onClick={() => setShowProfileModal(true)}

@@ -1,4 +1,4 @@
-// app/api/auth/refresh/route.ts
+
 import { getRefreshToken, setTokens } from '@/app/utils/tokenManager';
 import { authService } from '@/app/domain/services/authService';
 import { NextResponse } from 'next/server';
@@ -15,8 +15,7 @@ export async function POST() {
     }
     
     const tokenResponse = await authService.refreshTokens(refreshToken);
-    
-    // Update tokens in cookies
+
     await setTokens(
       tokenResponse.accessToken,
       tokenResponse.refreshToken,

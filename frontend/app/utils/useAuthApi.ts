@@ -1,4 +1,3 @@
-// hooks/useAuthApi.ts
 import { useCallback } from 'react';
 import axiosInstance from './axios';
 import { useAuth } from '../context/AuthContext';
@@ -28,20 +27,16 @@ export function useAuthApi() {
       
       return response.data;
     } catch (error: any) {
-      // If token expired, try to refresh and retry once
       if (error.response?.status === 401 && accessToken) {
         try {
           const refreshed = await refreshTokens();
           if (refreshed) {
-            // Get new token from cookies since context might not have updated yet
-            // We'll make a new request with the updated token via the interceptor
             const retryResponse = await axiosInstance({
               method,
               url,
               data,
               headers: {
                 ...headers,
-                // Clear Authorization header, let interceptor handle it
               },
               ...options,
             });
@@ -57,7 +52,6 @@ export function useAuthApi() {
         }
       }
       
-      // If it's an authentication error but we don't have a token
       if (error.response?.status === 401 && !accessToken) {
         await logout();
         throw new Error('Please login to continue.');

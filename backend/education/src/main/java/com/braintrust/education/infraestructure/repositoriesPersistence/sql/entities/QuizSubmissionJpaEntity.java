@@ -46,7 +46,7 @@ public class QuizSubmissionJpaEntity {
     @Column(name = "auto_graded", nullable = false)
     private boolean autoGraded;
 
-    @Column(name = "question_grades_json", columnDefinition = "TEXT") // ✅ NEW: Store question grades
+    @Column(name = "question_grades_json", columnDefinition = "TEXT")
     private String questionGradesJson;
 
     public QuizSubmissionJpaEntity() {}
@@ -54,7 +54,7 @@ public class QuizSubmissionJpaEntity {
     public QuizSubmissionJpaEntity(String id, String quizId, String studentId, int attemptNumber,
                                    LocalDateTime startedAt, LocalDateTime submittedAt, String status,
                                    String answersJson, BigDecimal gradeValue, BigDecimal gradeMaxScore,
-                                   boolean autoGraded, String questionGradesJson) { // ✅ ADDED
+                                   boolean autoGraded, String questionGradesJson) {
         this.id = id;
         this.quizId = quizId;
         this.studentId = studentId;
@@ -66,10 +66,10 @@ public class QuizSubmissionJpaEntity {
         this.gradeValue = gradeValue;
         this.gradeMaxScore = gradeMaxScore;
         this.autoGraded = autoGraded;
-        this.questionGradesJson = questionGradesJson; // ✅ SET
+        this.questionGradesJson = questionGradesJson;
     }
 
-    // Getters/Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getQuizId() { return quizId; }
@@ -92,6 +92,6 @@ public class QuizSubmissionJpaEntity {
     public void setGradeMaxScore(BigDecimal gradeMaxScore) { this.gradeMaxScore = gradeMaxScore; }
     public boolean isAutoGraded() { return autoGraded; }
     public void setAutoGraded(boolean autoGraded) { this.autoGraded = autoGraded; }
-    public String getQuestionGradesJson() { return questionGradesJson; } // ✅ GETTER
+    public String getQuestionGradesJson() { return questionGradesJson; }
     public void setQuestionGradesJson(String questionGradesJson) { this.questionGradesJson = questionGradesJson; } // ✅ SETTER
 }

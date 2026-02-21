@@ -45,10 +45,10 @@ public class QuizEntityMapper {
                 quiz.isActive()
         );
 
-        // ✅ FIXED: Map questions with bidirectional relationship
+
         if (quiz.getQuestions() != null && !quiz.getQuestions().isEmpty()) {
             List<QuizQuestionJpaEntity> questionEntities = quiz.getQuestions().stream()
-                    .map(question -> toQuestionEntity(question, entity)) // Pass parent entity
+                    .map(question -> toQuestionEntity(question, entity))
                     .collect(Collectors.toList());
             entity.setQuestions(questionEntities);
         }
@@ -84,7 +84,6 @@ public class QuizEntityMapper {
                 question.getCorrectAnswer()
         );
 
-        // ✅ Set the bidirectional relationship
         entity.setQuiz(parentQuiz);
         return entity;
     }

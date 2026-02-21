@@ -1,4 +1,3 @@
-// components/admin/AdminResetPasswordModal.tsx
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -25,7 +24,6 @@ interface AdminResetPasswordModalProps {
   onClose: () => void;
 }
 
-// Zod validation schema
 const resetPasswordSchema = z.object({
   newPassword: z
     .string()

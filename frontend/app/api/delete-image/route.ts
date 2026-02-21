@@ -1,5 +1,4 @@
 
-// Optional: Delete image endpoint
 
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from 'cloudinary';
@@ -24,10 +23,9 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Deleting image from Cloudinary:', publicId);
 
-    // Delete from Cloudinary (for images, use 'image' resource type)
     const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: 'image', // For images
-      invalidate: true, // Invalidate CDN cache
+      resource_type: 'image',
+      invalidate: true,
     });
 
     console.log('Cloudinary delete result:', result);

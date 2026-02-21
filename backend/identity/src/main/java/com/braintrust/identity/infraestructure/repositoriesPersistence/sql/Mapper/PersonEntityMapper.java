@@ -17,15 +17,12 @@ public class PersonEntityMapper {
     private static final Logger log =
             LoggerFactory.getLogger(PersonEntityMapper.class);
 
-    /**
-     * Converts a Person Domain Model to a JPA Entity.
-     */
     public PersonJpaEntity toEntity(Person person) {
         log.debug("Mapping Person Domain ID {} to JPA Entity.", person.getId().getValue());
 
         Address address = person.getAddress();
 
-        // Use trace level to log potentially sensitive PII data fields being mapped
+
         log.trace("Mapping PII: Name={}, Phone={}, Address={}",
                 person.getFullName(), person.getPhone(), address != null ? address.getStreet() : "N/A");
 
@@ -45,9 +42,6 @@ public class PersonEntityMapper {
         );
     }
 
-    /**
-     * Converts a Person JPA Entity back to a Domain Person model.
-     */
     public Person toDomain(PersonJpaEntity entity) {
         log.debug("Mapping Person JPA Entity {} back to Domain Model.", entity.getId());
 

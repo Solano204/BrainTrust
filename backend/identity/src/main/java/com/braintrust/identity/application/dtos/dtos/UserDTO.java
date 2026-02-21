@@ -5,10 +5,10 @@ import java.time.LocalDateTime;
 public record UserDTO(
         String id,
         String email,
-        String role,  // TEACHER, STUDENT, ADMIN
+        String role,
         boolean active,
         LocalDateTime createdAt,
         PersonDTO person,
-        String studentId  // Only for students, null otherwise
+        String studentId
 ) {
 }

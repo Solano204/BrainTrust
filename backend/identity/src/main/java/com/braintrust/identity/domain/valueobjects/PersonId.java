@@ -5,7 +5,6 @@ import com.braintrust.shared.domain.ValueObject;
 import java.util.Objects;
 import java.util.UUID;
 
-// 📍 identity/domain/valueobjects/PersonId.java
 public class PersonId extends ValueObject {
     private final String value;
 

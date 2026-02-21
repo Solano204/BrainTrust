@@ -14,27 +14,26 @@ import java.util.Optional;
 @Repository
 public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEntity, String> {
 
-    // Basic queries
     List<AssignmentJpaEntity> findByCourseId(String courseId);
     List<AssignmentJpaEntity> findByCourseIdAndUnit(String courseId, String unitId);
     List<AssignmentJpaEntity> findByCourseIdAndActiveTrue(String courseId);
     List<AssignmentJpaEntity> findByCourseIdAndDueDateBetween(String courseId, LocalDateTime start, LocalDateTime end);
 
-    // ✅ UPDATED - Fetch with documents AND links
+
     @Query("SELECT a FROM AssignmentJpaEntity a LEFT JOIN FETCH a.documents LEFT JOIN FETCH a.links WHERE a.id = :id")
     Optional<AssignmentJpaEntity> findByIdWithDocuments(@Param("id") String id);
 
-    // ✅ UPDATED - Fetch with documents AND links for course
+
     @Query("SELECT a FROM AssignmentJpaEntity a LEFT JOIN FETCH a.documents LEFT JOIN FETCH a.links WHERE a.courseId = :courseId")
     List<AssignmentJpaEntity> findByCourseIdWithDocuments(@Param("courseId") String courseId);
 
-    // ✅ ADDED - Find assignment with links only
+
     @Query("SELECT a FROM AssignmentJpaEntity a LEFT JOIN FETCH a.links WHERE a.id = :id")
     Optional<AssignmentJpaEntity> findByIdWithLinks(@Param("id") String id);
 
 
 
-    // ✅ ADDED - Find assignments by teacher with documents AND links
+
     @Query("""
         SELECT a FROM AssignmentJpaEntity a 
         LEFT JOIN FETCH a.documents 
@@ -47,11 +46,10 @@ public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEnti
     """)
     List<AssignmentJpaEntity> findByTeacherId(@Param("teacherId") String teacherId);
 
-    // ✅ ADDED - Find active assignments by course with documents AND links
+
     @Query("SELECT a FROM AssignmentJpaEntity a LEFT JOIN FETCH a.documents LEFT JOIN FETCH a.links WHERE a.courseId = :courseId AND a.active = true")
     List<AssignmentJpaEntity> findActiveAssignmentsByCourse(@Param("courseId") String courseId);
 
-    // ✅ ADDED - Find assignments due soon with documents AND links
     @Query("""
         SELECT a FROM AssignmentJpaEntity a 
         LEFT JOIN FETCH a.documents 
@@ -68,7 +66,7 @@ public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEnti
     );
 
 
-    // ✅ BEST SOLUTION: Use EntityGraph with attributePaths
+
     @EntityGraph(attributePaths = {"documents", "links"})
     @Query("SELECT a FROM AssignmentJpaEntity a WHERE a.id = :id")
     Optional<AssignmentJpaEntity> findByIdWithDocumentsAndLinks(@Param("id") String id);
@@ -174,7 +172,7 @@ public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEnti
             @Param("monthEnd") LocalDateTime monthEnd
     );
 
-    // Alternative: For simple cases, just use EntityGraph without query
+
     @EntityGraph(attributePaths = {"documents", "links"})
     List<AssignmentJpaEntity> findAll();
 

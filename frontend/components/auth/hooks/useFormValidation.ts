@@ -1,4 +1,3 @@
-// hooks/useFormValidation.ts
 import { useState, useCallback } from 'react'
 import { ZodSchema, ZodError } from 'zod'
 
@@ -44,7 +43,6 @@ export function useFormValidation<T extends Record<string, any>>(
 
   const validateField = useCallback(async (field: keyof T): Promise<boolean> => {
     try {
-      // Validate single field using schema
       const fieldSchema = schema.shape[field as string]
       if (fieldSchema) {
         await fieldSchema.parseAsync(values[field])
@@ -125,45 +123,3 @@ export function useFormValidation<T extends Record<string, any>>(
     clearFieldError
   }
 }
-
-// Example usage in component:
-/*
-const {
-  values: personalInfo,
-  errors: personalInfoErrors,
-  touched,
-  setFieldValue,
-  setFieldTouched,
-  validateField,
-  validateForm,
-  clearFieldError
-} = useFormValidation(
-  {
-    firstName: "",
-    lastName: "",
-    gender: "OTHER",
-    phone: "",
-  },
-  personalInfoSchema
-)
-
-// In input onChange:
-onChange={(e) => {
-  setFieldValue('firstName', e.target.value)
-  clearFieldError('firstName')
-}}
-
-// In input onBlur:
-onBlur={() => {
-  setFieldTouched('firstName')
-  validateField('firstName')
-}}
-
-// On form submit:
-const handleSubmit = async () => {
-  const isValid = await validateForm()
-  if (isValid) {
-    // Submit form
-  }
-}
-*/

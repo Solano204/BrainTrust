@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-// other imports...
 @Service
 
 public class JwtService {
@@ -40,7 +39,6 @@ public class JwtService {
     private long refreshTokenExpiration;
 
 
-    // Who created the token
     @Value("${jwt.issuer}")
     private String issuer;
 
@@ -48,24 +46,20 @@ public class JwtService {
     private static final String USER_ID_KEY = "userId";
     private static final String TOKEN_TYPE_KEY = "tokenType";
 
-    // Generate Access Token
     public String generateAccessToken(UserDetails userDetails, UserId userId) {
         Map<String, Object> extraClaims = new HashMap<>();
 
-        // AUTHORITIES (ROLES)
         extraClaims.put(AUTHORITIES_KEY, userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
 
-        // IdUser
         extraClaims.put(USER_ID_KEY, userId.getValue());
-        //Type of token (only to be sure that this token was issued from here)
+
         extraClaims.put(TOKEN_TYPE_KEY, "access_token");
 
         return buildToken(extraClaims, userDetails, accessTokenExpiration);
     }
 
-    // Generate Refresh Token
     public String generateRefreshToken(UserDetails userDetails, UserId userId) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put(USER_ID_KEY, userId.getValue());
@@ -94,18 +88,16 @@ public class JwtService {
                 .compact();
     }
 
-    // Validate Token
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
-            //Get the type token From the token USIN' THE KEY  TOKEN_TYPE_KEY
             final String tokenType = extractClaim(token, claims ->
                     claims.get(TOKEN_TYPE_KEY, String.class));
 
             return (username.equals(userDetails.getUsername())
                     && !isTokenExpired(token)
                     && "access_token".equals(tokenType)
-                    && isIssuerValid(token)); // validate if it's was created by my company
+                    && isIssuerValid(token));
 
         } catch (Exception e) {
             log.error("Token validation failed: {}", e.getMessage());

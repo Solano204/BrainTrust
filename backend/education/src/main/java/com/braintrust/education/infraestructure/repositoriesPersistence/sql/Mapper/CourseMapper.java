@@ -29,7 +29,7 @@ public class CourseMapper {
 
     private final UserService userService;
 
-    // ✅ Add constructor injection for UserService
+
     public CourseMapper(UserService userService) {
         this.userService = userService;
         log.info("✅ CourseMapper initialized with UserService");
@@ -49,7 +49,7 @@ public class CourseMapper {
                 course.getGrade(),
                 course.getGroup(),
                 course.getTeacherId().getValue(),
-                teacherName, // ✅ Now using real teacher name
+                teacherName,
                 course.isActive(),
                 course.getEnrollments().size(),
                 0, // TODO: Get assignment count
@@ -58,9 +58,7 @@ public class CourseMapper {
         );
     }
 
-    /**
-     * Get teacher name from UserService
-     */
+
     private String getTeacherName(UserId teacherId) {
         try {
             MinimalUserInfoDTO teacherInfo = userService.getMinimalUserInfo(teacherId);
@@ -72,14 +70,11 @@ public class CourseMapper {
                     teacherId.getValue(), e.getMessage());
         }
 
-        // Fallback
+
         return "Teacher Name";
     }
 
 
-    /**
-     * Converts a Domain Course model to a JPA Entity.
-     */
     public CourseJpaEntity toEntity(Course course) {
         log.debug("Mapping Course Domain {} to JPA Entity.", course.getId().getValue());
 
@@ -93,13 +88,11 @@ public class CourseMapper {
                 course.getGroup(),
                 course.getTeacherId().getValue(),
                 course.isActive(),
-                LocalDateTime.now() // Creation/Update timestamp
+                LocalDateTime.now()
         );
     }
 
-    /**
-     * Converts a Course JPA Entity back to a Domain Course model.
-     */
+
     public Course toDomain(CourseJpaEntity entity) {
         log.debug("Mapping Course JPA Entity {} back to Domain Model.", entity.getId());
 
@@ -107,7 +100,6 @@ public class CourseMapper {
         CourseCode courseCode = new CourseCode(entity.getCode());
         UserId teacherId = UserId.fromString(entity.getTeacherId());
 
-        // For now, we'll use empty collections for enrollments and units
         log.warn("Course reconstruction: Enrollments and Units are empty collections and must be loaded separately.");
 
         return Course.reconstitute(
@@ -120,20 +112,11 @@ public class CourseMapper {
                 entity.getGroup(),
                 teacherId,
                 entity.isActive(),
-                Collections.emptySet(), // Submissions/Enrollments
-                Collections.emptyList() // Units
+                Collections.emptySet(),
+                Collections.emptyList()
         );
     }
 
-    // ------------------------------------------------------------------
-    // ✅ STATIC DTO MAPPING HELPERS
-    // ------------------------------------------------------------------
-
-    /**
-     * Maps the Enrollment Domain Model to the public EnrollmentDTO.
-     * NOTE: This is a basic mapping without user details. For full details,
-     * use the method in CourseApplicationService that fetches user information.
-     */
     public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment) {
         GradeDTO gradeDTO = enrollment.getFinalGrade() != null
                 ? new GradeDTO(
@@ -143,24 +126,21 @@ public class CourseMapper {
         )
                 : null;
 
-        // Return basic EnrollmentDTO without user details
+
         return new EnrollmentDTO(
                 enrollment.getId().getValue(),
                 enrollment.getCourseId().getValue(),
                 "Course Name", // TODO: Get from Course
                 enrollment.getStudentId().getValue(),
                 "Student Name", // TODO: Get from UserService
-                "", // studentEmail - empty in basic mapping
-                "", // studentRefId - empty in basic mapping
+                "",
+                "",
                 enrollment.getEnrollmentDate().toString(),
                 enrollment.getStatus().name(),
                 gradeDTO
         );
     }
 
-    /**
-     * Overloaded method to map Enrollment with Course name
-     */
     public static EnrollmentDTO mapToEnrollmentDTO(Enrollment enrollment, String courseName) {
         GradeDTO gradeDTO = enrollment.getFinalGrade() != null
                 ? new GradeDTO(
@@ -175,18 +155,16 @@ public class CourseMapper {
                 enrollment.getCourseId().getValue(),
                 courseName,
                 enrollment.getStudentId().getValue(),
-                "Student Name", // TODO: Get from UserService
-                "", // studentEmail - empty in basic mapping
-                "", // studentRefId - empty in basic mapping
+                "Student Name",
+                "",
+                "",
                 enrollment.getEnrollmentDate().toString(),
                 enrollment.getStatus().name(),
                 gradeDTO
         );
     }
 
-    /**
-     * Maps the CourseUnit Domain Model to the public CourseUnitDTO.
-     */
+
     public CourseUnitDTO mapToUnitDTO(CourseUnit unit) {
         return new CourseUnitDTO(
                 unit.getId().getValue(),
@@ -199,13 +177,6 @@ public class CourseMapper {
     }
 
 
-
-
-
-    /**
-     * Maps Enrollment with all user details (to be used with UserService)
-     * This is the complete mapping method for enrollment details.
-     */
     public static EnrollmentDTO mapToEnrollmentDTOWithDetails(
             Enrollment enrollment,
             String courseName,

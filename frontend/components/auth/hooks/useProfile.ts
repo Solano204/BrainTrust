@@ -1,8 +1,6 @@
-// hooks/useProfile.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-// Import individual functions instead of the object
-import { 
+import {
   getProfile,
   updatePersonalInfo,
   updateAddress,
@@ -12,14 +10,12 @@ import {
 import { useAuth } from '@/app/context/AuthContext';
 import { uploadImageFile } from '@/app/utils/cloudinary/cloudinary';
 
-// Query keys
 export const profileKeys = {
   all: ['profile'] as const,
   details: () => [...profileKeys.all, 'detail'] as const,
   detail: (userId?: string) => [...profileKeys.details(), userId] as const,
 };
 
-// Profile queries
 export function useProfile() {
   const { user } = useAuth();
   
@@ -27,17 +23,15 @@ export function useProfile() {
     queryKey: profileKeys.detail(user?.id),
     queryFn: getProfile,
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
 }
 
-// Utility function to invalidate all profile queries
 function invalidateProfileQueries(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: profileKeys.all });
 }
 
-// Profile mutations
 export function useUpdatePersonalInfo() {
   const queryClient = useQueryClient();
   const { refreshTokens } = useAuth();
@@ -45,13 +39,9 @@ export function useUpdatePersonalInfo() {
   return useMutation({
     mutationFn: updatePersonalInfo,
     onSuccess: async (response, variables) => {
-      // Invalidate profile queries
       invalidateProfileQueries(queryClient);
       
-      // Refresh auth context to update user data
       await refreshTokens();
-      
-      // Show success message (you'll need to implement toast)
       console.log("Personal information updated successfully");
     },
     onError: (error: Error) => {
@@ -84,10 +74,8 @@ export function useUpdateImage() {
   
   return useMutation({
     mutationFn: async ({ personId, imageFile }: { personId: string; imageFile: File }) => {
-      // First upload the image
       const imagePath = await uploadImageFile(imageFile);
       
-      // Then update the profile with the image path
       return updateImage({ personId, imagePath });
     },
     onSuccess: async (response, variables) => {
@@ -114,7 +102,6 @@ export function useChangePassword() {
       return changePassword({ ...data, userId: user.id });
     },
     onSuccess: (response) => {
-      // Invalidate all queries since password change affects auth state
       queryClient.invalidateQueries();
       
       console.log("Password changed successfully");

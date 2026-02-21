@@ -1,6 +1,6 @@
 package com.braintrust.identity.application.dtos.commands;
 
-// 📍 identity/application/dtos/commands/ChangePasswordCommand.java
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;

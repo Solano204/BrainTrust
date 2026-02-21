@@ -1,4 +1,3 @@
-// components/timeline/timeline-skeleton.tsx
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -23,7 +22,6 @@ export function TimelineSectionSkeleton() {
               {/* Icon Skeleton */}
               <Skeleton className="h-10 w-10 rounded-lg" />
               
-              {/* Content Skeleton */}
               <div className="flex-1 space-y-3">
                 <div className="flex items-start justify-between">
                   <Skeleton className="h-5 w-3/4 rounded" />
@@ -36,7 +34,6 @@ export function TimelineSectionSkeleton() {
                 </div>
               </div>
 
-              {/* Action Skeleton */}
               <Skeleton className="h-8 w-8 rounded" />
             </div>
           </div>

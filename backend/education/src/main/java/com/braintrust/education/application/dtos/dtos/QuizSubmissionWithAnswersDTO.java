@@ -16,7 +16,7 @@ public record QuizSubmissionWithAnswersDTO(
         String status,
         GradeDTO grade,
         boolean autoGraded,
-        List<QuestionAnswerDTO> questionAnswers, // ✅ Detailed question responses
+        List<QuestionAnswerDTO> questionAnswers,
         boolean timeExpired
 ) {
     public record QuestionAnswerDTO(
@@ -25,8 +25,8 @@ public record QuizSubmissionWithAnswersDTO(
             String questionType,
             int points,
             List<QuestionOptionDTO> options,
-            List<Integer> selectedOptions, // For multiple choice
-            String textAnswer, // For open-ended
+            List<Integer> selectedOptions,
+            String textAnswer,
             boolean isCorrect,
             int earnedPoints
     ) {}

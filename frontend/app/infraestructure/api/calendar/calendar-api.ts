@@ -1,4 +1,3 @@
-// File: src/app/features/calendar/api/calendar-api.ts
 "use server";
 
 import axios from "axios";
@@ -36,9 +35,7 @@ const handleApiError = (error: unknown) => {
   throw error;
 };
 
-/**
- * Fetch calendar events for a specific month
- */
+
 export async function fetchCalendarEvents(
   teacherId: string,
   monthStart: string
@@ -53,9 +50,7 @@ export async function fetchCalendarEvents(
   }
 }
 
-/**
- * Fetch this week's latest tasks and quizzes
- */
+
 export async function fetchThisWeekResources(
   teacherId: string,
   weekStart: string
@@ -70,9 +65,7 @@ export async function fetchThisWeekResources(
   }
 }
 
-/**
- * Fetch all tasks and quizzes for current month
- */
+
 export async function fetchMonthResources(
   teacherId: string,
   monthStart: string

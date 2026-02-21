@@ -1,4 +1,4 @@
-// app/api/delete-document/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -7,7 +7,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-// app/api/delete-documents-batch/route.ts
+
 export async function DELETE(request: NextRequest) {
   try {
     const { publicIds } = await request.json();
@@ -21,7 +21,6 @@ export async function DELETE(request: NextRequest) {
 
     console.log(`Batch deleting ${publicIds.length} documents from Cloudinary`);
 
-    // Delete multiple resources
     const result = await cloudinary.api.delete_resources(publicIds, {
       resource_type: 'raw',
       invalidate: true,

@@ -5,7 +5,6 @@ import com.braintrust.shared.domain.ValueObject;
 import java.util.Objects;
 import java.util.UUID;
 
-// 📍 education/domain/valueobjects/SubmissionId.java
 public class SubmissionId extends ValueObject {
     private final String value;
 

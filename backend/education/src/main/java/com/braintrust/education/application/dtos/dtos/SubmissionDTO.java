@@ -17,7 +17,7 @@ public record SubmissionDTO(
         String submittedAt,
         boolean isLate,
         List<DocumentDTO> attachments,
-        AIDetectionResultDTO aiAnalysis, // ✅ This already contains detectedSegments
+        AIDetectionResultDTO aiAnalysis,
         String teamId,
         String teamName,
         boolean isTeamSubmission,
@@ -27,12 +27,12 @@ public record SubmissionDTO(
         String assignmentTargetType,
         String submissionFormat
 ) {
-    // ✅ Optional: Add helper method to get AI segments easily
+
     public List<DetectedSegmentDTO> getAiSegments() {
         return aiAnalysis != null ? aiAnalysis.detectedSegments() : List.of();
     }
 
-    // ✅ Helper method to check if AI analysis is available
+
     public boolean hasAiAnalysis() {
         return aiAnalysis != null && aiAnalysis.status() != null
                 && "COMPLETED".equals(aiAnalysis.status());

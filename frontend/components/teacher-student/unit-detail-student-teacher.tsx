@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/UnitDetail.tsx
 "use client";
 
 import * as React from "react";
@@ -18,6 +17,8 @@ import {
   Users,
   BookOpen,
   Monitor,
+  Clock,
+  CalendarX,
 } from "lucide-react";
 import {
   UnitResource,
@@ -47,6 +48,7 @@ import { useQuizMutations, useQuizzesByUnit } from "./hooks/quiz-hooks";
 import { usePageMutations, usePagesByUnit } from "./hooks/page-hooks";
 import { useUserTeam } from "./hooks/team-hooks";
 import { useQuizSubmission, useTaskSubmission } from "./hooks/submission-hooks";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UnitDetailProps {
   idUnit: UnitId;
@@ -64,15 +66,11 @@ export function UnitDetail({
   const { user } = useAuth();
   const isStudent = user?.role === "student";
 
-  // Data fetching for each resource type
   const {
     data: assignments = [],
     isLoading: isLoadingAssignments,
     refetch: refetchAssignments,
   } = useAssignmentsByUnit(idCourse, idUnit);
-
-
-// CURRENTLY WORKS
 
   const {
     data: quizzes = [],
@@ -86,41 +84,31 @@ export function UnitDetail({
     refetch: refetchPages,
   } = usePagesByUnit(idCourse, idUnit);
 
-  // Get user's team for group assignments
   const { data: userTeam } = useUserTeam(user?.id || "");
 
-  // Mutations for teachers
   const assignmentMutations = useAssignmentMutations();
   const quizMutations = useQuizMutations();
   const pageMutations = usePageMutations();
 
-  // Student submission hooks
   const { submitTask: submitTaskMutation, isSubmitting: isSubmittingTask } =
     useTaskSubmission();
   const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
     useQuizSubmission();
 
-  // Combine all resources for carousel display
   const resources = React.useMemo((): UnitResource[] => {
     return [...assignments, ...quizzes, ...pages].sort((a, b) =>
       a.title.localeCompare(b.title)
     );
   }, [assignments, quizzes, pages]);
 
-  // Carousel state
   const [currentResourceIndex, setCurrentResourceIndex] = React.useState(0);
-  const [viewMode, setViewMode] = React.useState<
-    "carousel" | "detail" | "student"
-  >("carousel");
-  const [currentResource, setCurrentResource] =
-    React.useState<UnitResource | null>(null);
+  const [viewMode, setViewMode] = React.useState<"carousel" | "detail" | "student">("carousel");
+  const [currentResource, setCurrentResource] = React.useState<UnitResource | null>(null);
   const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
   const [showResourceSelector, setShowResourceSelector] = React.useState(false);
-  const [selectedResourceType, setSelectedResourceType] = React.useState<
-    "ASSIGNMENT" | "QUIZ" | "PAGE" | null
-  >(null);
+  const [selectedResourceType, setSelectedResourceType] = React.useState<"ASSIGNMENT" | "QUIZ" | "PAGE" | null>(null);
+  const [quizAvailabilityError, setQuizAvailabilityError] = React.useState<string | null>(null);
 
-  // Fetch individual assignment when viewing in detail mode
   const { data: viewedAssignment, refetch: refetchViewedAssignment } =
     useAssignment(
       viewMode === "detail" &&
@@ -132,7 +120,6 @@ export function UnitDetail({
 
   const isLoading = isLoadingAssignments || isLoadingQuizzes || isLoadingPages;
 
-  // Helper function to determine resource type
   function getResourceType(
     resource: UnitResource
   ): "ASSIGNMENT" | "QUIZ" | "PAGE" {
@@ -142,7 +129,45 @@ export function UnitDetail({
     return "PAGE";
   }
 
-  // Handle resource creation with file support
+  // Check if quiz is available for student to take
+  const isQuizAvailable = (quiz: Quiz): { available: boolean; reason?: string } => {
+    const now = new Date();
+
+    // Check if quiz has availability dates
+    if (quiz.availableFrom) {
+      const availableFrom = new Date(quiz.availableFrom);
+      if (now < availableFrom) {
+        return {
+          available: false,
+          reason: `This quiz is not available yet. It will be available from ${availableFrom.toLocaleDateString()} at ${availableFrom.toLocaleTimeString()}.`
+        };
+      }
+    }
+
+    if (quiz.availableUntil) {
+      const availableUntil = new Date(quiz.availableUntil);
+      if (now > availableUntil) {
+        return {
+          available: false,
+          reason: `This quiz is no longer available. It was available until ${availableUntil.toLocaleDateString()} at ${availableUntil.toLocaleTimeString()}.`
+        };
+      }
+    }
+
+    // Check due date if no availableUntil is set
+    if (!quiz.availableUntil && quiz.dueDate && !quiz.acceptLateSubmissions) {
+      const dueDate = new Date(quiz.dueDate);
+      if (now > dueDate) {
+        return {
+          available: false,
+          reason: `This quiz is past its due date (${dueDate.toLocaleDateString()}) and late submissions are not accepted.`
+        };
+      }
+    }
+
+    return { available: true };
+  };
+
   const handleCreateResource = (resourceData: any, files?: File[]) => {
     if (!selectedResourceType) return;
 
@@ -166,7 +191,6 @@ export function UnitDetail({
         });
         break;
       case "QUIZ":
-        // ACTUALIZADO: Ahora maneja correctamente la creación del quiz
         quizMutations.createQuiz.mutate({
           ...commonConfig,
           quizData: resourceData,
@@ -182,7 +206,6 @@ export function UnitDetail({
     }
   };
 
-  // Handle resource deletion (for teachers)
   const handleDeleteResource = (resource: UnitResource) => {
     const resourceType = getResourceType(resource);
 
@@ -214,13 +237,25 @@ export function UnitDetail({
     }
   };
 
-  // Handle student viewing/submitting a resource
   const handleStudentView = (resource: UnitResource) => {
+    const resourceType = getResourceType(resource);
+
+    // If it's a quiz and the user is a student, check availability
+    if (resourceType === "QUIZ" && isStudent) {
+      const quiz = resource as Quiz;
+      const availability = isQuizAvailable(quiz);
+      
+      if (!availability.available) {
+        setQuizAvailabilityError(availability.reason || "This quiz is not available.");
+        return;
+      }
+    }
+
+    setQuizAvailabilityError(null);
     setCurrentResource(resource);
     setViewMode("student");
   };
 
-  // Handle task submission from student with delivery mode detection
   const handleTaskSubmit = async (submissionData: {
     content: string;
     attachments: File[];
@@ -256,11 +291,21 @@ export function UnitDetail({
     }
   };
 
-  // Handle quiz submission from student
   const handleQuizSubmit = async (answers: any) => {
     if (!currentResource || !user?.id) return;
 
     try {
+      // Double-check availability before submitting
+      const quiz = currentResource as Quiz;
+      const availability = isQuizAvailable(quiz);
+      
+      if (!availability.available) {
+        setQuizAvailabilityError(availability.reason || "This quiz is not available.");
+        setViewMode("carousel");
+        setCurrentResource(null);
+        return;
+      }
+
       await submitQuizMutation.mutateAsync({
         quizId: currentResource.id,
         studentId: user.id,
@@ -269,21 +314,25 @@ export function UnitDetail({
 
       setViewMode("carousel");
       setCurrentResource(null);
+      setQuizAvailabilityError(null);
       refetchQuizzes();
     } catch (error) {
       console.error("Failed to submit quiz:", error);
     }
   };
 
-  // Navigation handlers
   const handlePrevious = () => {
-    if (currentResourceIndex > 0)
+    if (currentResourceIndex > 0) {
       setCurrentResourceIndex(currentResourceIndex - 1);
+      setQuizAvailabilityError(null);
+    }
   };
 
   const handleNext = () => {
-    if (currentResourceIndex < resources.length - 1)
+    if (currentResourceIndex < resources.length - 1) {
       setCurrentResourceIndex(currentResourceIndex + 1);
+      setQuizAvailabilityError(null);
+    }
   };
 
   const handleView = (resource: UnitResource) => {
@@ -294,28 +343,25 @@ export function UnitDetail({
   const handleBackFromDetail = () => {
     setViewMode("carousel");
     setCurrentResource(null);
-    // Refetch all resources when returning to carousel
+    setQuizAvailabilityError(null);
     refetchAssignments();
     refetchQuizzes();
     refetchPages();
   };
 
-  // Utility functions
- const getResourceIcon = (resource: UnitResource) => {
-  const resourceType = getResourceType(resource);
-  if (resourceType === "ASSIGNMENT") {
-    const assignment = resource as Assignment;
-    // Show notebook or digital icon based on submission format
-    if (assignment.submissionFormat === "NOTEBOOK") {
-      return "📓"; // Notebook icon
+  const getResourceIcon = (resource: UnitResource) => {
+    const resourceType = getResourceType(resource);
+    if (resourceType === "ASSIGNMENT") {
+      const assignment = resource as Assignment;
+      if (assignment.submissionFormat === "NOTEBOOK") {
+        return "📓";
+      }
+      return assignment.deliveryMode === "TEAM" ? "👥" : "📝";
     }
-    // Show team or individual icon for digital
-    return assignment.deliveryMode === "TEAM" ? "👥" : "📝";
-  }
-  if (resourceType === "QUIZ") return "📋";
-  if (resourceType === "PAGE") return "📄";
-  return "📚";
-};
+    if (resourceType === "QUIZ") return "📋";
+    if (resourceType === "PAGE") return "📄";
+    return "📚";
+  };
 
   const getResourceColor = (resource: UnitResource) => {
     const resourceType = getResourceType(resource);
@@ -330,43 +376,77 @@ export function UnitDetail({
     return "from-gray-500 to-gray-600";
   };
 
-  // Update the getResourceDetails function to include submission format:
-const getResourceDetails = (resource: UnitResource) => {
-  const resourceType = getResourceType(resource);
+  const getResourceDetails = (resource: UnitResource) => {
+    const resourceType = getResourceType(resource);
 
-  switch (resourceType) {
-    case "ASSIGNMENT": {
-      const assign = resource as Assignment;
-      const deliveryMode =
-        assign.deliveryMode === "TEAM"
-          ? "Group Assignment"
-          : "Individual Assignment";
-      const submissionFormat = 
-        assign.submissionFormat === "NOTEBOOK"
-          ? "Notebook Submission"
-          : "Digital Submission";
-      const dueDate = assign.dueDate
-        ? `Due: ${new Date(assign.dueDate).toLocaleDateString()}`
-        : "";
-      const maxScore = `Max Score: ${assign.maxScore.maxPoints}`;
-      return `${deliveryMode} | ${submissionFormat} | ${maxScore} ${dueDate ? `| ${dueDate}` : ""}`;
+    switch (resourceType) {
+      case "ASSIGNMENT": {
+        const assign = resource as Assignment;
+        const deliveryMode =
+          assign.deliveryMode === "TEAM"
+            ? "Group Assignment"
+            : "Individual Assignment";
+        const submissionFormat =
+          assign.submissionFormat === "NOTEBOOK"
+            ? "Notebook Submission"
+            : "Digital Submission";
+        const dueDate = assign.dueDate
+          ? `Due: ${new Date(assign.dueDate).toLocaleDateString()}`
+          : "";
+        const maxScore = `Max Score: ${assign.maxScore.maxPoints}`;
+        return `${deliveryMode} | ${submissionFormat} | ${maxScore} ${dueDate ? `| ${dueDate}` : ""}`;
+      }
+      case "QUIZ": {
+        const quiz = resource as Quiz;
+        const availability = isStudent ? isQuizAvailable(quiz) : { available: true };
+        const availabilityText = !availability.available ? " | NOT AVAILABLE" : "";
+        return `Max Grade: ${quiz.maxGrade} | Time: ${quiz.timeLimit} min${availabilityText}`;
+      }
+      case "PAGE": {
+        const page = resource as Page;
+        const preview = page.sectionContent.substring(0, 100);
+        return preview + (page.sectionContent.length > 100 ? "..." : "");
+      }
+      default:
+        return "";
     }
-    case "QUIZ": {
-      const quiz = resource as Quiz;
-      return `Max Grade: ${quiz.maxGrade} | Time: ${quiz.timeLimit} min`;
-    }
-    case "PAGE": {
-      const page = resource as Page;
-      const preview = page.sectionContent.substring(0, 100);
-      return preview + (page.sectionContent.length > 100 ? "..." : "");
-    }
-    default:
-      return "";
-  }
-};
+  };
 
+  const getQuizAvailabilityBadge = (quiz: Quiz) => {
+    if (!isStudent) return null;
 
-  // Render detail view (teacher/student view with edit capabilities)
+    const availability = isQuizAvailable(quiz);
+    const now = new Date();
+
+    if (!availability.available) {
+      if (quiz.availableFrom && now < new Date(quiz.availableFrom)) {
+        return (
+          <Badge variant="secondary" className="text-sm">
+            <Clock className="h-3 w-3 mr-1" />
+            Opens {new Date(quiz.availableFrom).toLocaleDateString()}
+          </Badge>
+        );
+      }
+      if (quiz.availableUntil && now > new Date(quiz.availableUntil)) {
+        return (
+          <Badge variant="destructive" className="text-sm">
+            <CalendarX className="h-3 w-3 mr-1" />
+            Closed
+          </Badge>
+        );
+      }
+      if (quiz.dueDate && !quiz.acceptLateSubmissions && now > new Date(quiz.dueDate)) {
+        return (
+          <Badge variant="destructive" className="text-sm">
+            <CalendarX className="h-3 w-3 mr-1" />
+            Past Due
+          </Badge>
+        );
+      }
+    }
+
+    return null;
+  };
 
   const renderDetailView = () => {
     if (!currentResource) return null;
@@ -382,7 +462,6 @@ const getResourceDetails = (resource: UnitResource) => {
               onClose={handleBackFromDetail}
             />
           )}
-          {/* ACTUALIZADO: QuizView ahora tiene todas las operaciones CRUD integradas */}
           {resourceType === "QUIZ" && (
             <QuizView
               quiz={currentResource as Quiz}
@@ -400,7 +479,6 @@ const getResourceDetails = (resource: UnitResource) => {
     );
   };
 
-  // Render student view
   const renderStudentView = () => {
     if (!currentResource || !user) return null;
 
@@ -438,7 +516,6 @@ const getResourceDetails = (resource: UnitResource) => {
     return null;
   };
 
-  // Early returns for different view modes
   if (isLoading) {
     return (
       <div className="min-h-screen p-10 flex items-center justify-center text-lg text-primary">
@@ -448,17 +525,14 @@ const getResourceDetails = (resource: UnitResource) => {
     );
   }
 
-  // Detail mode (teacher/student view with inline editing)
   if (viewMode === "detail" && currentResource) {
     return renderDetailView();
   }
 
-  // Student view mode
   if (viewMode === "student" && currentResource) {
     return renderStudentView();
   }
 
-  // Carousel view
   const currentCarouselResource = resources[currentResourceIndex];
   const currentResourceType = currentCarouselResource
     ? getResourceType(currentCarouselResource)
@@ -498,7 +572,6 @@ const getResourceDetails = (resource: UnitResource) => {
               </p>
             </div>
 
-            {/* Add Resource button - only for teachers */}
             {!isStudent && (
               <Button
                 onClick={() => setShowResourceSelector(true)}
@@ -523,7 +596,6 @@ const getResourceDetails = (resource: UnitResource) => {
         </div>
       </div>
 
-      {/* Carousel */}
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         <Card className="overflow-hidden border-2 border-gray-600">
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-center">
@@ -546,7 +618,13 @@ const getResourceDetails = (resource: UnitResource) => {
               </div>
             ) : (
               <div className="space-y-12">
-                {/* Resource Navigation */}
+                {quizAvailabilityError && (
+                  <Alert variant="destructive">
+                    <CalendarX className="h-4 w-4" />
+                    <AlertDescription>{quizAvailabilityError}</AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="flex items-center justify-center gap-8">
                   <button
                     onClick={handlePrevious}
@@ -583,40 +661,8 @@ const getResourceDetails = (resource: UnitResource) => {
                   </button>
                 </div>
 
-                {/* Resource Details */}
                 <div className="text-center space-y-4 max-w-2xl mx-auto">
-               <div className="flex items-center justify-center gap-2">
-  <Badge className="text-sm">{currentResourceType}</Badge>
-  {isGroupAssignment && (
-    <Badge variant="secondary" className="text-sm">
-      <Users className="h-3 w-3 mr-1" />
-      Group Assignment
-    </Badge>
-  )}
-  {/* NEW: Add submission format badge for assignments */}
-  {currentResourceType === "ASSIGNMENT" && (
-    <Badge 
-      variant={
-        (currentCarouselResource as Assignment).submissionFormat === "NOTEBOOK" 
-          ? "outline" 
-          : "secondary"
-      } 
-      className="text-sm"
-    >
-      {(currentCarouselResource as Assignment).submissionFormat === "NOTEBOOK" ? (
-        <>
-          <BookOpen className="h-3 w-3 mr-1" />
-          Notebook
-        </>
-      ) : (
-        <>
-          <Monitor className="h-3 w-3 mr-1" />
-          Digital
-        </>
-      )}
-    </Badge>
-  )}
-</div>   <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2 flex-wrap">
                     <Badge className="text-sm">{currentResourceType}</Badge>
                     {isGroupAssignment && (
                       <Badge variant="secondary" className="text-sm">
@@ -624,7 +670,34 @@ const getResourceDetails = (resource: UnitResource) => {
                         Group Assignment
                       </Badge>
                     )}
+
+                    {currentResourceType === "ASSIGNMENT" && (
+                      <Badge
+                        variant={
+                          (currentCarouselResource as Assignment).submissionFormat === "NOTEBOOK"
+                            ? "outline"
+                            : "secondary"
+                        }
+                        className="text-sm"
+                      >
+                        {(currentCarouselResource as Assignment).submissionFormat === "NOTEBOOK" ? (
+                          <>
+                            <BookOpen className="h-3 w-3 mr-1" />
+                            Notebook
+                          </>
+                        ) : (
+                          <>
+                            <Monitor className="h-3 w-3 mr-1" />
+                            Digital
+                          </>
+                        )}
+                      </Badge>
+                    )}
+
+                    {currentResourceType === "QUIZ" && 
+                      getQuizAvailabilityBadge(currentCarouselResource as Quiz)}
                   </div>
+
                   <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                     {currentCarouselResource.title}
                   </h2>
@@ -643,7 +716,6 @@ const getResourceDetails = (resource: UnitResource) => {
                   </p>
                 </div>
 
-                {/* Actions - Different for students vs teachers */}
                 <div className="flex items-center justify-center gap-4">
                   {isStudent ? (
                     // Student Actions
@@ -651,14 +723,21 @@ const getResourceDetails = (resource: UnitResource) => {
                       onClick={() => handleStudentView(currentCarouselResource)}
                       className="gap-2"
                       size="lg"
+                      disabled={
+                        currentResourceType === "QUIZ" &&
+                        !isQuizAvailable(currentCarouselResource as Quiz).available
+                      }
                     >
                       <Eye className="h-4 w-4" />
                       {currentResourceType === "PAGE"
                         ? "View Content"
+                        : currentResourceType === "QUIZ" &&
+                          !isQuizAvailable(currentCarouselResource as Quiz).available
+                        ? "Not Available"
                         : "Start"}
                     </Button>
                   ) : (
-                    // Teacher Actions
+       
                     <>
                       <Button
                         variant="outline"
@@ -720,7 +799,6 @@ const getResourceDetails = (resource: UnitResource) => {
                   )}
                 </div>
 
-                {/* Progress Indicators */}
                 <div className="flex justify-center gap-2 pt-4 pb-8">
                   {resources.map((_, index) => (
                     <button
@@ -740,7 +818,6 @@ const getResourceDetails = (resource: UnitResource) => {
         </Card>
       </div>
 
-      {/* Resource Creator Selectors - Only for teachers */}
       {!isStudent && (
         <>
           <ResourceTypeSelector
@@ -749,7 +826,6 @@ const getResourceDetails = (resource: UnitResource) => {
             onSelect={setSelectedResourceType}
           />
 
-          {/* Conditional Creators */}
           {selectedResourceType === "ASSIGNMENT" && (
             <TaskCreator
               idCourse={idCourse}
@@ -768,7 +844,6 @@ const getResourceDetails = (resource: UnitResource) => {
               onSave={handleCreateResource}
             />
           )}
-          {/* ACTUALIZADO: QuizCreator ahora es solo para crear */}
           {selectedResourceType === "QUIZ" && (
             <QuizCreator
               courseId={idCourse}

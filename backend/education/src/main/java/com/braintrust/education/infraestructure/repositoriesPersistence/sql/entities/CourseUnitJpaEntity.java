@@ -28,7 +28,6 @@ public class CourseUnitJpaEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Constructors
     public CourseUnitJpaEntity() {}
 
     public CourseUnitJpaEntity(String id, String courseId, String name,
@@ -41,7 +40,6 @@ public class CourseUnitJpaEntity {
         this.description = description;
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

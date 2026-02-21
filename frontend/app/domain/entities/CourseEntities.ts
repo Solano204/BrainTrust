@@ -7,11 +7,7 @@ export interface Page {
   createdAt: string;
   attachments: Document[];
   urlsSupport: string[];
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
 }
-// ----------------------------------------------------
-// ENTITIES
-// ----------------------------------------------------
 
 import { LucideIcon } from "lucide-react";
 import {
@@ -41,20 +37,19 @@ import { GroupMemberDTO } from "@/components/teacher-student/api/group";
 import { GradeDTO } from "@/components/student/api/enrollment";
 import { submissionFormat } from "@/components/teacher-student/api/task-teacher";
 
-/** Represents com.braintrust.education.domain.model.CourseUnit */
+
 export interface CourseUnit {
   id: UnitId;
   courseId: CourseId;
   name: string;
   urlImage: string | null;
-  numUnity: number; // Maps to Java's numUnity / order
+  numUnity: number;
   description: string;
   resources: UnitResource[];
 }
 
 
 type  TypeTask = "INDIVIDUAL" | "TEAM";
-/** Represents com.braintrust.education.domain.model.Submission */
 export interface Submission {
   id: SubmissionId;
   assignmentId: AssignmentId;
@@ -62,7 +57,6 @@ export interface Submission {
   content: string;
   attachments: Document[];
   courseID:  CourseId;
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
   submittedAt: string;
   status: SubmissionStatus;
   grade: Grade | null;
@@ -88,7 +82,7 @@ export interface calificationStudent {
   };
   total: number | 0;
 }
-/** Represents com.braintrust.education.domain.model.Assignment (Aggregate Root) */
+
 export interface Assignment {
   id: AssignmentId;
   title: string;
@@ -97,13 +91,11 @@ export interface Assignment {
   description: string;
     submissionFormat: submissionFormat
 
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
   createdAt: string;
   urls: string[];
   attachments: Document[];
   links: string[];
   deliveryMode: deliveryMode;
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
   dueDate: string | null;
   maxScore: Score;
   instructions: string;
@@ -112,19 +104,14 @@ export interface Assignment {
   idUser: UserId;
 }
 
-export type deliveryMode = "TEAM" | "INDIVIDUAL"; // Added PAGE for general content
+export type deliveryMode = "TEAM" | "INDIVIDUAL";
 
 
-
-/** Represents com.braintrust.education.domain.model.Enrollment */
 export interface Enrollment {
   id: EnrollmentId;
   courseId: CourseId;
   studentId: UserId;
-  /** Java: LocalDate, serialized to ISO 8601 date string (YYYY-MM-DD) */
   enrollmentDate: string;
-  // status: EnrollmentStatus;
-  // grade: GradeEnrollment | null;
     status: string,
     studentName: string,
     studentEmail: string,
@@ -132,9 +119,6 @@ export interface Enrollment {
     finalGrade: GradeDTO | null
 }
 
-/** * Represents com.braintrust.education.domain.model.Course (Aggregate Root)
- * This is the main type for your CourseData object.
- */
 export interface Course {
   id: CourseId;
   code: CourseCode;
@@ -145,9 +129,7 @@ export interface Course {
   group: string;
   teacherId: UserId;
   active: boolean;
-  /** Set of Enrollments (Set on Java side, usually array on frontend) */
   enrollments: Enrollment[] | [];
-  /** List of CourseUnits */
   units: CourseUnit[] | [];
 }
 
@@ -156,9 +138,7 @@ export interface Team {
   teamId: TeamId;
   name: string;
   description: string;
-  // leaderId: UserId | null; // Team leader (optional)
   members: Set<GroupMemberDTO>;
-  // maxMembers: number;
   active: boolean;
   createdAt: Date;
 }
@@ -167,9 +147,7 @@ export interface TeamWithIds {
   teamId: TeamId;
   name: string;
   description: string;
-  // leaderId: UserId | null; // Team leader (optional)
   members: Set<UserId>;
-  // maxMembers: number;
   active: boolean;
   createdAt: Date;
 }
@@ -180,23 +158,17 @@ export interface TeamWithMembers {
   courseId: CourseId;
   name: string;
   description: string;
-  leaderId: UserId | null; // Team leader (optional)
+  leaderId: UserId | null;
   members: Set<string>;
   active: boolean;
   createdAt: Date;
 }
 
-/** Represents the instructional content page or lesson for a unit. */
 
-/** Represents a single question within a quiz. */
 export interface Question {
-  /** Unique ID for the specific question (allows reuse). */
   id: QuestionId;
-  /** Defines the question format: "OPEN_ENDED" or "CLOSED_CHOICE". */
   type: "multiple-choice" | "open-ended";
-  /** The question prompt itself. */
   text: string;
-  /** Points awarded for a correct answer. */
   maxPoints: number;
 
   question: string;
@@ -207,30 +179,20 @@ export interface Question {
   expectedAnswer?: string;
 }
 
-/** Represents a collection of questions used for assessment. */
-/** Represents a collection of questions used for assessment. */
+
 export interface Quiz {
-  /** Unique identifier for the quiz. */
   id: QuizId;
   description: string;
-  /** Link back to the parent course unit. */
   courseUnitId: UnitId;
   courseId: CourseId;
-  /** Name of the quiz (e.g., "UCD Fundamentals Quiz"). */
   title: string;
-  /** Maximum number of times a student can take the quiz. */
   maxGrade: number;
-  /** Time limit in minutes (or seconds). */
   timeLimit: number;
-  /** Percentage required to pass (e.g., 70). */
-  // passingScore: number;
   dueDate: string | null;
-  /** Array of Question objects. */
   questions: Question[];
   acceptLateSubmissions: boolean;
   idUser?: UserId;
-  
-  // New fields for backend integration
+
   availableFrom?: string;
   availableUntil?: string;
   maxAttempts?: number;
@@ -247,40 +209,29 @@ export interface Quiz {
 
 
 
-// Define the TypeScript ENUM/Union Type for resource categories
 export type CourseResourceType = "ASSIGNMENT" | "QUIZ" | "PAGE"; // Added PAGE for general content
 
-/**
- * Interface representing a selectable item in the ResourceTypeSelector component.
- */
 export interface ResourceItem {
-  id: string; // The selector key (e.g., 'task', 'quiz')
+  id: string;
   name: string;
   description: string;
   type: CourseResourceType;
-  icon: ComponentType; // 💡 Now includes the icon component directly
+  icon: ComponentType;
 }
 
 export type UnitResource = Page | Assignment | Quiz;
 
 export interface QuizAnswers {
   [questionId: string]: {
-    /** The student's answer - can be the option index (number) for multiple choice or text (string) for open-ended */
     answer: string | number;
-    /** Type of question to determine how to validate/process the answer */
     type: "multiple-choice" | "open-ended";
-    /** Optional: Time spent on this question in seconds */
     timeSpent?: number;
-    /** Optional: Whether the question was flagged for review */
     flagged?: boolean;
   };
 }
 
-// Export the quiz-specific interfaces
-
 
 export type QuestionType = "multiple-choice" | "open-ended";
-// File: src/app/domain/entities/QuizSubmission.ts
 export interface QuizAnswer {
   questionId: string;
   questionText: string;
@@ -304,7 +255,6 @@ export interface SubmissionQuiz {
   status: SubmissionStatus;
   grade: { value: number; maxScore: number } | null;
   teacherFeedback: string | null;
-  // Quiz-specific data
   quizData?: {
     answers: QuizAnswer[];
     timeSpent: number;
@@ -314,8 +264,8 @@ export interface SubmissionQuiz {
 }
 
 export interface TaskInventoryItem {
-  id: SubmissionId; // Using Submission ID here to map directly to a detail record
-  taskId: AssignmentId; // Reference to the parent task
+  id: SubmissionId;
+  taskId: AssignmentId;
   title: string;
   courseId: CourseId;
   studentId: UserId;
@@ -326,9 +276,8 @@ export interface TaskInventoryItem {
 }
 
 export interface QuizInventoryItem {
-  id: SubmissionId; // Using Submission ID here to map directly to a detail record
-  quizId: QuizId; // Reference to the parent task
-  title: string;
+  id: SubmissionId;
+  quizId: QuizId;
   courseId: CourseId;
   studentId: UserId;
   unit: string;
@@ -338,11 +287,11 @@ export interface QuizInventoryItem {
 }
 
 
-// --- 2. Interface for the Detail View ---
+
 export interface SubmissionDetailData {
   submission: {
     id: SubmissionId;
-    content: string; // The text content of the submission
+    content: string;
     submittedAt: string;
     status: SubmissionStatus;
     attachments: Document[];
@@ -350,14 +299,13 @@ export interface SubmissionDetailData {
     teacherFeedback: string | null;
   };
 
-  // One query to get task (ASSIGNMENT) details
   task: {
     id: AssignmentId;
     title: string;
     maxPoints: number;
     instructions: string;
   };
-  // One query to get student details
+
   student: {
     id: UserId;
     name: string;

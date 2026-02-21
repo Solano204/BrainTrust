@@ -1,6 +1,6 @@
 package com.braintrust.education.application.dtos.dtos;
 
-// 📍 education/application/dtos/CourseDTO.java
+
 import java.time.LocalDateTime;
 import java.util.List;
 

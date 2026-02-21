@@ -29,9 +29,11 @@ com\braintrust\identity\infraestructure\repositoriesPersistence\sql\repositories
 com\braintrust\identity\application\dtos\commands\CreatePersonCommand.class
 com\braintrust\identity\domain\valueobjects\UserId.class
 com\braintrust\identity\infraestructure\repositoriesPersistence\sql\Mapper\UserEntityMapper.class
+com\braintrust\identity\application\dtos\commands\AdminChangePasswordCommand.class
 com\braintrust\identity\application\dtos\dtos\UserBasicInfoDTO.class
 com\braintrust\identity\infraestructure\security\OpenApiConfig.class
 com\braintrust\identity\domain\valueobjects\Email.class
+com\braintrust\identity\application\dtos\commands\AssignFinalGradeCommand.class
 com\braintrust\identity\application\dtos\dtos\PersonDTO.class
 com\braintrust\identity\application\ports\in\PersonService.class
 com\braintrust\identity\application\dtos\commands\RegisterTeacherCommand.class

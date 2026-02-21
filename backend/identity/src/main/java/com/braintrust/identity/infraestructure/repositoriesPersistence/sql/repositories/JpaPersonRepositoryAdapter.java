@@ -1,6 +1,6 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories;
 
-// 📍 identity/infrastructure/persistence/JpaPersonRepositoryAdapter.java
+
 
 import com.braintrust.identity.application.ports.out.PersonRepository;
 import com.braintrust.identity.domain.model.Person;
@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
-// other imports...
 
 @Repository
 public class JpaPersonRepositoryAdapter implements PersonRepository {
@@ -44,10 +43,6 @@ public class JpaPersonRepositoryAdapter implements PersonRepository {
         return entityPage.map(mapper::toDomain);
     }
 
-    // ------------------------------------------------------------------
-    // ✅ COMMANDS (Mutating Operations)
-    // ------------------------------------------------------------------
-
     @Override
     public Person save(Person person) {
         log.info("Saving Person ID {} (Name: {}).", person.getId().getValue(), person.getFullName());
@@ -65,10 +60,6 @@ public class JpaPersonRepositoryAdapter implements PersonRepository {
         jpaRepository.deleteById(person.getId().getValue());
         log.info("Person ID {} deleted successfully.", person.getId().getValue());
     }
-
-    // ------------------------------------------------------------------
-    // ✅ QUERIES (Read Operations)
-    // ------------------------------------------------------------------
 
     @Override
     public Optional<Person> findById(PersonId personId) {
