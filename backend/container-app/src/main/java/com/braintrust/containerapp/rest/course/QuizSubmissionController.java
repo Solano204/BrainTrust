@@ -54,31 +54,6 @@ public class QuizSubmissionController {
 
 
 
-    /*
-    @PostMapping("/start")
-    public ResponseEntity<String> startQuiz(@RequestBody StartQuizCommand command) {
-        QuizSubmissionId id = submissionService.startQuiz(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id.getValue());
-    }
-    */
-
-    /*
-    @PostMapping("/{submissionId}/answer")
-    public ResponseEntity<Void> answerQuestion(
-            @PathVariable String submissionId,
-            @RequestBody AnswerQuestionCommand command) {
-        submissionService.answerQuestion(command);
-        return ResponseEntity.ok().build();
-    }
-    */
-
-    /*
-    @PostMapping("/{submissionId}/submit")
-    public ResponseEntity<Void> submitQuiz(@PathVariable String submissionId) {
-        submissionService.submitQuiz(new SubmitQuizCommand(submissionId));
-        return ResponseEntity.ok().build();
-    }
-    */
 
     @GetMapping("/quiz/{quizId}/student/{studentId}/detail")
     public ResponseEntity<QuizSubmissionDetailDTO> getStudentQuizSubmissionDetail(
@@ -97,7 +72,6 @@ public class QuizSubmissionController {
     }
 
 
-    // ✅ NEW: Get quiz submissions by course and unit with basic info
     @GetMapping("/course/{courseId}/unit/{unitId}/basic")
     public ResponseEntity<List<QuizSubmissionBasicDTO>> getSubmissionsByCourseAndUnitBasic(
             @PathVariable String courseId,
@@ -113,7 +87,6 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
-    // ✅ NEW: Get quiz submissions by student, course and unit with basic info
     @GetMapping("/student/{studentId}/course/{courseId}/unit/{unitId}/basic")
     public ResponseEntity<List<QuizSubmissionBasicDTO>> getSubmissionsByStudentAndCourseAndUnitBasic(
             @PathVariable String studentId,
@@ -148,9 +121,7 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(dto);
     }
 
-    /**
-     * ✅ NEW: Get all quiz submissions for a course, ordered by date (recent first)
-     */
+
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByCourse(@PathVariable String courseId) {
         List<QuizSubmissionDTO> submissions = submissionService.getSubmissionsByCourse(
@@ -159,9 +130,7 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
-    /**
-     * ✅ NEW: Get all quiz submissions for a course with basic info
-     */
+
     @GetMapping("/course/{courseId}/basic")
     public ResponseEntity<List<QuizSubmissionBasicDTO>> getSubmissionsByCourseBasic(@PathVariable String courseId) {
         List<QuizSubmissionBasicDTO> submissions = submissionService.getSubmissionsByCourseBasic(
@@ -169,16 +138,6 @@ public class QuizSubmissionController {
         );
         return ResponseEntity.ok(submissions);
     }
-
-    /*
-    @GetMapping("/quiz/{quizId}")
-    public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByQuiz(@PathVariable String quizId) {
-        List<QuizSubmissionDTO> submissions = submissionService.getSubmissionsByQuiz(
-                QuizId.fromString(quizId)
-        );
-        return ResponseEntity.ok(submissions);
-    }
-    */
 
     @GetMapping("/student/{studentId}/{courseId}")
     public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByStudent(@PathVariable String studentId, @PathVariable String courseId) {
@@ -188,66 +147,7 @@ public class QuizSubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
-    /*
-    @GetMapping("/quiz/{quizId}/student/{studentId}")
-    public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByQuizAndStudent(
-            @PathVariable String quizId,
-            @PathVariable String studentId) {
-        List<QuizSubmissionDTO> submissions = submissionService.getSubmissionsByQuizAndStudent(
-                QuizId.fromString(quizId),
-                UserId.fromString(studentId)
-        );
-        return ResponseEntity.ok(submissions);
-    }
-    */
 
-    /*
-    @GetMapping("/quiz/{quizId}/student/{studentId}/latest")
-    public ResponseEntity<QuizSubmissionDTO> getLatestSubmission(
-            @PathVariable String quizId,
-            @PathVariable String studentId) {
-        QuizSubmissionDTO dto = submissionService.getLatestSubmission(
-                QuizId.fromString(quizId),
-                UserId.fromString(studentId)
-        );
-        return ResponseEntity.ok(dto);
-    }
-    */
-
-    /*
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<QuizSubmissionDTO>> getSubmissionsByStatus(@PathVariable String status) {
-        List<QuizSubmissionDTO> submissions = submissionService.getSubmissionsByStatus(
-                QuizSubmissionStatus.valueOf(status)
-        );
-        return ResponseEntity.ok(submissions);
-    }
-    */
-
-    /*
-    @GetMapping("/quiz/{quizId}/analytics")
-    public ResponseEntity<QuizSubmissionAnalyticsDTO> getAnalytics(@PathVariable String quizId) {
-        QuizSubmissionAnalyticsDTO analytics = submissionService.getQuizAnalytics(
-                QuizId.fromString(quizId)
-        );
-        return ResponseEntity.ok(analytics);
-    }
-    */
-
-    /*
-    @GetMapping("/quiz/{quizId}/student/{studentId}/attempts")
-    public ResponseEntity<Integer> getAttemptCount(
-            @PathVariable String quizId,
-            @PathVariable String studentId) {
-        int count = submissionService.getAttemptCount(
-                QuizId.fromString(quizId),
-                UserId.fromString(studentId)
-        );
-        return ResponseEntity.ok(count);
-    }
-    */
-
-    // NEW: Delete submission and restart unit grade
     @DeleteMapping("/{submissionId}")
     public ResponseEntity<Void> deleteSubmission(@PathVariable String submissionId) {
         submissionService.deleteSubmission(QuizSubmissionId.fromString(submissionId));

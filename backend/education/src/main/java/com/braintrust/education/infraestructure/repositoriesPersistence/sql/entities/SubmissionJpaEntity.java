@@ -10,7 +10,7 @@ import java.util.List;
         @Index(name = "idx_submission_assignment", columnList = "assignment_id"),
         @Index(name = "idx_submission_student", columnList = "student_id"),
         @Index(name = "idx_submission_status", columnList = "status"),
-        @Index(name = "idx_submission_team", columnList = "team_id") // ✅ ADD INDEX
+        @Index(name = "idx_submission_team", columnList = "team_id")
 })
 public class SubmissionJpaEntity {
     @Id
@@ -23,7 +23,7 @@ public class SubmissionJpaEntity {
     @Column(name = "student_id", length = 50, nullable = false)
     private String studentId;
 
-    @Column(name = "team_id", length = 50) // ✅ ADD THIS - can be nullable
+    @Column(name = "team_id", length = 50)
     private String teamId;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
@@ -50,7 +50,6 @@ public class SubmissionJpaEntity {
     private List<DocumentJpaEntity> documents = new ArrayList<>();
 
 
-    // Constructors
     public SubmissionJpaEntity() {}
 
     public SubmissionJpaEntity(String id, String assignmentId, String studentId, String content,
@@ -65,10 +64,9 @@ public class SubmissionJpaEntity {
         this.gradeValue = gradeValue;
         this.gradeMaxScore = gradeMaxScore;
         this.teacherFeedback = teacherFeedback;
-        this.teamId = teamId; // ✅ ADD TEAM ID
+        this.teamId = teamId;
     }
 
-    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

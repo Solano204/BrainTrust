@@ -14,10 +14,8 @@ public class JacksonConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
 
-        // Register Java 8 date/time module
         mapper.registerModule(new JavaTimeModule());
 
-        // Configure to write dates as strings (not timestamps)
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         return mapper;

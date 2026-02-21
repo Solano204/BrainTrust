@@ -1,4 +1,3 @@
-// File: src/app/features/admin/components/ManageUnitGrades.tsx
 'use client';
 
 import { useState } from 'react';
@@ -95,7 +94,6 @@ export function ManageUnitGrades({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <button
             onClick={onBack}
@@ -118,9 +116,7 @@ export function ManageUnitGrades({
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Stats */}
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-sm text-blue-600">Total Students</div>
@@ -155,7 +151,6 @@ export function ManageUnitGrades({
             </div>
           </div>
 
-          {/* Bulk Actions */}
           {Object.keys(editingGrades).length > 0 && (
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
               <div className="text-blue-900 font-medium">
@@ -180,7 +175,6 @@ export function ManageUnitGrades({
             </div>
           )}
 
-          {/* Grades List */}
           {isLoading ? (
             <div className="text-center py-8 text-gray-500">Loading unit grades...</div>
           ) : unitGrades && unitGrades.length > 0 ? (
@@ -201,7 +195,6 @@ export function ManageUnitGrades({
                         </div>
 
                         {isEditing ? (
-                          // Edit mode
                           <div className="space-y-2">
                             <div className="flex gap-2 items-center">
                               <label className="text-sm font-medium text-gray-700 w-20">
@@ -247,7 +240,6 @@ export function ManageUnitGrades({
                             </div>
                           </div>
                         ) : (
-                          // View mode
                           <div className="space-y-2">
                             <div className="flex items-center gap-4 text-sm">
                               <span className="text-gray-600">
@@ -266,7 +258,6 @@ export function ManageUnitGrades({
                               </span>
                             </div>
 
-                            {/* Assignment Grades */}
                             {unitGrade.assignmentGrades &&
                               Object.keys(unitGrade.assignmentGrades).length > 0 && (
                                 <div className="mt-2">
@@ -288,7 +279,6 @@ export function ManageUnitGrades({
                                 </div>
                               )}
 
-                            {/* Quiz Grades */}
                             {unitGrade.quizGrades &&
                               Object.keys(unitGrade.quizGrades).length > 0 && (
                                 <div className="mt-2">
@@ -320,7 +310,6 @@ export function ManageUnitGrades({
                         )}
                       </div>
 
-                      {/* Actions */}
                       <div className="flex gap-2">
                         {isEditing ? (
                           <>
@@ -365,7 +354,6 @@ export function ManageUnitGrades({
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-gray-200 flex gap-3">
           <button
             onClick={onBack}

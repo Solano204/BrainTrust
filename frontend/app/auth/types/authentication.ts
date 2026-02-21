@@ -1,4 +1,4 @@
-// types/authentication.ts
+
 export type UserRole = 'admin' | 'teacher' | 'student' | 'guest';
 
 export interface UserSession {
@@ -10,7 +10,7 @@ export interface UserSession {
   permissions: string[];
   iat?: number;
   exp?: number;
-  // Additional fields from backend
+
   active?: boolean;
   createdAt?: string;
   studentId?: string | null;
@@ -74,7 +74,6 @@ export interface RegisterRequest {
   addressPostalCode?: string;
 }
 
-// Backend response interfaces
 export interface AuthenticationResult {
   success: boolean;
   user: UserSession | null;
@@ -104,23 +103,20 @@ export interface CompleteUserDTO {
   message: string;
 }
 
-// Permission constants
 export const PERMISSIONS = {
-  // Admin permissions
+
   ADMIN_DASHBOARD: 'admin:dashboard',
   USER_MANAGEMENT: 'admin:users',
   SYSTEM_SETTINGS: 'admin:settings',
   COURSE_MANAGEMENT: 'admin:courses',
-  
-  // Teacher permissions
+
   TEACHER_DASHBOARD: 'teacher:dashboard',
   MANAGE_CLASSES: 'teacher:classes',
   MANAGE_STUDENTS: 'teacher:students',
   VIEW_GRADES: 'teacher:grades',
   MANAGE_ASSIGNMENTS: 'teacher:assignments',
   GRADE_SUBMISSIONS: 'teacher:grade',
-  
-  // Student permissions
+
   STUDENT_DASHBOARD: 'student:dashboard',
   VIEW_COURSES: 'student:courses',
   SUBMIT_ASSIGNMENTS: 'student:submit',
@@ -150,7 +146,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   guest: [],
 };
 
-// Configuration
 export const AUTH_CONFIG = {
   ACCESS_TOKEN_EXPIRY: 15 * 60 * 1000, // 15 minutes
   REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, // 7 days

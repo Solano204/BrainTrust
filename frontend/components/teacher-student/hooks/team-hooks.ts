@@ -1,4 +1,3 @@
-// File: src/app/features/courses/hooks/team-hooks.ts
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,13 +20,6 @@ import {
   fetchTeamById
 } from "../api/group";
 
-/**
- * Custom hook for fetching teams by course
- */
-
-/**
- * Custom hook for fetching a specific team by ID
- */
 export function useTeamById(teamId: string | null) {
   return useQuery<Team>({
     queryKey: teamKeys.detail(teamId || ""),
@@ -38,9 +30,6 @@ export function useTeamById(teamId: string | null) {
   });
 }
 
-/**
- * Custom hook for fetching user's team
- */
 export function useUserTeam(userId: UserId | null) {
   return useQuery<Team | null>({
     queryKey: teamKeys.userTeam(userId || ""),
@@ -51,9 +40,6 @@ export function useUserTeam(userId: UserId | null) {
   });
 }
 
-/**
- * Custom hook for fetching available users (users without group)
- */
 export function useTeamsByCourse(courseId: CourseId | null) {
   return useQuery({
     queryKey: teamKeys.list(courseId || ""),
@@ -67,11 +53,15 @@ export function useAvailableUsers(courseId: CourseId | null) {
     queryKey: teamKeys.availableUsersByCourse(courseId || ""),
     queryFn: () => fetchAvailableUsers(courseId!),
     enabled: !!courseId,
+
+
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
-/**
- * Custom hook for team mutations
- */export function useTeamMutations() {
+
+export function useTeamMutations() {
   const queryClient = useQueryClient();
 
   const createTeamMutation = useMutation({
@@ -126,9 +116,7 @@ export function useAvailableUsers(courseId: CourseId | null) {
     updateTeamInfo: updateTeamInfoMutation,
   };
 }
-/**
- * Custom hook for managing team form state
- */
+
 export function useTeamForm(initialData?: Team) {
   const [formData, setFormData] = React.useState({
     name: initialData?.name || "",

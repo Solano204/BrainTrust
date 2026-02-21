@@ -1,4 +1,3 @@
-// File: src/app/features/courses/teacher/course-form-creator-teacher.tsx
 "use client";
 
 import * as React from 'react';
@@ -14,7 +13,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-// Zod validation schema
 const courseFormSchema = z.object({
   name: z.string()
     .min(3, "Course name must be at least 3 characters")
@@ -77,7 +75,6 @@ export function CourseFormModal({ open, onClose, initialData, onSave, isSaving }
     }
   });
 
-  // Reset form when modal opens/closes or initialData changes
   React.useEffect(() => {
     if (open) {
       if (initialData) {
@@ -229,7 +226,6 @@ export function CourseFormModal({ open, onClose, initialData, onSave, isSaving }
             </div>
           </div>
 
-          {/* Image Upload Component */}
           <ImageUploadWithValidation
             currentImageUrl={imagePreview}
             onImageChange={handleImageChange}

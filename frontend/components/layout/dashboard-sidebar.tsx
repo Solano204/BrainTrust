@@ -15,9 +15,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from "@/app/context/AuthContext"
 import { PERMISSIONS } from "@/app/types/authentication"
 
-// ==========================================
-// 🎯 FUNCIÓN NORMALIZE ROLE (Mantenemos tu lógica)
-// ==========================================
+
 function normalizeRole(role: string | undefined): string {
   if (!role) return 'student';
   
@@ -38,12 +36,9 @@ function normalizeRole(role: string | undefined): string {
   return roleMap[roleStr] || 'student';
 }
 
-// ==========================================
-// 📋 DEFINICIÓN DE ITEMS DE NAVEGACIÓN
-// ==========================================
+
 const getNavigationItems = (normalizedRole: string) => {
   
-  // 1. Configuración Estándar (Estudiante y Teacher comparten la misma vista según tu solicitud)
   const standardItems = [
     { name: "Dashboard", icon: Home, href: "/", permission: null },
     { name: "Calendar", icon: Calendar, href: "/calendar", permission: null },
@@ -51,7 +46,6 @@ const getNavigationItems = (normalizedRole: string) => {
     { name: "Settings", icon: Settings, href: "/settings", permission: null },
   ];
 
-  // 2. Configuración Exclusiva de Admin
   const adminItems = [
     { 
       name: "Gestión de Cursos", 
@@ -59,12 +53,7 @@ const getNavigationItems = (normalizedRole: string) => {
       href: "/admin/courses", 
       permission: PERMISSIONS.COURSE_MANAGEMENT 
     },
-    // { 
-    //   name: "Reportes", 
-    //   icon: BarChart3, 
-    //   href: "/admin/reports", 
-    //   permission: PERMISSIONS.VIEW_REPORTS 
-    // },
+
     { 
       name: "Gestión de Usuarios", 
       icon: Users, 
@@ -79,12 +68,10 @@ const getNavigationItems = (normalizedRole: string) => {
     },
   ];
 
-  // Retornamos la lista exacta dependiendo del rol
   if (normalizedRole === 'admin') {
     return adminItems;
   }
 
-  // Para Student y Teacher retornamos la lista estándar
   return standardItems;
 }
 
@@ -107,14 +94,11 @@ export function DashboardSidebar({
   const pathname = usePathname()
   const { hasPermission, user } = useAuth()
 
-  // Normalización de rol
   const rawRole = user?.role || userRole;
   const currentRole = normalizeRole(rawRole);
 
-  // Debug logs (opcional, puedes quitarlos en producción)
   console.log('=== SIDEBAR ROLE ===', currentRole);
 
-  // Filtramos los items basados en permisos (si tienen)
   const navigation = getNavigationItems(currentRole).filter(item => {
     if (!item.permission) return true;
     return hasPermission(item.permission);
@@ -141,8 +125,6 @@ export function DashboardSidebar({
           aria-hidden="true" 
         />
       )}
-
-
 
       {/* Mobile Sidebar */}
       <aside

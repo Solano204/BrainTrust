@@ -1,15 +1,9 @@
-// app/utils/cloudinary/cloudinary.ts
 
-/**
- * Upload an image file to Cloudinary
- * Works in both client and server environments
- */
 export async function uploadImageFile(
   file: File, 
   path: string = "units"
 ): Promise<string> {
   try {
-    // Check if we have Cloudinary credentials
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -21,7 +15,6 @@ export async function uploadImageFile(
     formData.append('file', file);
     formData.append('folder', path);
     
-    // If using unsigned upload (recommended for client-side)
     if (uploadPreset) {
       formData.append('upload_preset', uploadPreset);
       
@@ -41,8 +34,6 @@ export async function uploadImageFile(
       const data = await response.json();
       return data.secure_url;
     } else {
-      // Fallback: use signed upload via API route
-      // Create absolute URL for fetch
       const baseUrl = typeof window !== 'undefined' 
         ? window.location.origin 
         : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -65,8 +56,6 @@ export async function uploadImageFile(
   }
 }
 
-
-// app/utils/cloudinary/cloudinary.ts
 
 export async function deleteImageFromCloudinary(cloudinaryUrl: string): Promise<boolean> {
   try {

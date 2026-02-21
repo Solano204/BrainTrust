@@ -1,4 +1,3 @@
-// File: src/components/teacher-student/gradebook-unit-detail.tsx
 "use client";
 
 import { useState } from 'react';
@@ -60,10 +59,8 @@ export function GradebookUnitDetail({
     refresh 
   } = useUnitGrades(unitId);
 
-  // Transform unit grades data for display
   const transformUnitGradesToStudents = (): StudentGradeDisplay[] => {
-    // Filter grades: if student, show only their own; if teacher, show all
-    const filteredGrades = isTeacher 
+    const filteredGrades = isTeacher
       ? unitGrades 
       : unitGrades.filter(grade => grade.studentId === user?.id);
 

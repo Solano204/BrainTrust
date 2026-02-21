@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CourseStudents.tsx
 "use client";
 
 import * as React from "react";
@@ -28,8 +27,7 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
   const { user: currentUser } = useAuth();
   const isTeacher = currentUser?.role === 'teacher';
   
-  // Data fetching
-  const { 
+  const {
     data: enrollments = [], 
     isLoading: isLoadingEnrollments,
     error: enrollmentsError,
@@ -38,14 +36,12 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
   
   const { data: stats } = useEnrollmentStats(courseId);
 
-  // Mutations
-  const { 
+  const {
     createEnrollment, 
     bulkEnroll, 
     deleteEnrollment 
   } = useStudentMutations();
 
-  // Local state
   const [searchTerm, setSearchTerm] = useState("");
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -54,13 +50,11 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
   const [enrollSearchTerm, setEnrollSearchTerm] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<UserId[]>([]);
 
-  // Search for available students
-  const { 
+  const {
     data: searchResults = [], 
     isLoading: isSearching 
   } = useAvailableUsersSearch(courseId, enrollSearchTerm);
 
-  // Filter enrollments for display
   const filteredEnrollments = useMemo(() => {
     return enrollments.filter((enrollment) => {
       const searchLower = searchTerm.toLowerCase();
@@ -71,7 +65,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
     });
   }, [enrollments, searchTerm]);
 
-  // Handlers
   const handleEnrollUser = (userId: UserId) => {
     if (!isTeacher) return;
     
@@ -137,7 +130,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
     }
   };
 
-  // STUDENT VIEW - Read Only
   if (!isTeacher) {
     return (
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
@@ -200,7 +192,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
     );
   }
 
-  // TEACHER VIEW - Full Access
   if (isLoadingEnrollments) {
     return (
       <div className="p-8 text-center">
@@ -224,7 +215,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Student Management</h1>
@@ -245,7 +235,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         </Button>
       </div>
 
-      {/* Search */}
       <Card className="p-4 sm:p-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -258,7 +247,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         </div>
       </Card>
 
-      {/* Students Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {filteredEnrollments.map((enrollment) => (
           <StudentCard
@@ -277,7 +265,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         ))}
       </div>
 
-      {/* Empty State */}
       {filteredEnrollments.length === 0 && (
         <Card className="text-center p-12 border-2 border-dashed">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -289,7 +276,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         </Card>
       )}
 
-      {/* Enroll Modal */}
       <Dialog open={showEnrollModal} onOpenChange={setShowEnrollModal}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -404,7 +390,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Modal */}
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <DialogContent>
           <DialogHeader>
@@ -433,7 +418,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Modal */}
       <StudentDetailDialog
         isOpen={showStudentDetail}
         onClose={() => setShowStudentDetail(false)}
@@ -445,7 +429,6 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
   );
 }
 
-// Student Card Components
 interface StudentCardProps {
   enrollment: Enrollment;
   onViewDetails: (enrollment: Enrollment) => void;

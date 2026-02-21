@@ -1,10 +1,9 @@
-// File: src/app/features/courses/components/student/StudentQuizView.tsx
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import { QuizView } from "@/components/student/quiz-view-submission-student";
 import { useStudentQuizSubmission } from '@/components/teacher-student/hooks/submission-hooks';
-import { useAuth } from '@/app/context/AuthContext'; // Add this import
+import { useAuth } from '@/app/context/AuthContext';
 import { useQuizDetail } from '@/app/presentation/hooks/calendar/quiz-hooks';
 import { UnitResource, CourseUnit, Assignment, Quiz, Page } from "@/app/domain/entities/CourseEntities";
 
@@ -16,7 +15,7 @@ interface StudentQuizViewProps {
   isSubmitting: boolean;
 }
 export function StudentQuizView({ 
-  quizData , // Changed from quiz to quizId
+  quizData ,
   studentId, 
   onSubmit, 
   onExit, 
@@ -25,15 +24,13 @@ export function StudentQuizView({
   const { user } = useAuth();
   const userType = user?.role === 'student' ? 'student' : 'teacher';
   
-  // Fetch quiz details (this includes questions, options, etc.)
-  const { 
+  const {
     data: quiz, 
     isLoading: isQuizLoading,
     error: quizError 
   } = useQuizDetail(quizData.id, userType);
   
-  // Fetch existing submission
-  const { 
+  const {
     data: existingSubmission, 
     isLoading: isSubmissionLoading,
     error: submissionError 

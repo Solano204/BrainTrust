@@ -20,7 +20,7 @@ public class PageEntityMapper {
     public PageJpaEntity toEntity(Page page) {
         log.debug("Mapping Page Domain {} to JPA Entity", page.getId().getValue());
 
-        // ✅ DEBUG: Log all values before mapping
+
         log.debug("Domain values - ID: {}, CourseId: {}, UnitId: {}, Title: {}, Content length: {}, Links: {}, Attachments: {}",
                 page.getId().getValue(),
                 page.getCourseId().getValue(),
@@ -30,7 +30,6 @@ public class PageEntityMapper {
                 page.getExternalLinks() != null ? page.getExternalLinks().size() : 0,
                 page.getAttachments() != null ? page.getAttachments().size() : 0);
 
-        // ✅ Create entity with basic fields
         PageJpaEntity entity = new PageJpaEntity(
                 page.getId().getValue(),
                 page.getCourseId().getValue(),
@@ -42,10 +41,10 @@ public class PageEntityMapper {
                 page.isPublished()
         );
 
-        // ✅ CRITICAL FIX: Map external links BEFORE saving
+
         if (page.getExternalLinks() != null && !page.getExternalLinks().isEmpty()) {
             log.debug("Mapping {} external links to entity", page.getExternalLinks().size());
-            // Create a new mutable list from the immutable domain list
+
             List<String> linksList = new ArrayList<>(page.getExternalLinks());
             entity.setExternalLinks(linksList);
             log.debug("External links set on entity: {}", entity.getExternalLinks());
@@ -53,7 +52,7 @@ public class PageEntityMapper {
             entity.setExternalLinks(new ArrayList<>());
         }
 
-        // ✅ CRITICAL FIX: Map attachments with proper bidirectional relationship
+
         if (page.getAttachments() != null && !page.getAttachments().isEmpty()) {
             log.debug("Mapping {} attachments to entity", page.getAttachments().size());
             List<DocumentJpaEntity> documentEntities = page.getAttachments().stream()
@@ -61,7 +60,7 @@ public class PageEntityMapper {
                         DocumentJpaEntity docEntity = new DocumentJpaEntity();
                         docEntity.setName(doc.getName());
                         docEntity.setStoragePath(doc.getStoragePath());
-                        docEntity.setPage(entity); // Set bidirectional relationship
+                        docEntity.setPage(entity);
                         log.debug("Created document entity: name={}, path={}", doc.getName(), doc.getStoragePath());
                         return docEntity;
                     })

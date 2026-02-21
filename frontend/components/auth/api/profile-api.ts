@@ -1,12 +1,8 @@
-// api/profile-api.ts
 "use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
 
-
-
-// types/profile.ts
 export interface UserProfile {
   userId: string;
   email: string;
@@ -14,7 +10,6 @@ export interface UserProfile {
   active: boolean;
   createdAt: string;
   
-  // Person information
   personId: string;
   firstName: string;
   lastName: string;
@@ -24,7 +19,6 @@ export interface UserProfile {
   imagePath: string;
   registrationDate: string;
   
-  // Address information
   address?: {
     street: string;
     colony: string;
@@ -33,7 +27,6 @@ export interface UserProfile {
     postalCode: string;
   };
   
-  // Student-specific (if applicable)
   studentId?: string;
 }
 
@@ -68,8 +61,6 @@ export interface ChangePasswordRequest {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 
-
-// Create axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -77,7 +68,6 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor for adding token
 apiClient.interceptors.request.use(
   async (config) => {
     const cookieStore = await cookies();
@@ -92,7 +82,6 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Handle API errors
 const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || 
@@ -104,7 +93,6 @@ const handleApiError = async (error: unknown): Promise<never> => {
   throw error;
 };
 
-// Map backend user to profile
 function mapUserToProfile(backendUser: any) {
   return {
     userId: backendUser.id,
@@ -113,7 +101,6 @@ function mapUserToProfile(backendUser: any) {
     active: backendUser.active,
     createdAt: backendUser.createdAt,
     
-    // Person information
     personId: backendUser.person?.id || '',
     firstName: backendUser.person?.firstName || '',
     lastName: backendUser.person?.lastName || '',
@@ -123,7 +110,6 @@ function mapUserToProfile(backendUser: any) {
     imagePath: backendUser.person?.imagePath || '',
     registrationDate: backendUser.person?.registrationDate || '',
     
-    // Address information
     address: backendUser.person?.address ? {
       street: backendUser.person.address.street || '',
       colony: backendUser.person.address.colony || '',
@@ -132,19 +118,12 @@ function mapUserToProfile(backendUser: any) {
       postalCode: backendUser.person.address.postalCode || ''
     } : undefined,
     
-    // Student-specific
     studentId: backendUser.studentId || undefined
   };
 }
 
-// Individual async functions (not an object)
-
-/**
- * Get current user's profile
- */
 export async function getProfile() {
   try {
-    // First get user ID from token
     const cookieStore = await cookies();
     const userData = cookieStore.get("user_data")?.value;
     let userId = '';
@@ -158,7 +137,6 @@ export async function getProfile() {
       throw new Error("User not authenticated");
     }
     
-    // Fetch user details
     const response = await apiClient.get(`/api/users/${userId}`);
     
     return mapUserToProfile(response.data);
@@ -167,10 +145,6 @@ export async function getProfile() {
   }
 }
 
-/**
- * Update personal information (PII)
- * Backend endpoint: PUT /api/users/personal-info
- */
 export async function updatePersonalInfo(data: {
   userId: string;
   firstName: string;
@@ -191,10 +165,7 @@ export async function updatePersonalInfo(data: {
   }
 }
 
-/**
- * Update address
- * Backend endpoint: PUT /api/persons/contact-address
- */
+
 export async function updateAddress(data: {
   personId: string;
   street: string;
@@ -216,10 +187,6 @@ export async function updateAddress(data: {
   }
 }
 
-/**
- * Update profile image
- * Backend endpoint: PUT /api/persons/profile-image
- */
 export async function updateImage(data: {
   personId: string;
   imagePath: string;
@@ -237,15 +204,6 @@ export async function updateImage(data: {
   }
 }
 
-/**
- * Upload image file
- */
-
-
-/**
- * Change password
- * Backend endpoint: PUT /api/users/password
- */
 export async function changePassword(data: {
   userId: string;
   currentPassword: string;

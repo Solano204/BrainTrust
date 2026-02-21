@@ -22,20 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * ✅ PRODUCTION-READY Person Service with Virtual Threads
- *
- * Este servicio maneja información personal (PII - Personally Identifiable Information).
- *
- * Características:
- * 1. Todas las operaciones DB se ejecutan en Virtual Threads (via Tomcat)
- * 2. Las queries parkean el VT automáticamente
- * 3. Logs estructurados con niveles apropiados para PII
- * 4. Error handling robusto
- *
- * IMPORTANTE: Este servicio maneja datos sensibles (PII).
- * Los logs usan nivel WARN para actualizaciones de PII para auditoría.
- */
 @Service
 @Transactional
 public class PersonApplicationService implements PersonService {
@@ -49,16 +35,9 @@ public class PersonApplicationService implements PersonService {
     }
 
 
-
-
-    // ✅ OPTIONAL: Add search methods for persons if needed
     @Transactional(readOnly = true)
     public Page<PersonDTO> searchPersonsByName(String name, Pageable pageable) {
         log.debug("🔍 Searching persons by name: '{}' with pagination", name);
-
-        // Since we don't have direct search in the PersonRepository yet,
-        // we'll implement it by fetching all and filtering (not efficient for large datasets)
-        // For production, you should add proper search methods to the repository
 
         try {
             Page<Person> allPersonsPage = personRepository.findAll(pageable);
@@ -80,24 +59,15 @@ public class PersonApplicationService implements PersonService {
         }
     }
 
-    // ✅ OPTIONAL: For better performance, add this method to PersonRepository interface
-    // and implement it in JpaPersonRepositoryAdapter
     @Transactional(readOnly = true)
     public Page<PersonDTO> findPersonsByNameContaining(String name, Pageable pageable) {
         log.debug("🔍 Finding persons by name containing: '{}'", name);
 
-        // Note: This requires adding a search method to PersonRepository
-        // For now, we'll use the existing getAllPersons and filter
+
         return searchPersonsByName(name, pageable);
     }
 
 
-    /**
-     * ✅ CREATE PERSON
-     *
-     * Este método ya se ejecuta en un Virtual Thread (via Tomcat).
-     * La operación DB parkea el VT automáticamente.
-     */
     @Override
     public PersonId createPerson(CreatePersonCommand command) {
         long startTime = System.currentTimeMillis();
@@ -105,7 +75,7 @@ public class PersonApplicationService implements PersonService {
         log.info("🆕 Creating new Person: {} {}", command.firstName(), command.lastName());
 
         try {
-            // ✅ Create domain object
+
             Person person = Person.create(command.firstName(), command.lastName());
 
             person.updatePersonalInfo(
@@ -115,7 +85,6 @@ public class PersonApplicationService implements PersonService {
                     command.phone()
             );
 
-            // ✅ Save (DB operation parks VT)
             Person savedPerson = personRepository.save(person);
 
             long duration = System.currentTimeMillis() - startTime;
@@ -130,18 +99,11 @@ public class PersonApplicationService implements PersonService {
         }
     }
 
-    /**
-     * ✅ UPDATE PERSONAL INFO (PII)
-     *
-     * IMPORTANTE: Este método modifica datos personales sensibles.
-     * Usa nivel WARN para auditoría de seguridad.
-     */
     @Override
     public void updatePersonalInfo(UpdatePersonInfoCommand command) {
         PersonId personId = PersonId.fromString(command.personId());
         long startTime = System.currentTimeMillis();
 
-        // ⚠️ WARN level para actualizaciones de PII (auditoría)
         log.warn("🔐 Updating PII for Person ID: {}", personId.getValue());
 
         try {
@@ -168,9 +130,6 @@ public class PersonApplicationService implements PersonService {
         }
     }
 
-    /**
-     * ✅ UPDATE ADDRESS
-     */
     @Override
     public void updateAddress(UpdatePersonAddressCommand command) {
         PersonId personId = PersonId.fromString(command.personId());
@@ -205,9 +164,6 @@ public class PersonApplicationService implements PersonService {
         }
     }
 
-    /**
-     * ✅ UPDATE PROFILE IMAGE
-     */
     @Override
     public void updateImage(UpdateImageCommand command) {
         PersonId personId = PersonId.fromString(command.personId());
@@ -233,10 +189,6 @@ public class PersonApplicationService implements PersonService {
         }
     }
 
-    // ------------------------------------------------------------------
-    // ✅ QUERIES
-    // ------------------------------------------------------------------
-
     @Override
     @Transactional(readOnly = true)
     public PersonDTO getPersonById(PersonId personId) {
@@ -254,7 +206,7 @@ public class PersonApplicationService implements PersonService {
         );
     }
 
-    // ✅ NEW: Paginated method
+
     @Override
     @Transactional(readOnly = true)
     public Page<PersonDTO> getAllPersons(Pageable pageable) {
@@ -281,12 +233,6 @@ public class PersonApplicationService implements PersonService {
             throw new RuntimeException("Failed to fetch paginated persons", e);
         }
     }
-
-
-
-    // ------------------------------------------------------------------
-    // ✅ PRIVATE HELPER METHODS
-    // ------------------------------------------------------------------
 
     private Person findPersonByIdOrThrow(PersonId personId) {
         return personRepository.findById(personId)

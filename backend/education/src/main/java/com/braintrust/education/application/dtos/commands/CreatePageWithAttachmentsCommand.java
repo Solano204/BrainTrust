@@ -8,13 +8,13 @@ import java.util.List;
  * ✅ FIXED: Parameter order now matches controller usage
  */
 public record CreatePageWithAttachmentsCommand(
-        String courseId,              // 1st parameter
-        String unitId,                // 2nd parameter ✅ FIXED ORDER
-        String title,                 // 3rd parameter ✅ FIXED ORDER
-        String content,               // 4th parameter ✅ FIXED ORDER
-        List<String> externalLinks,   // 5th parameter
-        List<MultipartFile> attachments,  // 6th parameter
-        boolean publishImmediately    // 7th parameter
+        String courseId,
+        String unitId,
+        String title,
+        String content,
+        List<String> externalLinks,
+        List<MultipartFile> attachments,
+        boolean publishImmediately
 ) {
     // Compact constructor for validation (optional)
     public CreatePageWithAttachmentsCommand {
@@ -30,7 +30,7 @@ public record CreatePageWithAttachmentsCommand(
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("Content cannot be null or blank");
         }
-        // Ensure lists are never null
+
         externalLinks = externalLinks != null ? List.copyOf(externalLinks) : List.of();
         attachments = attachments != null ? List.copyOf(attachments) : List.of();
     }

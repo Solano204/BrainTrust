@@ -1,4 +1,4 @@
-// File: src/app/features/tasks/api/task-keys.ts
+
 export const taskKeys = {
   all: ["tasks"] as const,
   lists: () => [...taskKeys.all, "list"] as const,
@@ -10,7 +10,7 @@ export const taskKeys = {
   detailById: (taskId: string) => [...taskKeys.detail(), taskId] as const,
 } as const;
 
-// File: src/app/features/quizzes/api/quiz-keys.ts
+
 export const quizKeys = {
   all: ["quizzes"] as const,
   lists: () => [...quizKeys.all, "list"] as const,
@@ -22,7 +22,7 @@ export const quizKeys = {
   detailById: (quizId: string) => [...quizKeys.detail(), quizId] as const,
 } as const;
 
-// File: src/app/features/timeline/api/timeline-keys.ts
+
 export const timelineKeys = {
   all: ["timeline"] as const,
   pending: (userId: string, userType: string) => 

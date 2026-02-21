@@ -21,14 +21,12 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
     List<UserJpaEntity> findByActiveTrue();
     boolean existsByEmail(String email);
 
-    // ✅ FIXED: Removed ALL ORDER BY clauses - let Pageable handle sorting through the controller
     @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
             "WHERE (LOWER(p.firstName) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
             "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
             "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :name, '%')))")
     Page<UserJpaEntity> findByNameContainingWithPerson(@Param("name") String name, Pageable pageable);
 
-    // Keep these for explicit sorting when needed
     @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
             "WHERE u.role = :role ORDER BY p.firstName ASC, p.lastName ASC")
     Page<UserJpaEntity> findByRoleOrderByPersonNameAsc(@Param("role") Role role, Pageable pageable);
@@ -45,7 +43,6 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
     Page<UserJpaEntity> findAll(Pageable pageable);
     Page<UserJpaEntity> findByActiveTrue(Pageable pageable);
 
-    // ✅ CRITICAL FIX: Removed ALL ORDER BY clauses
     @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
             "WHERE u.personId IN :personIds")
     Page<UserJpaEntity> findByPersonIdIn(@Param("personIds") List<String> personIds, Pageable pageable);

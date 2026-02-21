@@ -5,7 +5,6 @@ import com.braintrust.shared.domain.ValueObject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-// 📍 education/domain/valueobjects/Grade.java
 public class Grade extends ValueObject {
     private final BigDecimal value;
     private final BigDecimal maxScore;

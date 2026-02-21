@@ -2,6 +2,7 @@ package com.braintrust.containerapp.rest.course;
 
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.*;
+import com.braintrust.education.application.dtos.dtos.CourseStatsDTO;
 import com.braintrust.education.application.ports.in.CourseService;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -35,7 +36,7 @@ public class CourseController {
     private static final Logger log = LoggerFactory.getLogger(CourseController.class);
 
     private final CourseService courseService;
-    private final StorageService storageService; // ✅ ADD THIS
+    private final StorageService storageService;
 
 
 
@@ -43,8 +44,6 @@ public class CourseController {
         this.courseService = courseService;
         this.storageService = storageService;
     }
-
-
 
     @Operation(
             summary = "Get all courses with pagination",
@@ -177,11 +176,8 @@ public class CourseController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
 
-        // Since we don't have direct search in CourseRepository, we'll fetch all and filter
-        // For production, you should add a search method to CourseRepository
         Page<CourseDTO> allCoursesPage = courseService.getAllCourses(pageable);
 
-        // Filter courses by name (case-insensitive)
         List<CourseDTO> filteredCourses = allCoursesPage.getContent().stream()
                 .filter(course -> course.name().toLowerCase().contains(name.toLowerCase()))
                 .collect(Collectors.toList());
@@ -195,10 +191,6 @@ public class CourseController {
         PaginatedResponse<CourseDTO> response = PaginatedResponse.fromPage(filteredPage);
         return ResponseEntity.ok(response);
     }
-
-    // ------------------------------------------------------------------
-    // ✅ LEGACY ENDPOINTS (for backward compatibility)
-    // ------------------------------------------------------------------
 
     @Operation(
             summary = "Get all active courses (legacy)",
@@ -236,11 +228,6 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
-
-
-    // ========================================
-    // ✅ COURSE COMMANDS
-    // ========================================
 
     @PostMapping
     public ResponseEntity<CourseDTO> createCourse(@RequestBody CreateCourseCommand command) {
@@ -282,10 +269,8 @@ public class CourseController {
         log.info("Uploading course image for Course ID: {}", courseId);
 
         try {
-            // Upload the file using storage service
             FileUploadDTO uploadResult = storageService.uploadFile(file, "courses/" + courseId + "/images");
 
-            // Update course with the new image URL
             courseService.updateCourseImage(CourseId.fromString(courseId), uploadResult.url());
 
             CourseDTO updatedCourse = courseService.getCourseById(CourseId.fromString(courseId));
@@ -312,7 +297,6 @@ public class CourseController {
         );
         UnitId unitId = courseService.addUnit(command);
 
-        // Get just the created unit
         CourseUnitDTO createdUnit = courseService.getUnitById(unitId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUnit);
@@ -333,7 +317,6 @@ public class CourseController {
         );
         UnitId unitId = courseService.addUnitWithImage(command);
 
-        // Get just the created unit
         CourseUnitDTO createdUnit = courseService.getUnitById(unitId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUnit);
@@ -353,7 +336,6 @@ public class CourseController {
         );
         courseService.updateUnit(command);
 
-        // Get the updated unit
         CourseUnitDTO updatedUnit = courseService.getUnitById(UnitId.fromString(unitId));
 
         return ResponseEntity.ok(updatedUnit);
@@ -371,27 +353,7 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course image updated successfully", null));
     }
 
-    /*
-    @PutMapping("/{courseId}/activate")
-    public ResponseEntity<SuccessResponseDTO> activateCourse(@PathVariable String courseId) {
-        log.info("Activating Course ID: {}", courseId);
-        courseService.activateCourse(CourseId.fromString(courseId));
-        log.info("Course ID {} status set to active.", courseId);
-        return ResponseEntity.ok(new SuccessResponseDTO(true, "Course activated successfully", null));
-    }
-    */
 
-    /*
-    @PutMapping("/{courseId}/deactivate")
-    public ResponseEntity<SuccessResponseDTO> deactivateCourse(@PathVariable String courseId) {
-        log.warn("Deactivating Course ID: {}", courseId);
-        courseService.deactivateCourse(CourseId.fromString(courseId));
-        log.warn("Course ID {} status set to inactive.", courseId);
-        return ResponseEntity.ok(new SuccessResponseDTO(true, "Course deactivated successfully", null));
-    }
-    */
-
-    // NEW: Delete course with cascade
     @DeleteMapping("/{courseId}")
     public ResponseEntity<SuccessResponseDTO> deleteCourse(@PathVariable String courseId) {
         log.warn("Deleting Course ID: {} with cascade", courseId);
@@ -399,10 +361,6 @@ public class CourseController {
         log.info("Course ID {} deleted successfully with cascade", courseId);
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course deleted successfully", null));
     }
-
-    // ========================================
-    // ✅ ENROLLMENT COMMANDS
-    // ========================================
 
     @PostMapping("/{courseId}/enrollments")
     public ResponseEntity<SuccessResponseDTO> enrollStudent(
@@ -428,12 +386,7 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Student unenrolled successfully", null));
     }
 
-    // ========================================
-    // ✅ UNIT COMMANDS
-    // ========================================
 
-
-    // ✅ NEW: Upload unit image
     @PostMapping(value = "/units/{unitId}/image/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponseDTO> uploadUnitImage(
             @PathVariable String unitId,
@@ -442,10 +395,8 @@ public class CourseController {
         log.info("Uploading unit image for Unit ID: {}", unitId);
 
         try {
-            // Upload the file using storage service
             FileUploadDTO uploadResult = storageService.uploadFile(file, "units/" + unitId + "/images");
 
-            // Update unit with the new image URL
             courseService.updateUnitImage(UnitId.fromString(unitId), uploadResult.url());
 
             Map<String, Object> data = new HashMap<>();
@@ -472,7 +423,6 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Unit image updated successfully", null));
     }
 
-    // NEW: Delete unit with cascade
     @DeleteMapping("/units/{unitId}")
     public ResponseEntity<SuccessResponseDTO> deleteUnit(@PathVariable String unitId) {
         log.warn("Deleting Unit ID: {} with cascade", unitId);
@@ -496,39 +446,6 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-    /*
-    @GetMapping("/code/{code}")
-    public ResponseEntity<CourseDTO> getCourseByCode(@PathVariable String code) {
-        log.debug("Querying course by code: {}", code);
-        CourseDTO course = courseService.getCourseByCode(new CourseCode(code));
-        return ResponseEntity.ok(course);
-    }
-    */
-
-
-
-    /*
-    @GetMapping("/active")
-    public ResponseEntity<List<CourseDTO>> getActiveCourses() {
-        log.debug("Fetching all active courses (via dedicated endpoint).");
-        List<CourseDTO> courses = courseService.getActiveCourses();
-        return ResponseEntity.ok(courses);
-    }
-    */
-
-    /*
-    @GetMapping("/grade/{grade}/group/{group}")
-    public ResponseEntity<List<CourseDTO>> getCoursesByGradeAndGroup(
-            @PathVariable String grade,
-            @PathVariable String group
-    ) {
-        log.debug("Fetching courses for Grade {} and Group {}", grade, group);
-        List<CourseDTO> courses = courseService.getCoursesByGradeAndGroup(grade, group);
-        return ResponseEntity.ok(courses);
-    }
-    */
-
-    // ✅ NEW: Search students for enrollment
     @GetMapping("/{courseId}/enrollments/search")
     public ResponseEntity<List<StudentSearchResultDTO>> searchStudentsForEnrollment(
             @PathVariable String courseId,
@@ -565,7 +482,6 @@ public class CourseController {
         return ResponseEntity.ok(units);
     }
 
-    // ✅ NEW: Bulk enroll students
     @PostMapping("/{courseId}/enrollments/bulk")
     public ResponseEntity<SuccessResponseDTO> bulkEnrollStudents(
             @PathVariable String courseId,
@@ -583,7 +499,7 @@ public class CourseController {
                         enrollmentIds.stream().map(EnrollmentId::getValue).collect(Collectors.toList())));
     }
 
-    // ✅ NEW: Bulk unenroll students
+
     @DeleteMapping("/{courseId}/enrollments/bulk")
     public ResponseEntity<SuccessResponseDTO> bulkUnenrollStudents(
             @PathVariable String courseId,
@@ -599,7 +515,6 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Students unenrolled successfully", null));
     }
 
-    // ✅ NEW: Update course information comprehensively
     @PutMapping("/{courseId}/information")
     public ResponseEntity<SuccessResponseDTO> updateCourseInformation(
             @PathVariable String courseId,
@@ -612,27 +527,4 @@ public class CourseController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Course information updated successfully", null));
     }
 
-    /*
-    @GetMapping("/{courseId}/enrollments/student/{studentId}/exists")
-    public ResponseEntity<Boolean> isStudentEnrolled(
-            @PathVariable String courseId,
-            @PathVariable String studentId
-    ) {
-        log.trace("Checking if Student ID {} is enrolled in Course ID {}", studentId, courseId);
-        boolean enrolled = courseService.isStudentEnrolled(
-                CourseId.fromString(courseId),
-                UserId.fromString(studentId)
-        );
-        return ResponseEntity.ok(enrolled);
-    }
-    */
-
-    /*
-    @GetMapping("/code/{code}/available")
-    public ResponseEntity<Boolean> isCourseCodeAvailable(@PathVariable String code) {
-        log.trace("Checking availability of course code: {}", code);
-        boolean available = courseService.isCourseCodeAvailable(new CourseCode(code));
-        return ResponseEntity.ok(available);
-    }
-    */
 }

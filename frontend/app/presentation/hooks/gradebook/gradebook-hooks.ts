@@ -1,4 +1,3 @@
-// File: src/app/infraestructure/hooks/gradebook/use-gradebook.ts
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -26,11 +25,9 @@ export function useGradebook(courseId: string) {
       setError(null);
 
       if (isStudent && user?.id) {
-        // Load student's personal gradebook
         const studentGradebook = await fetchStudentGradebook(courseId, user.id);
         setGradebook(studentGradebook);
       } else if (isTeacher) {
-        // Load all students' gradebooks for the course
         const gradebooks = await fetchCourseGradebooks(courseId);
         setCourseGradebooks(gradebooks);
       }
@@ -46,7 +43,7 @@ export function useGradebook(courseId: string) {
     
     try {
       await assignFinalGrade(courseId, studentId, gradeValue, feedback);
-      await loadGradebookData(); // Refresh data
+      await loadGradebookData();
     } catch (err) {
       throw err;
     }
@@ -57,7 +54,7 @@ export function useGradebook(courseId: string) {
     
     try {
       await assignUnitFinalGrade(unitId, studentId, gradeValue, feedback);
-      await loadGradebookData(); // Refresh data
+      await loadGradebookData();
     } catch (err) {
       throw err;
     }

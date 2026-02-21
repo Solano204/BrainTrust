@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 interface DetectedSegment {
     start: number;
     end: number;
-    probability: string; // Stored as a string in the example
+    probability: string;
 }
 
 interface AISegmentsModalProps {
@@ -19,7 +19,6 @@ interface AISegmentsModalProps {
 export  const AISegmentsModal: React.FC<AISegmentsModalProps> = ({ isOpen, onClose, segments, submissionContent }) => {
     if (!isOpen) return null;
 
-    // Helper to highlight the text segment
     const getHighlightedContent = (start: number, end: number) => {
         const pre = submissionContent.substring(0, start);
         const segment = submissionContent.substring(start, end);

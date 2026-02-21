@@ -1,6 +1,6 @@
 package com.braintrust.identity.domain.model;
 
-// 📍 identity/domain/model/Role.java
+
 public enum Role {
     TEACHER("Profesor"),
     STUDENT("Estudiante"),

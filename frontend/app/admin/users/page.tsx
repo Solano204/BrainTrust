@@ -1,6 +1,3 @@
-// ==========================================
-// ✅ ARCHIVO 1: src/app/admin/users/page.tsx
-// ==========================================
 
 "use client"
 
@@ -12,7 +9,6 @@ import AdminUsersModule from "@/components/admin/AdminUsersModule"
 export default function AdminUsersPage() {
     const { hasPermission, isLoading } = useAuth()
 
-    // Verificar permisos
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">

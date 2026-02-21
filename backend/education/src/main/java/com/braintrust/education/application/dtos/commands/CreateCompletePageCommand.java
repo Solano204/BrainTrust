@@ -10,13 +10,10 @@ public record CreateCompletePageCommand(
         @NotBlank String title,
         @NotBlank String content,
 
-        // External links
         List<String> externalLinks,
 
-        // Attachments
         List<DocumentAttachment> attachments,
 
-        // Publishing options
         boolean publishImmediately
 ) {
     public record DocumentAttachment(

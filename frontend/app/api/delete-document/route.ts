@@ -1,5 +1,4 @@
 
-// app/api/delete-document/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -22,10 +21,9 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Deleting from Cloudinary:', publicId);
 
-    // Delete from Cloudinary
     const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: 'raw', // Important for documents
-      invalidate: true, // Invalidate CDN cache
+      resource_type: 'raw',
+      invalidate: true,
     });
 
     console.log('Cloudinary delete result:', result);

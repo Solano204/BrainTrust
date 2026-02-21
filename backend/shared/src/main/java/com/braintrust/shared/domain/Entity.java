@@ -2,7 +2,6 @@ package com.braintrust.shared.domain;
 
 import java.util.Objects;
 
-// 📍 shared/domain/Entity.java
 public abstract class Entity<T> {
 
     protected T id;

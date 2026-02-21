@@ -4,7 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated theme with blue and gray color scheme for modern LMS dashboard */
   --background: oklch(0.98 0.002 240);
   --foreground: oklch(0.18 0.01 240);
   --card: oklch(1 0 0);

@@ -6,12 +6,12 @@ public record GradeQuizSubmissionCommand(
         String quizSubmissionId,
         int earnedPoints,
         int totalPoints,
-        List<QuestionGrade> questionGrades // ✅ NEW: Individual question grades
+        List<QuestionGrade> questionGrades
 ) {
     public record QuestionGrade(
             String questionId,
             int earnedPoints,
             int maxPoints,
-            String feedback // Optional teacher feedback
+            String feedback
     ) {}
 }

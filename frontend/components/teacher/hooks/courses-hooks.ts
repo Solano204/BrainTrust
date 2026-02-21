@@ -1,4 +1,3 @@
-// File: src/app/features/courses/hooks/course-hooks.ts
 "use client";
 
 import { Course } from "@/app/domain/entities/CourseEntities";
@@ -19,8 +18,6 @@ import {
 } from "../api/teacher-courses";
 import { deleteImageFromCloudinary, uploadImageFile } from "@/app/utils/cloudinary/cloudinary";
 
-// THIS CURRENTLY WORKS
-
 export function useCourseAllUnits(courseId: CourseId | null) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["course-all-units", courseId],
@@ -37,7 +34,6 @@ export function useCourseAllUnits(courseId: CourseId | null) {
   };
 }
 
-// CURRENTLY WORKS
 export function useCoursesByTeacher(teacherId: string | null) {
   return useQuery<Course[]>({
     queryKey: courseKeys.list(teacherId || ""),
@@ -48,34 +44,9 @@ export function useCoursesByTeacher(teacherId: string | null) {
   });
 }
 
-// export function useCourses() {
-//   return useQuery<Course[]>({
-//     queryKey: courseKeys.list("all"),
-//     queryFn: fetchAllCourses,
-//     staleTime: 5 * 60 * 1000,
-//     refetchOnWindowFocus: false,
-//   });
-// }
-
-// export function useCourse(courseId: string | null) {
-//   return useQuery<Course>({
-//     queryKey: courseKeys.detail(courseId || ""),
-//     queryFn: () => fetchCourseById(courseId!),
-//     enabled: !!courseId,
-//     staleTime: 10 * 60 * 1000,
-//   });
-// }
-
-/**
- * Custom hook for course mutations with image upload support
- */
-
-// CURRENTLY WORKS
-
 export function useCourseMutations() {
   const queryClient = useQueryClient();
 
-  // Mutation for uploading course image
   const uploadImageMutation = useMutation({
     mutationFn: async ({
       courseId,
@@ -91,7 +62,6 @@ export function useCourseMutations() {
     },
   });
 
-  // Mutation for creating course
   const createCourseMutation = useMutation({
     mutationFn: async ({
       courseData,
@@ -100,9 +70,7 @@ export function useCourseMutations() {
       courseData: Course;
       imageFile?: File | null;
     }) => {
-      // Create the course first
 
-      // If we have an image file, upload it and update the course
       if (imageFile) {
         const uploadedUrl = await uploadImageFile(imageFile);
         courseData.urlImage = uploadedUrl;
@@ -125,26 +93,23 @@ export function useCourseMutations() {
     },
   });
 
-// Mutation for updating course
 const updateCourseMutation = useMutation({
   mutationFn: async ({
     courseId,
     courseData,
     imageFile,
-    oldImageUrl, // Add this parameter
+    oldImageUrl,
   }: {
     courseId: CourseId;
     courseData: Partial<Omit<Course, "id" | "teacherId">>;
     imageFile?: File | null;
-    oldImageUrl?: string; // The current image URL from the course
+    oldImageUrl?: string;
   }) => {
     let finalCourseData = { ...courseData };
 
-    // If there's a new image file, handle the image swap
     if (imageFile) {
       console.log(`Uploading new image for course ${courseId}...`);
       
-      // 1. Delete old image from Cloudinary (if it exists)
       if (oldImageUrl && oldImageUrl.includes('cloudinary.com')) {
         try {
           console.log('Deleting old image from Cloudinary...');
@@ -152,17 +117,14 @@ const updateCourseMutation = useMutation({
           console.log('✓ Old image deleted from Cloudinary');
         } catch (deleteError) {
           console.warn('Failed to delete old image from Cloudinary:', deleteError);
-          // Continue with upload even if delete fails
         }
       }
       
-      // 2. Upload new image
       const uploadedUrl = await uploadImageFile(imageFile);
       finalCourseData.urlImage = uploadedUrl;
       console.log('✓ New image uploaded to Cloudinary');
     }
 
-    // Update the course with the (possibly updated) data
     return updateCourse(courseId, finalCourseData);
   },
 
@@ -180,7 +142,6 @@ const updateCourseMutation = useMutation({
 });
 
 
-  // Mutation for deleting course
   const deleteCourseMutation = useMutation({
     mutationFn: deleteCourse,
     onSuccess: () => {
@@ -201,9 +162,6 @@ const updateCourseMutation = useMutation({
   };
 }
 
-/**
- * Custom hook for managing course form state
- */
 export function useCourseForm(initialData?: Course) {
   const [formData, setFormData] = React.useState({
     name: initialData?.name || "",

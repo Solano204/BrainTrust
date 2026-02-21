@@ -7,11 +7,11 @@ import java.util.Map;
 public record SubmitQuizWithAnswersCommand(
         String quizId,
         String studentId,
-        Map<String, QuizAnswerData> answers // questionId -> answer data
+        Map<String, QuizAnswerData> answers
 ) {
     public record QuizAnswerData(
-            List<Integer> selectedOptions, // for multiple choice
-            String textAnswer, // for open-ended
-            Long timeSpentSeconds // optional
+            List<Integer> selectedOptions,
+            String textAnswer,
+            Long timeSpentSeconds
     ) {}
 }

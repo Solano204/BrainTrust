@@ -31,8 +31,8 @@ public class VirtualThreadHealthIndicator implements HealthIndicator {
 
     private static final long WARNING_THRESHOLD = 50_000;
     private static final long CRITICAL_THRESHOLD = 100_000;
-    private static final long EXPECTED_MIN_RATIO = 10;    // VTs per carrier
-    // private static final long EXPECTED_MAX_RATIO = 10_000; // Not used in logic
+    private static final long EXPECTED_MIN_RATIO = 10;
+
 
     @Override
     public Health health() {
@@ -43,17 +43,14 @@ public class VirtualThreadHealthIndicator implements HealthIndicator {
 
             Health.Builder builder = Health.up();
 
-            // Add metrics
             builder.withDetail("activeVirtualThreads", activeVThreads);
             builder.withDetail("carrierThreads", carrierThreads);
             builder.withDetail("platformThreads", platformThreads);
 
-            // Calculate ratio
             if (carrierThreads > 0) {
                 long ratio = activeVThreads / carrierThreads;
                 builder.withDetail("virtualThreadsPerCarrier", ratio);
 
-                // Check if ratio is healthy
                 if (ratio < EXPECTED_MIN_RATIO) {
                     builder.withDetail("warning",
                             "Low VT/Carrier ratio - may not be benefiting from Virtual Threads");
@@ -62,7 +59,6 @@ public class VirtualThreadHealthIndicator implements HealthIndicator {
                 }
             }
 
-            // Check thresholds
             if (activeVThreads > CRITICAL_THRESHOLD) {
                 builder.status("DOWN");
                 builder.withDetail("error",
@@ -92,7 +88,6 @@ public class VirtualThreadHealthIndicator implements HealthIndicator {
     }
 
     private long countActiveVirtualThreads() {
-        // Counts VTs that are running or runnable
         return Thread.getAllStackTraces().keySet().stream()
                 .filter(Thread::isVirtual)
                 .filter(Thread::isAlive)
@@ -100,7 +95,6 @@ public class VirtualThreadHealthIndicator implements HealthIndicator {
     }
 
     private long countCarrierThreads() {
-        // Counts Carrier threads (usually ForkJoinPool workers) by name, excluding VTs
         return Thread.getAllStackTraces().keySet().stream()
                 .filter(t -> !t.isVirtual())
                 .filter(t -> t.getName().contains("ForkJoinPool") || t.getName().contains("http-")) // Include HTTP threads if running Spring Web
@@ -108,7 +102,6 @@ public class VirtualThreadHealthIndicator implements HealthIndicator {
     }
 
     private long countPlatformThreads() {
-        // Counts all traditional platform threads
         return Thread.getAllStackTraces().keySet().stream()
                 .filter(t -> !t.isVirtual())
                 .count();

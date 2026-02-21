@@ -11,7 +11,7 @@ public record StudentGroupDTO(
         String courseName,
         String name,
         String description,
-        List<GroupMemberDTO> members,  // Changed from memberIds and memberNames
+        List<GroupMemberDTO> members,
         int memberCount,
         String createdAt,
         boolean active

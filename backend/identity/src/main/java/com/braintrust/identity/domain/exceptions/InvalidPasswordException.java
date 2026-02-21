@@ -5,7 +5,7 @@ import com.braintrust.shared.domain.exception.ValidationException;
 
 import java.util.Map;
 
-// 📍 identity/domain/exceptions/InvalidPasswordException.java
+
 public class InvalidPasswordException extends ValidationException {
 
     public InvalidPasswordException(String message) {

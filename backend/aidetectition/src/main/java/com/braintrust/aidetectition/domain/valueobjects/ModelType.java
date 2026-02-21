@@ -1,6 +1,6 @@
 package com.braintrust.aidetectition.domain.valueobjects;
 
-// 📍 aidetection/domain/valueobjects/ModelType.java
+
 public enum ModelType {
     GPT_DETECTOR("GPT Detector", "v2.1"),
     BERT_CLASSIFIER("BERT Classifier", "v1.5"),

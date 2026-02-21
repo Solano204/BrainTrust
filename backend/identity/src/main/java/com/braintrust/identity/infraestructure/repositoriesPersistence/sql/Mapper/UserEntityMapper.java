@@ -1,6 +1,6 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.Mapper;
 
-// 📍 identity/infrastructure/persistence/mappers/UserEntityMapper.java
+
 
 import com.braintrust.identity.domain.model.*;
 import com.braintrust.identity.domain.valueobjects.*;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-// other imports...
+
 
 @Component
 public class UserEntityMapper {
@@ -19,10 +19,6 @@ public class UserEntityMapper {
     private static final Logger log =
             LoggerFactory.getLogger(UserEntityMapper.class);
 
-    /**
-     * Converts a User Domain Model to a JPA Entity.
-     * Logs PII (Email) at debug level for auditing.
-     */
     public UserJpaEntity toEntity(User user) {
         log.debug("Mapping User Domain ID {} to JPA Entity. Email: {}",
                 user.getId().getValue(), user.getEmail().getValue());
@@ -39,10 +35,6 @@ public class UserEntityMapper {
         );
     }
 
-    /**
-     * Converts a User JPA Entity back to a Domain User model.
-     * Logs reconstitution for state tracking.
-     */
     public User toDomain(UserJpaEntity entity) {
         log.debug("Mapping User JPA Entity {} back to Domain Model. Role: {}",
                 entity.getId(), entity.getRole());
@@ -52,7 +44,6 @@ public class UserEntityMapper {
         Password password = Password.fromHash(entity.getPasswordHash());
         Role role = Role.valueOf(entity.getRole().name());
 
-        // Use reconstitute pattern for existing entities
         return User.reconstitute(
                 UserId.fromString(entity.getId()),
                 personId,

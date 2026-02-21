@@ -9,7 +9,7 @@ import com.braintrust.identity.domain.valueobjects.UserId;
 import java.util.List;
 import java.util.Optional;
 
-// 📍 education/application/ports/out/EnrollmentRepository.java
+
 public interface EnrollmentRepository {
 
     // Commands
@@ -17,9 +17,6 @@ public interface EnrollmentRepository {
     void delete(Enrollment enrollment);
     int countByCourseAndStatus(CourseId courseId, EnrollmentStatus status);
 
-    /**
-     * Get student IDs enrolled in a course with specific status
-     */
     List<String> findStudentIdsByCourse(CourseId courseId, EnrollmentStatus status);
     // Queries
     Optional<Enrollment> findById(EnrollmentId enrollmentId);

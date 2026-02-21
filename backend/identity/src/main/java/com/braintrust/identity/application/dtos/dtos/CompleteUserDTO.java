@@ -9,7 +9,7 @@ public record CompleteUserDTO(
         boolean active,
         String studentId,
 
-        // Personal Information
+
         String firstName,
         String lastName,
         String gender,
@@ -18,12 +18,10 @@ public record CompleteUserDTO(
         String registrationDate,
         String imagePath,
 
-        // Address Information
+
         AddressDTO address,
 
-        // Timestamps
         String createdAt,
 
-        // Success message
         String message
 ) {}

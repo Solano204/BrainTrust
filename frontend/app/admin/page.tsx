@@ -1,7 +1,3 @@
-// ==========================================
-// ✅ ARCHIVO: src/app/admin/page.tsx
-// Dashboard principal del administrador
-// ==========================================
 
 "use client"
 
@@ -18,9 +14,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect } from "react"
 
-// ==========================================
-// 🎯 FUNCIÓN NORMALIZE ROLE
-// ==========================================
+
 function normalizeRole(role: string | undefined): string {
     if (!role) return 'student';
     
@@ -44,7 +38,7 @@ function normalizeRole(role: string | undefined): string {
 export default function AdminDashboardPage() {
     const { user, hasPermission, isLoading } = useAuth()
 
-    // Debug logging
+
     useEffect(() => {
         console.log('=== ADMIN PAGE MOUNTED ===');
         console.log('User:', user);
@@ -57,7 +51,7 @@ export default function AdminDashboardPage() {
         console.log('=========================');
     }, [user, isLoading]);
 
-    // Verificar si está cargando
+
     if (isLoading) {
         console.log('⏳ Still loading...');
         return (
@@ -68,8 +62,7 @@ export default function AdminDashboardPage() {
     }
 
     const normalizedRole = normalizeRole(user?.role);
-    
-    // 🔧 VERIFICACIÓN MEJORADA
+
     if (!user || normalizedRole !== 'admin') {
         console.log('❌ Access denied. Redirecting to home.');
         console.log('User exists:', !!user);
@@ -79,7 +72,6 @@ export default function AdminDashboardPage() {
 
     console.log('✅ Admin access granted! Rendering dashboard...');
 
-    // Módulos del administrador
     const adminModules = [
         {
             title: "User Management",
@@ -109,14 +101,14 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="container mx-auto py-8 px-4">
-            {/* Header */}
+
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
                 <p className="text-muted-foreground">
                     Welcome back, {user.name}! Manage your system from here.
                 </p>
-                
-                {/* Debug info - VISIBLE */}
+
+
                 <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg text-sm space-y-2">
                     <p className="font-semibold text-blue-900 dark:text-blue-100">🔍 Debug Info:</p>
                     <p><strong>Raw role:</strong> <span className="font-mono">{user.role}</span></p>
@@ -128,7 +120,7 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* Stats Cards */}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -176,7 +168,7 @@ export default function AdminDashboardPage() {
                 </Card>
             </div>
 
-            {/* Admin Modules Grid */}
+
             <div className="mb-8">
                 <h2 className="text-2xl font-semibold mb-4">Admin Modules</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -227,7 +219,7 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* Quick Actions */}
+
             <Card>
                 <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>

@@ -1,21 +1,4 @@
 
-// =============================================================================
-// TYPES
-// =============================================================================
-
-// export interface Quiz {
-//   id: string;s
-//   title: string;
-//   description: string;
-//   courseUnitId: string;
-//   courseId: string;
-//   maxGrade: number;
-//   timeLimit: number;
-//   passingScore: number;
-//   dueDate: string;
-//   acceptLateSubmissions: boolean;
-//   questions: Question[];
-// }
 
 export interface Question {
   id: string;

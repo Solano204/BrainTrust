@@ -2,7 +2,6 @@ package com.braintrust.identity.domain.valueobjects;
 
 import com.braintrust.shared.domain.ValueObject;
 
-// 📍 identity/domain/valueobjects/Address.java
 public class Address extends ValueObject {
     private final String street;
     private final String colony;

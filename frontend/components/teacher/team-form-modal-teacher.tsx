@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/team-form-modal.tsx
 "use client";
 
 import * as React from "react";
@@ -13,14 +12,12 @@ import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-// Zod validation schema
 const teamFormSchema = z.object({
   name: z.string()
     .min(2, "Team name must be at least 2 characters")
     .max(100, "Team name must not exceed 100 characters")
     .trim()
     .refine((name) => {
-      // No special characters except spaces, hyphens, and underscores
       return /^[a-zA-Z0-9\s\-_]+$/.test(name)
     }, "Team name can only contain letters, numbers, spaces, hyphens, and underscores"),
   description: z.string()
@@ -212,7 +209,6 @@ export function TeamFormModal({
               </p>
             </div>
 
-            {/* Creation Info */}
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
               <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
                 Team Creation Information
@@ -225,7 +221,6 @@ export function TeamFormModal({
               </ul>
             </div>
 
-            {/* Form-level validation summary */}
             {Object.keys(errors).length > 0 && !isValid && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                 <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2">
@@ -240,7 +235,6 @@ export function TeamFormModal({
             )}
           </div>
 
-          {/* Footer / Save Button */}
           <div className="flex justify-end gap-3 p-6 border-t border-border bg-gray-50 dark:bg-gray-800">
             <Button
               type="button"

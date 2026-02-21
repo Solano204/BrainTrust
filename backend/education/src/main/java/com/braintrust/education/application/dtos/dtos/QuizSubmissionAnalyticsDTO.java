@@ -9,5 +9,5 @@ public record QuizSubmissionAnalyticsDTO(
         String highestScore,
         String lowestScore,
         int totalAttempts,
-        String averageTimeSpent // In minutes
+        String averageTimeSpent
 ) {}

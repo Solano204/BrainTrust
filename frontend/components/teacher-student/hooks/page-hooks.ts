@@ -30,10 +30,6 @@ import {
   processFiles
 } from "../api/page";
 
-// ============================================
-// QUERY HOOKS
-// ============================================
-
 export function usePagesByUnit(courseId: CourseId | null, unitId: UnitId | null) {
   return useQuery<Page[]>({
     queryKey: pageKeys.list(courseId || "", unitId || ""),
@@ -54,9 +50,6 @@ export function usePage(pageId: string | null) {
   });
 }
 
-// ============================================
-// PAGE MUTATIONS
-// ============================================
 
 export function usePageMutations() {
   const queryClient = useQueryClient();
@@ -89,8 +82,7 @@ export function usePageMutations() {
       pageData: Partial<Omit<Page, "id" | "courseId" | "unitId" | "createdAt">>;
     }) => updatePage(pageId, pageData),
     onSuccess: (_, variables) => {
-      // ✅ SIMPLE: Just invalidate like assignments do
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: pageKeys.detail(variables.pageId) 
       });
       queryClient.invalidateQueries({ 
@@ -115,9 +107,6 @@ export function usePageMutations() {
   };
 }
 
-// ============================================
-// LINK MANAGEMENT HOOKS
-// ============================================
 
 export function usePageLinkMutations() {
   const queryClient = useQueryClient();
@@ -131,8 +120,7 @@ export function usePageLinkMutations() {
       linkUrl: string;
     }) => addLinkToPage(pageId, linkUrl),
     onSuccess: (_, variables) => {
-      // ✅ SIMPLE: Just invalidate - triggers automatic refetch
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: pageKeys.detail(variables.pageId) 
       });
       queryClient.invalidateQueries({ 
@@ -256,9 +244,6 @@ export function usePageLinkMutations() {
   };
 }
 
-// ============================================
-// ATTACHMENT MANAGEMENT HOOKS
-// ============================================
 
 export function usePageAttachmentMutations() {
   const queryClient = useQueryClient();
@@ -272,8 +257,7 @@ export function usePageAttachmentMutations() {
       file: File;
     }) => addAttachmentToPage(pageId, file),
     onSuccess: (_, variables) => {
-      // ✅ SIMPLE: Just invalidate - triggers automatic refetch
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: pageKeys.detail(variables.pageId) 
       });
       queryClient.invalidateQueries({ 
@@ -384,9 +368,6 @@ export function usePageAttachmentMutations() {
   };
 }
 
-// ============================================
-// COMBINED CONTENT MANAGEMENT HOOK
-// ============================================
 
 export function usePageContentManagement(pageId: string) {
   const linkMutations = usePageLinkMutations();

@@ -18,7 +18,7 @@ public interface UserService {
 
     MinimalUserInfoDTO getMinimalUserInfo(UserId userId);
 
-    // Commands
+
     UserId registerTeacher(RegisterTeacherCommand command);
     UserId registerStudent(RegisterStudentCommand command);
     UserId registerAdmin(RegisterAdminCommand command);
@@ -36,7 +36,7 @@ public interface UserService {
     List<UserDTO> getUsersByIds(List<String> userIds);
     void adminChangePassword(AdminChangePasswordCommand command);
 
-    // Queries
+
     List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds);
     UserDTO getUserById(UserId userId);
     UserDTO getUserByEmail(Email email);
@@ -46,13 +46,12 @@ public interface UserService {
     boolean isEmailAvailable(Email email);
     List<MinimalUserInfoDTO> searchUsersByName(String searchQuery, Role role);
 
-    // ✅ NEW: Pagination methods
+
     Page<UserDTO> getAllUsers(Pageable pageable);
     Page<UserDTO> getUsersByRole(Role role, Pageable pageable);
     Page<UserDTO> searchUsersByName(String name, Pageable pageable);
     Page<UserDTO> searchUsersByNameAndRole(String name, Role role, Pageable pageable);
 
-    // Authentication
     AuthenticationResult authenticate(AuthenticateUserCommand command);
     AuthenticationResult refreshToken(RefreshTokenCommand command);
 }

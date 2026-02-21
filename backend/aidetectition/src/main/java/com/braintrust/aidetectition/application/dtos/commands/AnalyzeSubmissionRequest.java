@@ -10,5 +10,5 @@ public record AnalyzeSubmissionRequest(
         @NotBlank(message = "Content is required")
         String content,
 
-        String preferredModel  // Optional: GPT_DETECTOR, BERT_CLASSIFIER, ENSEMBLE
+        String preferredModel
 ) {}

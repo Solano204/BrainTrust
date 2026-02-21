@@ -5,15 +5,14 @@ import com.braintrust.education.application.dtos.commands.QuestionOptionDTO;
 
 import java.util.List;
 
-// ✅ NEW: Question response with grade information
 public record GradedQuestionResponseDTO(
         String questionId,
         String questionText,
         String questionType,
         int maxPoints,
-        int earnedPoints, // ✅ Points earned for this specific question
-        String teacherFeedback, // ✅ Teacher's feedback (optional)
-        boolean isAutoGraded, // ✅ Whether this was auto-graded
+        int earnedPoints,
+        String teacherFeedback,
+        boolean isAutoGraded,
         List<QuestionOptionDTO> options,
         List<Integer> selectedOptions,
         String textAnswer,

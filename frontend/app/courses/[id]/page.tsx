@@ -1,4 +1,3 @@
-// File: src/app/courses/[id]/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -27,15 +26,13 @@ export default function CoursePage() {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<CourseView>("overview");
   const [selectedSubmission, setSelectedSubmission] = useState<number | null>(null);
-  
-  // Gradebook specific state
+
   const [gradebookView, setGradebookView] = useState<GradebookView>("units");
   const [selectedGradebookUnit, setSelectedGradebookUnit] = useState<string | null>(null);
 
   const params = useParams();
   const courseId = params.id as string;
 
-  // Use the gradebook hook - FIXED: Added proper error handling
   const {
     gradebook,
     courseGradebooks,
@@ -52,28 +49,27 @@ export default function CoursePage() {
     setCurrentView(view);
     setSelectedUnit(null);
     setSelectedSubmission(null);
-    // Reset gradebook state when switching away from gradebook
+
     if (view !== "gradebook") {
       setGradebookView("units");
       setSelectedGradebookUnit(null);
     } else {
-      // Refresh gradebook data when switching to gradebook view
+
       refreshGradebook();
     }
   };
 
-  // Function to handle unit selection from CourseOverview
+
   const handleSelectUnit = (unitId: string) => {
     setSelectedUnit(unitId);
     setCurrentView("overview");
   };
 
-  // Function to handle back from UnitDetail
   const handleBackFromUnit = () => {
     setSelectedUnit(null);
   };
 
-  // Gradebook navigation functions
+
   const handleGradebookViewChange = (view: GradebookView) => {
     setGradebookView(view);
     setSelectedGradebookUnit(null);
@@ -91,7 +87,7 @@ export default function CoursePage() {
     router.push(`/courses/`);
   };
 
-  // Render the appropriate gradebook component based on current state
+
   const renderGradebookContent = () => {
     if (selectedGradebookUnit) {
       return (
@@ -107,7 +103,7 @@ export default function CoursePage() {
 
     return (
       <div className="space-y-6">
-        {/* Gradebook View Toggle */}
+
         <div className="flex border-b border-border">
           <button
             onClick={() => handleGradebookViewChange("units")}
@@ -131,7 +127,7 @@ export default function CoursePage() {
           </button>
         </div>
 
-        {/* Show loading or error state */}
+
         {gradebookLoading ? (
           <div className="flex justify-center items-center min-h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -148,7 +144,7 @@ export default function CoursePage() {
             </button>
           </div>
         ) : (
-          // Gradebook Content
+
           gradebookView === "units" ? (
             <GradebookUnitsView
               courseId={courseId}
@@ -251,7 +247,7 @@ export default function CoursePage() {
             </div>
           </div>
 
-          {/* Conditional Rendering - Only ONE component renders at a time */}
+
           <div className="container mx-auto p-6">
             {selectedUnit !== null ? (
               <UnitDetail
@@ -259,7 +255,7 @@ export default function CoursePage() {
                 idCourse={courseId}
                 idUnit={selectedUnit}
                 onBack={handleBackFromUnit}
-                // showStudentGrades={true} // FIX: Added prop to show student grades
+
               />
             ) : currentView === "overview" ? (
               <CourseOverview

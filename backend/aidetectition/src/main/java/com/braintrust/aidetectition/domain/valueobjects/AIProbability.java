@@ -5,7 +5,6 @@ import com.braintrust.shared.domain.ValueObject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-// 📍 aidetection/domain/valueobjects/AIProbability.java
 public class AIProbability extends ValueObject {
     private final BigDecimal value;
 

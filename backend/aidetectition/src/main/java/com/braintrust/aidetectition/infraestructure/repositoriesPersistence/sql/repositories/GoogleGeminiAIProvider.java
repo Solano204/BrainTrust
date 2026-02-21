@@ -38,10 +38,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
         log.info("✅ GoogleGeminiAIProvider initialized with model: {}", detectionModel);
     }
 
-    // ========================================
-    // AI DETECTION METHODS
-    // ========================================
-
     @Override
     public DetectionResult analyzeContent(String content, ModelType modelType) {
         log.info("🔍 Google Gemini: Analyzing text content (length: {}) with model: {}",
@@ -50,25 +46,21 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
         long startTime = System.currentTimeMillis();
 
         try {
-            // Step 1: Build the AI detection prompt
+
             String prompt = buildAIDetectionPrompt(content);
 
-            // Step 2: Call Gemini API
             String response = callGeminiAPI(prompt);
 
             log.debug("🔍 Gemini Response (first 500 chars): {}",
                     response.length() > 500 ? response.substring(0, 500) + "..." : response);
 
-            // Step 3: Parse the response to extract AI probability
             BigDecimal aiProbability = parseAIProbabilityFromResponse(response);
             AIProbability probability = new AIProbability(aiProbability);
 
-            // Step 4: Generate detected segments (now more robust)
             List<DetectedSegment> detectedSegments = generateSegmentsFromAnalysis(content, response, aiProbability);
 
             log.info("🔍 Detected {} segments with AI patterns", detectedSegments.size());
 
-            // Step 5: Build metadata
             Map<String, Object> metadata = buildDetectionMetadata(content, response, modelType);
 
             long duration = System.currentTimeMillis() - startTime;
@@ -90,10 +82,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             throw new RuntimeException("Google Gemini analysis failed: " + e.getMessage(), e);
         }
     }
-
-    // ========================================
-    // HELPER METHODS
-    // ========================================
 
     private String buildAIDetectionPrompt(String content) {
         return String.format("""
@@ -164,7 +152,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             content.put("parts", List.of(Map.of("text", prompt)));
             requestBody.put("contents", List.of(content));
 
-            // Add generation config for consistent results
             Map<String, Object> generationConfig = new HashMap<>();
             generationConfig.put("temperature", 0.2); // Low temperature for consistent analysis
             generationConfig.put("maxOutputTokens", 3000);
@@ -172,7 +159,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             generationConfig.put("topK", 40);
             requestBody.put("generationConfig", generationConfig);
 
-            // Set safety settings to be more permissive
             List<Map<String, Object>> safetySettings = Arrays.asList(
                     Map.of("category", "HARM_CATEGORY_HARASSMENT", "threshold", "BLOCK_NONE"),
                     Map.of("category", "HARM_CATEGORY_HATE_SPEECH", "threshold", "BLOCK_NONE"),
@@ -181,7 +167,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             );
             requestBody.put("safetySettings", safetySettings);
 
-            // Set headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -268,7 +253,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
     private String cleanJsonResponse(String response) {
         String cleaned = response.trim();
 
-        // Remove markdown code blocks
         if (cleaned.startsWith("```json")) {
             cleaned = cleaned.substring(7);
         } else if (cleaned.startsWith("```")) {
@@ -340,7 +324,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
                 }
             }
 
-            // Fallback: If no segments were extracted, create intelligent segments
             if (segments.isEmpty() && overallProbability.compareTo(new BigDecimal("0.6")) > 0) {
                 log.info("No segments found in JSON, creating fallback segments");
                 segments.addAll(createFallbackSegments(content, overallProbability));
@@ -348,7 +331,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
 
         } catch (Exception e) {
             log.warn("Could not parse segments from response: {}", e.getMessage());
-            // Create fallback segments on any error
             if (overallProbability.compareTo(new BigDecimal("0.6")) > 0) {
                 segments.addAll(createFallbackSegments(content, overallProbability));
             }
@@ -369,7 +351,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
 
             segmentText = segmentText.trim();
 
-            // Find exact match in content
             int startIndex = findBestMatch(content, segmentText);
 
             if (startIndex < 0) {
@@ -380,10 +361,8 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
 
             int endIndex = startIndex + segmentText.length();
 
-            // Get segment probability
             BigDecimal segmentProbability = extractSegmentProbability(segmentData, defaultProbability);
 
-            // Get reason
             String reason = (String) segmentData.get("reason");
             if (reason == null || reason.trim().isEmpty()) {
                 reason = "AI pattern detected";
@@ -404,13 +383,12 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
     }
 
     private int findBestMatch(String content, String segment) {
-        // Try exact match first
+
         int index = content.indexOf(segment);
         if (index >= 0) {
             return index;
         }
 
-        // Try case-insensitive match
         String lowerContent = content.toLowerCase();
         String lowerSegment = segment.toLowerCase();
         index = lowerContent.indexOf(lowerSegment);
@@ -418,16 +396,14 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             return index;
         }
 
-        // Try finding similar text (remove extra whitespace)
         String normalizedContent = content.replaceAll("\\s+", " ");
         String normalizedSegment = segment.replaceAll("\\s+", " ");
         index = normalizedContent.indexOf(normalizedSegment);
         if (index >= 0) {
-            // Calculate original position
+
             return calculateOriginalPosition(content, normalizedContent, index);
         }
 
-        // Try partial match (at least 70% of the segment)
         if (segment.length() > 30) {
             int partialLength = (int) (segment.length() * 0.7);
             String partialSegment = segment.substring(0, partialLength);
@@ -471,21 +447,18 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             log.debug("Could not extract segment probability: {}", e.getMessage());
         }
 
-        // Use default probability (usually the overall probability)
         return defaultValue;
     }
 
     private List<DetectedSegment> createFallbackSegments(String content, BigDecimal probability) {
         List<DetectedSegment> segments = new ArrayList<>();
 
-        // Split content into sentences
         String[] sentences = content.split("[.!?]+");
 
         if (sentences.length == 0) {
             return segments;
         }
 
-        // Take up to 3 segments evenly distributed
         int step = Math.max(1, sentences.length / 3);
         int count = 0;
         int currentPos = 0;
@@ -532,7 +505,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
             log.warn("Could not parse metadata from response: {}", e.getMessage());
         }
 
-        // Add basic content metrics
         metadata.put("detected_language", "en");
         metadata.put("analysis_quality", "HIGH");
         metadata.put("word_count", content.split("\\s+").length);
@@ -541,7 +513,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
         metadata.put("model_version", detectionModel);
         metadata.put("analysis_timestamp", new Date().toString());
 
-        // Detailed metrics
         detailedMetrics.put("perplexity", "N/A");
         detailedMetrics.put("burstiness", "N/A");
         detailedMetrics.put("confidence_score", "0.85");
@@ -551,10 +522,6 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
 
         return metadata;
     }
-
-    // ========================================
-    // OTHER INTERFACE METHODS
-    // ========================================
 
     @Override
     public List<ModelType> getAvailableModels() {

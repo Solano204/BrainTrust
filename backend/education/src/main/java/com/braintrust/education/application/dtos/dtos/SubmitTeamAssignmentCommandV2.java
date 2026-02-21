@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-// TEAM SUBMISSION DTOs
+
 public record SubmitTeamAssignmentCommandV2(
         @NotBlank(message = "Assignment ID is required")
         String assignmentId,
@@ -21,5 +21,5 @@ public record SubmitTeamAssignmentCommandV2(
         @Size(min = 10, message = "Content must be at least 10 characters")
         String content,
 
-        List<FrontendDocumentDTO> frontendDocuments // ✅ Frontend extracted documents
+        List<FrontendDocumentDTO> frontendDocuments
 ) {}

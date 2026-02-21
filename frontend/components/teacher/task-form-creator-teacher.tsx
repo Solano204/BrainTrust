@@ -14,12 +14,11 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 
-// Generate accept string for input element
 export function generateAcceptString(formats: Record<string, string[]>): string {
   const extensions = Object.values(formats).flat();
   return extensions.join(',');
 }
-// File validation constants
+
 const TASK_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const TASK_ALLOWED_FILE_TYPES = [
   'application/pdf',
@@ -33,24 +32,22 @@ const TASK_ALLOWED_FILE_TYPES = [
   'image/webp',
   'text/plain'
 ];
-// For TaskCreator - Documents, Images, and Presentations
+
 export const TASK_ACCEPTED_FORMATS = {
-  // Documents
   'application/pdf': ['.pdf'],
   'application/msword': ['.doc'],
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
   'text/plain': ['.txt'],
-  // Presentations
+
   'application/vnd.ms-powerpoint': ['.ppt'],
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
-  // Images
+
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/png': ['.png'],
   'image/gif': ['.gif'],
   'image/webp': ['.webp']
 };
 
-// Zod validation schema
 const taskFormSchema = z.object({
   title: z.string()
     .min(3, "Title must be at least 3 characters")
@@ -148,23 +145,15 @@ export function TaskCreator({ open, onClose, onSave, idCourse, idUnit }: TaskCre
   
   const watchedValues = watch()
 
-
-// ============================================
-// FILE VALIDATION FUNCTION
-// ============================================
-
 function validateFile(file: File, allowedTypes: string[], maxSize: number): string | null {
-  // Check file size
   if (file.size > maxSize) {
     return `File "${file.name}" exceeds ${maxSize / (1024 * 1024)}MB limit`;
   }
   
-  // Check MIME type
   if (!allowedTypes.includes(file.type)) {
     return `File "${file.name}" has an unsupported format. Allowed: ${getAllowedExtensions(allowedTypes)}`;
   }
   
-  // Additional check for file extension (some browsers don't set MIME type correctly)
   const extension = file.name.split('.').pop()?.toLowerCase();
   const allowedExtensions = getAllowedExtensionsArray(allowedTypes);
   
@@ -213,7 +202,6 @@ function getAllowedExtensionsArray(mimeTypes: string[]): string[] {
   return mimeTypes.flatMap(type => extensionMap[type] || []);
 }
 const onSubmit = (data: TaskFormData) => {
-  // Get the current form values including urls
   const currentFormValues = watch()
   
   const task = {
@@ -265,7 +253,6 @@ const onSubmit = (data: TaskFormData) => {
   
   if (files.length === 0) return;
   
-  // ✅ FIX: Pass all 3 required parameters
   for (const file of files) {
     const error = validateFile(file, TASK_ALLOWED_FILE_TYPES, TASK_MAX_FILE_SIZE);
     if (error) {
@@ -314,8 +301,7 @@ const handleAddUrl = () => {
   
   setUrlError("")
   
-  // Use setValue with shouldValidate and shouldDirty flags
-  setValue("urls", [...currentUrls, trimmedUrl], { 
+  setValue("urls", [...currentUrls, trimmedUrl], {
     shouldValidate: true,
     shouldDirty: true,
     shouldTouch: true 
@@ -346,11 +332,16 @@ const removeUrl = (index: number) => {
       e.preventDefault()
       handleAddUrl()
     }
-  }
+  } 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
+        // onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl">Create New Assignment</DialogTitle>
         </DialogHeader>
@@ -458,7 +449,6 @@ const removeUrl = (index: number) => {
             )}
           </div>
 
-          {/* NEW: Submission Format */}
           <div className="border border-border rounded-lg p-4 space-y-4">
             <Label className="font-bold">Submission Format *</Label>
             <Controller
@@ -565,11 +555,9 @@ const removeUrl = (index: number) => {
             />
           </div>
 
-          {/* Support Materials Section */}
           <div className="border border-border rounded-lg p-4 space-y-4">
             <Label className="font-bold">Support Materials</Label>
 
-            {/* Files */}
             <div>
               <Label className="text-sm mb-2 block">Upload Files</Label>
               

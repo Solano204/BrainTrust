@@ -1,4 +1,4 @@
-// app/login/page.tsx
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -23,7 +23,6 @@ export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // Redirect if already authenticated based on role
     useEffect(() => {
         if (!authLoading && isAuthenticated && user) {
             const redirectUrl = getRedirectUrlByRole(user.role);
@@ -31,7 +30,7 @@ export default function LoginPage() {
         }
     }, [isAuthenticated, authLoading, user, router]);
 
-    // Function to get redirect URL based on user role
+
     const getRedirectUrlByRole = (userRole: string): string => {
         switch (userRole.toLowerCase()) {
             case 'admin':
@@ -45,7 +44,6 @@ export default function LoginPage() {
         }
     };
 
-    // Show loading while checking auth
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -62,8 +60,7 @@ export default function LoginPage() {
         const result = await login(email, password);
         
         if (result.success) {
-            // Redirect will happen automatically in useEffect
-            // because user state will update
+
         } else {
             setError(result.error || 'Login failed');
             setIsLoading(false);
@@ -78,7 +75,7 @@ export default function LoginPage() {
         const result = await register({ email, password, name, role });
         
         if (result.success) {
-            // Redirect will happen automatically in useEffect
+
         } else {
             setError(result.error || 'Registration failed');
             setIsLoading(false);

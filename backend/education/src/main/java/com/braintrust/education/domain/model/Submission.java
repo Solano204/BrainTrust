@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// 📍 education/domain/model/Submission.java - AGGREGATE ROOT
+
 public class Submission extends AggregateRoot<SubmissionId> {
     private AssignmentId assignmentId;
     private UserId studentId;
@@ -50,7 +50,7 @@ public class Submission extends AggregateRoot<SubmissionId> {
         this.submittedAt = LocalDateTime.now();
         this.status = status;
     }
-    // ✅ FLEXIBLE: Can be called with or without teamId
+
     public static Submission create(AssignmentId assignmentId, UserId studentId,
                                     String content, List<Document> attachments,
                                     SubmissionStatus status, StudentGroupId teamId) {
@@ -66,9 +66,6 @@ public class Submission extends AggregateRoot<SubmissionId> {
     }
 
 
-
-
-    // ✅ OVERLOAD: For individual submissions
     public static Submission create(AssignmentId assignmentId, UserId studentId,
                                     String content, List<Document> attachments,
                                     SubmissionStatus status) {
@@ -84,8 +81,6 @@ public class Submission extends AggregateRoot<SubmissionId> {
     }
 
 
-
-    // ✅ Factory Method para RECONSTITUIR desde base de datos
     public static Submission reconstitute(SubmissionId id, AssignmentId assignmentId,
                                           UserId studentId, String content,
                                           List<Document> attachments, LocalDateTime submittedAt,
@@ -93,7 +88,6 @@ public class Submission extends AggregateRoot<SubmissionId> {
                                           String teacherFeedback) {
         Submission submission = new Submission(id, assignmentId, studentId, content);
 
-        // Sobrescribir valores del constructor con los de la BD
         submission.submittedAt = submittedAt;
         submission.status = status;
         submission.grade = grade;
@@ -112,7 +106,6 @@ public class Submission extends AggregateRoot<SubmissionId> {
                                           String teacherFeedback,StudentGroupId teamId) {
         Submission submission = new Submission(id, assignmentId, studentId, content);
 
-        // Sobrescribir valores del constructor con los de la BD
         submission.submittedAt = submittedAt;
         submission.status = status;
         submission.grade = grade;
@@ -127,10 +120,8 @@ public class Submission extends AggregateRoot<SubmissionId> {
     }
 
 
-    // Comportamiento de dominio - sin events
     public void grade(Grade grade, String feedback) {
         if (this.status != SubmissionStatus.SUBMITTED) {
-      //      throw new IllegalStateException("Only submitted assignments can be graded");
         }
 
         this.grade = grade;
@@ -159,7 +150,6 @@ public class Submission extends AggregateRoot<SubmissionId> {
     public void markForAIAnalysis() {
     }
 
-    // Getters
     public AssignmentId getAssignmentId() { return assignmentId; }
     public UserId getStudentId() { return studentId; }
     public String getContent() { return content; }

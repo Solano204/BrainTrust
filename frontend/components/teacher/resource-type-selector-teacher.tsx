@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react" // 💡 Added useEffect
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CourseResourceType, ResourceItem } from "@/app/domain/entities/CourseEntities"
 import { fetchResourceTypesMock } from "@/app/domain/services/serviceCourse"
-
-// 💡 IMPORT THE INTERFACE AND MOCK FUNCTION
 
 interface ResourceTypeSelectorProps {
   open: boolean
@@ -20,12 +18,9 @@ export function ResourceTypeSelector({ open, onClose, onSelect }: ResourceTypeSe
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all");
 
-  // 🚀 Fetch data on mount
   useEffect(() => {
     const loadResourceTypes = async () => {
       setIsLoading(true);
-      // NOTE: Using the statically defined resourceTypes in the mock for now.
-      // In a real app, this would be an API call.
       const data = await fetchResourceTypesMock(); 
       setResourceItems(data);
       setIsLoading(false);

@@ -37,12 +37,11 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
-// other imports...
+
 
 @RestController
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
-// ⬅️ TAG: Groups all endpoints in the documentation
 @Tag(
         name = "User Management (Identity)",
         description = "APIs for user registration, authentication, and core profile management."
@@ -57,10 +56,6 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
-
-    // ------------------------------------------------------------------
-    // ✅ REGISTRATION ENDPOINTS
-    // ------------------------------------------------------------------
 
     @Operation(
             summary = "Create complete user with all information",
@@ -198,48 +193,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-
-//
-//    @Operation(summary = "Register a new Teacher user", description = "Creates a new user with TEACHER role and associated person record.")
-//    @ApiResponse(responseCode = "201", description = "Teacher created successfully")
-//    @ApiResponse(responseCode = "400", description = "Invalid input or email already registered",
-//            content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
-//    @PostMapping("/register/teacher")
-//    public ResponseEntity<SuccessResponseDTO> registerTeacher(@RequestBody RegisterTeacherCommand command) {
-//        log.info("Request received to register new TEACHER. Email: {}", command.email());
-//        UserId userId = userService.registerTeacher(command);
-//        log.info("Teacher registered successfully with ID: {}", userId.getValue());
-//        return ResponseEntity.status(HttpStatus.CREATED)
-//                .body(new SuccessResponseDTO(true, "Teacher registered successfully", userId.getValue()));
-//    }
-//
-//    @Operation(summary = "Register a new Student user", description = "Creates a new user with STUDENT role and associated person record.")
-//    @ApiResponse(responseCode = "201", description = "Student created successfully")
-//    @PostMapping("/register/student")
-//    public ResponseEntity<SuccessResponseDTO> registerStudent(@RequestBody RegisterStudentCommand command) {
-//        log.info("Request received to register new STUDENT. Email: {}", command.email());
-//        UserId userId = userService.registerStudent(command);
-//        log.info("Student registered successfully with ID: {}", userId.getValue());
-//        return ResponseEntity.status(HttpStatus.CREATED)
-//                .body(new SuccessResponseDTO(true, "Student registered successfully", userId.getValue()));
-//    }
-//
-//    @Operation(summary = "Register a new Admin user (RESTRICTED)", description = "Creates a new user with ADMIN role. Requires existing ADMIN privileges.")
-//    @ApiResponse(responseCode = "201", description = "Admin created successfully")
-//    @ApiResponse(responseCode = "403", description = "Forbidden: Caller does not have ADMIN role")
-//    @PostMapping("/register/admin")
-//    public ResponseEntity<SuccessResponseDTO> registerAdmin(@RequestBody RegisterAdminCommand command) {
-//        log.warn("ADMIN registration attempt received. This endpoint requires elevated security.");
-//        UserId userId = userService.registerAdmin(command);
-//        log.warn("ADMIN registered successfully with ID: {}", userId.getValue());
-//        return ResponseEntity.status(HttpStatus.CREATED)
-//                .body(new SuccessResponseDTO(true, "Admin registered successfully", userId.getValue()));
-//    }
-
-    // ------------------------------------------------------------------
-    // ✅ AUTHENTICATION ENDPOINTS
-    // ------------------------------------------------------------------
-
     @Operation(summary = "Authenticate user and get access tokens", description = "Exchanges email and password for a short-lived Access Token and a long-lived Refresh Token.")
     @ApiResponse(responseCode = "200", description = "Authentication successful",
             content = @Content(schema = @Schema(implementation = AuthenticationResult.class)))
@@ -295,10 +248,6 @@ public class UserController {
         );
     }
 
-    // ------------------------------------------------------------------
-    // ✅ UPDATE ENDPOINTS
-    // ------------------------------------------------------------------
-
     @Operation(summary = "Update user's personal information (PII)", description = "Updates first name, last name, gender, and phone number for the associated person record.")
     @ApiResponse(responseCode = "200", description = "Information updated successfully")
     @PutMapping("/personal-info")
@@ -353,10 +302,6 @@ public class UserController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "User activated successfully", null));
     }
 
-    // ------------------------------------------------------------------
-    // ✅ QUERY ENDPOINTS
-    // ------------------------------------------------------------------
-
     @Operation(summary = "Get user by ID", description = "Retrieves complete user and person information by UserId.")
     @ApiResponse(responseCode = "200", description = "User data retrieved")
     @ApiResponse(responseCode = "404", description = "User not found")
@@ -368,27 +313,6 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-//    @Operation(summary = "Get user by email", description = "Retrieves complete user and person information by email address.")
-//    @ApiResponse(responseCode = "200", description = "User data retrieved")
-//    @ApiResponse(responseCode = "404", description = "User not found")
-//    @Parameter(name = "email", description = "The user's email address", required = true)
-//    @GetMapping("/email/{email}")
-//    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
-//        log.debug("Fetching user details by email: {}", email);
-//        UserDTO user = userService.getUserByEmail(new Email(email));
-//        return ResponseEntity.ok(user);
-//    }
-
-//    @Operation(summary = "Get user by Person ID", description = "Retrieves user data using the associated PersonId.")
-//    @ApiResponse(responseCode = "200", description = "User data retrieved")
-//    @Parameter(name = "personId", description = "The ID of the associated person record", required = true)
-//    @GetMapping("/person/{personId}")
-//    public ResponseEntity<UserDTO> getUserByPersonId(@PathVariable String personId) {
-//        log.debug("Fetching user details by Person ID: {}", personId);
-//        UserDTO user = userService.getUserByPersonId(PersonId.fromString(personId));
-//        return ResponseEntity.ok(user);
-//    }
-
     @Operation(summary = "Get users by role", description = "Retrieves a list of all users filtered by their primary role (e.g., ADMIN, STUDENT).")
     @ApiResponse(responseCode = "200", description = "List of users retrieved")
     @Parameter(name = "role", description = "The role name (e.g., STUDENT)", required = true)
@@ -398,8 +322,6 @@ public class UserController {
         List<UserDTO> users = userService.getUsersByRole(Role.valueOf(role.toUpperCase()));
         return ResponseEntity.ok(users);
     }
-
-
 
 
     @Operation(
@@ -426,28 +348,6 @@ public class UserController {
     }
 
 
-//
-//    @Operation(summary = "Get all active users", description = "Retrieves a list of all users whose accounts are currently active.")
-//    @ApiResponse(responseCode = "200", description = "List of active users retrieved")
-//    @GetMapping("/active")
-//    public ResponseEntity<List<UserDTO>> getActiveUsers() {
-//        log.debug("Fetching list of all active users.");
-//        List<UserDTO> users = userService.getActiveUsers();
-//        return ResponseEntity.ok(users);
-//    }
-
-//    @Operation(summary = "Check email availability", description = "Checks if an email address is already registered in the system.")
-//    @ApiResponse(responseCode = "200", description = "Returns true if available, false if in use")
-//    @Parameter(name = "email", description = "The email address to check", required = true)
-//    @GetMapping("/email-available/{email}")
-//    public ResponseEntity<Boolean> isEmailAvailable(@PathVariable String email) {
-//        log.debug("Checking availability for email: {}", email);
-//        boolean available = userService.isEmailAvailable(new Email(email));
-//        return ResponseEntity.ok(available);
-//    }
-
-
-
 
     @Operation(
             summary = "Admin: Reset user password (privileged operation)",
@@ -458,12 +358,11 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Password reset successfully")
     @ApiResponse(responseCode = "403", description = "Forbidden: Caller does not have ADMIN role")
     @ApiResponse(responseCode = "404", description = "User not found")
-    //@PreAuthorize("hasRole('ADMIN')") // ⬅️ IMPORTANT: Secure with Spring Security
+
     @PutMapping("/admin/reset-password")
     public ResponseEntity<SuccessResponseDTO> adminResetPassword(
             @RequestBody @Valid AdminChangePasswordCommand command) {
 
-        // ⚠️ Log at WARN level for security audit trail
         log.warn("🔐 ADMIN password reset requested by admin for User ID: {}", command.userId());
 
         userService.adminChangePassword(command);

@@ -1,4 +1,3 @@
-// File: src/app/features/admin/components/ManageEnrollments.tsx
 'use client';
 
 import { useState } from 'react';
@@ -207,7 +206,6 @@ export function ManageEnrollments({ course, isOpen, onClose }: ManageEnrollments
                 </div>
               )}
 
-              {/* Bulk Enroll Button */}
               {selectedStudents.length > 0 && (
                 <button
                   onClick={handleBulkEnroll}
@@ -230,7 +228,6 @@ export function ManageEnrollments({ course, isOpen, onClose }: ManageEnrollments
             </div>
           )}
 
-          {/* Enrolled Students */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-gray-900">Enrolled Students</h3>
@@ -323,7 +320,6 @@ export function ManageEnrollments({ course, isOpen, onClose }: ManageEnrollments
           </div>
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-gray-200">
           <button
             onClick={onClose}

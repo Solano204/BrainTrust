@@ -24,11 +24,11 @@ import java.util.Optional;
 public interface UserRepository {
     void deleteById(UserId userId);
 
-    // Commands
+
     User save(User user);
     void delete(User user);
 
-    // Queries
+
     Optional<User> findById(UserId userId);
     Optional<User> findByEmail(Email email);
     Optional<User> findByPersonId(PersonId personId);
@@ -36,7 +36,7 @@ public interface UserRepository {
     List<User> findActiveUsers();
     boolean existsByEmail(Email email);
 
-    // ✅ NEW: Pagination and search methods
+
     Page<User> findAll(Pageable pageable);
     Page<User> findByRole(Role role, Pageable pageable);
     Page<User> findByNameContaining(String name, Pageable pageable);

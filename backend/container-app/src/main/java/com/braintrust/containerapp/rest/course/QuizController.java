@@ -86,14 +86,12 @@ public class QuizController {
         return ResponseEntity.ok().build();
     }
 
-    // Batch modification endpoints
 
     @PatchMapping("/{quizId}/questions/points")
     public ResponseEntity<Void> updateQuestionsPointsBulk(
             @PathVariable String quizId,
             @RequestBody Map<String, Integer> questionPoints) {
 
-        // Create a bulk update command for points
         List<UpdateQuizQuestionsBulkCommand.QuestionUpdateData> updates =
                 questionPoints.entrySet().stream()
                         .map(entry -> new UpdateQuizQuestionsBulkCommand.QuestionUpdateData(
@@ -126,10 +124,10 @@ public class QuizController {
                         .map(entry -> new UpdateQuizQuestionsBulkCommand.QuestionUpdateData(
                                 entry.getKey(),
                                 entry.getValue(),
-                                null, // no type change
-                                null, // no points change
-                                null, // no options change
-                                null, // no correct answer change
+                                null,
+                                null,
+                                null,
+                                null,
                                 UpdateQuizQuestionsBulkCommand.QuestionUpdateData.UpdateAction.UPDATE_TEXT
                         ))
                         .collect(Collectors.toList());
@@ -231,7 +229,6 @@ public class QuizController {
         return ResponseEntity.ok().build();
     }
 
-    // Utility record for option updates
     public record QuestionOptionUpdateData(
             String text,
             boolean correct,
@@ -284,7 +281,6 @@ public class QuizController {
         return ResponseEntity.ok(completeQuiz);
     }
 
-    // NEW: Month calendar endpoints for student and teacher
     @GetMapping("/calendar/student/{studentId}/month")
     public ResponseEntity<List<QuizDTO>> getStudentMonthCalendar(
             @PathVariable String studentId,
@@ -309,7 +305,6 @@ public class QuizController {
         return ResponseEntity.ok(quizzes);
     }
 
-    // NEW: Week calendar endpoints for student and teacher
     @GetMapping("/calendar/student/{studentId}/week")
     public ResponseEntity<List<QuizDTO>> getStudentWeekCalendar(
             @PathVariable String studentId,
@@ -334,7 +329,6 @@ public class QuizController {
         return ResponseEntity.ok(quizzes);
     }
 
-    // Additional endpoints for individual question operations
     @GetMapping("/{quizId}/questions/{questionId}")
     public ResponseEntity<CompleteQuizQuestionDTO> getQuestion(
             @PathVariable String quizId,
@@ -353,7 +347,6 @@ public class QuizController {
             @PathVariable String questionId,
             @RequestBody UpdateQuizQuestionsBulkCommand.QuestionUpdateData updateData) {
 
-        // Ensure the question ID in the path matches the body
         if (!questionId.equals(updateData.questionId())) {
             throw new IllegalArgumentException("Question ID in path and body must match");
         }

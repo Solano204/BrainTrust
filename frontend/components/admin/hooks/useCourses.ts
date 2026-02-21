@@ -1,73 +1,69 @@
-// File: src/app/features/admin/hooks/useAdminCourses.ts
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
 import {
-  fetchAllCoursesAdmin,
-  fetchCourseByIdAdmin,
-  createCourseAdmin,
-  updateCourseAdmin,
-  deleteCourseAdmin,
-  fetchAllTeachers,
-  searchTeachers,
-  fetchCourseUnitsAdmin,
-  deleteUnitAdmin,
-  fetchCourseEnrollmentsAdmin,
-  searchStudentsForCourse,
-  bulkEnrollStudentsAdmin,
-  bulkUnenrollStudentsAdmin,
-  unenrollStudentAdmin,
-  fetchCourseGradesAdmin,
-  assignFinalGradeAdmin,
-  bulkUpdateCourseGrades,
-  fetchUnitGradesAdmin,
-  assignUnitFinalGradeAdmin,
-  bulkUpdateUnitGrades,
-  getCourseStatsAdmin,
-  getCourseEnrollmentStats,
-  type AdminCourse,
-  type CreateCourseCommand,
-  type UpdateCourseCommand,
-  type UpdateStudentGradeCommand,
-  Teacher,
-  PaginatedResponse,
-  fetchAllTeachersPaginated,
-  searchTeachersPaginated,
-  fetchCoursesByTeacherPaginated,
-  fetchActiveCoursesPaginated,
   fetchAllCoursesPaginated,
+  fetchActiveCoursesPaginated,
+  fetchCoursesByTeacherPaginated,
   searchCoursesByNamePaginated,
-  createCourseWithImage,
+  fetchCourseById,
   createCourse,
+  createCourseWithImage,
+  updateCourse,
+  deleteCourse,
+  fetchCourseUnits,
+  deleteUnit,
+  fetchCourseEnrollments,
+  searchStudentsForCourse,
+  bulkEnrollStudents,
+  bulkUnenrollStudents,
+  unenrollStudent,
+  fetchCourseGrades,
+  assignFinalGrade,
+  bulkUpdateCourseGrades,
+  fetchUnitGrades,
+  assignUnitFinalGrade,
+  bulkUpdateUnitGrades,
+  getCourseStats,
+  getCourseEnrollmentStats,
+  fetchAllTeachers,
+  fetchAllTeachersPaginated,
+  searchTeachers,
 } from '@/components/admin/api/coursesApi';
 import { uploadImageFile } from '@/app/utils/cloudinary/cloudinary';
 
-// ============================================
-// QUERY KEYS
-// ============================================
+// Importar tipos desde sus ubicaciones correctas
+import type { AdminCourse } from '@/app/shared/models/admin-course.model';
+import type { Teacher } from '@/app/shared/models/user.model';
+import type {
+  CreateCourseCommand,
+  UpdateCourseCommand,
+  UpdateStudentGradeCommand
+} from '@/app/shared/dtos/commands/course.commands';
+import type { PaginatedResponse, PaginationParams } from '@/app/shared/types/pagination';
 
 export const adminCoursesKeys = {
   all: ['admin-courses'] as const,
   lists: () => [...adminCoursesKeys.all, 'list'] as const,
   list: (filters?: any) => [...adminCoursesKeys.lists(), filters] as const,
   paginated: (params: CourseFilterParams) => [...adminCoursesKeys.all, 'paginated', params] as const,
-  activePaginated: (params: Omit<CourseFilterParams, 'active'>) => 
-    [...adminCoursesKeys.all, 'active', 'paginated', params] as const,
-  byTeacherPaginated: (teacherId: string, params: Omit<CourseFilterParams, 'teacherId'>) => 
-    [...adminCoursesKeys.all, 'teacher', teacherId, 'paginated', params] as const,
-  searchPaginated: (search: string, params: Omit<CourseFilterParams, 'search'>) => 
-    [...adminCoursesKeys.all, 'search', search, 'paginated', params] as const,
+  activePaginated: (params: Omit<CourseFilterParams, 'active'>) =>
+      [...adminCoursesKeys.all, 'active', 'paginated', params] as const,
+  byTeacherPaginated: (teacherId: string, params: Omit<CourseFilterParams, 'teacherId'>) =>
+      [...adminCoursesKeys.all, 'teacher', teacherId, 'paginated', params] as const,
+  searchPaginated: (search: string, params: Omit<CourseFilterParams, 'search'>) =>
+      [...adminCoursesKeys.all, 'search', search, 'paginated', params] as const,
   teachers: () => ['admin-teachers'] as const,
   teachersPaginated: (params: PaginationParams) => [...adminCoursesKeys.teachers(), 'paginated', params] as const,
-  searchTeachersPaginated: (search: string, params: Omit<PaginationParams, 'search'>) => 
-    [...adminCoursesKeys.teachers(), 'search', search, 'paginated', params] as const,
+  searchTeachersPaginated: (search: string, params: Omit<PaginationParams, 'search'>) =>
+      [...adminCoursesKeys.teachers(), 'search', search, 'paginated', params] as const,
   details: () => [...adminCoursesKeys.all, 'detail'] as const,
   detail: (id: string) => [...adminCoursesKeys.details(), id] as const,
   units: (courseId: string) => [...adminCoursesKeys.detail(courseId), 'units'] as const,
   enrollments: (courseId: string) => [...adminCoursesKeys.detail(courseId), 'enrollments'] as const,
   grades: (courseId: string) => [...adminCoursesKeys.detail(courseId), 'grades'] as const,
   unitGrades: (unitId: string) => ['admin-unit-grades', unitId] as const,
-  teachersSearchPaginated: (search: string, params: Omit<PaginationParams, 'search'>) => 
-    ['admin-teachers', 'search', search, 'paginated', params] as const,
+  teachersSearchPaginated: (search: string, params: Omit<PaginationParams, 'search'>) =>
+      ['admin-teachers', 'search', search, 'paginated', params] as const,
   students: (courseId: string) => ['admin-students', courseId] as const,
   stats: () => [...adminCoursesKeys.all, 'stats'] as const,
   enrollmentStats: (courseId: string) => [...adminCoursesKeys.detail(courseId), 'enrollment-stats'] as const,
@@ -84,50 +80,25 @@ interface CourseFilterParams {
   group?: string;
 }
 
-interface PaginationParams {
-  page?: number;
-  size?: number;
-  sort?: string;
-  search?: string;
-  active?: boolean;
-}
-
-// ============================================
-// UTILITY FUNCTION FOR CACHE INVALIDATION
-// ============================================
-
-/**
- * Invalidates all course-related queries
- * Use this after mutations that affect course data
- */
 function invalidateAllCourseQueries(queryClient: ReturnType<typeof useQueryClient>) {
-  // Invalidate all course lists (paginated and non-paginated)
-  queryClient.invalidateQueries({ 
+  queryClient.invalidateQueries({
     queryKey: adminCoursesKeys.all,
-    refetchType: 'active' // Only refetch currently mounted queries
+    refetchType: 'active'
   });
-  
-  // Invalidate stats
-  queryClient.invalidateQueries({ 
-    queryKey: adminCoursesKeys.stats() 
+
+  queryClient.invalidateQueries({
+    queryKey: adminCoursesKeys.stats()
   });
 }
 
-/**
- * Invalidates queries for a specific course
- */
 function invalidateCourseDetailQueries(
-  queryClient: ReturnType<typeof useQueryClient>, 
-  courseId: string
+    queryClient: ReturnType<typeof useQueryClient>,
+    courseId: string
 ) {
-  queryClient.invalidateQueries({ 
-    queryKey: adminCoursesKeys.detail(courseId) 
+  queryClient.invalidateQueries({
+    queryKey: adminCoursesKeys.detail(courseId)
   });
 }
-
-// ============================================
-// COURSE QUERIES
-// ============================================
 
 export function useAdminCoursesPaginated(params: CourseFilterParams = {}) {
   return useQuery<PaginatedResponse<AdminCourse>, Error>({
@@ -148,8 +119,8 @@ export function useAdminActiveCoursesPaginated(params: Omit<CourseFilterParams, 
 }
 
 export function useAdminCoursesByTeacherPaginated(
-  teacherId: string, 
-  params: Omit<CourseFilterParams, 'teacherId'> = {}
+    teacherId: string,
+    params: Omit<CourseFilterParams, 'teacherId'> = {}
 ) {
   return useQuery<PaginatedResponse<AdminCourse>, Error>({
     queryKey: adminCoursesKeys.byTeacherPaginated(teacherId, params),
@@ -161,8 +132,8 @@ export function useAdminCoursesByTeacherPaginated(
 }
 
 export function useAdminSearchCoursesPaginated(
-  search: string, 
-  params: Omit<CourseFilterParams, 'search'> = {}
+    search: string,
+    params: Omit<CourseFilterParams, 'search'> = {}
 ) {
   return useQuery<PaginatedResponse<AdminCourse>, Error>({
     queryKey: adminCoursesKeys.searchPaginated(search, params),
@@ -172,10 +143,6 @@ export function useAdminSearchCoursesPaginated(
     gcTime: 1000 * 60 * 5,
   });
 }
-
-// ============================================
-// TEACHER QUERIES
-// ============================================
 
 export function useAdminTeachersPaginated(params: PaginationParams = {}) {
   return useQuery<PaginatedResponse<Teacher>, Error>({
@@ -187,12 +154,12 @@ export function useAdminTeachersPaginated(params: PaginationParams = {}) {
 }
 
 export function useAdminSearchTeachersPaginated(
-  search: string, 
-  params: Omit<PaginationParams, 'search'> = {}
+    search: string,
+    params: Omit<PaginationParams, 'search'> = {}
 ) {
   return useQuery<PaginatedResponse<Teacher>, Error>({
     queryKey: adminCoursesKeys.searchTeachersPaginated(search, params),
-    queryFn: () => searchTeachersPaginated(search, params),
+    queryFn: () => searchTeachers(search), // Usa searchTeachers como fallback
     enabled: true,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
@@ -209,12 +176,29 @@ export function useAdminTeachers() {
 }
 
 export function useSearchTeachersPaginated(
-  searchTerm: string,
-  params: Omit<PaginationParams, 'search'> = {}
+    searchTerm: string,
+    params: Omit<PaginationParams, 'search'> = {}
 ) {
   return useQuery<PaginatedResponse<Teacher>, Error>({
     queryKey: adminCoursesKeys.teachersSearchPaginated(searchTerm, params),
-    queryFn: () => searchTeachersPaginated(searchTerm, params),
+    queryFn: async () => {
+
+      const allTeachers = await searchTeachers(searchTerm);
+      const { page = 0, size = 20 } = params;
+      const startIndex = page * size;
+      const endIndex = startIndex + size;
+      const paginatedTeachers = allTeachers.slice(startIndex, endIndex);
+
+      return {
+        content: paginatedTeachers,
+        pageNumber: page,
+        pageSize: size,
+        totalElements: allTeachers.length,
+        totalPages: Math.ceil(allTeachers.length / size),
+        first: page === 0,
+        last: endIndex >= allTeachers.length
+      };
+    },
     enabled: !!searchTerm && searchTerm.trim().length > 0,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 15,
@@ -230,14 +214,10 @@ export function useSearchTeachers(searchTerm: string) {
   });
 }
 
-// ============================================
-// COURSE DETAIL QUERIES
-// ============================================
-
 export function useAdminCourse(courseId: string) {
   return useQuery({
     queryKey: adminCoursesKeys.detail(courseId),
-    queryFn: () => fetchCourseByIdAdmin(courseId),
+    queryFn: () => fetchCourseById(courseId),
     enabled: !!courseId,
     staleTime: 1000 * 60 * 5,
   });
@@ -246,7 +226,7 @@ export function useAdminCourse(courseId: string) {
 export function useAdminCourseUnits(courseId: string) {
   return useQuery({
     queryKey: adminCoursesKeys.units(courseId),
-    queryFn: () => fetchCourseUnitsAdmin(courseId),
+    queryFn: () => fetchCourseUnits(courseId),
     enabled: !!courseId,
     staleTime: 1000 * 60 * 5,
   });
@@ -255,7 +235,7 @@ export function useAdminCourseUnits(courseId: string) {
 export function useAdminCourseEnrollments(courseId: string) {
   return useQuery({
     queryKey: adminCoursesKeys.enrollments(courseId),
-    queryFn: () => fetchCourseEnrollmentsAdmin(courseId),
+    queryFn: () => fetchCourseEnrollments(courseId),
     enabled: !!courseId,
     staleTime: 1000 * 60 * 2,
   });
@@ -264,7 +244,7 @@ export function useAdminCourseEnrollments(courseId: string) {
 export function useAdminCourseGrades(courseId: string) {
   return useQuery({
     queryKey: adminCoursesKeys.grades(courseId),
-    queryFn: () => fetchCourseGradesAdmin(courseId),
+    queryFn: () => fetchCourseGrades(courseId),
     enabled: !!courseId,
     staleTime: 1000 * 60 * 2,
   });
@@ -273,7 +253,7 @@ export function useAdminCourseGrades(courseId: string) {
 export function useAdminUnitGrades(unitId: string) {
   return useQuery({
     queryKey: adminCoursesKeys.unitGrades(unitId),
-    queryFn: () => fetchUnitGradesAdmin(unitId),
+    queryFn: () => fetchUnitGrades(unitId),
     enabled: !!unitId,
     staleTime: 1000 * 60 * 2,
   });
@@ -282,7 +262,7 @@ export function useAdminUnitGrades(unitId: string) {
 export function useAdminCourseStats() {
   return useQuery({
     queryKey: adminCoursesKeys.stats(),
-    queryFn: getCourseStatsAdmin,
+    queryFn: getCourseStats,
     staleTime: 1000 * 60 * 10,
   });
 }
@@ -296,25 +276,17 @@ export function useAdminCourseEnrollmentStats(courseId: string) {
   });
 }
 
-// ============================================
-// COURSE MUTATIONS (FIXED)
-// ============================================
-
-/**
- * Create course with immediate cache update
- */
 export function useCreateCourseAdmin() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      courseData,
-      imageFile,
-    }: {
+                         courseData,
+                         imageFile,
+                       }: {
       courseData: CreateCourseCommand;
       imageFile?: File | null;
     }) => {
-      // Upload image if provided
       if (imageFile) {
         const uploadedUrl = await uploadImageFile(imageFile);
         courseData.urlImage = uploadedUrl;
@@ -324,13 +296,11 @@ export function useCreateCourseAdmin() {
       }
     },
     onSuccess: (newCourse) => {
-      // Invalidate ALL course-related queries
       invalidateAllCourseQueries(queryClient);
-      
-      // Optionally: Set the new course data in cache immediately
+
       queryClient.setQueryData(
-        adminCoursesKeys.detail(newCourse.id),
-        newCourse
+          adminCoursesKeys.detail(newCourse.id),
+          newCourse
       );
     },
     onError: (error: Error) => {
@@ -339,44 +309,37 @@ export function useCreateCourseAdmin() {
   });
 }
 
-/**
- * Update course with immediate cache update
- */
 export function useUpdateCourseAdmin() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      courseId,
-      courseData,
-      imageFile,
-    }: {
+                         courseId,
+                         courseData,
+                         imageFile,
+                       }: {
       courseId: string;
       courseData: UpdateCourseCommand;
       imageFile?: File | null;
     }) => {
       let finalCourseData = { ...courseData };
 
-      // Upload new image if provided
       if (imageFile) {
         console.log(`Uploading new image for course ${courseId}...`);
         const uploadedUrl = await uploadImageFile(imageFile);
         finalCourseData.imageUrl = uploadedUrl;
       }
 
-      return await updateCourseAdmin(courseId, finalCourseData);
+      return await updateCourse(courseId, finalCourseData);
     },
     onSuccess: (updatedCourse, variables) => {
-      // Invalidate all course lists
       invalidateAllCourseQueries(queryClient);
-      
-      // Update the specific course detail in cache
+
       queryClient.setQueryData(
-        adminCoursesKeys.detail(variables.courseId),
-        updatedCourse
+          adminCoursesKeys.detail(variables.courseId),
+          updatedCourse
       );
-      
-      // Invalidate related queries
+
       invalidateCourseDetailQueries(queryClient, variables.courseId);
     },
     onError: (error: Error) => {
@@ -385,70 +348,53 @@ export function useUpdateCourseAdmin() {
   });
 }
 
-/**
- * Delete course with immediate cache update
- */
 export function useDeleteCourseAdmin() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (courseId: string) => deleteCourseAdmin(courseId),
+    mutationFn: (courseId: string) => deleteCourse(courseId),
     onSuccess: (_, courseId) => {
-      // Invalidate all course lists
       invalidateAllCourseQueries(queryClient);
-      
-      // Remove the deleted course from cache
-      queryClient.removeQueries({ 
-        queryKey: adminCoursesKeys.detail(courseId) 
+
+      queryClient.removeQueries({
+        queryKey: adminCoursesKeys.detail(courseId)
       });
     },
   });
 }
-
-// ============================================
-// UNIT MUTATIONS (FIXED)
-// ============================================
 
 export function useDeleteUnitAdmin() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ courseId, unitId }: { courseId: string; unitId: string }) =>
-      deleteUnitAdmin(courseId, unitId),
+        deleteUnit(courseId, unitId),
     onSuccess: (_, variables) => {
-      // Invalidate units and course details
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.units(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.units(variables.courseId)
       });
       invalidateCourseDetailQueries(queryClient, variables.courseId);
-      
-      // Also invalidate course lists as unit count changes
+
       invalidateAllCourseQueries(queryClient);
     },
   });
 }
-
-// ============================================
-// ENROLLMENT MUTATIONS (FIXED)
-// ============================================
 
 export function useBulkEnrollStudents() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ courseId, studentIds }: { courseId: string; studentIds: string[] }) =>
-      bulkEnrollStudentsAdmin(courseId, studentIds),
+        bulkEnrollStudents(courseId, studentIds),
     onSuccess: (_, variables) => {
-      // Invalidate all enrollment-related queries
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollments(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollments(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId)
       });
       invalidateCourseDetailQueries(queryClient, variables.courseId);
-      
-      // Invalidate course lists as student count changes
+
       invalidateAllCourseQueries(queryClient);
     },
   });
@@ -459,13 +405,13 @@ export function useBulkUnenrollStudents() {
 
   return useMutation({
     mutationFn: ({ courseId, studentIds }: { courseId: string; studentIds: string[] }) =>
-      bulkUnenrollStudentsAdmin(courseId, studentIds),
+        bulkUnenrollStudents(courseId, studentIds),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollments(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollments(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId)
       });
       invalidateCourseDetailQueries(queryClient, variables.courseId);
       invalidateAllCourseQueries(queryClient);
@@ -478,13 +424,13 @@ export function useUnenrollStudentAdmin() {
 
   return useMutation({
     mutationFn: ({ courseId, studentId }: { courseId: string; studentId: string }) =>
-      unenrollStudentAdmin(courseId, studentId),
+        unenrollStudent(courseId, studentId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollments(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollments(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId)
       });
       invalidateCourseDetailQueries(queryClient, variables.courseId);
       invalidateAllCourseQueries(queryClient);
@@ -492,34 +438,30 @@ export function useUnenrollStudentAdmin() {
   });
 }
 
-// ============================================
-// GRADE MUTATIONS (FIXED)
-// ============================================
-
 export function useAssignFinalGradeAdmin() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
-      courseId,
-      studentId,
-      gradeValue,
-      feedback,
-    }: {
+                   courseId,
+                   studentId,
+                   gradeValue,
+                   feedback,
+                 }: {
       courseId: string;
       studentId: string;
       gradeValue: number;
       feedback: string;
-    }) => assignFinalGradeAdmin(courseId, studentId, gradeValue, feedback),
+    }) => assignFinalGrade(courseId, studentId, { gradeValue, feedback }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.grades(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.grades(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollments(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollments(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId)
       });
     },
   });
@@ -530,16 +472,16 @@ export function useBulkUpdateCourseGrades() {
 
   return useMutation({
     mutationFn: ({ courseId, grades }: { courseId: string; grades: UpdateStudentGradeCommand[] }) =>
-      bulkUpdateCourseGrades(courseId, grades),
+        bulkUpdateCourseGrades(courseId, grades),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.grades(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.grades(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollments(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollments(variables.courseId)
       });
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.enrollmentStats(variables.courseId)
       });
     },
   });
@@ -550,19 +492,19 @@ export function useAssignUnitFinalGradeAdmin() {
 
   return useMutation({
     mutationFn: ({
-      unitId,
-      studentId,
-      gradeValue,
-      feedback,
-    }: {
+                   unitId,
+                   studentId,
+                   gradeValue,
+                   feedback,
+                 }: {
       unitId: string;
       studentId: string;
       gradeValue: number;
       feedback: string;
-    }) => assignUnitFinalGradeAdmin(unitId, studentId, gradeValue, feedback),
+    }) => assignUnitFinalGrade(unitId, studentId, { gradeValue, feedback }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.unitGrades(variables.unitId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.unitGrades(variables.unitId)
       });
     },
   });
@@ -573,18 +515,14 @@ export function useBulkUpdateUnitGrades() {
 
   return useMutation({
     mutationFn: ({ unitId, grades }: { unitId: string; grades: UpdateStudentGradeCommand[] }) =>
-      bulkUpdateUnitGrades(unitId, grades),
+        bulkUpdateUnitGrades(unitId, grades),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ 
-        queryKey: adminCoursesKeys.unitGrades(variables.unitId) 
+      queryClient.invalidateQueries({
+        queryKey: adminCoursesKeys.unitGrades(variables.unitId)
       });
     },
   });
 }
-
-// ============================================
-// SEARCH HOOKS
-// ============================================
 
 export function useSearchStudentsForCourse(courseId: string, searchTerm: string) {
   return useQuery({
@@ -595,7 +533,6 @@ export function useSearchStudentsForCourse(courseId: string, searchTerm: string)
   });
 }
 
-// Legacy hook for backward compatibility
 export function useAdminCourses() {
   return useQuery<AdminCourse[], Error>({
     queryKey: adminCoursesKeys.list({}),

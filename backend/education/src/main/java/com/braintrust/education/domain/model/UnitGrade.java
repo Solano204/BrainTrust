@@ -10,10 +10,8 @@ public class UnitGrade extends Entity<UnitGradeId> {
     private UnitId unitId;
     private UserId studentId;
 
-    // ✅ Store the RAW SUM of grades (no percentage conversion)
     private BigDecimal calculatedTotal;
 
-    // ✅ Final grade assigned by teacher
     private BigDecimal finalGrade;
     private String finalFeedback;
 
@@ -49,25 +47,21 @@ public class UnitGrade extends Entity<UnitGradeId> {
         return unitGrade;
     }
 
-    // ✅ NEW: Check if assignment grade already exists
     public boolean hasAssignmentGrade(AssignmentId assignmentId) {
         return assignmentGrades.containsKey(assignmentId);
     }
 
-    // ✅ NEW: Check if quiz grade already exists
     public boolean hasQuizGrade(QuizId quizId) {
         return quizGrades.containsKey(quizId);
     }
 
-    // ✅ UPDATED: Add assignment grade (store the actual grade value)
     public void addAssignmentGrade(AssignmentId assignmentId, Grade grade) {
         if (assignmentId == null || grade == null) {
             throw new IllegalArgumentException("Assignment ID and grade cannot be null");
         }
 
-        // ✅ Check if this assignment already exists
         if (assignmentGrades.containsKey(assignmentId)) {
-            // Remove the old grade first
+
             assignmentGrades.remove(assignmentId);
         }
 
@@ -75,15 +69,14 @@ public class UnitGrade extends Entity<UnitGradeId> {
         recalculateTotal();
     }
 
-    // ✅ UPDATED: Add quiz grade (store the actual grade value)
     public void addQuizGrade(QuizId quizId, Grade grade) {
         if (quizId == null || grade == null) {
             throw new IllegalArgumentException("Quiz ID and grade cannot be null");
         }
 
-        // ✅ Check if this quiz already exists
+
         if (quizGrades.containsKey(quizId)) {
-            // Remove the old grade first
+
             quizGrades.remove(quizId);
         }
 
@@ -91,7 +84,6 @@ public class UnitGrade extends Entity<UnitGradeId> {
         recalculateTotal();
     }
 
-    // ✅ NEW: Removal methods
     public void removeAssignmentGrade(AssignmentId assignmentId) {
         if (this.assignmentGrades.containsKey(assignmentId)) {
             Grade removedGrade = this.assignmentGrades.remove(assignmentId);
@@ -106,7 +98,6 @@ public class UnitGrade extends Entity<UnitGradeId> {
         }
     }
 
-    // ✅ SIMPLIFIED: Recalculation - just SUM the earned points directly
     private void recalculateTotal() {
         if (assignmentGrades.isEmpty() && quizGrades.isEmpty()) {
             this.calculatedTotal = BigDecimal.ZERO; // Start from 0 instead of null
@@ -116,43 +107,36 @@ public class UnitGrade extends Entity<UnitGradeId> {
 
         BigDecimal totalEarned = BigDecimal.ZERO;
 
-        // Sum assignment earned points directly
         for (Grade grade : assignmentGrades.values()) {
             totalEarned = totalEarned.add(grade.getValue());
         }
 
-        // Sum quiz earned points directly
         for (Grade grade : quizGrades.values()) {
             totalEarned = totalEarned.add(grade.getValue());
         }
 
-        // ✅ Store the RAW SUM without percentage conversion
         this.calculatedTotal = totalEarned;
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // 🎯 Teacher assigns final grade for unit
     public void assignFinalGrade(BigDecimal finalGrade, String feedback) {
         this.finalGrade = finalGrade;
         this.finalFeedback = feedback;
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // ✅ NEW: Clear quiz grades
     public void clearQuizGrades() {
         this.quizGrades.clear();
         this.calculatedTotal = BigDecimal.ZERO;
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // ✅ NEW: Clear assignment grades
     public void clearAssignmentGrades() {
         this.assignmentGrades.clear();
         this.calculatedTotal = BigDecimal.ZERO;
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // ✅ NEW: Clear all grades (both quizzes and assignments)
     public void clearAllGrades() {
         this.quizGrades.clear();
         this.assignmentGrades.clear();
@@ -160,12 +144,10 @@ public class UnitGrade extends Entity<UnitGradeId> {
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // ✅ Get display grade value (final if assigned, otherwise calculated)
     public BigDecimal getDisplayGradeValue() {
         return finalGrade != null ? finalGrade : calculatedTotal;
     }
 
-    // Getters
     public UnitId getUnitId() { return unitId; }
     public UserId getStudentId() { return studentId; }
     public BigDecimal getCalculatedTotal() { return calculatedTotal; }

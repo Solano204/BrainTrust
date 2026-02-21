@@ -17,6 +17,6 @@ public record AnalysisResultDTO(
         String status,
         LocalDateTime analyzedAt,
         String errorMessage,
-        List<DetectedSegmentDTO> detectedSegments, // ✅ NEW
+        List<DetectedSegmentDTO> detectedSegments,
         Map<String, Object> metadata
 ) {}

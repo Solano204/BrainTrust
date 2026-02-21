@@ -19,40 +19,15 @@ public interface QuizSubmissionRepository {
     // Queries
     Optional<QuizSubmission> findById(QuizSubmissionId submissionId);
 
-    /*
-    List<QuizSubmission> findByQuizId(QuizId quizId);
-    */
-
     List<QuizSubmission> findByStudentId(UserId studentId);
-
-    /*
-    List<QuizSubmission> findByQuizAndStudent(QuizId quizId, UserId studentId);
-    */
 
     Optional<QuizSubmission> findLatestByQuizAndStudent(QuizId quizId, UserId studentId);
 
-    /*
-    List<QuizSubmission> findByStatus(QuizSubmissionStatus status);
-    */
-
     int countAttempts(QuizId quizId, UserId studentId);
 
-    /*
-    List<QuizSubmission> findInProgressSubmissions(UserId studentId);
-    */
-
-    /*
-    List<QuizSubmission> findByCourseAndStudent(CourseId courseId, UserId studentId);
-    */
-
-
-
-    // NEW: Find submissions by course ordered by date
     List<QuizSubmission> findByCourseIdOrderBySubmittedAtDesc(CourseId courseId);
 
-    // NEW: Find submissions by course and unit ordered by date
     List<QuizSubmission> findByCourseIdAndUnitIdOrderBySubmittedAtDesc(CourseId courseId, UnitId unitId);
 
-    // NEW: Find submissions by student, course and unit ordered by date
     List<QuizSubmission> findByStudentIdAndCourseIdAndUnitIdOrderBySubmittedAtDesc(UserId studentId, CourseId courseId, UnitId unitId);
 }

@@ -13,10 +13,6 @@ import java.util.Map;
 @Component
 public class QuizSubmissionConverter {
 
-    /**
-     * Convert GradeQuizSubmissionCommand to domain QuestionGrade map
-     * This keeps the domain layer independent of application layer DTOs
-     */
     public Map<QuizQuestionId, QuestionGrade> toQuestionGrades(GradeQuizSubmissionCommand command) {
         if (command.questionGrades() == null || command.questionGrades().isEmpty()) {
             return Map.of();
@@ -32,7 +28,7 @@ public class QuizSubmissionConverter {
                     dtoGrade.earnedPoints(),
                     dtoGrade.maxPoints(),
                     dtoGrade.feedback(),
-                    false // Teacher graded, not auto-graded
+                    false
             );
 
             grades.put(questionId, domainGrade);
@@ -41,9 +37,6 @@ public class QuizSubmissionConverter {
         return grades;
     }
 
-    /**
-     * Calculate totals from question grades to verify consistency
-     */
     public TotalPoints calculateTotals(Map<QuizQuestionId, QuestionGrade> questionGrades) {
         int totalEarned = questionGrades.values().stream()
                 .mapToInt(QuestionGrade::getEarnedPoints)

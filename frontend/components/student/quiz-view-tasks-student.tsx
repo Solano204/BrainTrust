@@ -1,4 +1,3 @@
-// components/Student/TaskSubmissionView.tsx
 "use client";
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,12 +82,10 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
   const isGraded = existingSubmission?.status === 'GRADED';
   const hasAIResult = existingSubmission?.iaResult !== undefined;
 
-  // Handle file selection
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     setFiles(prev => [...prev, ...selectedFiles]);
     
-    // Simulate upload progress
     let progress = 0;
     const interval = setInterval(() => {
       progress += 10;
@@ -100,12 +97,10 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     }, 100);
   };
 
-  // Remove file from list
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle submission
   const handleSubmit = async () => {
     if (!content.trim() && files.length === 0) {
       const shouldContinue = window.confirm(
@@ -117,7 +112,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     try {
       await onSubmit({ content, attachments: files });
       setShowSubmitConfirm(false);
-      // Reset form on successful submission if it's a new submission
       if (!existingSubmission) {
         setContent('');
         setFiles([]);
@@ -136,7 +130,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     onExit?.();
   };
 
-  // Format date helper
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'long',
@@ -148,7 +141,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     });
   };
 
-  // Format date relative (e.g., "in 3 days", "2 weeks ago")
   const formatDateRelative = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -162,7 +154,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     }
   };
 
-  // Calculate time remaining
   const getTimeRemaining = () => {
     if (!assignment.dueDate) return null;
     
@@ -181,7 +172,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     return { overdue: false, text: `${minutes}m remaining` };
   };
 
-  // AI Detection Result Component
   const renderAIDetectionResult = () => {
     if (!hasAIResult || !existingSubmission?.iaResult) return null;
 
@@ -301,7 +291,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
   const timeRemaining = getTimeRemaining();
   const totalSubmissions = assignment.submissions?.length || 0;
 
-  // Display only first 3 links/attachments initially
   const displayedLinks = showAllLinks ? assignment.links : assignment.links.slice(0, 3);
   const displayedAttachments = showAllAttachments ? assignment.attachments : assignment.attachments.slice(0, 3);
 
@@ -445,8 +434,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
                   <CardContent className="space-y-6">
                     
                   
-
-                    {/* Links */}
                     {assignment.links.length > 0 && (
                       <div className="space-y-3">
                         <Label className="text-base font-medium flex items-center gap-2">
@@ -525,7 +512,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
                 </Card>
               )}
 
-              {/* AI Detection Result - Only show if submission exists and has AI analysis */}
               {hasAIResult && renderAIDetectionResult()}
 
               {/* Submission Form */}
@@ -538,7 +524,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-6">
                   
-                  {/* Written Content */}
                   <div className="space-y-3">
                     <Label htmlFor="content" className="text-base flex items-center gap-2">
                       <MessageSquare className="h-4 w-4" />
@@ -642,7 +627,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
                     )}
                   </div>
 
-                  {/* Existing Attachments from Previous Submission */}
                   {existingSubmission?.attachments && existingSubmission.attachments.length > 0 && (
                     <div className="space-y-3">
                       <Label className="text-base flex items-center gap-2">
@@ -678,7 +662,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
                     </div>
                   )}
 
-                  {/* Submission Status */}
                   {isSubmitted && (
                     <div className={`p-4 rounded-lg border ${
                       isGraded 
@@ -902,7 +885,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
         </div>
       </div>
 
-      {/* Exit Confirmation Dialog */}
       <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -926,7 +908,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Submit Confirmation Dialog */}
       <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>

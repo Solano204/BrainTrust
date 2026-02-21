@@ -13,11 +13,9 @@ public class PaginatedResponse<T> {
     private boolean first;
     private boolean last;
 
-    // No-args constructor
     public PaginatedResponse() {
     }
 
-    // All-args constructor
     public PaginatedResponse(List<T> content, int pageNumber, int pageSize,
                              long totalElements, int totalPages, boolean first, boolean last) {
         this.content = content;
@@ -29,7 +27,6 @@ public class PaginatedResponse<T> {
         this.last = last;
     }
 
-    // Factory method
     public static <T> PaginatedResponse<T> fromPage(Page<T> page) {
         return new PaginatedResponse<>(
                 page.getContent(),
@@ -42,7 +39,6 @@ public class PaginatedResponse<T> {
         );
     }
 
-    // Getters and setters
     public List<T> getContent() {
         return content;
     }
@@ -99,7 +95,6 @@ public class PaginatedResponse<T> {
         this.last = last;
     }
 
-    // toString() method for debugging
     @Override
     public String toString() {
         return "PaginatedResponse{" +
@@ -113,7 +108,6 @@ public class PaginatedResponse<T> {
                 '}';
     }
 
-    // equals() and hashCode() methods (optional but recommended)
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

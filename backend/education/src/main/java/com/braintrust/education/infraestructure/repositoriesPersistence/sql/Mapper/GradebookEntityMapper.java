@@ -31,11 +31,10 @@ public class GradebookEntityMapper {
     public GradebookJpaEntity toEntity(Gradebook gradebook) {
         log.debug("Mapping Gradebook Domain {} to JPA Entity", gradebook.getId().getValue());
 
-        // Serialize unit grades map to JSON and store in finalFeedback
+
         String unitGradesJson = serializeUnitGradesMap(gradebook.getUnitGrades());
 
-        // If there's actual text feedback, we need to decide how to handle it
-        // For now, we'll prioritize unit grades storage over text feedback
+
         String finalFeedbackToStore = unitGradesJson != null ? unitGradesJson : gradebook.getFinalFeedback();
 
         return new GradebookJpaEntity(
@@ -44,7 +43,7 @@ public class GradebookEntityMapper {
                 gradebook.getStudentId().getValue(),
                 gradebook.getCalculatedTotal(),
                 gradebook.getFinalGrade(),
-                finalFeedbackToStore, // Store either unit grades JSON or text feedback
+                finalFeedbackToStore,
                 gradebook.getLastCalculated()
         );
     }
@@ -56,10 +55,8 @@ public class GradebookEntityMapper {
         CourseId courseId = CourseId.fromString(entity.getCourseId());
         UserId studentId = UserId.fromString(entity.getStudentId());
 
-        // Try to deserialize unit grades from finalFeedback field
         Map<UnitId, Grade> unitGrades = tryDeserializeUnitGrades(entity.getFinalFeedback());
 
-        // Extract actual text feedback if finalFeedback contained JSON
         String actualFeedback = extractTextFeedback(entity.getFinalFeedback(), unitGrades);
 
         return Gradebook.reconstitute(
@@ -68,22 +65,18 @@ public class GradebookEntityMapper {
                 studentId,
                 entity.getCalculatedTotalValue(),
                 entity.getFinalGradeValue(),
-                actualFeedback, // Pass the actual text feedback (or null)
+                actualFeedback,
                 unitGrades,
                 entity.getLastCalculated()
         );
     }
 
-    /**
-     * Try to deserialize unit grades from the finalFeedback field.
-     * Returns empty map if the content is not valid JSON (i.e., it's regular text feedback)
-     */
+
     private Map<UnitId, Grade> tryDeserializeUnitGrades(String finalFeedback) {
         if (finalFeedback == null || finalFeedback.trim().isEmpty()) {
             return new HashMap<>();
         }
 
-        // Quick check if it might be JSON (starts with { and ends with })
         if (!isLikelyJson(finalFeedback)) {
             log.debug("FinalFeedback does not appear to be JSON, treating as text feedback");
             return new HashMap<>();
@@ -105,35 +98,24 @@ public class GradebookEntityMapper {
         }
     }
 
-    /**
-     * Extract text feedback from finalFeedback field.
-     * If unitGrades were successfully deserialized, then finalFeedback contained JSON, so return null for text feedback.
-     * If unitGrades is empty, then finalFeedback contained text, so return it as the actual feedback.
-     */
     private String extractTextFeedback(String finalFeedback, Map<UnitId, Grade> unitGrades) {
         if (finalFeedback == null || finalFeedback.trim().isEmpty()) {
             return null;
         }
 
-        // If we successfully deserialized unit grades, then finalFeedback was JSON, not text
         if (!unitGrades.isEmpty()) {
             return null;
         }
 
-        // If unitGrades is empty, then finalFeedback contains actual text feedback
         return finalFeedback;
     }
 
-    /**
-     * Simple heuristic to check if a string is likely JSON
-     */
     private boolean isLikelyJson(String str) {
         if (str == null) return false;
         String trimmed = str.trim();
         return trimmed.startsWith("{") && trimmed.endsWith("}");
     }
 
-    // Serialize unit grades map to JSON
     private String serializeUnitGradesMap(Map<UnitId, Grade> unitGrades) {
         if (unitGrades == null || unitGrades.isEmpty()) {
             return null;

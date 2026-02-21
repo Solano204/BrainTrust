@@ -2,7 +2,6 @@ package com.braintrust.education.domain.valueobjects;
 
 import com.braintrust.shared.domain.ValueObject;
 
-// 📍 education/domain/valueobjects/Score.java
 public class Score extends ValueObject {
     private final int value;
     private final int maxPoints;

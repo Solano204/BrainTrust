@@ -15,19 +15,16 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
-/**
- * ✅ SIMPLIFIED MOCK IMPLEMENTATION for text-only AI detection
- */
+
 @Component("MockPythonAIProvider")
 @Primary
-@Profile("!prod") // Only active in non-production environments
+@Profile("!prod")
 public class MockPythonAIDetectionProvider implements AIDetectionProvider {
 
     private static final Logger log = LoggerFactory.getLogger(MockPythonAIDetectionProvider.class);
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
 
-    // Mock performance metrics for different models
     private final Map<ModelType, ModelPerformance> modelPerformanceMap = Map.of(
             ModelType.ENSEMBLE, new ModelPerformance(
                     ModelType.ENSEMBLE, "1.0",
@@ -55,11 +52,9 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
     public DetectionResult analyzeContent(String content, ModelType modelType) {
         log.info("🧪 MOCK: Analyzing text content (length: {}) with model: {}", content.length(), modelType);
 
-        // Simulate API call delay
         simulateProcessingDelay(500, 1500);
 
         try {
-            // Generate realistic mock analysis based on content
             BigDecimal aiProbability = generateAIProbability(content);
             AIProbability probability = new AIProbability(aiProbability);
 
@@ -101,8 +96,7 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
     @Override
     public boolean isServiceAvailable() {
         log.trace("🧪 MOCK: Checking service availability");
-        // Simulate occasional service unavailability for testing
-        return random.nextDouble() > 0.1; // 90% available
+        return random.nextDouble() > 0.1;
     }
 
     @Override
@@ -116,10 +110,6 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
         return health;
     }
 
-    // ========================================
-    // PRIVATE HELPER METHODS
-    // ========================================
-
     private void simulateProcessingDelay(int minMs, int maxMs) {
         try {
             int delay = minMs + random.nextInt(maxMs - minMs);
@@ -131,22 +121,17 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
     }
 
     private BigDecimal generateAIProbability(String content) {
-        // Generate realistic AI probability based on content characteristics
         int length = content.length();
         double baseProbability;
 
         if (length < 100) {
-            // Short content - more uncertain
             baseProbability = 0.3 + random.nextDouble() * 0.4;
         } else if (length > 1000) {
-            // Long content - more likely to be human-written
             baseProbability = 0.1 + random.nextDouble() * 0.3;
         } else {
-            // Medium content - varied
             baseProbability = 0.2 + random.nextDouble() * 0.6;
         }
 
-        // Add some randomness but keep it realistic
         double variation = (random.nextDouble() - 0.5) * 0.2;
         double finalProbability = Math.max(0.0, Math.min(1.0, baseProbability + variation));
 
@@ -157,10 +142,9 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
         List<DetectedSegment> segments = new ArrayList<>();
 
         if (content.length() < 50) {
-            return segments; // No segments for very short content
+            return segments;
         }
 
-        // Generate 0-3 segments based on AI probability
         int segmentCount = (int) (aiProbability.doubleValue() * 3);
 
         for (int i = 0; i < segmentCount; i++) {
@@ -192,15 +176,13 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
 
     private String extractSegmentFromContent(String content, int segmentIndex, int totalSegments) {
         if (content.length() < 100) {
-            return content; // Return entire content for short texts
+            return content;
         }
 
-        // Split content into roughly equal segments
         int segmentLength = content.length() / totalSegments;
         int start = segmentIndex * segmentLength;
         int end = Math.min(start + segmentLength, content.length());
 
-        // Adjust to word boundaries
         while (start > 0 && !Character.isWhitespace(content.charAt(start))) {
             start--;
         }
@@ -241,7 +223,6 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
         metadata.put("character_count", content.length());
         metadata.put("provider", "Mock AI Detector");
 
-        // Detailed metrics
         detailedMetrics.put("perplexity", String.format("%.2f", 50 + random.nextDouble() * 100));
         detailedMetrics.put("burstiness", String.format("%.2f", random.nextDouble() * 2));
         detailedMetrics.put("confidence_score", String.format("%.2f", 0.7 + random.nextDouble() * 0.3));

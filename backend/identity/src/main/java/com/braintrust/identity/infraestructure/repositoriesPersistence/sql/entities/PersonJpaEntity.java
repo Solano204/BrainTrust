@@ -30,7 +30,6 @@ public class PersonJpaEntity {
     @Column(name = "image_path", length = 500)
     private String imagePath;
 
-    // Embedded Address
     @Column(name = "address_street", length = 255)
     private String addressStreet;
 
@@ -46,7 +45,6 @@ public class PersonJpaEntity {
     @Column(name = "address_postal_code", length = 10)
     private String addressPostalCode;
 
-    // Constructors
     public PersonJpaEntity() {}
 
     public PersonJpaEntity(String id, String firstName, String lastName, String gender,
@@ -67,7 +65,6 @@ public class PersonJpaEntity {
         this.addressPostalCode = addressPostalCode;
     }
 
-    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

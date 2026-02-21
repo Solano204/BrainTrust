@@ -2,7 +2,7 @@ package com.braintrust.education.application.dtos.dtos;
 
 import java.util.List;
 
-// 📍 education/application/dtos/CourseDetailDTO.java
+
 public record CourseDetailDTO(
         String id,
         String code,
