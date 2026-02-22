@@ -7,8 +7,8 @@ public record StudentSearchResultDTO(
         String lastName,
         String fullName,
         String email,
-        String studentRefId,  // Student reference ID
+        String studentRefId,
         boolean isAlreadyEnrolled,
-        String enrollmentId, // null if not enrolled
-        String enrollmentStatus // ACTIVE, COMPLETED, CANCELLED if enrolled
+        String enrollmentId,
+        String enrollmentStatus
 ) {}

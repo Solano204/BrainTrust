@@ -34,8 +34,8 @@ public record CreateAssignmentWithAttachmentsCommand(
 
         List<MultipartFile> attachments,
         List<String> links,
-        String targetType, // "INDIVIDUAL" or "TEAM"
+        String targetType,
 
-        // ✅ NEW: Submission format field
-        String submissionFormat // "DIGITAL" or "NOTEBOOK"
+
+        String submissionFormat
 ) {}

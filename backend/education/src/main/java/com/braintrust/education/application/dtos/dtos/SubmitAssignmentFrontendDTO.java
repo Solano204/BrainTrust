@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-// ✅ OPTION 1: DTO for pure frontend extraction (NO file uploads)
+
 public record SubmitAssignmentFrontendDTO(
         @NotBlank(message = "Assignment ID is required")
         String assignmentId,

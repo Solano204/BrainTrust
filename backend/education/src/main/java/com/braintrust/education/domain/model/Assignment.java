@@ -23,11 +23,10 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     private final List<Submission> submissions;
     private boolean active;
     private AssignmentTargetType targetType;
-    private SubmissionFormat submissionFormat; // ✅ NEW: Submission format field
+    private SubmissionFormat submissionFormat;
     private static final int MAX_ATTACHMENTS = 10;
     private static final int MAX_LINKS = 10;
 
-    // Update constructor to include submissionFormat
     private Assignment(AssignmentId id, CourseId courseId, UnitId unitId, String title) {
         this.id = id;
         this.courseId = courseId;
@@ -42,8 +41,6 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     }
 
 
-
-    // Update factory methods to include submissionFormat
     public static Assignment create(CourseId courseId, UnitId unitId, String title, String description,
                                     LocalDateTime dueDate, int maxPoints, String instructions,
                                     AssignmentTargetType targetType, SubmissionFormat submissionFormat) { // ✅ NEW parameter
@@ -58,14 +55,13 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // Update reconstitute method
     public static Assignment reconstitute(AssignmentId id, CourseId courseId, UnitId unitId, String title,
                                           String description, LocalDateTime createdAt,
                                           List<Document> attachments, List<String> links,
                                           LocalDateTime dueDate, Score maxScore, String instructions,
                                           List<Submission> submissions, boolean active,
                                           AssignmentTargetType targetType,
-                                          SubmissionFormat submissionFormat) { // ✅ NEW parameter
+                                          SubmissionFormat submissionFormat) {
         Assignment assignment = new Assignment(id, courseId, unitId, title);
         assignment.description = description;
         assignment.createdAt = createdAt;
@@ -88,17 +84,14 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // Add getter for submission format
     public SubmissionFormat getSubmissionFormat() {
         return submissionFormat;
     }
 
-    // Add setter for submission format
     public void updateSubmissionFormat(SubmissionFormat submissionFormat) {
         this.submissionFormat = submissionFormat != null ? submissionFormat : SubmissionFormat.DIGITAL;
     }
 
-    // Update details method to include submission format
     public void updateDetails(String title, String description, String instructions, SubmissionFormat submissionFormat) {
         this.title = validateTitle(title);
         this.description = description;
@@ -107,7 +100,6 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     }
 
 
-    // ✅ Factory Method for INDIVIDUAL Assignment with Unit
     public static Assignment createForIndividual(CourseId courseId, UnitId unitId, String title,
                                                  String description, LocalDateTime dueDate,
                                                  int maxPoints, String instructions) {
@@ -121,7 +113,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // ✅ Factory Method for TEAM Assignment with Unit
+
     public static Assignment createForTeam(CourseId courseId, UnitId unitId, String title,
                                            String description, LocalDateTime dueDate,
                                            int maxPoints, String instructions) {
@@ -135,7 +127,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // ✅ Factory Method with target type selection and Unit
+
     public static Assignment create(CourseId courseId, UnitId unitId, String title, String description,
                                     LocalDateTime dueDate, int maxPoints, String instructions,
                                     AssignmentTargetType targetType) {
@@ -149,7 +141,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // ✅ Factory Method with attachments, target type and Unit
+
     public static Assignment createWithAttachments(CourseId courseId, UnitId unitId, String title, String description,
                                                    LocalDateTime dueDate, int maxPoints, String instructions,
                                                    List<Document> attachments, AssignmentTargetType targetType) {
@@ -169,7 +161,6 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     }
 
 
-    // ✅ Factory Method with links support
     public static Assignment createWithLinks(CourseId courseId, UnitId unitId, String title, String description,
                                              LocalDateTime dueDate, int maxPoints, String instructions,
                                              List<String> links, AssignmentTargetType targetType) {
@@ -207,12 +198,10 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         assignment.targetType = targetType;
         assignment.submissionFormat= submissionFormat;
 
-        // Add attachments if provided
         if (attachments != null && !attachments.isEmpty()) {
             assignment.addAttachments(attachments);
         }
 
-        // ✅ Add links if provided
         if (links != null && !links.isEmpty()) {
             assignment.addLinks(links);
         }
@@ -220,7 +209,6 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return assignment;
     }
 
-    // ✅ RECONSTITUTE METHOD - Updated with links support
     public static Assignment reconstitute(AssignmentId id, CourseId courseId, UnitId unitId, String title,
                                           String description, LocalDateTime createdAt,
                                           List<Document> attachments, List<String> links, // ✅ ADDED links parameter
@@ -239,7 +227,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         if (attachments != null) {
             assignment.attachments.addAll(attachments);
         }
-        if (links != null) { // ✅ ADDED - Initialize links
+        if (links != null) {
             assignment.links.addAll(links);
         }
         if (submissions != null) {
@@ -313,10 +301,6 @@ public class Assignment extends AggregateRoot<AssignmentId> {
             throw new IllegalArgumentException("Link cannot be null or empty");
         }
 
-//        if (!isValidUrl(link)) {
-//            throw new IllegalArgumentException("Invalid URL format: " + link);
-//        }
-
         if (links.size() >= MAX_LINKS) {
             throw new IllegalStateException("Cannot add more than " + MAX_LINKS + " links");
         }
@@ -381,7 +365,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         }
 
         if (!this.active && (dueDate == null || LocalDateTime.now().isBefore(dueDate))) {
-            // Allow submission but assignment remains inactive
+
         }
 
         SubmissionStatus status = determineSubmissionStatus();
@@ -450,14 +434,13 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return targetType == AssignmentTargetType.TEAM;
     }
 
-    // Getters
     public CourseId getCourseId() { return courseId; }
     public UnitId getUnitId() { return unitId; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<Document> getAttachments() { return Collections.unmodifiableList(attachments); }
-    public List<String> getLinks() { return Collections.unmodifiableList(links); } // ✅ ADDED - Links getter
+    public List<String> getLinks() { return Collections.unmodifiableList(links); }
     public LocalDateTime getDueDate() { return dueDate; }
     public Score getMaxScore() { return maxScore; }
     public String getInstructions() { return instructions; }

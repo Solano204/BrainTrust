@@ -1,10 +1,5 @@
 package com.braintrust.education.domain.model;
 
-
-// ========================================
-// 📍 ENTITY: QuizQuestion
-// ========================================
-
 import com.braintrust.education.domain.valueobjects.QuestionOption;
 import com.braintrust.education.domain.valueobjects.QuizQuestionId;
 import com.braintrust.shared.domain.Entity;
@@ -14,8 +9,8 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
     private String questionText;
     private QuestionType type;
     private int points;
-    private final List<QuestionOption> options; // For multiple choice
-    private String correctAnswer; // For open-ended
+    private final List<QuestionOption> options;
+    private String correctAnswer;
 
     private QuizQuestion(QuizQuestionId id, String questionText, QuestionType type, int points) {
         this.id = id;
@@ -25,32 +20,25 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
         this.options = new ArrayList<>();
     }
 
-    // ✅ Factory for Multiple Choice
-// ✅ Fixed Factory for Multiple Choice - ADD correctAnswer parameter
-// ✅ Fixed Factory for Multiple Choice - ADD correctAnswer parameter
     public static QuizQuestion createMultipleChoice(String questionText, int points,
                                                     List<QuestionOption> options,
-                                                    String correctAnswer) { // ✅ ADD THIS PARAMETER
+                                                    String correctAnswer) {
         QuizQuestionId id = QuizQuestionId.generate();
         QuizQuestion question = new QuizQuestion(id, questionText, QuestionType.MULTIPLE_CHOICE, points);
         if (options != null) {
             question.options.addAll(options);
         }
-        question.correctAnswer = correctAnswer; // ✅ STORE THE CORRECT ANSWER
+        question.correctAnswer = correctAnswer;
         return question;
     }
 
-
-    // ✅ Fixed reconstitute method
     public static QuizQuestion reconstitute(QuizQuestionId id, String questionText,
                                             QuestionType type, int points,
                                             List<QuestionOption> options, String correctAnswer) {
         QuizQuestion question = new QuizQuestion(id, questionText, type, points);
 
-        // ✅ Store the correct answer first
         question.correctAnswer = correctAnswer;
 
-        // ✅ Then add options
         if (options != null) {
             question.options.addAll(options);
         }
@@ -58,8 +46,6 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
         return question;
     }
 
-
-    // In QuizQuestion class
     public void updateQuestionText(String newText) {
         if (newText == null || newText.trim().isEmpty()) {
             throw new IllegalArgumentException("Question text cannot be null or empty");
@@ -109,10 +95,6 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
     }
 
 
-
-
-
-    // ✅ Factory for Open-Ended
     public static QuizQuestion createOpenEnded(String questionText, int points, String correctAnswer) {
         QuizQuestionId id = QuizQuestionId.generate();
         QuizQuestion question = new QuizQuestion(id, questionText, QuestionType.OPEN_ENDED, points);
@@ -120,7 +102,6 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
         return question;
     }
 
-    // ✅ Reconstitute
     public boolean isCorrectAnswer(List<Integer> selectedOptionIndices) {
         if (type != QuestionType.MULTIPLE_CHOICE) {
             throw new IllegalStateException("This method is only for multiple choice questions");
@@ -143,7 +124,6 @@ public class QuizQuestion extends Entity<QuizQuestionId> {
         return points;
     }
 
-    // Getters
     public String getQuestionText() { return questionText; }
     public QuestionType getType() { return type; }
     public int getPoints() { return points; }

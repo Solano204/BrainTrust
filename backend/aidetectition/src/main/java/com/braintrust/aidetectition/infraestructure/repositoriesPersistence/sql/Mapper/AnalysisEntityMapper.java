@@ -28,15 +28,10 @@ public class AnalysisEntityMapper {
             LoggerFactory.getLogger(AnalysisEntityMapper.class);
     private final ObjectMapper objectMapper;
 
-    // ✅ Spring will automatically inject ObjectMapper bean
     public AnalysisEntityMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Converts a Domain AnalysisRequest to a JPA Entity.
-     * @throws JsonProcessingException if serialization fails.
-     */
     public AnalysisRequestJpaEntity toEntity(AnalysisRequest analysis) throws JsonProcessingException {
         String detectedSegmentsJson = null;
         BigDecimal probability = null;
@@ -51,7 +46,6 @@ public class AnalysisEntityMapper {
             modelUsed = result.getModelUsed().name();
             confidenceLevel = result.getConfidenceLevel();
 
-            // ✅ Serialize detected segments to JSON
             if (!result.getDetectedSegments().isEmpty()) {
                 log.trace("Serializing {} detected segments to JSON.", result.getDetectedSegments().size());
                 List<Map<String, Object>> segmentMaps = result.getDetectedSegments().stream()
@@ -70,7 +64,7 @@ public class AnalysisEntityMapper {
                     detectedSegmentsJson = objectMapper.writeValueAsString(segmentMaps);
                 } catch (JsonProcessingException e) {
                     log.error("Failed to serialize detected segments for Analysis ID {}.", analysis.getId().getValue(), e);
-                    throw e; // Re-throw to be handled by service layer transaction
+                    throw e;
                 }
             }
         }
@@ -90,9 +84,6 @@ public class AnalysisEntityMapper {
         );
     }
 
-    /**
-     * Converts a JPA Entity back to a Domain AnalysisRequest.
-     */
     public AnalysisRequest toDomain(AnalysisRequestJpaEntity entity) {
         AnalysisId analysisId = AnalysisId.fromString(entity.getId());
         SubmissionId submissionId = SubmissionId.fromString(entity.getSubmissionId());
@@ -103,7 +94,6 @@ public class AnalysisEntityMapper {
         DetectionResult result = null;
         if (entity.getProbability() != null && entity.getModelUsed() != null) {
 
-            // ✅ Deserialize detected segments from JSON
             List<DetectedSegment> detectedSegments = new ArrayList<>();
             if (entity.getDetectedSegmentsJson() != null && !entity.getDetectedSegmentsJson().isEmpty()) {
                 try {
@@ -124,7 +114,7 @@ public class AnalysisEntityMapper {
                             .toList();
                 } catch (JsonProcessingException | ClassCastException e) {
                     log.error("Failed to deserialize detected segments for Analysis ID {}. Data integrity compromised.", analysisId.getValue(), e);
-                    // Crucial: Throw a runtime exception if data integrity is compromised
+
                     throw new RuntimeException("Failed to deserialize detected segments due to JSON format error.", e);
                 }
             }

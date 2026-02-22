@@ -22,11 +22,11 @@ public class GradebookJpaEntity {
     @Column(name = "student_id", length = 50, nullable = false)
     private String studentId;
 
-    // ✅ CALCULATED TOTAL (Auto-calculated sum from all units)
+
     @Column(name = "calculated_total_value", precision = 10, scale = 2)
     private BigDecimal calculatedTotalValue;
 
-    // ✅ FINAL GRADE (Assigned by teacher - can override calculated total)
+
     @Column(name = "final_grade_value", precision = 10, scale = 2)
     private BigDecimal finalGradeValue;
 
@@ -51,7 +51,7 @@ public class GradebookJpaEntity {
         this.lastCalculated = lastCalculated;
     }
 
-    // Getters/Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getCourseId() { return courseId; }

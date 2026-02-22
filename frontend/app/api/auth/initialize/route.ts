@@ -1,4 +1,4 @@
-// app/api/auth/initialize/route.ts
+
 import { authService } from '@/app/domain/services/authService';
 import { getUserData, getAccessToken, getRefreshToken } from '@/app/utils/tokenManager';
 import { NextResponse } from 'next/server';
@@ -11,7 +11,6 @@ export async function GET() {
       return NextResponse.json({ authenticated: false });
     }
 
-    // Validate the token with backend
     const user = await authService.validateToken(accessToken);
     
     if (!user) {

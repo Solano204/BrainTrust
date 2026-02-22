@@ -1,4 +1,4 @@
-// 📍 shared/infrastructure/security/SecurityConfig.java
+
 package com.braintrust.identity.infraestructure.security;
 
 import com.braintrust.identity.infraestructure.security.filters.JwtAuthenticationEntryPoint;
@@ -35,7 +35,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
- // private final RateLimitFilter rateLimitFilter;
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
@@ -54,7 +53,6 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - Authentication
                         .requestMatchers(
                                 "/api/**",
 
@@ -66,7 +64,6 @@ public class SecurityConfig {
                                 "/api/users/email-available/**"
                         ).permitAll()
 
-                        // ✅ FIXED: Public endpoints - Documentation (Swagger UI)
                         .requestMatchers(
                                 "/api/**",
                                 "/**",
@@ -79,23 +76,19 @@ public class SecurityConfig {
                                 "/configuration/**"          // Swagger configuration
                         ).permitAll()
 
-                        // Public endpoints - Health
                         .requestMatchers("/actuator/health").permitAll()
 
-                        // Admin-only endpoints
                         .requestMatchers("/api/users/register/admin").hasRole("ADMIN")
                         .requestMatchers("/api/users/register/admin").hasRole("ADMIN")
                         .requestMatchers("/api/users/*/activate").hasRole("ADMIN")
                         .requestMatchers("/api/users/*/deactivate").hasRole("ADMIN")
 
-                        // Teacher-only endpoints
+
                         .requestMatchers("/api/courses").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/assignments").hasAnyRole("TEACHER", "ADMIN")
 
-                        // Student-accessible endpoints
                         .requestMatchers("/api/submissions/**").hasAnyRole("STUDENT", "TEACHER", "ADMIN")
 
-                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
 
@@ -103,11 +96,8 @@ public class SecurityConfig {
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 
-                // Add custom filters
-                // .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
-                // Security headers
                 .headers(headers -> headers
                         .contentTypeOptions(contentTypeOptions -> {})
                         .xssProtection(xss -> {})

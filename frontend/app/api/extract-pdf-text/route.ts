@@ -1,16 +1,16 @@
-// app/api/extract-pdf-text/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { PdfReader } from 'pdfreader';
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
     let fullText = '';
-    
+
     new PdfReader().parseBuffer(buffer, (err: any, item: any) => {
       if (err) {
         reject(err);
       } else if (!item) {
-        // End of file
+
         resolve(fullText.trim());
       } else if (item.text) {
         fullText += item.text + ' ';

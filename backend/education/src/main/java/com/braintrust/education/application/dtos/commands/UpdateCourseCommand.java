@@ -20,9 +20,7 @@ public record UpdateCourseCommand(
         @NotBlank(message = "Group is required")
         String group,
 
-        // ✅ NEW: Optional teacherId field
         String teacherId,
 
-        // ✅ NEW: Optional image URL field
         String imageUrl
 ) {}

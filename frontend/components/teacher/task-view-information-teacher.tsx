@@ -46,10 +46,8 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
   const attachmentMutations = useAssignmentAttachmentMutations();
   const linkMutations = useAssignmentLinkMutations();
   const { updateAssignment } = useAssignmentMutations();
- // Edit mode state
   const [isEditMode, setIsEditMode] = React.useState(false);
   
-  // Editable fields
  const [editData, setEditData] = React.useState({
     title: assignment.title,
     description: assignment.description,
@@ -61,21 +59,17 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
     submissionFormat: assignment.submissionFormat || "DIGITAL" // NEW
   });
   
-  // Single URL state
   const [newUrl, setNewUrl] = React.useState("");
   const [isAddingUrl, setIsAddingUrl] = React.useState(false);
   
-  // Multiple URLs state
   const [isAddingMultipleUrls, setIsAddingMultipleUrls] = React.useState(false);
   const [urlInput, setUrlInput] = React.useState("");
   const [selectedUrls, setSelectedUrls] = React.useState<string[]>([]);
   
-  // Attachments state
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
   const [isAddingFiles, setIsAddingFiles] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Reset edit data when assignment changes
   React.useEffect(() => {
     setEditData({
       title: assignment.title,
@@ -89,7 +83,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
     });
   }, [assignment]);
 
-  // Validate URL
   const isValidUrl = (url: string): boolean => {
     try {
       new URL(url);
@@ -99,7 +92,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
     }
   };
 
-  // Add URL to list
   const handleAddUrlToList = () => {
     const trimmedUrl = urlInput.trim();
     if (!trimmedUrl) return;
@@ -118,12 +110,10 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
     setUrlInput("");
   };
 
-  // Remove URL from list
   const removeSelectedUrl = (index: number) => {
     setSelectedUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle multiple URLs upload
   const handleMultipleUrlsUpload = async () => {
     if (selectedUrls.length === 0) return;
 
@@ -140,7 +130,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
     }
   };
 
-  // Handle save edits
   const handleSaveEdits = async () => {
     try {
       await updateAssignment.mutateAsync({
@@ -466,7 +455,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
               </CardContent>
             </Card>
 
-            {/* Instructions Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -492,7 +480,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
               </CardContent>
             </Card>
 
-            {/* ATTACHMENTS */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -608,7 +595,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
                   </div>
                 )}
 
-                {/* Existing Attachments List */}
                 {assignment.attachments.length === 0 ? (
                   <div className="text-center py-12 border-2 border-dashed rounded-lg">
                     <Paperclip className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
@@ -662,7 +648,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
               </CardContent>
             </Card>
 
-            {/* URLS WITH MULTIPLE LINK SUPPORT */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -708,7 +693,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Single URL Interface */}
                 {isAddingUrl && (
                   <div className="flex gap-2 p-4 bg-muted/20 rounded-lg border">
                     <Input
@@ -745,7 +729,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
                   </div>
                 )}
 
-                {/* Multiple URLs Interface */}
                 {isAddingMultipleUrls && (
                   <div className="border-2 border-dashed border-border rounded-lg p-4 space-y-4 bg-muted/20">
                     <div className="flex gap-2">
@@ -821,7 +804,6 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
                   </div>
                 )}
 
-                {/* URLs List */}
                 {assignment.urls.length === 0 ? (
                   <div className="text-center py-12 border-2 border-dashed rounded-lg">
                     <LinkIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
@@ -882,9 +864,7 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
             </Card>
           </div>
 
-          {/* Sidebar Column (1/3) */}
           <div className="space-y-6">
-            {/* Assignment Details Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Assignment Details</CardTitle>

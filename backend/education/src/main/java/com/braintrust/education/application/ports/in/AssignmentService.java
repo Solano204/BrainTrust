@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface AssignmentService {
 
-    // Commands
+
     AssignmentId createAssignment(CreateAssignmentCommand command);
     AssignmentId createAssignmentWithAttachments(CreateAssignmentWithAttachmentsCommand command);
     void updateAssignmentDetails(UpdateAssignmentCommand command);
@@ -28,15 +28,9 @@ public interface AssignmentService {
     AssignmentId createAssignmentForTeam(CreateTeamAssignmentCommand command);
     void deleteAssignment(AssignmentId assignmentId);
     AssignmentId createAssignmentFrontend(CreateAssignmentFrontendDTO command);
-//    AssignmentId createAssignmentWithAttachmentsFrontend(CreateAssignmentWithAttachmentsCommand command);
-    // ✅ ADDED - Link management methods
 
-    // In AssignmentService interface, add these methods:
-
-    // For bulk JSON attachments
     void addBulkAttachmentsJson(AssignmentId assignmentId, List<FrontendDocumentDTO> attachments);
 
-    // For single JSON attachment
     void addSingleAttachmentJson(AssignmentId assignmentId, FrontendDocumentDTO attachment);
 
     void addLink(AssignmentId assignmentId, String link);
@@ -44,11 +38,10 @@ public interface AssignmentService {
     void removeLink(AssignmentId assignmentId, String link);
     void clearLinks(AssignmentId assignmentId);
 
-    // ✅ ADDED - File management methods
     void addAttachment(AssignmentId assignmentId, MultipartFile file);
     void addMultipleAttachments(AssignmentId assignmentId, List<MultipartFile> files);
     void removeAttachment(AssignmentId assignmentId, String documentName);
-    // Queries
+
     AssignmentDTO getAssignmentById(AssignmentId assignmentId);
     List<AssignmentDTO> getAssignmentsByCourse(CourseId courseId);
     List<AssignmentDTO> getAssignmentsByUnit(CourseId courseId, UnitId unitId);

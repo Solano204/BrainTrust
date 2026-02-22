@@ -17,15 +17,13 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-// other imports...
+
 @Component
 public class SubmissionEntityMapper {
 
     private static final Logger log = LoggerFactory.getLogger(SubmissionEntityMapper.class);
 
-    /**
-     * Converts a Submission Domain Model to a JPA Entity.
-     */
+
     public SubmissionJpaEntity toEntity(Submission submission) {
         log.debug("Mapping Submission Domain ID {} (Status: {}) to JPA Entity.",
                 submission.getId().getValue(), submission.getStatus().name());
@@ -52,13 +50,13 @@ public class SubmissionEntityMapper {
                 submission.getTeamId() != null ? submission.getTeamId().getValue() : null
         );
 
-        // Map attachments - THIS IS WHERE THE FIX IS NEEDED
+
         if (submission.getAttachments() != null && !submission.getAttachments().isEmpty()) {
             log.trace("Mapping {} attached documents.", submission.getAttachments().size());
 
-            // Create document entities and SET THE SUBMISSION RELATIONSHIP
+
             List<DocumentJpaEntity> documentEntities = submission.getAttachments().stream()
-                    .map(doc -> toDocumentEntity(doc, entity)) // Pass the submission entity
+                    .map(doc -> toDocumentEntity(doc, entity))
                     .collect(Collectors.toList());
 
             entity.setDocuments(documentEntities);
@@ -70,25 +68,19 @@ public class SubmissionEntityMapper {
         return entity;
     }
 
-    /**
-     * Converts a Document domain object to DocumentJpaEntity with proper relationship
-     */
     private DocumentJpaEntity toDocumentEntity(Document doc, SubmissionJpaEntity submissionEntity) {
         log.trace("Mapping Document entity for storage path: {}", doc.getStoragePath());
 
-        // Create document entity with the submission relationship
         DocumentJpaEntity entity = new DocumentJpaEntity(
                 doc.getName(),
                 doc.getStoragePath(),
-                submissionEntity  // This sets the relationship
+                submissionEntity
         );
 
         return entity;
     }
 
-    /**
-     * Converts a Submission JPA Entity back to a Domain Submission model.
-     */
+
     public Submission toDomain(SubmissionJpaEntity entity) {
         log.debug("Mapping Submission JPA Entity {} back to Domain Model.", entity.getId());
 
@@ -104,7 +96,7 @@ public class SubmissionEntityMapper {
 
         SubmissionStatus status = SubmissionStatus.valueOf(entity.getStatus());
 
-        // Map documents list from entity to domain
+
         List<Document> documents = new ArrayList<>();
         if (entity.getDocuments() != null && !entity.getDocuments().isEmpty()) {
             log.trace("Mapping {} documents from entity.", entity.getDocuments().size());

@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-// other imports...
+
 
 @Service
 @Transactional
@@ -41,7 +41,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
     private final AssignmentRepository assignmentRepository;
     private final QuizRepository quizRepository;
     private final CourseRepository courseRepository;
-    private final UserService userService; // ✅ NEW: For getting student names
+    private final UserService userService;
 
     public UnitGradeApplicationService(
             UnitGradeRepository unitGradeRepository,
@@ -50,14 +50,14 @@ public class UnitGradeApplicationService implements UnitGradeService {
             AssignmentRepository assignmentRepository,
             QuizRepository quizRepository,
             CourseRepository courseRepository,
-            UserService userService) { // ✅ NEW
+            UserService userService) {
         this.unitGradeRepository = unitGradeRepository;
         this.submissionRepository = submissionRepository;
         this.quizSubmissionRepository = quizSubmissionRepository;
         this.assignmentRepository = assignmentRepository;
         this.quizRepository = quizRepository;
         this.courseRepository = courseRepository;
-        this.userService = userService; // ✅ NEW
+        this.userService = userService;
     }
 
 
@@ -78,7 +78,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
                     BigDecimal finalGrade = new BigDecimal(gradeCommand.gradeValue());
                     String feedback = gradeCommand.feedback();
 
-                    // Assign final grade for each student
+
                     assignFinalGrade(unitId, studentId, finalGrade, feedback);
                     successCount++;
 
@@ -115,7 +115,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
 
-        // ✅ Check if we should add or update
         if (unitGrade.hasAssignmentGrade(assignmentId)) {
             log.info("🔄 Updating existing assignment grade in unit");
         }
@@ -135,7 +134,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
 
-        // ✅ Check if we should add or update
         if (unitGrade.hasQuizGrade(quizId)) {
             log.info("🔄 Updating existing quiz grade in unit");
         }
@@ -148,7 +146,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
                 unitGrade.getCalculatedTotal() != null ? unitGrade.getCalculatedTotal() : "N/A");
     }
 
-    // ✅ UPDATED: Remove methods now properly subtract grades
     @Override
     public void removeAssignmentGradeFromUnit(UnitId unitId, UserId studentId, AssignmentId assignmentId) {
         log.info("➖ Removing assignment grade from unit {} for student {} (Assignment: {})",
@@ -163,7 +160,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
             return;
         }
 
-        // Store the old total and check if assignment exists
         BigDecimal oldTotal = unitGrade.getCalculatedTotal();
         boolean hadAssignment = unitGrade.hasAssignmentGrade(assignmentId);
 
@@ -172,7 +168,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
             return;
         }
 
-        // Remove the assignment grade (this triggers recalculation)
         unitGrade.removeAssignmentGrade(assignmentId);
         unitGradeRepository.save(unitGrade);
 
@@ -197,7 +192,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
             return;
         }
 
-        // Store the old total and check if quiz exists
         BigDecimal oldTotal = unitGrade.getCalculatedTotal();
         boolean hadQuiz = unitGrade.hasQuizGrade(quizId);
 
@@ -206,7 +200,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
             return;
         }
 
-        // Remove the quiz grade (this triggers recalculation)
         unitGrade.removeQuizGrade(quizId);
         unitGradeRepository.save(unitGrade);
 
@@ -232,11 +225,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
         log.info("Feedback added");
     }
 
-
-
-
-
-    // ✅ NEW: Assign final grade for unit
     @Override
     public void assignFinalGrade(UnitId unitId, UserId studentId, BigDecimal finalGrade, String feedback) {
         log.info("Assigning final grade {} for student {} in unit {}",
@@ -249,7 +237,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
         log.info("Final grade assigned for unit");
     }
 
-    // ✅ NEW: Get final grade for unit
     @Override
     @Transactional(readOnly = true)
     public FinalGradeDTO getFinalGrade(UnitId unitId, UserId studentId) {
@@ -275,10 +262,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
 
-        // ✅ FIXED: DO NOT clear existing grades - accumulate instead
-        // unitGrade.clearAllGrades(); // REMOVED THIS LINE
-
-        // Get all assignments for this unit and add their latest grades
         List<Assignment> unitAssignments = findAssignmentsForUnit(unitId);
         for (Assignment assignment : unitAssignments) {
             List<Submission> submissions = submissionRepository
@@ -292,12 +275,11 @@ public class UnitGradeApplicationService implements UnitGradeService {
                                 assignment.getId().getValue(),
                                 submission.getGrade().getValue(),
                                 submission.getGrade().getMaxScore());
-                        // ✅ This will ADD or UPDATE the assignment grade, not replace all
+
                         unitGrade.addAssignmentGrade(assignment.getId(), submission.getGrade());
                     });
         }
 
-        // Get all quizzes for this unit and add their latest grades
         List<Quiz> unitQuizzes = findQuizzesForUnit(unitId);
         for (Quiz quiz : unitQuizzes) {
             quizSubmissionRepository.findLatestByQuizAndStudent(quiz.getId(), studentId)
@@ -307,7 +289,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
                                 quiz.getId().getValue(),
                                 submission.getGrade().getValue(),
                                 submission.getGrade().getMaxScore());
-                        // ✅ This will ADD or UPDATE the quiz grade, not replace all
+
                         unitGrade.addQuizGrade(quiz.getId(), submission.getGrade());
                     });
         }
@@ -361,24 +343,15 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
     private List<Assignment> findAssignmentsForUnit(UnitId unitId) {
         // TODO: Implement logic to find assignments belonging to a unit
-        // This depends on your Assignment-Unit relationship
         return List.of();
     }
 
     private List<Quiz> findQuizzesForUnit(UnitId unitId) {
         // TODO: Implement logic to find quizzes belonging to a unit
-        // This depends on your Quiz-Unit relationship
         return List.of();
     }
 
-    // ✅ UPDATED: Map to DTO with new simplified structure
-    // ✅ UPDATED: Map to DTO with actual student names
-    // ✅ UPDATED: Map to DTO with real student names
-
-    // ✅ UPDATED: Map to DTO with real student names
-    // ✅ UPDATED: Map to DTO with real student and unit names
     private UnitGradeDTO mapToDTO(UnitGrade unitGrade) {
-        // Use display grade value (final if assigned, otherwise calculated)
         BigDecimal displayGradeValue = unitGrade.getDisplayGradeValue();
 
         GradeDTO gradeDTO = displayGradeValue != null
@@ -409,19 +382,18 @@ public class UnitGradeApplicationService implements UnitGradeService {
                         )
                 ));
 
-        // ✅ FIXED: Get real student name from UserService
+
         MinimalUserInfoDTO studentInfo = userService.getMinimalUserInfo(unitGrade.getStudentId());
         String studentName = studentInfo != null ? studentInfo.fullName() : "Unknown Student";
 
-        // ✅ FIXED: Get real unit name from CourseRepository
         String unitName = getUnitName(unitGrade.getUnitId());
 
         return new UnitGradeDTO(
                 unitGrade.getId().getValue(),
                 unitGrade.getUnitId().getValue(),
-                unitName, // ✅ REAL unit name
+                unitName,
                 unitGrade.getStudentId().getValue(),
-                studentName, // ✅ REAL student name
+                studentName,
                 gradeDTO,
                 assignmentGrades,
                 quizGrades,
@@ -433,7 +405,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
         );
     }
 
-    // ✅ FIXED: Get real unit name from CourseRepository
     private String getUnitName(UnitId unitId) {
         try {
             log.debug("🔍 Resolving unit name for Unit ID: {}", unitId.getValue());
@@ -466,7 +437,4 @@ public class UnitGradeApplicationService implements UnitGradeService {
             return "Unit";
         }
     }
-
-
-
 }

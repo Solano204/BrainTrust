@@ -1,4 +1,3 @@
-// components/student-courses-section.tsx
 "use client"
 
 import { Card } from "@/components/ui/card"
@@ -10,14 +9,6 @@ import { Course } from "@/app/domain/entities/CourseEntities"
 import { CourseId } from "@/app/domain/valueObjects/CourseValues"
 import { useStudentCourses } from "@/app/presentation/hooks/course/student/student-hooks"
 
-/**
- * Returns a Tailwind CSS background color class based on the given course ID.
- * The color is determined by hashing the course ID and taking the remainder
- * of the hash divided by the number of colors. This ensures that the same
- * course ID will always return the same color.
- * @param {CourseId} id - The course ID to generate a color for.
- * @returns {string} - A Tailwind CSS background color class.
- */
 const getCourseColor = (id: CourseId): string => {
     const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const colors = [

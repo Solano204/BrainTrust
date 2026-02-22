@@ -1,4 +1,3 @@
-// hooks/use-toast.ts (si no lo tienes)
 "use client"
 
 import * as React from "react"

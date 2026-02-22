@@ -31,25 +31,20 @@ export function StudentTaskView({
 }: StudentTaskViewProps) {
   const { data: existingSubmission, isLoading } = useStudentTaskSubmission(assignment.id, studentId);
   
-  // State for confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState<{ content: string; attachments: File[] } | null>(null);
 
   const isNotebookSubmission = assignment.submissionFormat === "NOTEBOOK";
 
-  // Handle submission with notebook confirmation
   const handleSubmitAttempt = async (submission: { content: string; attachments: File[] }) => {
     if (isNotebookSubmission) {
-      // For notebook submissions, show confirmation modal
       setPendingSubmission(submission);
       setShowConfirmModal(true);
     } else {
-      // For digital submissions, submit directly
       await onSubmit(submission);
     }
   };
 
-  // Confirm notebook submission
   const handleConfirmSubmission = async () => {
     if (pendingSubmission) {
       setShowConfirmModal(false);
@@ -58,7 +53,6 @@ export function StudentTaskView({
     }
   };
 
-  // Cancel submission
   const handleCancelSubmission = () => {
     setShowConfirmModal(false);
     setPendingSubmission(null);
@@ -75,7 +69,6 @@ export function StudentTaskView({
   return (
     <>
       <div className="space-y-4">
-        {/* Submission Format Info Banner */}
         {isNotebookSubmission ? (
           <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
             <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -104,7 +97,6 @@ export function StudentTaskView({
           </Alert>
         )}
 
-        {/* Task Submission View */}
         <TaskSubmissionView
           assignment={assignment}
           existingSubmission={existingSubmission || undefined}
@@ -117,7 +109,6 @@ export function StudentTaskView({
         />
       </div>
 
-      {/* Notebook Submission Confirmation Modal */}
       <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

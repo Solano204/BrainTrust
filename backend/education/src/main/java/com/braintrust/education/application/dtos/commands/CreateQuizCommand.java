@@ -7,9 +7,9 @@ public record CreateQuizCommand(
         String title,
         String description,
         String unitId,
-        String availableFrom,      // ISO DateTime
-        String availableUntil,     // ISO DateTime
-        Integer timeLimitMinutes,  // null = no limit
+        String availableFrom,
+        String availableUntil,
+        Integer timeLimitMinutes,
         int maxAttempts,
         boolean shuffleQuestions,
         boolean showCorrectAnswers

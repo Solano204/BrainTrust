@@ -1,4 +1,3 @@
-// File: src/app/features/admin/components/AdminUsersModule.tsx
 "use client";
 
 import * as React from "react";
@@ -74,9 +73,6 @@ import {
 import { ChangeEmailModal } from "@/components/admin/ChangeEmailModal";
 import { AdminResetPasswordModal } from "@/components/admin/AdminResetPasswordModal";
 
-// ==========================================
-// 📝 USER FORM MODAL
-// ==========================================
 
 interface UserFormModalProps {
   open: boolean;
@@ -208,7 +204,6 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
           </div>
 
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Personal Information */}
             <div className="space-y-4">
               <h3 className="font-semibold text-base sm:text-lg">Información Personal</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -267,7 +262,6 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
               </div>
             </div>
 
-            {/* Account Information */}
             <div className="space-y-4">
               <h3 className="font-semibold text-base sm:text-lg">Información de Cuenta</h3>
               <div className="space-y-2">
@@ -322,7 +316,6 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
               )}
             </div>
 
-            {/* Address Information */}
             <div className="space-y-4">
               <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
@@ -410,9 +403,6 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
   );
 }
 
-// ==========================================
-// 🔍 USER DETAIL MODAL
-// ==========================================
 
 interface UserDetailModalProps {
   user: User | null;
@@ -461,7 +451,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Avatar and Name */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 pb-4 border-b">
             <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
               {getInitials(user.person.firstName, user.person.lastName)}
@@ -482,7 +471,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
             </div>
           </div>
 
-          {/* Contact Information */}
           <div>
             <h4 className="font-semibold mb-3 flex items-center gap-2">
               <Mail className="h-4 w-4" />
@@ -508,7 +496,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
             </div>
           </div>
 
-          {/* Address Information */}
           {user.person.address && (
             <div>
               <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -523,7 +510,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
             </div>
           )}
 
-          {/* Account Information */}
           <div>
             <h4 className="font-semibold mb-3 flex items-center gap-2">
               <Shield className="h-4 w-4" />
@@ -566,9 +552,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
   );
 }
 
-// ==========================================
-// PAGINATION CONTROLS COMPONENT
-// ==========================================
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -659,10 +642,6 @@ function PaginationControls({
   );
 }
 
-// ==========================================
-// 🎯 MAIN COMPONENT
-// ==========================================
-
 export default function AdminUsersModule() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -678,7 +657,6 @@ export default function AdminUsersModule() {
   const [pageSize, setPageSize] = useState(20);
   const [sort, setSort] = useState('createdAt,desc');
 
-  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -750,7 +728,6 @@ export default function AdminUsersModule() {
     updateAddress: updateAddressMutation
   } = useUserMutations();
 
-  // Handlers
   const handleEdit = (user: User) => {
     setSelectedUser(user);
     setShowFormModal(true);
@@ -934,7 +911,6 @@ export default function AdminUsersModule() {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6 bg-background min-h-screen">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Gestión de Usuarios</h1>
@@ -965,7 +941,6 @@ export default function AdminUsersModule() {
         </div>
       </div>
 
-      {/* Tabs with counts */}
       <Tabs value={activeTab} onValueChange={(value: any) => {
         setActiveTab(value);
         setPage(0);
@@ -1002,7 +977,6 @@ export default function AdminUsersModule() {
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">
-          {/* Search Bar */}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1021,7 +995,6 @@ export default function AdminUsersModule() {
             )}
           </div>
 
-          {/* Users Table */}
           <Card>
             <Table>
               <TableHeader>
@@ -1154,7 +1127,6 @@ export default function AdminUsersModule() {
               </TableBody>
             </Table>
 
-            {/* Pagination */}
             {users.length > 0 && (
               <PaginationControls
                 currentPage={page}
@@ -1169,7 +1141,6 @@ export default function AdminUsersModule() {
         </TabsContent>
       </Tabs>
 
-      {/* Modals */}
       <UserFormModal
         open={showFormModal}
         onClose={() => {
@@ -1210,7 +1181,6 @@ export default function AdminUsersModule() {
         }}
       />
 
-      {/* Activate/Deactivate Modal */}
       <AlertDialog open={showActivateModal} onOpenChange={setShowActivateModal}>
         <AlertDialogContent>
           <AlertDialogHeader>

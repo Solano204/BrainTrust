@@ -24,7 +24,6 @@ public class AssignmentLinkJpaEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Constructor
     public AssignmentLinkJpaEntity() {
         this.createdAt = LocalDateTime.now();
     }
@@ -35,7 +34,6 @@ public class AssignmentLinkJpaEntity {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

@@ -1,4 +1,3 @@
-// File: src/app/features/courses/hooks/unit-hooks.ts
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,9 +17,7 @@ import {
 } from "@/components/teacher-student/api/unit";
 import { deleteImageFromCloudinary, uploadImageFile } from "@/app/utils/cloudinary/cloudinary";
 
-/**
- * Custom hook for fetching units by course
- */
+
 export function useUnitsByCourse(courseId: CourseId | null) {
   return useQuery<CourseUnit[]>({
     queryKey: unitKeys.list(courseId || ""),
@@ -31,9 +28,6 @@ export function useUnitsByCourse(courseId: CourseId | null) {
   });
 }
 
-/**
- * Custom hook for fetching a single unit by ID
- */
 export function useUnit(unitId: UnitId | null) {
   return useQuery<CourseUnit>({
     queryKey: unitKeys.detail(unitId || ""),
@@ -44,17 +38,10 @@ export function useUnit(unitId: UnitId | null) {
   });
 }
 
-/**
- * Custom hook for unit mutations with image upload support
- */
-
-
-// CURRENTLY WORKS
 
 export function useUnitMutations() {
   const queryClient = useQueryClient();
 
-  // Mutation for uploading unit image
   const uploadImageMutation = useMutation({
     mutationFn: async ({ unitId, file }: { unitId: string, file: File }) => {
       return uploadUnitImageFile(unitId, file);
@@ -64,8 +51,6 @@ export function useUnitMutations() {
     }
   });
 
-  // Mutation for creating unit
-  // Then in your mutation, you can use:
 const createUnitMutation = useMutation({
   mutationFn: async ({ 
     courseId, 
@@ -78,10 +63,8 @@ const createUnitMutation = useMutation({
   }) => {
     if (imageFile) {
 
-      // Use the new function for units with images
       return await createUnitWithImage(courseId, unitData, imageFile);
     } else {
-      // Use the regular function for units without images
       return await createUnit(courseId, unitData);
     }
   },
@@ -94,29 +77,25 @@ const createUnitMutation = useMutation({
     console.error("Error creating unit:", error.message);
   }
 });
- // In your unit-hooks.ts file
 
 
-// Mutation for updating unit
 const updateUnitMutation = useMutation({
   mutationFn: async ({ 
     unitId, 
     unitData,
     imageFile,
-    oldImageUrl, // Add this parameter
+    oldImageUrl,
   }: { 
     unitId: UnitId, 
     unitData: Partial<Omit<CourseUnit, "id" | "courseId" | "resources">>,
     imageFile?: File | null,
-    oldImageUrl?: string, // The current image URL from the unit
+    oldImageUrl?: string,
   }) => {
     let finalUnitData = { ...unitData };
     
-    // If there's a new image file, handle the image swap
     if (imageFile) {
       console.log(`Uploading new image for unit ${unitId}...`);
       
-      // 1. Delete old image from Cloudinary (if it exists)
       if (oldImageUrl && oldImageUrl.includes('cloudinary.com')) {
         try {
           console.log('Deleting old image from Cloudinary...');
@@ -124,17 +103,14 @@ const updateUnitMutation = useMutation({
           console.log('✓ Old image deleted from Cloudinary');
         } catch (deleteError) {
           console.warn('Failed to delete old image from Cloudinary:', deleteError);
-          // Continue with upload even if delete fails
         }
       }
       
-      // 2. Upload new image
       const uploadedUrl = await uploadImageFile(imageFile);
       finalUnitData.urlImage = uploadedUrl;
       console.log('✓ New image uploaded to Cloudinary');
     }
 
-    // Update the unit with the (possibly updated) data
     return updateUnit(unitId, finalUnitData);
   },
   onSuccess: (data, variables) => {
@@ -150,9 +126,7 @@ const updateUnitMutation = useMutation({
   }
 });
 
-
-  // Mutation for deleting unit
-  const deleteUnitMutation = useMutation({
+ const deleteUnitMutation = useMutation({
     mutationFn: deleteUnit,
     onSuccess: () => {
       queryClient.invalidateQueries({ 
@@ -164,7 +138,6 @@ const updateUnitMutation = useMutation({
     }
   });
 
-  // Mutation for reordering units
   const reorderUnitsMutation = useMutation({
     mutationFn: ({ courseId, unitOrder }: { courseId: CourseId, unitOrder: { unitId: UnitId, order: number }[] }) =>
       reorderUnits(courseId, unitOrder),
@@ -187,9 +160,6 @@ const updateUnitMutation = useMutation({
   };
 }
 
-/**
- * Custom hook for managing unit form state
- */
 export function useUnitForm(initialData?: CourseUnit) {
   const [formData, setFormData] = React.useState({
     name: initialData?.name || "",

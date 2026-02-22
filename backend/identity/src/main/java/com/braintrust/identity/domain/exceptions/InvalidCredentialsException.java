@@ -4,7 +4,7 @@ import com.braintrust.shared.domain.exception.BusinessRuleException;
 
 import java.util.Map;
 
-// 📍 identity/domain/exceptions/InvalidCredentialsException.java
+
 public class InvalidCredentialsException extends BusinessRuleException {
 
     public InvalidCredentialsException(String message) {

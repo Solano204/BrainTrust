@@ -1,4 +1,3 @@
-// components/admin/ChangeEmailModal.tsx
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -25,7 +24,6 @@ interface ChangeEmailModalProps {
   onClose: () => void;
 }
 
-// Zod validation schema
 const changeEmailSchema = z.object({
   newEmail: z
     .string()

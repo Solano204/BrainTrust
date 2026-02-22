@@ -8,7 +8,7 @@ public record UnitGradeDTO(
         String unitId,
         String unitName,
         String studentId,
-        String studentName,  // ✅ This should show actual student name
+        String studentName,
         GradeDTO grade,
         Map<String, GradeDTO> assignmentGrades,
         Map<String, GradeDTO> quizGrades,

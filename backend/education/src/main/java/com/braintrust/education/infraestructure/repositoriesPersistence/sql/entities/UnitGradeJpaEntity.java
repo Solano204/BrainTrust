@@ -22,18 +22,18 @@ public class UnitGradeJpaEntity {
     @Column(name = "student_id", length = 50, nullable = false)
     private String studentId;
 
-    // ✅ CALCULATED TOTAL (Auto-calculated sum from all assignments and quizzes)
+
     @Column(name = "calculated_total_value", precision = 10, scale = 2)
     private BigDecimal calculatedTotalValue;
 
-    // ✅ FINAL GRADE (Assigned by teacher - can override calculated total)
+
     @Column(name = "final_grade_value", precision = 10, scale = 2)
     private BigDecimal finalGradeValue;
 
     @Column(name = "final_feedback", columnDefinition = "TEXT")
     private String finalFeedback;
 
-    // ✅ JSON stores individual assignment and quiz grades for recalculation
+
     @Column(name = "assignment_grades_json", columnDefinition = "TEXT")
     private String assignmentGradesJson;
 
@@ -61,7 +61,7 @@ public class UnitGradeJpaEntity {
         this.lastCalculated = lastCalculated;
     }
 
-    // Getters/Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getUnitId() { return unitId; }

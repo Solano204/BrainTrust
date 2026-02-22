@@ -1,4 +1,4 @@
-// app/api/auth/get-token/route.ts
+
 import { getAccessToken } from '@/app/utils/tokenManager';
 import { NextResponse } from 'next/server';
 

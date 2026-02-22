@@ -1,6 +1,5 @@
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
 
-// File: src/app/features/courses/api/quiz-keys.ts
 export const quizKeys = {
   all: ["quizzes"] as const,
   lists: () => [...quizKeys.all, "list"] as const,

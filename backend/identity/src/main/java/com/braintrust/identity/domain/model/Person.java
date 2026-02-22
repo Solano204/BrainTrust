@@ -6,7 +6,6 @@ import com.braintrust.shared.domain.Entity;
 
 import java.time.LocalDate;
 
-// 📍 identity/domain/model/Person.java
 public class Person extends Entity<PersonId> {
     private String firstName;
     private String lastName;
@@ -16,7 +15,6 @@ public class Person extends Entity<PersonId> {
     private String imagePath;
     private Address address;
 
-    // Constructor privado para factory methods
     private Person(PersonId id, String firstName, String lastName) {
         this.id = id;
         this.firstName = validateName(firstName, "First name");
@@ -24,14 +22,12 @@ public class Person extends Entity<PersonId> {
         this.registrationDate = LocalDate.now();
     }
 
-    // Factory Method - SRP: creación centralizada (to NEW ENTITY)
     public static Person create(String firstName, String lastName) {
         PersonId id = PersonId.generate();
         return new Person(id, firstName, lastName);
     }
 
 
-    //  to rebuild One EXISTIN ENTITIY
     public static Person reconstitute(PersonId id, String firstName, String lastName,
                                       String gender, String phone, LocalDate registrationDate,
                                       String imagePath, Address address) {
@@ -54,7 +50,6 @@ public class Person extends Entity<PersonId> {
         return name.trim();
     }
 
-    // Comportamiento de dominio - sin events
     public void updatePersonalInfo(String firstName, String lastName, String gender, String phone) {
         this.firstName = validateName(firstName, "First name");
         this.lastName = validateName(lastName, "Last name");
@@ -74,7 +69,7 @@ public class Person extends Entity<PersonId> {
         return firstName + " " + lastName;
     }
 
-    // Getters con contrato definido
+
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
     public String getGender() { return gender; }

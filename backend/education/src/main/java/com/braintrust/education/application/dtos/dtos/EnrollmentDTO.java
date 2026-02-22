@@ -7,8 +7,8 @@ public record EnrollmentDTO(
         String studentId,
         String studentName,
         String studentEmail,
-        String studentRefId,  // Student reference ID
+        String studentRefId,
         String enrollmentDate,
-        String status,  // ACTIVE, COMPLETED, CANCELLED
+        String status,
         GradeDTO finalGrade
 ) {}

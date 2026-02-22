@@ -1,4 +1,4 @@
-// File: src/app/infraestructure/api/calendar/quiz-keys.ts
+
 export const quizKeys = {
   all: ["quizzes"] as const,
   lists: () => [...quizKeys.all, "list"] as const,

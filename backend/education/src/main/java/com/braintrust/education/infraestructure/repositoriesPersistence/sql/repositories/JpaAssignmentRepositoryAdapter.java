@@ -54,7 +54,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     @Override
     public Optional<Assignment> findById(AssignmentId assignmentId) {
         log.info("Querying database for Assignment ID: {}", assignmentId.getValue());
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findByIdWithDocumentsAndLinks(assignmentId.getValue())
                 .map(mapper::toDomain);
     }
@@ -62,7 +62,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     @Override
     public List<Assignment> findByCourseId(CourseId courseId) {
         log.info("Fetching all assignments for Course ID: {}", courseId.getValue());
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findByCourseIdWithDocumentsAndLinks(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -73,7 +73,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findByCourseIdAndUnitId(CourseId courseId, UnitId unitId) {
         log.info("Fetching assignments for Course ID: {} and Unit ID: {}",
                 courseId.getValue(), unitId.getValue());
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findByCourseIdAndUnitId(courseId.getValue(), unitId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -84,7 +84,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findByStudentCourseUnit(UserId studentId, CourseId courseId, UnitId unitId) {
         log.info("Fetching assignments for Student {} in Course {} Unit {}",
                 studentId.getValue(), courseId.getValue(), unitId.getValue());
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findByStudentCourseUnit(
                         studentId.getValue(),
                         courseId.getValue(),
@@ -117,7 +117,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Student ID {} for week {} to {}",
                 studentId.getValue(), weekStart, weekEnd);
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findAssignmentsByStudentForWeek(
                         studentId.getValue(),
                         weekStart,
@@ -132,7 +132,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Teacher ID {} for week {} to {}",
                 teacherId.getValue(), weekStart, weekEnd);
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findAssignmentsByTeacherForWeek(
                         teacherId.getValue(),
                         weekStart,
@@ -147,7 +147,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByStudentForMonth(UserId studentId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Fetching assignments for Student ID {} for month {} to {}",
                 studentId.getValue(), monthStart, monthEnd);
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findAssignmentsByStudentForMonth(
                         studentId.getValue(),
                         monthStart,
@@ -162,7 +162,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByTeacherForMonth(UserId teacherId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Fetching assignments for Teacher ID {} for month {} to {}",
                 teacherId.getValue(), monthStart, monthEnd);
-        // ✅ Use the EntityGraph method to fetch both documents and links
+
         return jpaRepository.findAssignmentsByTeacherForMonth(
                         teacherId.getValue(),
                         monthStart,

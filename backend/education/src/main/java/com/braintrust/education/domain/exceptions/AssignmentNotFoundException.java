@@ -5,7 +5,7 @@ import com.braintrust.shared.domain.exception.DomainException;
 
 import java.util.Map;
 
-// Course-related exceptions
+
 public class AssignmentNotFoundException extends DomainException {
     public AssignmentNotFoundException(String message) {
         super(message, "COURSE_CODE_ALREADY_EXISTS");

@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CourseOverview.tsx
 "use client";
 
 import * as React from "react";
@@ -59,7 +58,6 @@ export function CourseOverview({
   courseId,
   onSelectUnit,
 }: CourseOverviewProps) {
-  // Fetch course basic info
   const {
     data: courseData,
     isLoading: isLoadingCourse,
@@ -70,7 +68,6 @@ export function CourseOverview({
     enabled: !!courseId,
   });
 
-  // Fetch course units
   const {
     units,
     isLoading: isLoadingUnits,
@@ -78,16 +75,13 @@ export function CourseOverview({
     refetch: refetchUnits,
   } = useCourseAllUnits(courseId);
 
-  // Auth context
   const { user } = useAuth();
   const isStudent = user?.role === "student";
 
-  // Unit management state
   const [isUnitModalOpen, setIsUnitModalOpen] = React.useState(false);
   const [unitToEdit, setUnitToEdit] = React.useState<any>(undefined);
   const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
 
-  // Unit mutations
   const {
     createUnit,
     updateUnit,
@@ -97,7 +91,6 @@ export function CourseOverview({
   const isLoading = isLoadingCourse || isLoadingUnits;
   const error = courseError || unitsError;
 
-  // Event handlers
   const handleCreateUnit = () => {
     if (isStudent) return;
     setUnitToEdit(undefined);
@@ -124,11 +117,9 @@ export function CourseOverview({
 
   try {
     if (unitId) {
-      // UPDATE EXISTING UNIT
       console.log("Updating unit with ID:", unitId);
       console.log("Has new image file:", !!imageFile);
       
-      // Get the current unit to access the old image URL
       const currentUnit = units?.find(u => u.id === unitId);
       const oldImageUrl = currentUnit?.urlImage;
       
@@ -137,7 +128,7 @@ export function CourseOverview({
           unitId,
           unitData,
           imageFile: imageFile || undefined,
-          oldImageUrl: oldImageUrl || undefined, // Pass the old image URL
+          oldImageUrl: oldImageUrl || undefined,
         },
         {
           onSuccess: () => {
@@ -147,7 +138,6 @@ export function CourseOverview({
         }
       );
     } else {
-      // CREATE NEW UNIT (no need to delete anything)
       console.log("Creating new unit");
       console.log("Has image file:", !!imageFile);
       
@@ -173,7 +163,6 @@ export function CourseOverview({
   }
 };
 
-
   const handleDeleteUnit = (unitId: string) => {
     if (isStudent) return;
     deleteUnit.mutate(unitId, {
@@ -184,7 +173,6 @@ export function CourseOverview({
     });
   };
 
-  // Loading State
   if (isLoading) {
     return (
       <Card className="p-8 h-80 flex flex-col items-center justify-center space-y-4">
@@ -196,7 +184,6 @@ export function CourseOverview({
     );
   }
 
-  // Error State
   if (error || !courseData) {
     return (
       <Card className="p-8 h-80 flex flex-col items-center justify-center space-y-4 bg-red-50 dark:bg-red-900/10 border-red-500">
@@ -220,7 +207,6 @@ export function CourseOverview({
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6 sm:space-y-8">
-      {/* Course Header */}
       <div className="relative">
         <Card className="overflow-hidden">
           <div className="relative h-48 sm:h-64 md:h-80 bg-gradient-to-br from-blue-500 to-blue-700">
@@ -248,7 +234,6 @@ export function CourseOverview({
             </div>
           </div>
 
-          {/* Course Stats */}
           <div className="bg-card border-t border-border p-4 sm:p-6">
             <div className="flex flex-wrap gap-4 sm:gap-6 justify-center text-sm sm:text-base">
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -268,7 +253,6 @@ export function CourseOverview({
         </Card>
       </div>
 
-      {/* Units Section */}
       <Card className="p-6 sm:p-8 lg:p-10">
         <div className="flex justify-between items-center mb-6">
           <ComponentTitle className="text-2xl font-bold">
@@ -287,7 +271,6 @@ export function CourseOverview({
           )}
         </div>
 
-        {/* Units Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {units?.map((unit) => (
             <UnitCard
@@ -304,7 +287,6 @@ export function CourseOverview({
           ))}
         </div>
 
-        {/* Empty State */}
         {(!units || units.length === 0) && (
           <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
             <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -325,7 +307,6 @@ export function CourseOverview({
         )}
       </Card>
 
-      {/* Unit Form Modal */}
       {!isStudent && (
         <UnitFormModal
           open={isUnitModalOpen}
@@ -339,7 +320,6 @@ export function CourseOverview({
   );
 }
 
-// Unit Card Component
 interface UnitCardProps {
   unit: CourseUnitDTO;
   onSelect: (unitId: string) => void;

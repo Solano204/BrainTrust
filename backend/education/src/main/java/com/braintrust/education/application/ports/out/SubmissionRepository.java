@@ -14,51 +14,18 @@ import java.util.Optional;
 
 public interface SubmissionRepository {
 
-    // Commands
     Submission save(Submission submission);
     void delete(Submission submission);
 
-    // Queries
     Optional<Submission> findById(SubmissionId submissionId);
 
     List<Submission> findByAssignmentId(AssignmentId assignmentId);
 
     List<Submission> findByStudentId(UserId studentId);
-    // In QuizSubmissionRepository interface - add these methods
 
     List<Submission> findByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId);
 
-    // In SubmissionRepository interface
     List<Submission> findByCourseId(CourseId courseId);
 
-    /*
-    Optional<Submission> findLatestByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId);
-    */
-
-    /*
-    List<Submission> findByStatus(SubmissionStatus status);
-    */
-
-    /*
-    List<Submission> findLateSubmissions(AssignmentId assignmentId, LocalDateTime dueDate);
-    */
-
-    /*
-    List<Submission> findByTeamId(StudentGroupId teamId);
-    */
-
-    /*
-    List<Submission> findByTeamIdAndAssignmentId(StudentGroupId teamId, AssignmentId assignmentId);
-    */
-
-    /*
-    boolean existsByAssignmentAndTeam(AssignmentId assignmentId, StudentGroupId teamId);
-    */
-
-    // NEW: Find submissions by course and student
     List<Submission> findByCourseAndStudent(CourseId courseId, UserId studentId);
-
-    /*
-    List<Submission> findByCourseId(CourseId courseId);
-    */
 }

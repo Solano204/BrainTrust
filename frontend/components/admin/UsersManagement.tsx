@@ -25,9 +25,6 @@ import {
     BarChart3
 } from "lucide-react"
 
-// ==========================================
-// 🎯 TIPOS Y ENTIDADES
-// ==========================================
 
 type UserRole = 'ADMIN' | 'TEACHER' | 'STUDENT'
 type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
@@ -46,9 +43,6 @@ interface User {
     avatarUrl: string
 }
 
-// ==========================================
-// 🗄️ DATOS MOCK (Simula backend)
-// ==========================================
 
 const mockUsers: User[] = [
     {
@@ -118,9 +112,6 @@ const mockUsers: User[] = [
     }
 ]
 
-// ==========================================
-// 📊 COMPONENTE: Stats Cards
-// ==========================================
 
 function UserStatsCards({ users }: { users: User[] }) {
     const stats = useMemo(() => ({
@@ -134,85 +125,11 @@ function UserStatsCards({ users }: { users: User[] }) {
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {/* <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Total</p>
-                        <p className="text-xl font-bold">{stats.total}</p>
-                    </div>
-                </div>
-            </Card>
 
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-green-600 flex items-center justify-center">
-                        <UserCheck className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Activos</p>
-                        <p className="text-xl font-bold">{stats.active}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-600 flex items-center justify-center">
-                        <UserX className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Inactivos</p>
-                        <p className="text-xl font-bold">{stats.inactive}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-purple-600 flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Profesores</p>
-                        <p className="text-xl font-bold">{stats.teachers}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-orange-600 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Estudiantes</p>
-                        <p className="text-xl font-bold">{stats.students}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-red-600 flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Admins</p>
-                        <p className="text-xl font-bold">{stats.admins}</p>
-                    </div>
-                </div>
-            </Card> */}
         </div>
     )
 }
 
-// ==========================================
-// 📝 COMPONENTE: User Form Modal
-// Basado en TeamFormModal + CourseFormModal
-// ==========================================
 
 interface UserFormModalProps {
     open: boolean
@@ -363,10 +280,6 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
     )
 }
 
-// ==========================================
-// 🔍 COMPONENTE: User Detail Modal
-// Basado en SubmissionDetailView
-// ==========================================
 
 function UserDetailModal({ user, open, onClose }: { user: User | null, open: boolean, onClose: () => void }) {
     if (!open || !user) return null
@@ -427,7 +340,6 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
                         </div>
                     </div>
 
-                    {/* Información de cuenta */}
                     <div>
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                             <Shield className="h-4 w-4" />
@@ -453,7 +365,6 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
                         </div>
                     </div>
 
-                    {/* Estadísticas */}
                     <div>
                         <h4 className="font-semibold mb-3 flex items-center gap-2">
                             <BarChart3 className="h-4 w-4" />
@@ -485,11 +396,6 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
         </div>
     )
 }
-
-// ==========================================
-// 🎯 COMPONENTE PRINCIPAL
-// Basado en CourseTaskOverview
-// ==========================================
 
 export default function AdminUsersModule() {
     const [users] = useState<User[]>(mockUsers)
@@ -584,10 +490,8 @@ export default function AdminUsersModule() {
                 </div>
             </div>
 
-            {/* Stats Cards */}
             <UserStatsCards users={users} />
 
-            {/* Search Bar */}
             <Card className="p-4">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -711,7 +615,6 @@ export default function AdminUsersModule() {
                                 </table>
                             </Card>
 
-                            {/* Mobile Cards */}
                             <div className="lg:hidden space-y-4">
                                 {filteredUsers.map((user) => (
                                     <Card key={user.id} className="p-4">
@@ -785,7 +688,6 @@ export default function AdminUsersModule() {
                 </TabsContent>
             </Tabs>
 
-            {/* Form Modal */}
             <UserFormModal
                 open={showFormModal}
                 onClose={() => {
@@ -797,7 +699,6 @@ export default function AdminUsersModule() {
                 isSaving={isSaving}
             />
 
-            {/* Detail Modal */}
             <UserDetailModal
                 user={selectedUser}
                 open={showDetailModal}

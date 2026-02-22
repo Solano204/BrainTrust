@@ -7,7 +7,7 @@ public record GradebookDTO(
         String courseId,
         String courseName,
         String studentId,
-        String studentName,  // ✅ This should show actual student name
+        String studentName,
         String lastCalculated,
         String calculatedTotal,
         String finalGrade,

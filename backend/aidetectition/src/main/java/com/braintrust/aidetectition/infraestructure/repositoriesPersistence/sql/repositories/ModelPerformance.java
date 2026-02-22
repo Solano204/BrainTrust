@@ -36,7 +36,6 @@ public class ModelPerformance {
         return metric;
     }
 
-    // Factory method for creating mock performance
     public static ModelPerformance createMockPerformance(ModelType modelType) {
         return new ModelPerformance(
                 modelType,
@@ -49,7 +48,6 @@ public class ModelPerformance {
         );
     }
 
-    // Business methods
     public boolean isHighPerformance() {
         return accuracy.compareTo(new BigDecimal("0.90")) >= 0 &&
                 f1Score.compareTo(new BigDecimal("0.85")) >= 0;
@@ -60,7 +58,6 @@ public class ModelPerformance {
                 f1Score.compareTo(new BigDecimal("0.75")) < 0;
     }
 
-    // Getters
     public ModelType getModelType() { return modelType; }
     public String getVersion() { return version; }
     public BigDecimal getAccuracy() { return accuracy; }

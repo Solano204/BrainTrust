@@ -1,4 +1,3 @@
-// File: src/app/features/courses/api/group.ts
 "use server";
 
 import axios from "axios";
@@ -7,15 +6,8 @@ import { redirect } from "next/navigation";
 import { CourseId, UserId } from "@/app/domain/valueObjects/CourseValues";
 import { Team, TeamWithIds } from "@/app/domain/entities/CourseEntities";
 
-// =====================================================
-// CONFIGURATION
-// =====================================================
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
-// =====================================================
-// TYPES AND INTERFACES (Matching Backend DTOs)
-// =====================================================
 
 export interface GroupMemberDTO {
   userId: string;
@@ -85,10 +77,6 @@ export interface AvailableUsersResponse {
   users: AvailableUser[];
 }
 
-// =====================================================
-// UTILITIES
-// =====================================================
-
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -128,10 +116,6 @@ const handleApiError = async (error: unknown): Promise<never> => {
   throw new Error("An unexpected error occurred");
 };
 
-// =====================================================
-// MAPPERS
-// =====================================================
-
 const mapStudentGroupDTOToTeam = (dto: StudentGroupDTO): Team => {
 
   return {
@@ -153,14 +137,6 @@ const mapUserWithoutGroupToAvailableUser = (user: UserWithoutGroupDTO): Availabl
   };
 };
 
-// =====================================================
-// API FUNCTIONS
-// =====================================================
-
-/**
- * GET /api/groups/course/{courseId}
- * Fetch all groups for a specific course
- */
 export async function fetchTeamsByCourse(courseId: CourseId): Promise<TeamsResponse> {
   try {
     if (!courseId) throw new Error("Course ID is required");
@@ -177,10 +153,6 @@ export async function fetchTeamsByCourse(courseId: CourseId): Promise<TeamsRespo
   }
 }
 
-/**
- * GET /api/groups/{groupId}
- * Fetch a specific group by ID
- */
 export async function fetchTeamById(groupId: string): Promise<Team> {
   try {
     if (!groupId) throw new Error("Group ID is required");
@@ -192,10 +164,6 @@ export async function fetchTeamById(groupId: string): Promise<Team> {
   }
 }
 
-/**
- * GET /api/groups/user/{userId}
- * Get all groups for a specific user
- */
 export async function getUserTeam(userId: UserId): Promise<Team | null> {
   try {
     if (!userId) throw new Error("User ID is required");
@@ -213,10 +181,6 @@ export async function getUserTeam(userId: UserId): Promise<Team | null> {
   }
 }
 
-/**
- * POST /api/groups/with-members
- * Create a new group with initial members
- */
 export async function createTeam(teamData: Omit<TeamWithIds, "teamId" | "createdAt">): Promise<TeamResponse> {
   try {
     const command: CreateStudentGroupWithMembersCommand = {
@@ -229,7 +193,6 @@ export async function createTeam(teamData: Omit<TeamWithIds, "teamId" | "created
     const response = await apiClient.post<string>("/api/groups/with-members", command);
     const teamId = response.data;
     
-    // Fetch the created team
     const createdTeam = await fetchTeamById(teamId);
     
     return {
@@ -240,10 +203,6 @@ export async function createTeam(teamData: Omit<TeamWithIds, "teamId" | "created
   }
 }
 
-/**
- * POST /api/groups
- * Create a new group without members
- */
 export async function createEmptyTeam(courseId: CourseId, name: string, description: string): Promise<string> {
   try {
     const command: CreateStudentGroupCommand = {
@@ -259,10 +218,6 @@ export async function createEmptyTeam(courseId: CourseId, name: string, descript
   }
 }
 
-/**
- * POST /api/groups/{groupId}/members
- * Add a single member to a group
- */
 export async function addSingleMember(groupId: string, studentId: UserId): Promise<void> {
   try {
     const command: AddMemberToGroupCommand = {
@@ -276,10 +231,6 @@ export async function addSingleMember(groupId: string, studentId: UserId): Promi
   }
 }
 
-/**
- * POST /api/groups/{groupId}/members/bulk-add
- * Add multiple members to a group
- */
 export async function addTeamMembers(
   courseId: CourseId,
   teamId: string,
@@ -294,7 +245,6 @@ export async function addTeamMembers(
       }
     );
     
-    // Fetch updated team
     const updatedTeam = await fetchTeamById(teamId);
     
     return {
@@ -305,10 +255,6 @@ export async function addTeamMembers(
   }
 }
 
-/**
- * DELETE /api/groups/{groupId}/members/{studentId}
- * Remove a member from a group
- */
 export async function removeTeamMember(
   courseId: CourseId,
   teamId: string,
@@ -317,7 +263,6 @@ export async function removeTeamMember(
   try {
     await apiClient.delete(`/api/groups/${teamId}/members/${memberId}`);
     
-    // Fetch updated team
     const updatedTeam = await fetchTeamById(teamId);
     
     return {
@@ -328,10 +273,6 @@ export async function removeTeamMember(
   }
 }
 
-/**
- * DELETE /api/groups/{groupId}/members/bulk-remove
- * Remove multiple members from a group
- */
 export async function bulkRemoveMembers(
   courseId: CourseId,
   teamId: string,
@@ -346,7 +287,6 @@ export async function bulkRemoveMembers(
       }
     );
     
-    // Fetch updated team
     const updatedTeam = await fetchTeamById(teamId);
     
     return {
@@ -357,10 +297,6 @@ export async function bulkRemoveMembers(
   }
 }
 
-/**
- * DELETE /api/groups/{groupId}
- * Delete a group
- */
 export async function deleteTeam(courseId: CourseId, teamId: string): Promise<void> {
   try {
     await apiClient.delete(`/api/groups/${teamId}`);
@@ -369,10 +305,6 @@ export async function deleteTeam(courseId: CourseId, teamId: string): Promise<vo
   }
 }
 
-/**
- * GET /api/groups/course/{courseId}/users-without-group
- * Get users who are not in any group for a course
- */
 export async function fetchAvailableUsers(courseId: CourseId): Promise<AvailableUsersResponse> {
   try {
     if (!courseId) throw new Error("Course ID is required");
@@ -391,10 +323,6 @@ export async function fetchAvailableUsers(courseId: CourseId): Promise<Available
   }
 }
 
-/**
- * POST /api/groups/course/{courseId}/check-students-in-groups
- * Check which students are already in groups
- */
 export async function checkStudentsInGroups(
   courseId: CourseId,
   studentIds: UserId[]
@@ -411,15 +339,6 @@ export async function checkStudentsInGroups(
   }
 }
 
-/**
- * Update team info (name, description)
- * Note: Backend doesn't have a direct update endpoint, so we simulate it
- * by recreating the team or you can add a PUT endpoint to your backend
- */
-/**
- * PUT /api/groups/{groupId}/info
- * Update team information (name, description)
- */
 export async function updateTeamInfo(
   courseId: CourseId,
   teamId: string,
@@ -432,20 +351,16 @@ export async function updateTeamInfo(
   try {
     if (!teamId) throw new Error("Team ID is required");
     
-    // Only send name and description as per backend API
-    // Note: 'active' field is not included in UpdateGroupInfoRequest
     const updateRequest = {
       name: updates.name,
       description: updates.description
     };
     
-    // Send update request to backend
     await apiClient.put(
       `/api/groups/${teamId}/info`,
       updateRequest
     );
     
-    // Fetch and return updated team
     const updatedTeam = await fetchTeamById(teamId);
     
     return {

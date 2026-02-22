@@ -1,4 +1,3 @@
-// File: src/app/presentation/hooks/submission/quiz-submissions-hooks.ts
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
@@ -9,15 +8,12 @@ import { fetchSubmissionQuizByStudentAndQuiz, fetchSubmissionQuizzesByCourse } f
 import { QuizId } from "@/app/domain/valueObjects/CourseValues";
 import { fetchQuizSubmissionDetail } from "@/components/student/api/student-submission";
 
-/**
- * Custom hook for fetching all SubmissionQuiz entries for a course
- */
 export function useSubmissionQuizzesByCourse(courseId: CourseId | null) {
   return useQuery<SubmissionQuiz[]>({
     queryKey: quizKeys.submissionQuizzesByCourse(courseId || ""),
     queryFn: () => fetchSubmissionQuizzesByCourse(courseId!),
     enabled: !!courseId,
-    staleTime: 300000, // 5 minutes
+    staleTime: 300000,
     refetchOnWindowFocus: false,
   });
 }

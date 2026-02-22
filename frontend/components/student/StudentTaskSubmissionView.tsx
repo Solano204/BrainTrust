@@ -158,7 +158,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
                     </div>
                 </div>
 
-                {/* Submission Overview Stats */}
                 {isGraded && submission.grade && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <Card className="border-2 border-primary">
@@ -299,7 +298,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
                             </Card>
                         )}
 
-                        {/* Teacher Feedback */}
                         {submission.teacherFeedback && (
                             <Card className="border-l-4 border-blue-500">
                                 <CardHeader>

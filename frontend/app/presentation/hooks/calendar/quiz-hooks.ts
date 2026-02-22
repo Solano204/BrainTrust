@@ -1,4 +1,3 @@
-// File: src/app/features/quizzes/hooks/quiz-hooks.ts
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,9 +5,6 @@ import { Quiz } from "@/app/domain/entities/CourseEntities";
 import { quizKeys } from "@/app/infraestructure/api/calendar/task-keys";
 import { fetchQuizDetail, fetchQuizzesByMonth, fetchThisWeekQuizzes } from "@/components/teacher-student/api/quiz";
 
-
-
-// CURRENTLY WORKS
 
 export function useQuizzesByMonth(
   userId: string | null, 
@@ -19,12 +15,9 @@ export function useQuizzesByMonth(
     queryKey: quizKeys.list(userId || "", monthStart, userType),
     queryFn: () => fetchQuizzesByMonth(userId!, monthStart, userType),
     enabled: !!userId && !!monthStart,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
-
-
-// CURRENTLY WORKS
 
 
 export function useThisWeekQuizzes(
@@ -36,12 +29,10 @@ export function useThisWeekQuizzes(
     queryKey: quizKeys.week(userId || "", weekStart, userType),
     queryFn: () => fetchThisWeekQuizzes(userId!, weekStart, userType),
     enabled: !!userId && !!weekStart,
-    staleTime: 2 * 60 * 1000, // 2 minutes for week data
+    staleTime: 2 * 60 * 1000,
   });
 }
 
-
-// THIS CURRENTLY WORKS
 
 export function useQuizDetail(
   quizId: string | null, 
@@ -51,7 +42,7 @@ export function useQuizDetail(
     queryKey: quizKeys.detailById(quizId || ""),
     queryFn: () => fetchQuizDetail(quizId!, userType),
     enabled: !!quizId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 }
 

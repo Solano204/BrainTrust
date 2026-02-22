@@ -5,19 +5,7 @@
       <stringProp name="TestPlan.comments">
 🎯 SPIKE TEST - GET /api/submissions/{submissionId}
 
-Objetivo: Verificar resistencia a picos repentinos
-Escenario: Profesor publica grades + todos revisan a la vez
 
-Fases:
-1. Normal: 50 usuarios por 2 minutos
-2. SPIKE: 1000 usuarios en 30 segundos
-3. Mantener: 1 minuto en pico
-4. Volver: 50 usuarios por 2 minutos
-
-¿Qué medir?
-- ¿Responde durante el spike?
-- ¿Errores 503/Timeout?
-- ¿Recuperación rápida?
       </stringProp>
     </TestPlan>
     <hashTree>

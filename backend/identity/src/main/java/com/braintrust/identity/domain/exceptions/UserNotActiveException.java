@@ -5,7 +5,7 @@ import com.braintrust.shared.domain.exception.BusinessRuleException;
 
 import java.util.Map;
 
-// 📍 identity/domain/exceptions/UserNotActiveException.java
+
 public class UserNotActiveException extends BusinessRuleException {
 
     public UserNotActiveException(String message) {

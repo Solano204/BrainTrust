@@ -1,4 +1,4 @@
-// components/Auth/RouteGuard.tsx
+
 'use client';
 
 import { useEffect } from 'react';
@@ -67,18 +67,11 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  // if (!isAuthenticated || 
-  //     (requiredRole && user && !hasRole(requiredRole)) ||
-  //     (requiredPermission && user && !hasPermission(requiredPermission))) {
-  //   return null;
-  // }
-
   return <>{children}</>;
 };
 
  console.log("GUARDS")
 
-// Convenience components
 export const AdminOnly: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <RouteGuard requiredRole="admin">
     {children}

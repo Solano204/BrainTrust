@@ -1,4 +1,3 @@
-// File: components/timeline-section.tsx
 "use client";
 
 import * as React from "react";
@@ -39,13 +38,11 @@ import { TimelineSectionSkeleton } from "../sketons/timeline-skeleton";
 import { useQuizDetail } from "@/app/presentation/hooks/calendar/quiz-hooks";
 import { useUserTeam } from "./hooks/team-hooks";
 
-// IMPORT THE EXISTING HOOKS
 import { useThisWeekTasks } from "@/app/presentation/hooks/calendar/task-hooks";
 import { useThisWeekQuizzes } from "@/app/presentation/hooks/calendar/quiz-hooks";
 
 export type TimelineResourceData = Assignment | Quiz;
 
-// Helper functions with UUID
 const getResourceType = (
   resource: TimelineResourceData
 ): CourseResourceType => {
@@ -104,7 +101,6 @@ const getResourceStatus = (
         return "Pending review";
     }
   } else {
-    // Student view
     switch (type) {
       case "ASSIGNMENT":
         const assignment = resource as Assignment;
@@ -124,7 +120,6 @@ const getResourceStatus = (
   }
 };
 
-// Date utility functions (add these if missing)
 const getDaysUntilDue = (dueDate: string | null): number => {
   if (!dueDate) return Infinity;
   const due = new Date(dueDate);
@@ -175,7 +170,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     return formatForAPI(startOfWeek);
   }, []);
 
-  // USE EXISTING HOOKS FOR TASKS AND QUIZZES
   const {
     data: tasks = [],
     isLoading: tasksLoading,
@@ -188,10 +182,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     error: quizzesError,
   } = useThisWeekQuizzes(userId, weekStart, userType);
 
-  // Get user's team for group assignments
   const { data: userTeam } = useUserTeam(userId);
 
-  // Only fetch quiz detail when needed
   const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(
     selectedResourceId && activeResource && "questions" in activeResource
       ? selectedResourceId
@@ -199,7 +191,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     userType
   );
 
-  // Combine tasks and quizzes for timeline
   const timelineResources = React.useMemo(() => {
     return [...tasks, ...quizzes];
   }, [tasks, quizzes]);
@@ -224,7 +215,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
   const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
     useQuizSubmission();
 
-  // Handle task submission with delivery mode detection
   const handleTaskSubmit = async (submissionData: {
     content: string;
     attachments: File[];
@@ -236,7 +226,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
       const submissionType =
         assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
 
-      // Get groupId for team submissions
       let groupId: string | undefined;
       if (submissionType === "TEAM" && userTeam) {
         groupId = userTeam.teamId;
@@ -275,13 +264,11 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     }
   };
 
-  // Sort by urgency and due date
   const sortedResources = React.useMemo(() => {
     return [...timelineResources].sort((a, b) => {
       const aDue = "dueDate" in a ? a.dueDate : null;
       const bDue = "dueDate" in b ? b.dueDate : null;
 
-      // First sort by urgency
       const aUrgency = getTimelineUrgency(aDue);
       const bUrgency = getTimelineUrgency(bDue);
 
@@ -290,7 +277,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
         return urgencyOrder[aUrgency] - urgencyOrder[bUrgency];
       }
 
-      // Then sort by due date (soonest first)
       if (aDue && bDue) {
         return new Date(aDue).getTime() - new Date(bDue).getTime();
       }
@@ -313,10 +299,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
       return <TimelineSectionSkeleton />;
     }
 
-    // Show different views based on user role and resource type
     if (userType === "student") {
       if (resourceType === "ASSIGNMENT") {
-        // Use activeResource directly since we have all task data
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto">
@@ -326,7 +310,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                 onSubmit={handleTaskSubmit}
                 studentId={userId}
                 isSubmitting={isSubmittingTask}
-                // userTeam={userTeam}
               />
             </div>
           </div>
@@ -347,7 +330,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
         );
       }
     } else {
-      // Teacher view - show resource details for grading
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
@@ -375,7 +357,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     return null;
   };
 
-  // Calculate week range for display
   const weekRange = React.useMemo(() => {
     const start = getStartOfWeek();
     const end = new Date(start);

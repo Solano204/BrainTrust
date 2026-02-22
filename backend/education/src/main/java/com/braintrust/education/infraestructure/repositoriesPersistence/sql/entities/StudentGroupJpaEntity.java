@@ -36,7 +36,7 @@ public class StudentGroupJpaEntity {
     @Column(name = "active", nullable = false)
     private boolean active;
 
-    // Constructors, getters, setters...
+
     public StudentGroupJpaEntity() {}
 
     public StudentGroupJpaEntity(String id, String courseId, String name, String description,
@@ -50,7 +50,7 @@ public class StudentGroupJpaEntity {
         this.active = active;
     }
 
-    // Getters/Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getCourseId() { return courseId; }

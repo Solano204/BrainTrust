@@ -9,7 +9,6 @@ import com.braintrust.shared.domain.AggregateRoot;
 import java.time.LocalDateTime;
 import java.util.*;
 
-// 📍 education/domain/model/Course.java - AGGREGATE ROOT
 public class Course extends AggregateRoot<CourseId> {
     private CourseCode code;
     private String name;
@@ -32,7 +31,6 @@ public class Course extends AggregateRoot<CourseId> {
         this.units = new ArrayList<>();
     }
 
-    //  Factory Method for NEW Course (without image)
     public static Course create(CourseCode code, String name, String description,
                                 String grade, String group, UserId teacherId) {
         CourseId courseId = CourseId.generate();
@@ -40,11 +38,10 @@ public class Course extends AggregateRoot<CourseId> {
         course.description = description;
         course.grade = grade;
         course.group = group;
-        course.urlImage = null; // Can be set later
+        course.urlImage = null;
         return course;
     }
 
-    // Factory Method for NEW Course (with image)
     public static Course createWithImage(CourseCode code, String name, String description,
                                          String grade, String group, UserId teacherId, String urlImage) {
         CourseId courseId = CourseId.generate();
@@ -162,7 +159,6 @@ public class Course extends AggregateRoot<CourseId> {
                 .findFirst();
     }
 
-    // Getters
     public CourseCode getCode() { return code; }
     public String getName() { return name; }
     public String getDescription() { return description; }

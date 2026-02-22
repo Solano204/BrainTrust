@@ -1,6 +1,6 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities;
 
-// 📍 identity/infrastructure/persistence.java/entities/UserJpaEntity.java
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -37,7 +37,6 @@ public class UserJpaEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Constructors, getters, setters
     public UserJpaEntity() {}
 
     public UserJpaEntity(String id, String personId, String email, String passwordHash,
@@ -52,7 +51,7 @@ public class UserJpaEntity {
         this.createdAt = createdAt;
     }
 
-    // Getters and setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

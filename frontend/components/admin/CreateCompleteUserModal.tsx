@@ -1,4 +1,3 @@
-// components/admin/CreateCompleteUserModal.tsx
 "use client";
 
 import { useState } from "react";
@@ -55,7 +54,6 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match");
       return;
@@ -91,7 +89,6 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
     
     await createCompleteUser.mutateAsync(requestData);
     
-    // Reset form and close
     setFormData({
       firstName: "",
       lastName: "",
@@ -255,7 +252,6 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
             </div>
           </div>
           
-          {/* Address Information (Optional) */}
           <div className="space-y-4 border-t pt-4">
             <h3 className="font-semibold">Address Information (Optional)</h3>
             

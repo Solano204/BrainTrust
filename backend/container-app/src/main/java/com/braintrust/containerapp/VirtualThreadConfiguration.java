@@ -43,30 +43,13 @@ public class VirtualThreadConfiguration {
     private static final Logger log =
             LoggerFactory.getLogger(VirtualThreadConfiguration.class);
 
-    /**
-     * ✅ EXECUTOR FOR @Async METHODS
-     *
-     * This executor is used for all methods annotated with @Async.
-     * Each async task gets its own Virtual Thread.
-     *
-     * Example usage:
-     * @Async("virtualTaskExecutor")
-     * public void sendNotification() { ... }
-     */
     @Bean(name = "virtualTaskExecutor")
     public Executor virtualTaskExecutor() {
         log.info("🚀 Initializing Virtual Thread Executor for @Async operations");
         return Executors.newVirtualThreadPerTaskExecutor();
     }
 
-    /**
-     * ✅ CONFIGURE TOMCAT TO USE VIRTUAL THREADS
-     *
-     * CRITICAL: This makes ALL HTTP requests execute on Virtual Threads.
-     * Every incoming request gets its own lightweight Virtual Thread.
-     *
-     * This is the most important configuration for web applications.
-     */
+
     @Bean
     public TomcatProtocolHandlerCustomizer<?> protocolHandlerVirtualThreadExecutor() {
         return protocolHandler -> {
@@ -75,18 +58,12 @@ public class VirtualThreadConfiguration {
         };
     }
 
-    /**
-     * ✅ OPTIONAL: Fine-tune Tomcat for high throughput
-     *
-     * These settings optimize Tomcat for Virtual Threads workloads.
-     */
     @Bean
     public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatOptimization() {
         return factory -> {
             factory.addConnectorCustomizers(connector -> {
                 ProtocolHandler handler = connector.getProtocolHandler();
 
-                // Set connection timeout
                 if (handler instanceof org.apache.coyote.http11.AbstractHttp11Protocol) {
                     org.apache.coyote.http11.AbstractHttp11Protocol<?> protocol =
                             (org.apache.coyote.http11.AbstractHttp11Protocol<?>) handler;
@@ -101,11 +78,6 @@ public class VirtualThreadConfiguration {
         };
     }
 
-    /**
-     * ✅ HEALTH INDICATOR FOR MONITORING
-     *
-     * Exposes Virtual Thread metrics via /actuator/health/virtualThreads
-     */
     @Bean
     public VirtualThreadHealthIndicator virtualThreadHealthIndicator() {
         return new VirtualThreadHealthIndicator();

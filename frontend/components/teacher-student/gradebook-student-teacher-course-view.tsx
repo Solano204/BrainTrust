@@ -1,4 +1,3 @@
-// File: src/components/teacher-student/gradebook-student-teacher-course-view.tsx
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,10 +127,8 @@ export function GradebookCourseView({
 
   return (
     <div className="space-y-6">
-      {/* Student View */}
       {!isTeacher && studentGradebook && (
         <>
-          {/* Overall Progress */}
           <Card>
             <CardHeader>
               <CardTitle>Course Overview</CardTitle>
@@ -166,10 +163,8 @@ export function GradebookCourseView({
         </>
       )}
 
-      {/* Teacher View */}
       {isTeacher && courseGradebooks && courseGradebooks.length > 0 && (
         <>
-          {/* Course Statistics */}
           <Card>
             <CardHeader>
               <CardTitle>Course Statistics</CardTitle>
@@ -199,7 +194,6 @@ export function GradebookCourseView({
             </CardContent>
           </Card>
 
-          {/* Student Final Grades */}
           <Card>
             <CardHeader>
               <CardTitle>Student Final Grades</CardTitle>

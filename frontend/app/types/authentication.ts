@@ -1,4 +1,3 @@
-// types/auth.ts
 export type UserRole = 'admin' | 'teacher' | 'student' | 'guest';
 
 export interface UserSession {
@@ -40,15 +39,12 @@ export interface RegisterRequest {
   role: UserRole;
 }
 
-// Permission constants
 export const PERMISSIONS = {
-  // Admin permissions
   ADMIN_DASHBOARD: 'admin:dashboard',
   USER_MANAGEMENT: 'admin:users',
   SYSTEM_SETTINGS: 'admin:settings',
   COURSE_MANAGEMENT: 'admin:courses',
   
-  // Teacher permissions
   TEACHER_DASHBOARD: 'teacher:dashboard',
   MANAGE_CLASSES: 'teacher:classes',
   MANAGE_STUDENTS: 'teacher:students',
@@ -56,7 +52,6 @@ export const PERMISSIONS = {
   MANAGE_ASSIGNMENTS: 'teacher:assignments',
   GRADE_SUBMISSIONS: 'teacher:grade',
   
-  // Student permissions
   STUDENT_DASHBOARD: 'student:dashboard',
   VIEW_COURSES: 'student:courses',
   SUBMIT_ASSIGNMENTS: 'student:submit',
@@ -65,7 +60,7 @@ export const PERMISSIONS = {
 } as const;
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  admin: Object.values(PERMISSIONS), // Admin has all permissions
+  admin: Object.values(PERMISSIONS),
   teacher: [
     PERMISSIONS.TEACHER_DASHBOARD,
     PERMISSIONS.MANAGE_CLASSES,
@@ -86,10 +81,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   guest: [],
 };
 
-// Configuration
 export const AUTH_CONFIG = {
-  ACCESS_TOKEN_EXPIRY: 15 * 60 * 1000, // 15 minutes
-  REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, // 7 days
+  ACCESS_TOKEN_EXPIRY: 15 * 60 * 1000,
+  REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000,
   MOCK_MODE: process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true',
   API_BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
 } as const;

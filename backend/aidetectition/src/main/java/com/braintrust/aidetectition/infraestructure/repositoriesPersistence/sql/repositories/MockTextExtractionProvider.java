@@ -12,13 +12,12 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 @Component("MockTextExtractionProvider")
-//@Profile("!prod") // Only active in non-production environments
+
 public class MockTextExtractionProvider implements TextExtractionProvider {
 
     private static final Logger log = LoggerFactory.getLogger(MockTextExtractionProvider.class);
     private final Random random = new Random();
 
-    // Mock for testing OCR/PDF extraction
     private final List<String> mockExtractedTexts = Arrays.asList(
             "This research paper examines the impact of artificial intelligence on modern educational systems. " +
                     "The study conducted a comprehensive analysis of AI-assisted learning tools across multiple institutions. " +
@@ -96,16 +95,13 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
 
         log.info("🧪 MOCK: Extracting text from PDF: {} (size: {} bytes)", fileName, fileSize);
 
-        // Simulate processing delay (OCR/PDF processing takes time)
         simulateProcessingDelay(800, 2500);
 
         try {
-            // Determine text based on file name and size
             String extractedText = generateMockPdfText(fileName, fileSize);
             int wordCount = extractedText.split("\\s+").length;
             int charCount = extractedText.length();
 
-            // Add some extraction metadata as a comment
             String extractionInfo = String.format(
                     "\n\n[Extracted from: %s | File size: %d bytes | Words: %d | Characters: %d | Method: mock-ocr]",
                     fileName, fileSize, wordCount, charCount
@@ -135,7 +131,6 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
         }
 
         try {
-            // Use virtual threads for parallel processing simulation
             ExecutorService virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
             List<CompletableFuture<String>> futures = pdfFiles.stream()
@@ -151,7 +146,6 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
                     }, virtualExecutor))
                     .collect(Collectors.toList());
 
-            // Wait for all completions
             List<String> results = futures.stream()
                     .map(future -> {
                         try {
@@ -177,7 +171,6 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
         } catch (Exception e) {
             log.error("🧪 MOCK: Parallel PDF extraction failed", e);
 
-            // Fallback: sequential extraction
             List<String> results = new ArrayList<>();
             for (MultipartFile pdfFile : pdfFiles) {
                 if (pdfFile != null && !pdfFile.isEmpty()) {
@@ -194,8 +187,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
 
     @Override
     public boolean isServiceAvailable() {
-        // Simulate occasional service unavailability for testing
-        boolean available = random.nextDouble() > 0.05; // 95% available
+        boolean available = random.nextDouble() > 0.05;
 
         log.trace("🧪 MOCK: Text extraction service availability: {}", available);
         return available;
@@ -205,16 +197,12 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
     public Double getServiceHealth() {
         boolean available = isServiceAvailable();
         double health = available ?
-                0.85 + random.nextDouble() * 0.15 : // 0.85-1.0 when available
-                0.1 + random.nextDouble() * 0.3;    // 0.1-0.4 when not available
+                0.85 + random.nextDouble() * 0.15 :
+                0.1 + random.nextDouble() * 0.3;
 
         log.debug("🧪 MOCK: Text extraction service health: {:.2f}", health);
         return health;
     }
-
-    // ========================================
-    // PRIVATE HELPER METHODS
-    // ========================================
 
     private void simulateProcessingDelay(int minMs, int maxMs) {
         try {
@@ -229,46 +217,38 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
     private String generateMockPdfText(String fileName, long fileSize) {
         StringBuilder text = new StringBuilder();
 
-        // Determine base text based on file name keywords
         String baseText = determineBaseText(fileName);
         text.append(baseText);
 
-        // Add more content based on file size (simulating larger files having more content)
         int targetWords = calculateTargetWords(fileSize);
         int currentWords = countWords(text.toString());
 
         while (currentWords < targetWords && targetWords < 2000) {
-            // Add more paragraphs
             text.append("\n\n");
             text.append(generateAdditionalParagraph());
             currentWords = countWords(text.toString());
         }
 
-        // Format the text (simulate some OCR artifacts occasionally)
         String formattedText = formatWithOcrArtifacts(text.toString());
 
         return formattedText;
     }
 
     private String determineBaseText(String fileName) {
-        // Check for keywords in filename
         for (Map.Entry<String, String> entry : fileTypeTexts.entrySet()) {
             if (fileName.contains(entry.getKey())) {
                 return entry.getValue();
             }
         }
 
-        // Default: random selection from mock texts
         return mockExtractedTexts.get(random.nextInt(mockExtractedTexts.size()));
     }
 
     private int calculateTargetWords(long fileSize) {
-        // Rough estimation: more file size = more words
-        // Assuming average PDF: 1KB ≈ 50-100 words
+
         int baseWords = 100;
         int sizeBasedWords = (int) (fileSize / 1024) * 80; // 80 words per KB
 
-        // Add some randomness
         int variation = random.nextInt(200) - 100; // -100 to +100
 
         return Math.max(50, baseWords + sizeBasedWords + variation);
@@ -301,11 +281,10 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
     }
 
     private String formatWithOcrArtifacts(String text) {
-        // Simulate occasional OCR errors (5% chance)
+
         if (random.nextDouble() > 0.95) {
             log.debug("🧪 MOCK: Simulating OCR artifacts in extracted text");
 
-            // Introduce some common OCR errors
             String[] replacements = {
                     "the", "t he",
                     "and", "an d",
@@ -323,7 +302,6 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
                 }
             }
 
-            // Occasionally add OCR artifact markers
             if (random.nextDouble() > 0.8) {
                 result = result + "\n\n[Note: Some text may contain OCR recognition errors]";
             }
@@ -341,16 +319,11 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
         return text.split("\\s+").length;
     }
 
-    /**
-     * ✅ Additional utility method for testing
-     * Simulates extraction quality metrics
-     */
     public Map<String, Object> getExtractionQualityMetrics(MultipartFile pdfFile) {
         String extractedText = extractTextFromPdf(pdfFile);
         int wordCount = countWords(extractedText);
         int charCount = extractedText.length();
 
-        // Simulate quality metrics
         double confidence = 0.7 + random.nextDouble() * 0.25; // 0.7-0.95
         double completeness = 0.8 + random.nextDouble() * 0.15; // 0.8-0.95
         double accuracy = 0.85 + random.nextDouble() * 0.1; // 0.85-0.95
@@ -369,9 +342,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
         );
     }
 
-    /**
-     * ✅ Additional utility method for batch extraction metrics
-     */
+
     public Map<String, Object> getBatchExtractionMetrics(List<MultipartFile> pdfFiles) {
         List<String> extractedTexts = extractTextFromPdfs(pdfFiles);
 

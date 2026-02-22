@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CourseTaskOverview.tsx
 "use client";
 
 import { useState, useMemo } from "react";
@@ -36,7 +35,6 @@ interface CourseTaskOverviewProps {
   courseId: string;
 }
 
-// Separate interfaces for different submission types
 interface TaskItem {
   id: string;
   type: "ASSIGNMENT";
@@ -51,7 +49,6 @@ interface QuizItem {
   uniqueKey: string;
 }
 
-// Separate display property functions for each type
 const getTaskDisplayProperties = (item: TaskItem) => {
   return {
     title: item.data.name,
@@ -72,7 +69,7 @@ const getQuizDisplayProperties = (item: QuizItem) => {
   return {
     title: item.data.title,
     studentName: item.data.studentName || "—",
-    deadline: "No deadline", // Quizzes might not have deadlines in the same way
+    deadline: "No deadline",
     isOverdue: item.data.isOverdue,
     submission: item.data.submission,
     maxGrade: item.data.maxGrade,
@@ -82,7 +79,6 @@ const getQuizDisplayProperties = (item: QuizItem) => {
   };
 };
 
-// Helper function to get display properties based on type
 const getDisplayProperties = (item: TaskItem | QuizItem) => {
   if (item.type === "ASSIGNMENT") {
     return getTaskDisplayProperties(item);
@@ -100,21 +96,17 @@ export function CourseTaskOverviewTeacher({
   const [selectedQuiz, setSelectedQuiz] = useState<StudentSubmissionQuiz | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Fetch all units for the course
   const {
     units: courseUnits,
     isLoading: isLoadingUnits,
     error: unitsError,
   } = useCourseAllUnits(courseId);
 
-  // Use existing hooks with selected unit
   const {
     tasks,
     isLoadingTasks,
     tasksError,
     selectedSubmissionId,
-    // isLoadingDetail,
-    // detailError,
     handleViewSubmission,
     handleBackFromDetail,
   } = useTaskInventoryManagement(courseId, selectedUnitId);
@@ -124,11 +116,9 @@ export function CourseTaskOverviewTeacher({
   const { updateGrade } =
     useTaskInventoryMutations();
 
-  // Fetch quizzes for the selected unit
   const { data: quizzes = [], isLoading: isLoadingQuizzes } =
     useQuizzesByCourseWithoutDetails(courseId, selectedUnitId);
 
-  // Combine tasks and quizzes for display with proper typing
   const combinedItems: (TaskItem | QuizItem)[] = useMemo(() => {
     const taskItems: TaskItem[] = tasks.map((task) => ({
       id: task.id,
@@ -147,7 +137,6 @@ export function CourseTaskOverviewTeacher({
     return [...taskItems, ...quizItems];
   }, [tasks, quizzes]);
 
-  // Filter combined items based on search and active tab
   const filteredItems = useMemo(() => {
     return combinedItems.filter((item) => {
       const displayProps = getDisplayProperties(item);
@@ -164,7 +153,6 @@ export function CourseTaskOverviewTeacher({
     });
   }, [combinedItems, searchTerm, activeTab]);
 
-  // Calculate statistics
   const stats = useMemo(() => {
     const totalTasks = combinedItems.length;
     const assignments = combinedItems.filter(
@@ -200,12 +188,10 @@ export function CourseTaskOverviewTeacher({
     setSelectedQuiz(null);
   };
 
-  // Handle task selection
   const handleViewTask = (task: SubmissionTask) => {
     setSelectedTask(task);
   };
 
-  // Handle quiz selection
   const handleViewQuiz = (quiz: StudentSubmissionQuiz) => {
     setSelectedQuiz(quiz);
   };
@@ -218,7 +204,6 @@ export function CourseTaskOverviewTeacher({
     setSelectedQuiz(null);
   };
 
-  // UI helper functions
   const getTaskIcon = (type: "ASSIGNMENT" | "QUIZ") => {
     switch (type) {
       case "ASSIGNMENT":
@@ -375,7 +360,6 @@ export function CourseTaskOverviewTeacher({
 
   const isLoading = isLoadingTasks || isLoadingQuizzes;
 
-  // Show unit selection if no unit is selected
   if (!selectedUnitId) {
     return (
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
@@ -456,23 +440,17 @@ export function CourseTaskOverviewTeacher({
     );
   }
 
-  // Show task detail view with complete data
   if (selectedTask) {
     return (
       <SubmissionDetailView
         data={selectedTask}
         onBack={handleBackFromTask}
         onUpdateGrade={updateGrade.mutate}
-        // onRequestAnalysis={requestAnalysis.mutate}
-        // onDownloadAttachment={downloadAttachment.mutate}
         isUpdatingGrade={updateGrade.isPending}
-        // isRequestingAnalysis={requestAnalysis.isPending}
-        // isDownloadingAttachment={downloadAttachment.isPending}
       />
     );
   }
 
-  // Show quiz detail view
   if (selectedQuiz) {
 
     console.log("selectedQuiz", selectedQuiz.submission);
@@ -484,12 +462,10 @@ export function CourseTaskOverviewTeacher({
     );
   }
 
-  // Get the selected unit name for display
   const selectedUnit = courseUnits.find((unit) => unit.id === selectedUnitId);
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Header with Back Button and Unit Info */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button
@@ -561,7 +537,6 @@ export function CourseTaskOverviewTeacher({
         </Card>
       )}
 
-      {/* Tabs for All, Assignments and Quizzes */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
@@ -685,7 +660,6 @@ export function CourseTaskOverviewTeacher({
                                     displayProps.submission.grade.maxScore || 0
                                   )
                                 ) : (
-                                  // For quizzes
                                   <div className="flex items-center gap-2">
                                     <span className="font-semibold">
                                       {displayProps.submission.grade.value}/{displayProps.submission.grade.maxScore || 0}
@@ -719,7 +693,6 @@ export function CourseTaskOverviewTeacher({
                 </div>
               </Card>
 
-              {/* Mobile Card View */}
               <div className="space-y-4 lg:hidden">
                 {filteredItems.map((item) => {
                   const displayProps = getDisplayProperties(item);

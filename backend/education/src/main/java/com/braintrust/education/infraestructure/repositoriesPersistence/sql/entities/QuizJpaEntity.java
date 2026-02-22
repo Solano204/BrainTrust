@@ -9,7 +9,7 @@ import java.util.List;
 @Table(name = "quizzes", indexes = {
         @Index(name = "idx_quiz_course", columnList = "course_id"),
         @Index(name = "idx_quiz_active", columnList = "active"),
-        @Index(name = "idx_quiz_unit", columnList = "unit_id") // ✅ Added index for unit
+        @Index(name = "idx_quiz_unit", columnList = "unit_id")
 })
 public class QuizJpaEntity {
 
@@ -53,7 +53,7 @@ public class QuizJpaEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
-    // ✅ FIXED: Proper OneToMany mapping with cascade and orphanRemoval
+
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<QuizQuestionJpaEntity> questions = new ArrayList<>();
 
@@ -78,19 +78,18 @@ public class QuizJpaEntity {
         this.active = active;
     }
 
-    // ✅ Helper method to add question with bidirectional relationship
     public void addQuestion(QuizQuestionJpaEntity question) {
         questions.add(question);
         question.setQuiz(this);
     }
 
-    // ✅ Helper method to remove question
+
     public void removeQuestion(QuizQuestionJpaEntity question) {
         questions.remove(question);
         question.setQuiz(null);
     }
 
-    // Getters and Setters (all existing ones remain the same)
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getCourseId() { return courseId; }
@@ -120,7 +119,7 @@ public class QuizJpaEntity {
     public List<QuizQuestionJpaEntity> getQuestions() { return questions; }
     public void setQuestions(List<QuizQuestionJpaEntity> questions) {
         this.questions = questions;
-        // Ensure bidirectional relationship
+
         if (questions != null) {
             for (QuizQuestionJpaEntity question : questions) {
                 question.setQuiz(this);

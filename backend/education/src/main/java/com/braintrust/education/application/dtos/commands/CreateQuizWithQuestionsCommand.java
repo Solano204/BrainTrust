@@ -1,6 +1,5 @@
 package com.braintrust.education.application.dtos.commands;
 
-// Add this to your DTOs package
 import java.util.List;
 
 public record CreateQuizWithQuestionsCommand(

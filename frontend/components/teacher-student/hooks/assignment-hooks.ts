@@ -1,4 +1,3 @@
-// File: src/app/features/courses/hooks/assignment-hooks.ts
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,9 +25,6 @@ import {
 } from "../api/task-teacher";
 
 
-
-// CURRENTLY WORKS
-
 export function useAssignmentsByUnit(courseId: CourseId | null, unitId: UnitId | null) {
   return useQuery<Assignment[]>({
     queryKey: assignmentKeys.list(courseId || "", unitId || ""),
@@ -48,9 +44,6 @@ export function useAssignment(assignmentId: string | null) {
     staleTime: 300000,
   });
 }
-
-
-// CURRENTLY WORKS
 
 export function useAssignmentMutations() {
   const queryClient = useQueryClient();
@@ -74,9 +67,6 @@ export function useAssignmentMutations() {
       });
     }
   });
-
-
-
 
   const updateAssignmentMutation = useMutation({
     mutationFn: ({ 
@@ -147,13 +137,6 @@ export function useAssignmentMutations() {
     deactivateAssignment: deactivateAssignmentMutation
   };
 }
-
-// ============================================
-// ATTACHMENT MANAGEMENT HOOKS
-// ============================================
-
-
-// CURRENTLY WORKS
 
 export function useAssignmentAttachmentMutations() {
   const queryClient = useQueryClient();
@@ -234,14 +217,6 @@ export function useAssignmentAttachmentMutations() {
     clearAttachments: clearAttachmentsMutation
   };
 }
-
-// ============================================
-// LINK MANAGEMENT HOOKS
-// ============================================
-
-
-
-// CURRENTLY WORKS
 
 export function useAssignmentLinkMutations() {
   const queryClient = useQueryClient();

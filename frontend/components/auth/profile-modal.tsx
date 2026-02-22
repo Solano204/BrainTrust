@@ -1,4 +1,3 @@
-// components/profile/profile-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -141,7 +140,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     setImageError("")
     
     try {
-      // Validate image
       imageUploadSchema.parse({ file })
       
       setIsUploading(true)
@@ -179,7 +177,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     setPersonalInfoErrors({})
     
     try {
-      // Validate data
       const validatedData = personalInfoSchema.parse(personalInfo)
       
       await updatePersonalInfoMutation.mutateAsync({
@@ -206,7 +203,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     setAddressErrors({})
     
     try {
-      // Validate data
       const validatedData = addressSchema.parse(address)
       
       await updateAddressMutation.mutateAsync({

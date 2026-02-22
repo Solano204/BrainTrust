@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-// other imports...
+
 
 @RestController
 @RequestMapping("/api/submissions")
@@ -111,7 +111,6 @@ public class SubmissionController {
 
         SubmissionId submissionIdObj = SubmissionId.fromString(submissionId);
 
-        // Check if this is a team submission
         boolean isTeamSubmission = submissionService.isTeamSubmission(submissionIdObj);
 
         if (isTeamSubmission) {
@@ -130,8 +129,6 @@ public class SubmissionController {
     }
 
 
-
-    // ✅ NEW: Get submissions by course and unit (for teachers)
     @GetMapping("/course/{courseId}/unit/{unitId}")
     public ResponseEntity<List<SubmissionDTO>> getSubmissionsByCourseAndUnit(
             @PathVariable String courseId,
@@ -147,7 +144,6 @@ public class SubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
-    // ✅ NEW: Get submissions by course, unit and student (for students)
     @GetMapping("/student/{studentId}/course/{courseId}/unit/{unitId}")
     public ResponseEntity<List<SubmissionDTO>> getSubmissionsByStudentAndCourseAndUnit(
             @PathVariable String studentId,
@@ -182,31 +178,6 @@ public class SubmissionController {
         return ResponseEntity.ok(submissions);
     }
 
-    /*
-    @GetMapping("/team/{teamId}/assignment/{assignmentId}")
-    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByTeamAndAssignment(
-            @PathVariable String teamId,
-            @PathVariable String assignmentId
-    ) {
-        log.debug("Fetching team submissions for Team {} and Assignment {}", teamId, assignmentId);
-        List<SubmissionDTO> submissions = submissionService.getSubmissionsByTeamAndAssignment(
-                StudentGroupId.fromString(teamId),
-                AssignmentId.fromString(assignmentId)
-        );
-        return ResponseEntity.ok(submissions);
-    }
-    */
-
-    /*
-    @PostMapping("/{submissionId}/request-ai-analysis")
-    public ResponseEntity<SuccessResponseDTO> requestAIAnalysis(@PathVariable String submissionId) {
-        log.info("Requesting AI analysis for Submission ID: {}", submissionId);
-        submissionService.requestAIAnalysis(SubmissionId.fromString(submissionId));
-        log.info("AI analysis request dispatched for Submission ID {}.", submissionId);
-        return ResponseEntity.ok(new SuccessResponseDTO(true,
-                "AI analysis requested successfully", null));
-    }
-    */
 
     // ------------------------------------------------------------------
     // ✅ SUBMISSION QUERIES
@@ -220,17 +191,6 @@ public class SubmissionController {
         return ResponseEntity.ok(submission);
     }
 
-    /*
-    @GetMapping("/assignment/{assignmentId}")
-    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByAssignment(
-            @PathVariable String assignmentId) {
-        log.debug("Fetching all submissions for Assignment ID: {}", assignmentId);
-        List<SubmissionDTO> submissions = submissionService.getSubmissionsByAssignment(
-                AssignmentId.fromString(assignmentId)
-        );
-        return ResponseEntity.ok(submissions);
-    }
-    */
 
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<SubmissionDTO>> getSubmissionsByStudent(
@@ -253,100 +213,6 @@ public class SubmissionController {
         );
         return ResponseEntity.ok(submissions);
     }
-
-    /*
-    @GetMapping("/assignment/{assignmentId}/student/{studentId}/latest")
-    public ResponseEntity<SubmissionDTO> getLatestSubmission(
-            @PathVariable String assignmentId,
-            @PathVariable String studentId
-    ) {
-        log.debug("Fetching latest submission for Assignment {} by Student {}",
-                assignmentId, studentId);
-        Optional<SubmissionDTO> submission = submissionService.getLatestSubmission(
-                AssignmentId.fromString(assignmentId),
-                UserId.fromString(studentId)
-        );
-
-        return submission.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-    */
-
-    /*
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<SubmissionDTO>> getSubmissionsByStatus(
-            @PathVariable String status) {
-        log.debug("Fetching submissions with status: {}", status.toUpperCase());
-        List<SubmissionDTO> submissions = submissionService.getSubmissionsByStatus(
-                SubmissionStatus.valueOf(status.toUpperCase())
-        );
-        return ResponseEntity.ok(submissions);
-    }
-    */
-
-    /*
-    @GetMapping("/assignment/{assignmentId}/late")
-    public ResponseEntity<List<SubmissionDTO>> getLateSubmissions(
-            @PathVariable String assignmentId) {
-        log.debug("Fetching late submissions for Assignment ID: {}", assignmentId);
-        List<SubmissionDTO> submissions = submissionService.getLateSubmissions(
-                AssignmentId.fromString(assignmentId));
-        return ResponseEntity.ok(submissions);
-    }
-    */
-
-    /*
-    @GetMapping("/assignment/{assignmentId}/analytics")
-    public ResponseEntity<SubmissionAnalyticsDTO> getSubmissionAnalytics(
-            @PathVariable String assignmentId) {
-        log.debug("Calculating analytics for Assignment ID: {}", assignmentId);
-        SubmissionAnalyticsDTO analytics = submissionService.getSubmissionAnalytics(
-                AssignmentId.fromString(assignmentId)
-        );
-        return ResponseEntity.ok(analytics);
-    }
-    */
-
-    /*
-    @GetMapping("/assignment/{assignmentId}/student/{studentId}/has-submitted")
-    public ResponseEntity<Boolean> hasStudentSubmitted(
-            @PathVariable String assignmentId,
-            @PathVariable String studentId
-    ) {
-        log.trace("Checking submission flag for Assignment {} and Student {}",
-                assignmentId, studentId);
-        boolean hasSubmitted = submissionService.hasStudentSubmitted(
-                AssignmentId.fromString(assignmentId),
-                UserId.fromString(studentId)
-        );
-        return ResponseEntity.ok(hasSubmitted);
-    }
-    */
-
-    // ------------------------------------------------------------------
-    // ✅ TEAM-SPECIFIC QUERIES
-    // ------------------------------------------------------------------
-
-    /*
-    @GetMapping("/team/{groupId}/assignment/{assignmentId}")
-    public ResponseEntity<SubmissionDTO> getTeamSubmission(
-            @PathVariable String groupId,
-            @PathVariable String assignmentId
-    ) {
-        log.debug("Fetching team submission for Group {} in Assignment {}",
-                groupId, assignmentId);
-
-        List<SubmissionDTO> submissions = submissionService.getSubmissionsByAssignment(
-                AssignmentId.fromString(assignmentId));
-
-        Optional<SubmissionDTO> teamSubmission = submissions.stream()
-                .filter(s -> groupId.equals(s.teamId()))
-                .findFirst();
-
-        return teamSubmission.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-    */
 
     // NEW: Delete submission and restart unit grade
     @DeleteMapping("/{submissionId}")

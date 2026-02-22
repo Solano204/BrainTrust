@@ -1,4 +1,4 @@
-// components/ProtectedRoute.tsx
+
 'use client';
 
 import { useEffect } from 'react';
@@ -24,20 +24,18 @@ export default function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading) {
-      // Redirect if not authenticated
+
       if (!isAuthenticated) {
         const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(window.location.pathname)}`;
         router.push(redirectUrl);
         return;
       }
 
-      // Check role requirement
       if (requiredRole && user && !hasRole(requiredRole)) {
         router.push('/unauthorized');
         return;
       }
 
-      // Check permission requirements
       if (requiredPermissions.length > 0 && user) {
         const hasAllPermissions = requiredPermissions.every(permission => 
           hasPermission(permission)
@@ -77,7 +75,7 @@ export default function ProtectedRoute({
       );
       
       if (!hasAllPermissions) {
-        return null; // Will redirect in useEffect
+        return null;
       }
     }
   }

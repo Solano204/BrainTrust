@@ -11,14 +11,11 @@ public class Gradebook extends AggregateRoot<GradebookId> {
     private CourseId courseId;
     private UserId studentId;
 
-    // ✅ Calculated total sum from all units
     private BigDecimal calculatedTotal;
 
-    // ✅ Final grade assigned by teacher
     private BigDecimal finalGrade;
     private String finalFeedback;
 
-    // ✅ NEW: Store unit grades for recalculation
     private final Map<UnitId, Grade> unitGrades;
 
     private LocalDateTime lastCalculated;
@@ -49,13 +46,11 @@ public class Gradebook extends AggregateRoot<GradebookId> {
         return gradebook;
     }
 
-    // ✅ NEW: Update unit grade method
     public void updateUnitGrade(UnitId unitId, Grade unitGrade) {
         unitGrades.put(unitId, unitGrade);
         recalculateTotalFromUnits();
     }
 
-    // ✅ NEW: Recalculate total from all unit grades
     private void recalculateTotalFromUnits() {
         if (unitGrades.isEmpty()) {
             this.calculatedTotal = null;
@@ -79,7 +74,6 @@ public class Gradebook extends AggregateRoot<GradebookId> {
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // 🎯 Update calculated total sum from unit grades (external method)
     public void updateCalculatedTotal(List<UnitGrade> unitGrades) {
         if (unitGrades.isEmpty()) {
             this.calculatedTotal = null;
@@ -99,29 +93,24 @@ public class Gradebook extends AggregateRoot<GradebookId> {
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // 🎯 Teacher assigns final grade (can override calculated total)
     public void assignFinalGrade(BigDecimal finalGrade, String feedback) {
         this.finalGrade = finalGrade;
         this.finalFeedback = feedback;
         this.lastCalculated = LocalDateTime.now();
     }
 
-    // ✅ Get display grade value (final if assigned, otherwise calculated)
     public BigDecimal getDisplayGradeValue() {
         return finalGrade != null ? finalGrade : calculatedTotal;
     }
 
-    // ✅ Get unit grades for DTO mapping
     public Map<UnitId, Grade> getUnitGrades() {
         return Map.copyOf(unitGrades);
     }
 
-    // ✅ Get total units count
     public int getTotalUnits() {
         return unitGrades.size();
     }
 
-    // Getters
     public CourseId getCourseId() { return courseId; }
     public UserId getStudentId() { return studentId; }
     public BigDecimal getCalculatedTotal() { return calculatedTotal; }

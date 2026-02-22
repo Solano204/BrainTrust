@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-// other imports...
+
 
 @Repository
 @Transactional(readOnly = true)
@@ -46,7 +46,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
         long count = jpaRepository.countByCourseIdAndStatus(courseId.getValue(), status.name());
 
-        // Convert to int (assuming count will fit within int range for your use case)
+
         int result = Math.toIntExact(count);
         log.trace("Found {} enrollments for Course ID: {} with Status: {}",
                 result, courseId.getValue(), status.name());

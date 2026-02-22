@@ -1,4 +1,3 @@
-// utils/tokenManager.ts
 'use server';
 
 import { cookies } from 'next/headers';
@@ -16,16 +15,14 @@ export async function setTokens(
 ) {
   const cookieStore = await cookies();
   
-  // Set access token (short-lived)
   cookieStore.set(ACCESS_TOKEN_COOKIE, accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 15 * 60, // 15 minutes
+    maxAge: 15 * 60,
     path: '/',
   });
   
-  // Set refresh token (long-lived)
   cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -34,7 +31,6 @@ export async function setTokens(
     path: '/',
   });
   
-  // Store user data (not HttpOnly so client can read)
   cookieStore.set(USER_DATA_COOKIE, JSON.stringify(userData), {
     httpOnly: false,
     secure: process.env.NODE_ENV === 'production',

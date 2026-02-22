@@ -1,7 +1,4 @@
 
-
-
-// File: src/app/presentation/hooks/student/student-hooks.ts
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,14 +15,6 @@ import {
   User
 } from "@/components/student/api/enrollment";
 
-// ============================================
-// QUERY HOOKS
-// ============================================
-
-/**
- * Fetch enrollments for a specific course
- * Returns array of Enrollment objects (without embedded user data)
- */
 export function useEnrollmentsByCourse(courseId: CourseId | null) {
   return useQuery<Enrollment[]>({
     queryKey: studentKeysEnrollment.enrollmentsByCourse(courseId || ""),
@@ -36,9 +25,6 @@ export function useEnrollmentsByCourse(courseId: CourseId | null) {
   });
 }
 
-/**
- * Get enrollment statistics for a course
- */
 export function useEnrollmentStats(courseId: CourseId | null) {
   return useQuery({
     queryKey: studentKeysEnrollment.statsByCourse(courseId || ""),
@@ -49,12 +35,6 @@ export function useEnrollmentStats(courseId: CourseId | null) {
   });
 }
 
-/**
- * Search for students available to enroll in a course
- * Backend endpoint already filters out enrolled students
- */
-
-// CURRENTLY WORKS
 
 export function useAvailableUsersSearch(courseId: CourseId | null, searchTerm: string) {
   return useQuery<User[]>({
@@ -66,30 +46,19 @@ export function useAvailableUsersSearch(courseId: CourseId | null, searchTerm: s
   });
 }
 
-// ============================================
-// MUTATION HOOKS
-// ============================================
-
-/**
- * All student enrollment mutations
- */
 export function useStudentMutations() {
   const queryClient = useQueryClient();
 
-  // Single enrollment mutation
   const createEnrollmentMutation = useMutation({
     mutationFn: createEnrollment,
     onSuccess: (data) => {
-      // Invalidate enrollments for this course
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: studentKeysEnrollment.enrollmentsByCourse(data.courseId) 
       });
-      // Invalidate stats
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: studentKeysEnrollment.statsByCourse(data.courseId) 
       });
-      // Invalidate search results (student is now enrolled)
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: studentKeysEnrollment.availableUsersByCourse(data.courseId)
       });
     },
@@ -98,7 +67,6 @@ export function useStudentMutations() {
     }
   });
 
-  // Bulk enrollment mutation
   const bulkEnrollMutation = useMutation({
     mutationFn: ({ courseId, studentIds }: { courseId: CourseId; studentIds: UserId[] }) =>
       bulkEnrollStudents(courseId, studentIds),
@@ -118,7 +86,6 @@ export function useStudentMutations() {
     }
   });
 
-  // Single unenrollment mutation
   const deleteEnrollmentMutation = useMutation({
     mutationFn: ({ courseId, studentId }: { courseId: CourseId; studentId: UserId }) =>
       deleteEnrollment(courseId, studentId),

@@ -4,5 +4,5 @@ public record CreatePageCommand(
         String courseId,
         String title,
         String unitId,
-        String content // HTML or Markdown
+        String content
 ) {}

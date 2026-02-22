@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
-// other imports...
 
 @Repository
 public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepository {
@@ -71,7 +70,6 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
         }
 
         try {
-            // Convert all domain objects to entities
             List<AnalysisRequestJpaEntity> entities = new ArrayList<>();
             for (AnalysisRequest analysisRequest : analysisRequests) {
                 log.trace("Mapping AnalysisRequest {} to entity.", analysisRequest.getId().getValue());
@@ -79,11 +77,9 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
                 entities.add(entity);
             }
 
-            // Batch save all entities
             log.debug("Persisting {} entities in batch operation.", entities.size());
             List<AnalysisRequestJpaEntity> savedEntities = jpaRepository.saveAll(entities);
 
-            // Convert saved entities back to domain objects
             List<AnalysisRequest> savedAnalysisRequests = savedEntities.stream()
                     .map(entity -> {
                         log.trace("Mapping saved entity {} back to domain.", entity.getId());
@@ -114,13 +110,11 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
     @Override
     public List<AnalysisRequest> findBySubmissionId(SubmissionId submissionId) {
         log.debug("Querying database by Submission ID: {}", submissionId.getValue());
-        // 1. Call the JPA repository method, which returns List<AnalysisRequestJpaEntity>
         List<AnalysisRequestJpaEntity> entities = jpaRepository.findBySubmissionId(submissionId.getValue());
 
-        // 2. Stream the list, map each entity to the domain model, and collect as a List.
         return entities.stream()
-                .map(mapper::toDomain) // Use the mapper to convert each entity
-                .collect(Collectors.toList()); // Collect the results into the required List
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

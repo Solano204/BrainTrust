@@ -24,7 +24,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-// other imports...
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,36 +32,28 @@ public class GlobalExceptionHandler {
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // ========================================
-    // ✅ AUTHENTICATION & AUTHORIZATION EXCEPTIONS
-    // ========================================
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleNotFoundException(
             NotFoundException ex,
             WebRequest request
     ) {
-        // Log the actual type and message.
+
         log.error("❌ Resource not found: {}", ex.getMessage(), ex);
 
-        // ⚠️ Spring will automatically set the 404 status because of @ResponseStatus(NOT_FOUND)
-        // We only need to return the DTO and let Spring handle the status code via the annotation.
 
         ErrorResponseDTO error = new ErrorResponseDTO(
                 Instant.now().toString(),
-                HttpStatus.NOT_FOUND.value(), // Note: Using NOT_FOUND here is fine
+                HttpStatus.NOT_FOUND.value(),
                 "Not Found",
-                ex.getMessage(), // ⬅️ The specific domain message is passed here
+                ex.getMessage(),
                 request.getDescription(false).replace("uri=", "")
         );
 
-        // Returning the ResponseEntity with the DTO. Spring will apply the status code.
-        return ResponseEntity.status(HttpStatus.NOT_FOUND) // Explicit status for clarity
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error);
     }
 
-    // 📍 FIX: And applied the same simplified pattern to the main Auth handlers:
-// (Example of the BadCredentialsException being simplified to use the helper)
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponseDTO> handleBadCredentials(
             BadCredentialsException ex,
@@ -70,14 +62,14 @@ public class GlobalExceptionHandler {
         log.error("Bad credentials at {}: {}",
                 request.getDescription(false), ex.getMessage());
 
-        return buildErrorResponse( // ⬅️ Calling the fixed helper method
+        return buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "Invalid email or password",
                 request.getDescription(false).replace("uri=", "")
         );
     }
 
-    // 📍 FIX: The Private Helper Method (Final corrected state)
+
     private ResponseEntity<ErrorResponseDTO> buildErrorResponse(
             HttpStatus status,
             String message,
@@ -93,12 +85,8 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(error); // Return the fully constructed DTO object
+                .body(error);
     }
-
-
-
-
 
 
 
@@ -122,14 +110,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
-    // ========================================
-    // ✅ DOMAIN-SPECIFIC EXCEPTIONS (NEW!)
-    // ========================================
-
-    /**
-     * Handles InvalidPasswordException specifically
-     * This provides detailed feedback for password-related errors
-     */
     @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<ErrorResponseDTO> handleInvalidPasswordException(
             InvalidPasswordException ex,
@@ -150,11 +130,6 @@ public class GlobalExceptionHandler {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(error);
     }
-
-    // ========================================
-    // ✅ GENERIC DOMAIN & SYSTEM EXCEPTIONS
-    // ========================================
-
 
 
     @ExceptionHandler(IllegalStateException.class)
@@ -199,27 +174,24 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    /**
-     * ⚠️ CRITICAL FIX: Added full stack trace logging
-     * This catches all DomainExceptions and logs the complete error details
-     */
+
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponseDTO> handleDomainException(
             DomainException ex,
             WebRequest request
     ) {
-        // ✅ FIX: Log the FULL stack trace, not just the message
+
         log.error("❌ Domain exception at {}: {} | Exception Type: {}",
                 request.getDescription(false),
                 ex.getMessage(),
                 ex.getClass().getSimpleName(),
-                ex); // ← This logs the full stack trace
+                ex);
 
         ErrorResponseDTO error = new ErrorResponseDTO(
                 Instant.now().toString(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Domain Error",
-                ex.getMessage(), // ✅ Returns the specific domain message
+                ex.getMessage(),
                 request.getDescription(false).replace("uri=", "")
         );
 
@@ -228,24 +200,21 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    /**
-     * ⚠️ CRITICAL: This is your last line of defense
-     * Logs EVERYTHING and returns detailed info in DEV mode
-     */
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGlobalException(
             Exception ex,
             WebRequest request
     ) {
-        // ✅ FIX: Log complete error details with stack trace
+
         log.error("❌❌❌ UNEXPECTED ERROR at {}: {} | Exception Type: {} | Root Cause: {}",
                 request.getDescription(false),
                 ex.getMessage(),
                 ex.getClass().getName(),
                 ex.getCause() != null ? ex.getCause().getMessage() : "N/A",
-                ex); // ← Full stack trace
+                ex);
 
-        // ✅ OPTIONAL: Return more details in development mode
+
         String detailedMessage = buildDetailedErrorMessage(ex);
 
         ErrorResponseDTO error = new ErrorResponseDTO(
@@ -261,22 +230,10 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
-    // ========================================
-    // ✅ PRIVATE HELPER METHODS
-    // ========================================
 
-    /**
-     * Builds a standardized error response with proper content type
-     */
-
-    /**
-     * ✅ NEW: Builds detailed error message for debugging
-     * In production, you might want to make this less verbose
-     */
     private String buildDetailedErrorMessage(Exception ex) {
         StringBuilder message = new StringBuilder(ex.getMessage());
 
-        // Add root cause if available
         Throwable cause = ex.getCause();
         if (cause != null) {
             message.append(" | Root Cause: ")
@@ -284,14 +241,6 @@ public class GlobalExceptionHandler {
                     .append(": ")
                     .append(cause.getMessage());
         }
-
-        // ⚠️ SECURITY NOTE: In production, return generic message
-        // You can add a profile check here:
-        // if (environment.acceptsProfiles(Profiles.of("dev", "local"))) {
-        //     return detailed message
-        // } else {
-        //     return "An unexpected error occurred"
-        // }
 
         return message.toString();
     }

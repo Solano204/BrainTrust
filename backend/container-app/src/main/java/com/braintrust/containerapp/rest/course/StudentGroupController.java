@@ -23,7 +23,6 @@ public class StudentGroupController {
         this.groupService = groupService;
     }
 
-    // Add these endpoints to StudentGroupController
 
     @PostMapping("/with-members")
     public ResponseEntity<String> createGroupWithMembers(@RequestBody CreateStudentGroupWithMembersCommand command) {
@@ -31,7 +30,6 @@ public class StudentGroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(id.getValue());
     }
 
-    // Get group by ID (Frontend team-api needs this)
     @GetMapping("/{groupId}")
     public ResponseEntity<StudentGroupDTO> getGroupById(@PathVariable String groupId) {
         StudentGroupDTO group = groupService.getGroupById(StudentGroupId.fromString(groupId));
@@ -44,21 +42,18 @@ public class StudentGroupController {
         return ResponseEntity.noContent().build();
     }
 
-    // ✅ NEW: Get groups for specific user
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<StudentGroupDTO>> getGroupsByUser(@PathVariable String userId) {
         List<StudentGroupDTO> groups = groupService.getGroupsByStudent(UserId.fromString(userId));
         return ResponseEntity.ok(groups);
     }
 
-    // ✅ NEW: Update group information
     @PutMapping("/{groupId}/info")
     public ResponseEntity<Void> updateGroupInfo(
             @PathVariable String groupId,
             @RequestBody UpdateGroupInfoRequest request) {
 
 
-        // Validate request
         if (request.name() == null || request.name().trim().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -72,23 +67,6 @@ public class StudentGroupController {
         return ResponseEntity.ok().build();
     }
 
-
-
-
-//
-//    @PostMapping("/{groupId}/members/bulk")
-//    public ResponseEntity<Void> addMultipleMembers(
-//            @PathVariable String groupId,
-//            @RequestBody AddMultipleMembersToGroupCommand command) {
-//
-//        // Ensure the groupId in path matches the command
-//        if (!groupId.equals(command.groupId())) {
-//            throw new IllegalArgumentException("Group ID in path does not match request body");
-//        }
-//
-//        groupService.addMultipleMembers(command);
-//        return ResponseEntity.ok().build();
-//    }
 
     @PostMapping
     public ResponseEntity<String> createGroup(@RequestBody CreateStudentGroupCommand command) {
@@ -112,18 +90,6 @@ public class StudentGroupController {
         return ResponseEntity.noContent().build();
     }
 
-//    @PutMapping("/{groupId}/deactivate")
-//    public ResponseEntity<Void> deactivateGroup(@PathVariable String groupId) {
-//        groupService.deactivateGroup(new DeactivateGroupCommand(groupId));
-//        return ResponseEntity.ok().build();
-//    }
-
-//    @GetMapping("/{groupId}")
-//    public ResponseEntity<StudentGroupDTO> getGroup(@PathVariable String groupId) {
-//        StudentGroupDTO dto = groupService.getGroupById(StudentGroupId.fromString(groupId));
-//        return ResponseEntity.ok(dto);
-//    }
-
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<StudentGroupDTO>> getGroupsByCourse(@PathVariable String courseId) {
         List<StudentGroupDTO> groups = groupService.getGroupsByCourse(CourseId.fromString(courseId));
@@ -131,8 +97,6 @@ public class StudentGroupController {
     }
 
 
-
-    // ✅ NEW: Bulk add members to group
     @PostMapping("/{groupId}/members/bulk-add")
     public ResponseEntity<Void> bulkAddMembers(
             @PathVariable String groupId,
@@ -144,7 +108,6 @@ public class StudentGroupController {
         return ResponseEntity.ok().build();
     }
 
-    // ✅ NEW: Bulk remove members from group
     @DeleteMapping("/{groupId}/members/bulk-remove")
     public ResponseEntity<Void> bulkRemoveMembers(
             @PathVariable String groupId,
@@ -156,7 +119,6 @@ public class StudentGroupController {
         return ResponseEntity.noContent().build();
     }
 
-    // ✅ NEW: Check which students are already in groups
     @PostMapping("/course/{courseId}/check-students-in-groups")
     public ResponseEntity<List<String>> checkStudentsInGroups(
             @PathVariable String courseId,
@@ -169,34 +131,10 @@ public class StudentGroupController {
         return ResponseEntity.ok(studentsInGroups);
     }
 
-    // ✅ UPDATED: Get users without group for a course
     @GetMapping("/course/{courseId}/users-without-group")
     public ResponseEntity<List<UserWithoutGroupDTO>> getUsersWithoutGroup(@PathVariable String courseId) {
         List<UserWithoutGroupDTO> users = groupService.getUsersWithoutGroup(CourseId.fromString(courseId));
         return ResponseEntity.ok(users);
     }
 
-//
-//    @GetMapping("/course/{courseId}/active")
-//    public ResponseEntity<List<StudentGroupDTO>> getActiveGroupsByCourse(@PathVariable String courseId) {
-//        List<StudentGroupDTO> groups = groupService.getActiveGroupsByCourse(CourseId.fromString(courseId));
-//        return ResponseEntity.ok(groups);
-//    }
-
-//    @GetMapping("/student/{studentId}")
-//    public ResponseEntity<List<StudentGroupDTO>> getGroupsByStudent(@PathVariable String studentId) {
-//        List<StudentGroupDTO> groups = groupService.getGroupsByStudent(UserId.fromString(studentId));
-//        return ResponseEntity.ok(groups);
-//    }
-//
-//    @GetMapping("/{groupId}/has-member/{studentId}")
-//    public ResponseEntity<Boolean> isStudentInGroup(
-//            @PathVariable String groupId,
-//            @PathVariable String studentId) {
-//        boolean isMember = groupService.isStudentInGroup(
-//                StudentGroupId.fromString(groupId),
-//                UserId.fromString(studentId)
-//        );
-//        return ResponseEntity.ok(isMember);
-//    }
 }

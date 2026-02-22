@@ -1,7 +1,5 @@
-// lib/validations/profile-validation.ts
 import { z } from "zod"
 
-// Personal Info Schema
 export const personalInfoSchema = z.object({
   firstName: z
     .string()
@@ -31,7 +29,6 @@ export const personalInfoSchema = z.object({
     .or(z.literal("")),
 })
 
-// Address Schema
 export const addressSchema = z.object({
   street: z
     .string()
@@ -73,7 +70,6 @@ export const addressSchema = z.object({
     .or(z.literal("")),
 })
 
-// Password Schema
 export const passwordSchema = z.object({
   currentPassword: z
     .string()
@@ -96,7 +92,6 @@ export const passwordSchema = z.object({
   path: ["confirmPassword"],
 })
 
-// Image Upload Schema
 export const imageUploadSchema = z.object({
   file: z
     .instanceof(File)
@@ -107,7 +102,6 @@ export const imageUploadSchema = z.object({
     ),
 })
 
-// Type exports
 export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>
 export type AddressFormData = z.infer<typeof addressSchema>
 export type PasswordFormData = z.infer<typeof passwordSchema>

@@ -1,6 +1,6 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories;
 
-// 📍 identity/infrastructure/persistence/JpaUserRepositoryAdapter.java
+
 
 import com.braintrust.identity.application.ports.out.UserRepository;
 import com.braintrust.identity.domain.exceptions.UserNotFoundException;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
-// other imports...
+
 
 @Repository
 public class JpaUserRepositoryAdapter implements UserRepository {
@@ -48,26 +48,21 @@ public class JpaUserRepositoryAdapter implements UserRepository {
         this.mapper = mapper;
     }
 
-    // ------------------------------------------------------------------
-    // ✅ COMMANDS (Mutating Operations)
-    // ------------------------------------------------------------------
-
-
     @Override
     public Page<User> findByRole(Role role, Pageable pageable) {
         log.debug("Fetching users by Role: {} with pagination. Sort: {}",
                 role.name(), pageable.getSort());
 
         try {
-            // Check if sorting by fullName is requested
+
             Page<UserJpaEntity> entityPage;
 
-            // Handle different sort options
+
             Sort sort = pageable.getSort();
             boolean hasSort = sort != null && sort.isSorted();
 
             if (hasSort && sort.getOrderFor("fullName") != null) {
-                // Custom handling for fullName sorting
+
                 Sort.Direction direction = sort.getOrderFor("fullName").getDirection();
 
                 if (direction == Sort.Direction.ASC) {
@@ -78,10 +73,10 @@ public class JpaUserRepositoryAdapter implements UserRepository {
                             PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
                 }
             } else if (hasSort) {
-                // Use the generic method for other sorts
+
                 entityPage = jpaRepository.findByRoleWithPerson(role, pageable);
             } else {
-                // No sort specified, use default
+
                 entityPage = jpaRepository.findByRole(role, pageable);
             }
 
@@ -89,7 +84,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
 
         } catch (Exception e) {
             log.error("❌ Error in findByRole with sorting: {}", e.getMessage(), e);
-            // Fallback to simple method
+
             Page<UserJpaEntity> entityPage = jpaRepository.findByRole(role, pageable);
             return entityPage.map(mapper::toDomain);
         }
@@ -102,20 +97,18 @@ public class JpaUserRepositoryAdapter implements UserRepository {
         log.warn("🗑️ Deleting User ID: {} with associated Person", userId.getValue());
 
         try {
-            // Find the user first
+
             UserJpaEntity userEntity = jpaRepository.findById(userId.getValue())
                     .orElseThrow(() -> {
                         log.warn("❌ User not found for deletion: {}", userId.getValue());
                         return new UserNotFoundException("User not found: " + userId.getValue());
                     });
 
-            // Get the person ID before deletion
+
             String personId = userEntity.getPersonId();
 
-            // Delete the user
             jpaRepository.deleteById(userId.getValue());
 
-            // Delete the associated person
             personJpaRepository.deleteById(personId);
 
             log.info("✅ User ID {} and Person ID {} deleted successfully.",
@@ -136,7 +129,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
         log.debug("Searching users by name: '{}' with pagination", name);
 
         try {
-            // Use the new method that joins with person
+
             Page<UserJpaEntity> entityPage = jpaRepository.findByNameContainingWithPerson(
                     name, pageable);
 
@@ -173,10 +166,10 @@ public class JpaUserRepositoryAdapter implements UserRepository {
 
     @Override
     public Page<User> findByNameContainingAndRole(String name, Role role, Pageable pageable) {
-        // First, find persons with matching names
+
         Page<PersonJpaEntity> personPage = personJpaRepository.findByFullNameContainingIgnoreCase(name, pageable);
 
-        // Get person IDs
+
         List<String> personIds = personPage.getContent()
                 .stream()
                 .map(PersonJpaEntity::getId)
@@ -186,7 +179,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
             return Page.empty(pageable);
         }
 
-        // Find users associated with those persons and with specific role
+
         Page<UserJpaEntity> userPage = jpaRepository.findByPersonIdInAndRole(personIds, role, pageable);
 
         return userPage.map(mapper::toDomain);
@@ -199,7 +192,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
                 user.getId().getValue(), user.getRole().name(), user.getEmail().getValue());
 
         UserJpaEntity entity = mapper.toEntity(user);
-        // Note: The password hash is handled in the mapper, but the operation is logged here.
+
         UserJpaEntity savedEntity = jpaRepository.save(entity);
 
         log.debug("User saved/updated successfully. Status: {}", savedEntity.isActive() ? "ACTIVE" : "INACTIVE");
@@ -214,10 +207,6 @@ public class JpaUserRepositoryAdapter implements UserRepository {
         log.info("User ID {} deleted successfully.", user.getId().getValue());
     }
 
-    // ------------------------------------------------------------------
-    // ✅ QUERIES (Read Operations)
-    // ------------------------------------------------------------------
-
     @Override
     public Optional<User> findById(UserId userId) {
         log.debug("Querying database for User ID: {}", userId.getValue());
@@ -227,7 +216,6 @@ public class JpaUserRepositoryAdapter implements UserRepository {
 
     @Override
     public Optional<User> findByEmail(Email email) {
-        // Log sensitive PII at debug level
         log.debug("Querying database by Email: {}", email.getValue());
         return jpaRepository.findByEmail(email.getValue())
                 .map(mapper::toDomain);

@@ -9,8 +9,8 @@ import java.util.*;
 
 public class QuizAnswer {
     private final QuizQuestionId questionId;
-    private final List<Integer> selectedOptions; // For multiple choice
-    private final String textAnswer; // For open-ended
+    private final List<Integer> selectedOptions;
+    private final String textAnswer;
 
     public QuizAnswer(QuizQuestionId questionId, List<Integer> selectedOptions, String textAnswer) {
         this.questionId = questionId;

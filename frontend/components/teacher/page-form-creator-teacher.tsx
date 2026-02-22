@@ -34,7 +34,6 @@ const PAGE_ALLOWED_FILE_TYPES = [
   'application/x-zip-compressed'
 ];
 
-// Zod validation schema
 const pageFormSchema = z.object({
   title: z
     .string()
@@ -52,7 +51,6 @@ const pageFormSchema = z.object({
 
 type PageFormData = z.infer<typeof pageFormSchema>;
 
-// URL validation schema for individual URL input
 const urlSchema = z
   .string()
   .min(1, "URL cannot be empty")
@@ -66,8 +64,7 @@ const urlSchema = z
     }
   }, "URL must start with http:// or https://");
 
-// File validation
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = [
   "application/pdf",
   "application/msword",
@@ -81,21 +78,19 @@ const ALLOWED_FILE_TYPES = [
   "application/x-zip-compressed",
 ];
 
-// For PageCreator - Documents and Images
 export const PAGE_ACCEPTED_FORMATS = {
-  // Documents
   "application/pdf": [".pdf"],
   "application/msword": [".doc"],
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
     ".docx",
   ],
   "text/plain": [".txt"],
-  // Images
+
   "image/jpeg": [".jpg", ".jpeg"],
   "image/png": [".png"],
   "image/gif": [".gif"],
   "image/webp": [".webp"],
-  // Archives
+
   "application/zip": [".zip"],
   "application/x-zip-compressed": [".zip"],
 };
@@ -173,21 +168,15 @@ export function PageCreator({
     onClose();
   };
 
-  // ============================================
-  // FILE VALIDATION FUNCTION
-  // ============================================
-
   function validateFile(
     file: File,
     allowedTypes: string[],
     maxSize: number
   ): string | null {
-    // Check file size
     if (file.size > maxSize) {
       return `File "${file.name}" exceeds ${maxSize / (1024 * 1024)}MB limit`;
     }
 
-    // Check MIME type
     if (!allowedTypes.includes(file.type)) {
       return `File "${
         file.name
@@ -196,7 +185,6 @@ export function PageCreator({
       )}`;
     }
 
-    // Additional check for file extension (some browsers don't set MIME type correctly)
     const extension = file.name.split(".").pop()?.toLowerCase();
     const allowedExtensions = getAllowedExtensionsArray(allowedTypes);
 
@@ -254,7 +242,6 @@ export function PageCreator({
   if (files) {
     const fileArray = Array.from(files);
 
-    // ✅ FIX: Pass all 3 required parameters
     for (const file of fileArray) {
       const error = validateFile(file, PAGE_ALLOWED_FILE_TYPES, PAGE_MAX_FILE_SIZE);
       if (error) {
@@ -278,7 +265,6 @@ export function PageCreator({
       shouldValidate: true,
     });
 
-    // Reset input to allow same file again if needed
     e.target.value = "";
   }
 };
@@ -298,7 +284,6 @@ export function PageCreator({
   const addUrl = () => {
     const trimmedUrl = newUrl.trim();
 
-    // Validate URL
     const validation = urlSchema.safeParse(trimmedUrl);
 
     if (!validation.success) {
@@ -306,7 +291,6 @@ export function PageCreator({
       return;
     }
 
-    // Check for duplicates
     const currentUrls = watchedValues.urlsSupport || [];
     if (currentUrls.includes(trimmedUrl)) {
       setUrlError("This URL has already been added");

@@ -23,10 +23,6 @@ public class UnitGradeController {
         this.unitGradeService = unitGradeService;
     }
 
-    // ========================================
-    // 📍 FINAL GRADE MANAGEMENT
-    // ========================================
-
     @PutMapping("/unit/{unitId}/student/{studentId}/final-grade")
     public ResponseEntity<Void> assignFinalGrade(
             @PathVariable String unitId,
@@ -51,8 +47,6 @@ public class UnitGradeController {
             @RequestBody BulkUpdateUnitGradesCommand command) {
 
 
-
-        // Ensure the unitId in path matches the command
         BulkUpdateUnitGradesCommand finalCommand = new BulkUpdateUnitGradesCommand(
                 unitId,
                 command.grades()
@@ -67,60 +61,6 @@ public class UnitGradeController {
                 null
         ));
     }
-
-
-//    @GetMapping("/unit/{unitId}/student/{studentId}/final-grade")
-//    public ResponseEntity<FinalGradeDTO> getFinalGrade(
-//            @PathVariable String unitId,
-//            @PathVariable String studentId) {
-//
-//        FinalGradeDTO finalGrade = unitGradeService.getFinalGrade(
-//                UnitId.fromString(unitId),
-//                UserId.fromString(studentId)
-//        );
-//
-//        return ResponseEntity.ok(finalGrade);
-//    }
-
-    // ========================================
-    // 📍 UNIT GRADE MANAGEMENT
-    // ========================================
-
-//    @PostMapping("/feedback")
-//    public ResponseEntity<Void> addFeedback(@RequestBody AddUnitGradeFeedbackCommand command) {
-//        unitGradeService.addFeedback(command);
-//        return ResponseEntity.ok().build();
-//    }
-
-//    @PostMapping("/recalculate")
-//    public ResponseEntity<Void> recalculateUnitGrade(
-//            @RequestParam String unitId,
-//            @RequestParam String studentId) {
-//        unitGradeService.recalculateUnitGrade(
-//                UnitId.fromString(unitId),
-//                UserId.fromString(studentId)
-//        );
-//        return ResponseEntity.ok().build();
-//    }
-
-//    @GetMapping("/unit/{unitId}/student/{studentId}")
-//    public ResponseEntity<UnitGradeDTO> getUnitGrade(
-//            @PathVariable String unitId,
-//            @PathVariable String studentId) {
-//        UnitGradeDTO dto = unitGradeService.getUnitGrade(
-//                UnitId.fromString(unitId),
-//                UserId.fromString(studentId)
-//        );
-//        return ResponseEntity.ok(dto);
-//    }
-
-//    @GetMapping("/student/{studentId}")
-//    public ResponseEntity<List<UnitGradeDTO>> getUnitGradesByStudent(@PathVariable String studentId) {
-//        List<UnitGradeDTO> grades = unitGradeService.getUnitGradesByStudent(
-//                UserId.fromString(studentId)
-//        );
-//        return ResponseEntity.ok(grades);
-//    }
 
     @GetMapping("/unit/{unitId}")
     public ResponseEntity<List<UnitGradeDTO>> getUnitGradesByUnit(@PathVariable String unitId) {

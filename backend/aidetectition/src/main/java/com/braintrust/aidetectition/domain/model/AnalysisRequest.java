@@ -7,7 +7,6 @@ import com.braintrust.shared.domain.AggregateRoot;
 
 import java.time.LocalDateTime;
 
-// 📍 aidetection/domain/model/AnalysisRequest.java - AGGREGATE ROOT
 public class AnalysisRequest extends AggregateRoot<AnalysisId> {
     private SubmissionId submissionId;
     private String contentToAnalyze;
@@ -25,13 +24,11 @@ public class AnalysisRequest extends AggregateRoot<AnalysisId> {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ✅ Factory Method for NEW analysis
     public static AnalysisRequest create(SubmissionId submissionId, String contentToAnalyze) {
         AnalysisId id = AnalysisId.generate();
         return new AnalysisRequest(id, submissionId, contentToAnalyze);
     }
 
-    // ✅ Factory Method to RECONSTITUTE from database
     public static AnalysisRequest reconstitute(AnalysisId id, SubmissionId submissionId,
                                                String contentToAnalyze, AnalysisStatus status,
                                                DetectionResult result, String errorMessage,
@@ -52,7 +49,6 @@ public class AnalysisRequest extends AggregateRoot<AnalysisId> {
         return content.trim();
     }
 
-    // Domain behavior
     public void completeAnalysis(DetectionResult result) {
         if (result == null) {
             throw new IllegalArgumentException("Detection result cannot be null");
@@ -80,7 +76,6 @@ public class AnalysisRequest extends AggregateRoot<AnalysisId> {
         return this.status == AnalysisStatus.PENDING;
     }
 
-    // Getters
     public SubmissionId getSubmissionId() { return submissionId; }
     public String getContentToAnalyze() { return contentToAnalyze; }
     public AnalysisStatus getStatus() { return status; }

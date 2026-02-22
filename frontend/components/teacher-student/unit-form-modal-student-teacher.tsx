@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/unit-form-modal-student-teacher.tsx
 "use client";
 
 import * as React from 'react';
@@ -14,7 +13,6 @@ import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-// Zod validation schema
 const unitFormSchema = z.object({
   name: z.string()
     .min(3, "Unit name must be at least 3 characters")
@@ -62,7 +60,6 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
     }
   });
 
-  // Reset form when modal opens/closes or initialData changes
   React.useEffect(() => {
     if (open) {
       if (initialData) {
@@ -107,7 +104,6 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
       urlImage: data.urlImage || "",
     };
 
-    // Pass the unitData AND the raw imageFile to the parent
     onSave(unitData, initialData?.id, imageFile);
   };
 
@@ -148,7 +144,6 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
             )}
           </div>
 
-          {/* Unit Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description *</Label>
             <Controller
@@ -170,7 +165,6 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
             )}
           </div>
 
-          {/* Unit Number (Optional - auto-assigned if creating) */}
           {initialData && (
             <div className="space-y-2">
               <Label htmlFor="numUnity">Unit Number</Label>
@@ -196,7 +190,6 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
             </div>
           )}
 
-          {/* Image Upload Component */}
           <ImageUploadWithValidation
             currentImageUrl={imagePreview}
             onImageChange={handleImageChange}
@@ -204,7 +197,6 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
             disabled={isSaving}
           />
 
-          {/* Action Buttons */}
           <div className="flex gap-3 pt-4 border-t">
             <Button
               type="submit"

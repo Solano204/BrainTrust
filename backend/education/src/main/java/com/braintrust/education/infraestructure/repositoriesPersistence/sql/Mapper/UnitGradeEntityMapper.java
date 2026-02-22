@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-// other imports...
+
 
 @Component
 public class UnitGradeEntityMapper {
@@ -35,7 +35,7 @@ public class UnitGradeEntityMapper {
     public UnitGradeJpaEntity toEntity(UnitGrade unitGrade) {
         log.debug("Mapping UnitGrade Domain {} to JPA Entity", unitGrade.getId().getValue());
 
-        // Serialize grades maps to JSON
+
         String assignmentGradesJson = serializeGradesMap(unitGrade.getAssignmentGrades());
         String quizGradesJson = serializeGradesMap(unitGrade.getQuizGrades());
 
@@ -43,9 +43,9 @@ public class UnitGradeEntityMapper {
                 unitGrade.getId().getValue(),
                 unitGrade.getUnitId().getValue(),
                 unitGrade.getStudentId().getValue(),
-                unitGrade.getCalculatedTotal(),  // calculatedTotalValue in JPA
-                unitGrade.getFinalGrade(),       // finalGradeValue in JPA
-                unitGrade.getFinalFeedback(),    // finalFeedback in JPA
+                unitGrade.getCalculatedTotal(),
+                unitGrade.getFinalGrade(),
+                unitGrade.getFinalFeedback(),
                 assignmentGradesJson,
                 quizGradesJson,
                 unitGrade.getLastCalculated()
@@ -59,7 +59,7 @@ public class UnitGradeEntityMapper {
         UnitId unitId = UnitId.fromString(entity.getUnitId());
         UserId studentId = UserId.fromString(entity.getStudentId());
 
-        // Deserialize grades maps from JSON
+
         Map<AssignmentId, Grade> assignmentGrades = deserializeGradesMap(
                 entity.getAssignmentGradesJson(), AssignmentId::fromString);
         Map<QuizId, Grade> quizGrades = deserializeGradesMap(
@@ -69,9 +69,9 @@ public class UnitGradeEntityMapper {
                 id,
                 unitId,
                 studentId,
-                entity.getCalculatedTotalValue(),  // calculatedTotal in domain
-                entity.getFinalGradeValue(),       // finalGrade in domain
-                entity.getFinalFeedback(),         // finalFeedback in domain
+                entity.getCalculatedTotalValue(),
+                entity.getFinalGradeValue(),
+                entity.getFinalFeedback(),
                 assignmentGrades,
                 quizGrades,
                 entity.getLastCalculated()
@@ -88,7 +88,7 @@ public class UnitGradeEntityMapper {
                     .collect(Collectors.toMap(
                             e -> {
                                 Object key = e.getKey();
-                                // Handle different types of keys that have getValue() method
+
                                 if (key instanceof AssignmentId) {
                                     return ((AssignmentId) key).getValue();
                                 } else if (key instanceof QuizId) {
@@ -98,7 +98,7 @@ public class UnitGradeEntityMapper {
                                 } else if (key instanceof String) {
                                     return (String) key;
                                 } else {
-                                    // Use reflection or toString() as fallback
+
                                     try {
                                         java.lang.reflect.Method getValueMethod = key.getClass().getMethod("getValue");
                                         return (String) getValueMethod.invoke(key);
@@ -137,7 +137,7 @@ public class UnitGradeEntityMapper {
 
                     Grade grade;
                     if (value instanceof Map) {
-                        // Case 1: Nested object format {"value": 85, "maxScore": 100}
+
                         @SuppressWarnings("unchecked")
                         Map<String, Object> nestedMap = (Map<String, Object>) value;
                         BigDecimal gradeValue = toBigDecimal(nestedMap.get("value"));
@@ -148,7 +148,7 @@ public class UnitGradeEntityMapper {
                             continue;
                         }
 
-                        // Provide default maxScore if null
+
                         if (maxScore == null) {
                             maxScore = BigDecimal.valueOf(100);
                             log.debug("Using default maxScore of 100 for key: {}", entry.getKey());
@@ -156,8 +156,7 @@ public class UnitGradeEntityMapper {
 
                         grade = new Grade(gradeValue, maxScore);
                     } else {
-                        // Case 2: Direct value format (just a number)
-                        // Use the value directly and use default maxScore of 100
+
                         BigDecimal gradeValue = toBigDecimal(value);
                         if (gradeValue == null) {
                             log.warn("Invalid grade value for key: {}", entry.getKey());
@@ -171,7 +170,7 @@ public class UnitGradeEntityMapper {
                     result.put(key, grade);
                 } catch (Exception e) {
                     log.warn("Failed to parse grade for key: {}", entry.getKey(), e);
-                    // Continue processing other entries
+
                 }
             }
 

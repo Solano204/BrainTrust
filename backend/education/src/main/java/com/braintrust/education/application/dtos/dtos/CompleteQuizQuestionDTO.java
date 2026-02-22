@@ -10,5 +10,5 @@ public record CompleteQuizQuestionDTO(
         String questionType,
         int points,
         List<QuestionOptionDTO> options,
-        String correctAnswer  // ✅ This will include the correct answer
+        String correctAnswer
 ) {}

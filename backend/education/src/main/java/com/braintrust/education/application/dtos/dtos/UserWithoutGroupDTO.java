@@ -8,5 +8,5 @@ public record UserWithoutGroupDTO(
         String fullName,
         String email,
         String role,
-        String studentRefId // Add this field
+        String studentRefId
 ) {}

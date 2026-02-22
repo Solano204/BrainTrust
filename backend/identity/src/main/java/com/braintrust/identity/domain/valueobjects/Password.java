@@ -5,7 +5,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Objects;
 
-// 📍 identity/domain/valueobjects/Password.java
 public class Password extends ValueObject {
     private final String hash;
 

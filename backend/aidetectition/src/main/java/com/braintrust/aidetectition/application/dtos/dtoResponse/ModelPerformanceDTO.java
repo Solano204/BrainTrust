@@ -1,6 +1,5 @@
 package com.braintrust.aidetectition.application.dtos.dtoResponse;
 
-// 📍 aidetection/application/dtos/ModelPerformanceDTO.java
 public record ModelPerformanceDTO(
         String modelType,
         String version,

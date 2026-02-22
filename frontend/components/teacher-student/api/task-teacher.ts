@@ -1,19 +1,12 @@
-// File: src/app/features/courses/api/assignment-api.ts
 "use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Assignment } from "@/app/domain/entities/CourseEntities";
-import { sub } from "date-fns";
-import { deleteDocumentByUrl, deleteMultipleDocuments, extractPublicIdFromUrl, getPdfContent, uploadDocumentFile } from "@/app/utils/cloudinary/cloudinary-pdf";
+import { deleteDocumentByUrl, deleteMultipleDocuments, extractPublicIdFromUrl, uploadDocumentFile } from "@/app/utils/cloudinary/cloudinary-pdf";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-const isMockEnabled = false; // Enable mock data
-
-// ============================================
-// DTO INTERFACES - MATCHING BACKEND
-// ============================================
 
 export interface SuccessResponseDTO {
   success: boolean;
@@ -40,8 +33,7 @@ export interface AssignmentDTO {
   maxPoints: number;
   instructions: string;
   targetType: "INDIVIDUAL" | "TEAM";
-    submissionFormat: submissionFormat;
-
+  submissionFormat: submissionFormat;
   attachments: DocumentDTO[];
   externalLinks: string[];
   createdAt: string;
@@ -74,17 +66,11 @@ export interface UpdateAssignmentCommand {
   description: string;
   instructions: string;
   submissionFormat: submissionFormat;
-
 }
 
-
-// Types matching your backend DTOs
 interface FrontendDocumentDTO {
   originalFilename: string;
-  // fileSize?: number;
-  // mimeType?: string;
-  // fileHash?: string;
-  uploadedUrl?: string; // Cloudinary URL
+  uploadedUrl?: string;
 }
 
 interface CreateAssignmentFrontendDTO {
@@ -97,16 +83,10 @@ interface CreateAssignmentFrontendDTO {
   instructions: string;
   attachments?: FrontendDocumentDTO[];
   links?: string[];
-  targetType: string; // "INDIVIDUAL" or "TEAM"
-  submissionFormat: string; // "DIGITAL" or "NOTEBOOK"
+  targetType: string;
+  submissionFormat: string;
 }
-// ============================================
-// MAPPERS - FRONTEND TO BACKEND CONVERSION
-// ============================================
 
-/**
- * Maps backend AssignmentDTO to frontend Assignment interface
- */
 async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment> {
   return {
     id: dto.id,
@@ -119,7 +99,7 @@ async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment>
     urls: dto.externalLinks || [],
     links: [],
     deliveryMode: dto.targetType === "INDIVIDUAL" ? "INDIVIDUAL" : "TEAM",
-    submissionFormat: dto.submissionFormat || "DIGITAL", // NEW
+    submissionFormat: dto.submissionFormat || "DIGITAL",
     dueDate: dto.dueDate || null,
     maxScore: { value: 0, maxPoints: dto.maxPoints || 100 },
     instructions: dto.instructions || "",
@@ -129,14 +109,6 @@ async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment>
   };
 }
 
-/**
- * Maps frontend Assignment data to backend CreateAssignmentCommand
- */
-
-
-/**
- * Maps frontend Assignment data to backend UpdateAssignmentCommand
- */
 async function mapAssignmentToUpdateCommand(
   assignmentId: string,
   assignmentData: Partial<Omit<Assignment, "id" | "courseId" | "unitId" | "createdAt" | "submissions" | "idUser">>
@@ -149,10 +121,6 @@ async function mapAssignmentToUpdateCommand(
     submissionFormat: assignmentData.submissionFormat || "DIGITAL",
   };
 }
-
-// ============================================
-// CONFIGURATION & CLIENT SETUP
-// ============================================
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -188,79 +156,7 @@ const handleApiError = async (error: unknown): Promise<never> => {
   throw new Error("An unexpected error occurred");
 };
 
-// ============================================
-// MOCK DATA
-// ============================================
-
-const MOCK_ASSIGNMENTS: Assignment[] = [
-  {
-    id: "assign-1",
-    title: "JavaScript Variables Assignment",
-    courseId: "crs-101",
-    unitId: "unit-1-1",
-    description: "Practice declaring and using variables in JavaScript",
-    createdAt: "2024-01-15T10:00:00Z",
-    attachments: [
-      {
-        name: "assignment-instructions.pdf",
-        storagePath: "/assignments/instructions.pdf",
-        createdAt: "2024-01-15T10:00:00Z"
-      }
-    ],
-    urls: ["https://developer.mozilla.org/en-US/docs/Web/JavaScript"],
-    links: [],
-    deliveryMode: "INDIVIDUAL",
-    dueDate: "2024-02-01T23:59:00Z",
-    maxScore: { value: 0, maxPoints: 100 },
-    instructions: "Complete the following exercises:\n1. Declare variables using let, const, and var\n2. Create different data types\n3. Practice variable scope",
-    submissions: [],
-    allowLateSubmissions: true,
-    idUser: ""
-  },
-  {
-    id: "assign-2",
-    title: "Control Flow Exercises",
-    courseId: "crs-101",
-    unitId: "unit-1-2",
-    description: "Practice if/else statements and loops",
-    createdAt: "2024-01-20T10:00:00Z",
-    attachments: [
-      {
-        name: "control-flow-exercises.pdf",
-        storagePath: "/assignments/control-flow.pdf",
-        createdAt: "2024-01-20T10:00:00Z"
-      }
-    ],
-    urls: ["https://javascript.info/ifelse", "https://javascript.info/while-for"],
-    links: [],
-    deliveryMode: "GROUP",
-    dueDate: "2024-02-10T23:59:00Z",
-    maxScore: { value: 0, maxPoints: 150 },
-    instructions: "Work in groups to solve the control flow problems. Submit one solution per group.",
-    submissions: [],
-    allowLateSubmissions: false,
-    idUser: ""
-  }
-];
-
-const simulateDelay = async (ms: number = 500): Promise<void> => 
-  new Promise(resolve => setTimeout(resolve, ms));
-
-// ============================================
-// API FUNCTIONS
-// ============================================
-
-/**
- * Fetch assignments by course unit
- * Backend: GET /api/assignments/course/{courseId}/unit/{unitId}
- */
 export async function fetchAssignmentsByUnit(courseId: string, unitId: string): Promise<Assignment[]> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    console.log(`MOCK: Fetching assignments for course ${courseId}, unit ${unitId}`);
-    return MOCK_ASSIGNMENTS.filter(assign => assign.courseId === courseId && assign.unitId === unitId);
-  }
-
   try {
     const response = await apiClient.get<AssignmentDTO[]>(
       `/api/assignments/course/${courseId}/unit/${unitId}`
@@ -276,23 +172,8 @@ export async function fetchAssignmentsByUnit(courseId: string, unitId: string): 
   }
 }
 
-/**
- * Fetch assignment by ID
- * Backend: GET /api/assignments/{assignmentId}
- */
 export async function fetchAssignmentById(assignmentId: string): Promise<Assignment> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    const assignment = MOCK_ASSIGNMENTS.find(assign => assign.id === assignmentId);
-    if (!assignment) {
-      throw new Error(`Assignment not found: ${assignmentId}`);
-    }
-    console.log(`MOCK: Fetching assignment ${assignmentId}`);
-    return assignment;
-  }
-
   try {
-
     console.log(`API: Fetching assignment ${assignmentId}`);
     const response = await apiClient.get<AssignmentDTO>(
       `/api/assignments/${assignmentId}`
@@ -305,34 +186,21 @@ export async function fetchAssignmentById(assignmentId: string): Promise<Assignm
   }
 }
 
-
-/**
- * Process and upload a single file to Cloudinary
- */
 async function processAssignmentFile(
   file: File,
   courseId: string,
   assignmentTitle: string
 ): Promise<FrontendDocumentDTO> {
-  // Create folder structure: assignments/{courseId}/{sanitized-title}
   const sanitizedTitle = assignmentTitle
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .substring(0, 50);
   const folder = `assignments/${courseId}/${sanitizedTitle}`;
 
-  // Upload file to Cloudinary
   const uploadResult = await uploadDocumentFile(file, folder);
 
-  // Generate file hash (optional - simple checksum)
-  const fileHash = await generateFileHash(file);
-
-  // Create document DTO
   const document: FrontendDocumentDTO = {
     originalFilename: file.name,
-    // fileSize: file.size,
-    // mimeType: file.type,
-    // fileHash: uploadResult.url,
     uploadedUrl: uploadResult.url,
   };
 
@@ -340,25 +208,6 @@ async function processAssignmentFile(
   return document;
 }
 
-/**
- * Generate a simple hash for file verification (optional)
- */
-async function generateFileHash(file: File): Promise<string> {
-  try {
-    const buffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex.substring(0, 16); // First 16 chars
-  } catch (error) {
-    console.warn('Failed to generate file hash:', error);
-    return `${file.size}-${file.name}`; // Fallback
-  }
-}
-
-/**
- * Process all assignment files in parallel
- */
 async function processAssignmentFiles(
   files: File[],
   courseId: string,
@@ -370,7 +219,6 @@ async function processAssignmentFiles(
 
   console.log(`Processing ${files.length} files for assignment: ${assignmentTitle}`);
 
-  // Process all files in parallel for better performance
   const processedDocuments = await Promise.all(
     files.map(file => processAssignmentFile(file, courseId, assignmentTitle))
   );
@@ -379,9 +227,6 @@ async function processAssignmentFiles(
   return processedDocuments;
 }
 
-/**
- * Create assignment with new frontend processing
- */
 export async function createAssignment(
   courseId: string,
   unitId: string,
@@ -393,12 +238,10 @@ export async function createAssignment(
   console.log("Files:", files?.length || 0);
 
   try {
-    // Process and upload files to Cloudinary
     const attachments = files && files.length > 0
       ? await processAssignmentFiles(files, courseId, taskData.title)
       : [];
 
-    // Prepare the DTO for backend
     const frontendDTO: CreateAssignmentFrontendDTO = {
       courseId: courseId,
       unitId: unitId,
@@ -413,10 +256,8 @@ export async function createAssignment(
       submissionFormat: taskData.submissionFormat || "DIGITAL",
     };
 
-    // Log the payload
     console.log("Frontend DTO to send:", JSON.stringify(frontendDTO, null, 2));
 
-    // Send JSON to new frontend endpoint
     const response = await apiClient.post<any>(
       "/api/assignments/frontend",
       frontendDTO,
@@ -434,30 +275,14 @@ export async function createAssignment(
     throw error;
   }
 }
-/**
- * Update an existing assignment
- * Backend: PUT /api/assignments/{assignmentId}
- */
+
 export async function updateAssignment(
   assignmentId: string,
   assignmentData: Partial<Omit<Assignment, "id" | "courseId" | "unitId" | "createdAt" | "submissions" | "idUser">>
 ): Promise<Assignment> {
   console.log("Updating assignment:", assignmentId, assignmentData);
-  
-  if (isMockEnabled) {
-    await simulateDelay(600);
-    const index = MOCK_ASSIGNMENTS.findIndex(assign => assign.id === assignmentId);
-    if (index !== -1) {
-      MOCK_ASSIGNMENTS[index] = { ...MOCK_ASSIGNMENTS[index], ...assignmentData };
-      console.log(`MOCK: Updated assignment ${assignmentId}`, assignmentData);
-      return MOCK_ASSIGNMENTS[index];
-    }
-    throw new Error(`Assignment not found: ${assignmentId}`);
-  }
 
   try {
-  
-
     console.log(`API: Updating assignment ${assignmentData}`);
     const command = await mapAssignmentToUpdateCommand(assignmentId, assignmentData);
     
@@ -468,7 +293,6 @@ export async function updateAssignment(
       command
     );
     
-    // Fetch the updated assignment details
     const updatedAssignment = await fetchAssignmentById(assignmentId);
     
     console.log("Backend: Updated assignment:", assignmentId);
@@ -479,22 +303,7 @@ export async function updateAssignment(
   }
 }
 
-/**
- * Delete an assignment
- * Backend: DELETE /api/assignments/{assignmentId}
- */
 export async function deleteAssignment(assignmentId: string): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(400);
-    const index = MOCK_ASSIGNMENTS.findIndex(assign => assign.id === assignmentId);
-    if (index !== -1) {
-      MOCK_ASSIGNMENTS.splice(index, 1);
-      console.log(`MOCK: Deleted assignment ${assignmentId}`);
-      return;
-    }
-    throw new Error(`Assignment not found: ${assignmentId}`);
-  }
-
   try {
     console.log("Deleting assignment:", assignmentId);
     
@@ -509,24 +318,10 @@ export async function deleteAssignment(assignmentId: string): Promise<void> {
   }
 }
 
-/**
- * Extend due date for an assignment
- * Backend: PUT /api/assignments/{assignmentId}/due-date
- */
 export async function extendAssignmentDueDate(
   assignmentId: string,
   newDueDate: string
 ): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(500);
-    const assignment = MOCK_ASSIGNMENTS.find(assign => assign.id === assignmentId);
-    if (assignment) {
-      assignment.dueDate = newDueDate;
-      console.log(`MOCK: Extended due date for assignment ${assignmentId} to ${newDueDate}`);
-    }
-    return;
-  }
-
   try {
     await apiClient.put<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/due-date`,
@@ -540,17 +335,7 @@ export async function extendAssignmentDueDate(
   }
 }
 
-/**
- * Activate an assignment
- * Backend: PUT /api/assignments/{assignmentId}/activate
- */
 export async function activateAssignment(assignmentId: string): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(500);
-    console.log(`MOCK: Activated assignment ${assignmentId}`);
-    return;
-  }
-
   try {
     await apiClient.put<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/activate`
@@ -563,17 +348,7 @@ export async function activateAssignment(assignmentId: string): Promise<void> {
   }
 }
 
-/**
- * Deactivate an assignment
- * Backend: PUT /api/assignments/{assignmentId}/deactivate
- */
 export async function deactivateAssignment(assignmentId: string): Promise<void> {
-  if (isMockEnabled) {
-    await simulateDelay(500);
-    console.log(`MOCK: Deactivated assignment ${assignmentId}`);
-    return;
-  }
-
   try {
     await apiClient.put<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/deactivate`
@@ -586,18 +361,7 @@ export async function deactivateAssignment(assignmentId: string): Promise<void> 
   }
 }
 
-/**
- * Fetch all assignments for a course
- * Backend: GET /api/assignments/course/{courseId}
- */
 export async function fetchAssignmentsByCourse(courseId: string): Promise<Assignment[]> {
-  if (isMockEnabled) {
-    await simulateDelay();
-    const assignments = MOCK_ASSIGNMENTS.filter(assign => assign.courseId === courseId);
-    console.log(`MOCK: Fetching ${assignments.length} assignments for course ${courseId}`);
-    return assignments;
-  }
-
   try {
     const response = await apiClient.get<AssignmentDTO[]>(
       `/api/assignments/course/${courseId}`
@@ -613,9 +377,6 @@ export async function fetchAssignmentsByCourse(courseId: string): Promise<Assign
   }
 }
 
-/**
- * Validate assignment data before creation/update
- */
 export async function validateAssignmentData(
   assignmentData: Partial<Assignment>
 ): Promise<{ 
@@ -650,18 +411,6 @@ export async function validateAssignmentData(
   };
 }
 
-
-// File: src/app/features/courses/api/assignment-api.ts
-// Add these functions to your existing assignment-api.ts file
-
-// ============================================
-// LINK MANAGEMENT
-// ============================================
-
-/**
- * Add a single link to an assignment
- * Backend: POST /api/assignments/{assignmentId}/links
- */
 export async function addLinkToAssignment(
   assignmentId: string,
   link: string
@@ -681,10 +430,6 @@ export async function addLinkToAssignment(
   }
 }
 
-/**
- * Add multiple links to an assignment
- * Backend: POST /api/assignments/{assignmentId}/links/batch
- */
 export async function addMultipleLinksToAssignment(
   assignmentId: string,
   links: string[]
@@ -704,10 +449,6 @@ export async function addMultipleLinksToAssignment(
   }
 }
 
-/**
- * Remove a link from an assignment
- * Backend: DELETE /api/assignments/{assignmentId}/links
- */
 export async function removeLinkFromAssignment(
   assignmentId: string,
   linkUrl: string
@@ -727,10 +468,6 @@ export async function removeLinkFromAssignment(
   }
 }
 
-/**
- * Clear all links from an assignment
- * Backend: DELETE /api/assignments/{assignmentId}/links/all
- */
 export async function clearAllLinksFromAssignment(
   assignmentId: string
 ): Promise<void> {
@@ -748,34 +485,18 @@ export async function clearAllLinksFromAssignment(
   }
 }
 
-
-
-
-
-// Helper function to process a file and create FrontendDocumentDTO
 async function processFileToDTO(file: File, folder: string): Promise<FrontendDocumentDTO> {
   console.log(`Processing file: ${file.name} (${file.size} bytes)`);
   
-  // 1. Upload to Cloudinary
   const uploadResult = await uploadDocumentFile(file, folder);
   console.log(`✓ Uploaded to Cloudinary: ${uploadResult.url}`);
   
-  // 3. Calculate file hash
-  // 4. Create FrontendDocumentDTO
   return {
     originalFilename: file.name,
     uploadedUrl: uploadResult.url,
-    // extractedText: extractedText,
-    // fileSize: file.size,
-    // mimeType: file.type,
-    // fileHash: fileHash,
   };
 }
 
-/**
- * Add a single attachment to an assignment
- * Backend: POST /api/assignments/{assignmentId}/attachments/single-json
- */
 export async function addAttachmentToAssignment(
   assignmentId: string,
   file: File
@@ -783,10 +504,8 @@ export async function addAttachmentToAssignment(
   try {
     console.log(`Adding attachment to assignment ${assignmentId}:`, file.name);
     
-    // Process file: upload to Cloudinary and extract text
     const documentDTO = await processFileToDTO(file, 'assignment-attachments');
     
-    // Send metadata to backend
     await apiClient.post<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/attachments/single-json`,
       documentDTO,
@@ -804,10 +523,6 @@ export async function addAttachmentToAssignment(
   }
 }
 
-/**
- * Add multiple attachments to an assignment
- * Backend: POST /api/assignments/{assignmentId}/attachments/bulk-json
- */
 export async function addMultipleAttachmentsToAssignment(
   assignmentId: string,
   files: File[]
@@ -815,17 +530,14 @@ export async function addMultipleAttachmentsToAssignment(
   try {
     console.log(`Adding ${files.length} attachments to assignment ${assignmentId}`);
     
-    // Process all files in parallel
     const documentDTOs = await Promise.all(
       files.map(file => processFileToDTO(file, 'assignment-attachments'))
     );
     
-    // Create command with processed attachments
     const command = {
       attachments: documentDTOs
     };
     
-    // Send metadata to backend
     await apiClient.post<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/attachments/bulk-json`,
       command,
@@ -843,10 +555,6 @@ export async function addMultipleAttachmentsToAssignment(
   }
 }
 
-/**
- * Add multiple attachments with progress tracking
- * Useful for showing upload progress to users
- */
 export async function addMultipleAttachmentsToAssignmentWithProgress(
   assignmentId: string,
   files: File[],
@@ -857,7 +565,6 @@ export async function addMultipleAttachmentsToAssignmentWithProgress(
     
     const documentDTOs: FrontendDocumentDTO[] = [];
     
-    // Process files one by one to track progress
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       onProgress?.(i + 1, files.length, file.name);
@@ -866,7 +573,6 @@ export async function addMultipleAttachmentsToAssignmentWithProgress(
       documentDTOs.push(documentDTO);
     }
     
-    // Send all metadata to backend
     const command = {
       attachments: documentDTOs
     };
@@ -888,10 +594,6 @@ export async function addMultipleAttachmentsToAssignmentWithProgress(
   }
 }
 
-/**
- * Remove an attachment from an assignment
- * Backend: DELETE /api/assignments/{assignmentId}/attachments
- */
 export async function removeAttachmentFromAssignment(
   assignmentId: string,
   documentName: string,
@@ -899,20 +601,19 @@ export async function removeAttachmentFromAssignment(
 ): Promise<void> {
   try {
     console.log(`Removing attachment from assignment ${assignmentId}:`, documentName);
-    console.log('Cloudinary URL:', cloudinaryUrl); // Add this
+    console.log('Cloudinary URL:', cloudinaryUrl);
     
     if (cloudinaryUrl) {
       try {
-        console.log('Attempting Cloudinary deletion...'); // Add this
+        console.log('Attempting Cloudinary deletion...');
         const result = await deleteDocumentByUrl(cloudinaryUrl);
-        console.log('✓ Deleted from Cloudinary:', result); // Add result
+        console.log('✓ Deleted from Cloudinary:', result);
       } catch (cloudinaryError) {
-        console.error('Failed to delete from Cloudinary:', cloudinaryError); // Change to error
-        // Consider throwing here instead of continuing
+        console.error('Failed to delete from Cloudinary:', cloudinaryError);
         throw cloudinaryError;
       }
     } else {
-      console.warn('⚠️ No Cloudinary URL provided - skipping cloud deletion'); // Add this
+      console.warn('⚠️ No Cloudinary URL provided - skipping cloud deletion');
     }
     
     await apiClient.delete<SuccessResponseDTO>(
@@ -927,15 +628,13 @@ export async function removeAttachmentFromAssignment(
   }
 }
 
-// UPDATED: clearAllAttachmentsFromAssignment with Cloudinary deletion
 export async function clearAllAttachmentsFromAssignment(
   assignmentId: string,
-  attachments?: Array<{ name: string; storagePath: string }> // Add this parameter
+  attachments?: Array<{ name: string; storagePath: string }>
 ): Promise<void> {
   try {
     console.log(`Clearing all attachments from assignment ${assignmentId}`);
     
-    // Delete all from Cloudinary if attachments info is provided
     if (attachments && attachments.length > 0) {
       try {
         const publicIds = attachments
@@ -948,11 +647,9 @@ export async function clearAllAttachmentsFromAssignment(
         }
       } catch (cloudinaryError) {
         console.warn('Failed to delete from Cloudinary:', cloudinaryError);
-        // Continue anyway
       }
     }
     
-    // Clear from backend database
     await apiClient.delete<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/attachments/all`
     );
@@ -962,4 +659,4 @@ export async function clearAllAttachmentsFromAssignment(
     console.error("❌ Error clearing attachments:", error);
     return await handleApiError(error);
   }
-}
+} 

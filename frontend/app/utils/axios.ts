@@ -1,8 +1,6 @@
-// lib/axios.ts
 import axios from 'axios';
 import { JWTUtils } from '@/app/utils/jwt';
 
-// Create axios instance with base configuration
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   headers: {
@@ -12,7 +10,6 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Track if we're currently refreshing token
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: any) => void;
@@ -31,13 +28,10 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request interceptor
 axiosInstance.interceptors.request.use(
   async (config) => {
-    // On client side, we'll get token from cookies via a server action
     if (typeof window !== 'undefined') {
       try {
-        // Get access token from server action
         const response = await fetch('/api/auth/get-token', {
           method: 'GET',
           credentials: 'include',
@@ -61,16 +55,13 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     
-    // If error is 401 and we haven't tried refreshing yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // If already refreshing, add to queue
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -87,7 +78,6 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
       
       try {
-        // Try to refresh token
         const refreshResponse = await fetch('/api/auth/refresh', {
           method: 'POST',
           credentials: 'include',
@@ -96,19 +86,15 @@ axiosInstance.interceptors.response.use(
         if (refreshResponse.ok) {
           const { accessToken } = await refreshResponse.json();
           
-          // Process queued requests
           processQueue(null, accessToken);
           
-          // Update current request
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           
           return axiosInstance(originalRequest);
         } else {
-          // Refresh failed, logout
           processQueue(new Error('Refresh token expired'));
           await fetch('/api/auth/clear-tokens', { method: 'POST' });
           
-          // Redirect to login
           if (typeof window !== 'undefined') {
             window.location.href = '/login?session=expired';
           }

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-// other imports...
+
 
 @RestController
 @RequestMapping("/api/persons")
@@ -44,27 +44,6 @@ public class PersonController {
     public PersonController(PersonService personService) {
         this.personService = personService;
     }
-
-//
-//    /*delete */
-//    @PostMapping
-//    public ResponseEntity<SuccessResponseDTO> createPerson(@RequestBody CreatePersonCommand command) {
-//        log.info("Request received to create new person: {} {}", command.firstName(), command.lastName());
-//        PersonId personId = personService.createPerson(command);
-//        log.info("Person created successfully with ID: {}", personId.getValue());
-//        return ResponseEntity.status(HttpStatus.CREATED)
-//                .body(new SuccessResponseDTO(true, "Person created successfully", personId.getValue()));
-//    }
-
-
-//    /*delete */
-//    @PutMapping("/personal-info")
-//    public ResponseEntity<SuccessResponseDTO> updatePersonInfo(@RequestBody UpdatePersonInfoCommand command) {
-//        log.info("Updating personal info for Person ID: {}", command.personId());
-//        personService.updatePersonalInfo(command);
-//        log.debug("Person ID {} information updated.", command.personId());
-//        return ResponseEntity.ok(new SuccessResponseDTO(true, "Person information updated successfully", null));
-//    }
 
 
     @Operation(
@@ -117,14 +96,13 @@ public class PersonController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortParams[0]));
 
-        // Cast to PersonApplicationService to access search method
         if (personService instanceof PersonApplicationService) {
             Page<PersonDTO> personPage = ((PersonApplicationService) personService)
                     .searchPersonsByName(name, pageable);
             PaginatedResponse<PersonDTO> response = PaginatedResponse.fromPage(personPage);
             return ResponseEntity.ok(response);
         } else {
-            // Fallback to regular pagination if search not available
+
             Page<PersonDTO> personPage = personService.getAllPersons(pageable);
             PaginatedResponse<PersonDTO> response = PaginatedResponse.fromPage(personPage);
             return ResponseEntity.ok(response);
@@ -148,16 +126,6 @@ public class PersonController {
         return ResponseEntity.ok(new SuccessResponseDTO(true, "Image updated successfully", null));
     }
 
-
-//
-//    // delete
-//    @GetMapping("/{personId}")
-//    public ResponseEntity<PersonDTO> getPersonById(@PathVariable String personId) {
-//        log.debug("Fetching details for Person ID: {}", personId);
-//        PersonDTO person = personService.getPersonById(PersonId.fromString(personId));
-//        return ResponseEntity.ok(person);
-//    }
-
     @Operation(
             summary = "Get all persons (legacy)",
             description = "Retrieves all persons without pagination. Use /paginated endpoint for better performance with large datasets."
@@ -166,7 +134,6 @@ public class PersonController {
     @GetMapping
     public ResponseEntity<List<PersonDTO>> getAllPersons() {
 
-        // Fallback: Use pagination with large page size
         Pageable pageable = PageRequest.of(0, 1000, Sort.by("registrationDate").descending());
         Page<PersonDTO> personPage = personService.getAllPersons(pageable);
         return ResponseEntity.ok(personPage.getContent());
