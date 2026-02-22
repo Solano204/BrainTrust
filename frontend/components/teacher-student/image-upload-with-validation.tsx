@@ -1,12 +1,8 @@
-// File: src/app/features/courses/components/image-upload-with-validation.tsx
 "use client";
 
 import React, { useState, useRef } from 'react';
 import { Upload, X, ImageIcon, AlertCircle, Check } from 'lucide-react';
 
-// ============================================
-// IMAGE VALIDATION UTILITY (Magic Numbers)
-// ============================================
 
 const validateImageSignature = (file: File): Promise<{ valid: boolean; type: string }> => {
   return new Promise((resolve, reject) => {
@@ -25,17 +21,16 @@ const validateImageSignature = (file: File): Promise<{ valid: boolean; type: str
         case "89504E47": // PNG
           type = "image/png";
           break;
-        case "FFD8FFDB": // JPEG cases
+        case "FFD8FFDB":
         case "FFD8FFE0":
         case "FFD8FFEE":
         case "FFD8FFE1":
           type = "image/jpeg";
           break;
-        case "47494638": // GIF
+        case "47494638":
           type = "image/gif";
           break;
         default:
-          // Check for WEBP (RIFF....WEBP)
           if (header.startsWith("52494646")) {
             type = "image/webp";
           }
@@ -54,9 +49,6 @@ const validateImageSignature = (file: File): Promise<{ valid: boolean; type: str
   });
 };
 
-// ============================================
-// IMAGE UPLOAD COMPONENT
-// ============================================
 
 interface ImageUploadWithValidationProps {
   currentImageUrl?: string;
@@ -79,7 +71,6 @@ export function ImageUploadWithValidation({
   const [isValidating, setIsValidating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Update preview when currentImageUrl changes (for edit mode)
   React.useEffect(() => {
     setPreviewUrl(currentImageUrl);
   }, [currentImageUrl]);
@@ -91,12 +82,10 @@ export function ImageUploadWithValidation({
       return;
     }
 
-    // Reset states
     setError("");
     setValidationStatus(null);
     setIsValidating(true);
 
-    // Level 1: Check file size (5MB limit)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       setError("File size must be less than 5MB");
@@ -104,14 +93,12 @@ export function ImageUploadWithValidation({
       return;
     }
 
-    // Level 2: Check MIME type
     if (!file.type.startsWith('image/')) {
       setError("File must be an image");
       setIsValidating(false);
       return;
     }
 
-    // Level 3: Validate binary signature (Magic Numbers)
     try {
       const validation = await validateImageSignature(file);
       
@@ -122,7 +109,6 @@ export function ImageUploadWithValidation({
         return;
       }
 
-      // All checks passed - create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
@@ -130,7 +116,6 @@ export function ImageUploadWithValidation({
         setValidationStatus("valid");
         setIsValidating(false);
         
-        // Pass the file and preview URL to parent
         if (onImageChange) {
           onImageChange({ 
             file, 
@@ -268,7 +253,6 @@ export function ImageUploadWithValidation({
         </div>
       )}
 
-      {/* Info Note */}
       <p className="text-xs text-gray-500 dark:text-gray-400">
         Images are validated using binary signatures for security
       </p>

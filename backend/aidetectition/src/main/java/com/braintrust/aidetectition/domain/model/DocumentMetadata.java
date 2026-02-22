@@ -4,9 +4,7 @@ import lombok.Value;
 
 import java.time.LocalDateTime;
 
-/**
- * Metadata about a stored document
- */
+
 public class DocumentMetadata {
     private final String originalFilename;
     private final String storagePath;

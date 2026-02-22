@@ -11,7 +11,6 @@ import java.util.List;
 
 public interface QuizService {
 
-    // Commands
     QuizId createQuiz(CreateQuizCommand command);
     void addQuestion(AddQuizQuestionCommand command);
     void updateQuiz(UpdateQuizCommand command);
@@ -21,19 +20,16 @@ public interface QuizService {
     List<QuizDTO> getBasicQuizzesByCourse(CourseId courseId);
     MinimalQuizDTO getMinimalQuizById(QuizId quizId);
 
-    // NEW: Delete quiz
+
     void deleteQuiz(QuizId quizId);
     void addQuestionsBulk(AddQuizQuestionsBulkCommand command);
     void deleteQuestionsBulk(DeleteQuizQuestionsBulkCommand command);
     void updateQuestionsBulk(UpdateQuizQuestionsBulkCommand command);
-    // NEW: Get submissions
 
     List<QuizDTO> getQuizzesByCourseAndUnit(CourseId courseId, UnitId unitId);
 
-    // Add this method to your QuizService interface
     CompleteQuizDTO getCompleteQuiz(QuizId quizId);
 
-    // Queries
     QuizDTO getQuizById(QuizId quizId);
     List<QuizDTO> getQuizzesByCourse(CourseId courseId);
     List<QuizDTO> getAvailableQuizzesByCourse(CourseId courseId);

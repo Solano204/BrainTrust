@@ -2,13 +2,12 @@ package com.braintrust.aidetectition.domain.model;
 import com.braintrust.shared.domain.ValueObject;
 import java.math.BigDecimal;
 
-// 📍 aidetection/domain/valueobjects/DetectedSegment.java
 public class DetectedSegment extends ValueObject {
     private final String text;
     private final int startIndex;
     private final int endIndex;
-    private final BigDecimal aiProbability; // 0.0 - 1.0
-    private final String reason; // Why this segment was flagged
+    private final BigDecimal aiProbability;
+    private final String reason;
 
     public DetectedSegment(String text, int startIndex, int endIndex,
                            BigDecimal aiProbability, String reason) {

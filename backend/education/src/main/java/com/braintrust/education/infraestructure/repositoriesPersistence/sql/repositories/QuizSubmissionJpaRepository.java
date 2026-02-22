@@ -12,15 +12,9 @@ import java.util.Optional;
 @Repository
 public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissionJpaEntity, String> {
 
-    /*
-    List<QuizSubmissionJpaEntity> findByQuizId(String quizId);
-    */
 
     List<QuizSubmissionJpaEntity> findByStudentId(String studentId);
 
-    /*
-    List<QuizSubmissionJpaEntity> findByQuizIdAndStudentId(String quizId, String studentId);
-    */
 
     @Query("SELECT qs FROM QuizSubmissionJpaEntity qs " +
             "JOIN QuizJpaEntity q ON qs.quizId = q.id " +
@@ -28,7 +22,7 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
             "ORDER BY qs.submittedAt DESC NULLS LAST, qs.startedAt DESC")
     List<QuizSubmissionJpaEntity> findByCourseIdOrderBySubmittedAtDesc(@Param("courseId") String courseId);
 
-    // NEW: Find submissions by course and unit
+
     @Query("SELECT qs FROM QuizSubmissionJpaEntity qs " +
             "JOIN QuizJpaEntity q ON qs.quizId = q.id " +
             "WHERE q.courseId = :courseId AND q.unitId = :unitId " +
@@ -38,7 +32,7 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
             @Param("unitId") String unitId
     );
 
-    // NEW: Find submissions by student, course and unit
+
     @Query("SELECT qs FROM QuizSubmissionJpaEntity qs " +
             "JOIN QuizJpaEntity q ON qs.quizId = q.id " +
             "WHERE qs.studentId = :studentId AND q.courseId = :courseId AND q.unitId = :unitId " +
@@ -57,9 +51,6 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
             @Param("studentId") String studentId
     );
 
-    /*
-    List<QuizSubmissionJpaEntity> findByStatus(String status);
-    */
 
     @Query("SELECT COUNT(s) FROM QuizSubmissionJpaEntity s " +
             "WHERE s.quizId = :quizId AND s.studentId = :studentId")
@@ -68,16 +59,4 @@ public interface QuizSubmissionJpaRepository extends JpaRepository<QuizSubmissio
             @Param("studentId") String studentId
     );
 
-    /*
-    @Query("SELECT qs FROM QuizSubmissionJpaEntity qs " +
-            "JOIN QuizJpaEntity q ON qs.quizId = q.id " +
-            "WHERE q.courseId = :courseId AND qs.studentId = :studentId")
-    List<QuizSubmissionJpaEntity> findByCourseIdAndStudentId(
-            @Param("courseId") String courseId,
-            @Param("studentId") String studentId);
-    */
-
-    /*
-    List<QuizSubmissionJpaEntity> findByStudentIdAndStatus(String studentId, String status);
-    */
 }

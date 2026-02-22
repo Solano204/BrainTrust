@@ -22,13 +22,11 @@ public class Enrollment extends Entity<EnrollmentId> {
         this.status = EnrollmentStatus.ACTIVE;
     }
 
-    // ✅ Factory Method para NUEVO enrollment
     public static Enrollment create(CourseId courseId, UserId studentId) {
         EnrollmentId id = EnrollmentId.generate();
         return new Enrollment(id, courseId, studentId);
     }
 
-    // ✅ Factory Method para RECONSTITUIR desde base de datos
     public static Enrollment reconstitute(EnrollmentId id, CourseId courseId, UserId studentId,
                                           LocalDate enrollmentDate, EnrollmentStatus status,
                                           Grade finalGrade) {
@@ -58,7 +56,6 @@ public class Enrollment extends Entity<EnrollmentId> {
         return this.status == EnrollmentStatus.ACTIVE;
     }
 
-    // Getters
     public CourseId getCourseId() { return courseId; }
     public UserId getStudentId() { return studentId; }
     public LocalDate getEnrollmentDate() { return enrollmentDate; }

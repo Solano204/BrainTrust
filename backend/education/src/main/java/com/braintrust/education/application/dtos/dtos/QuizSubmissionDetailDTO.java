@@ -16,7 +16,7 @@ public record QuizSubmissionDetailDTO(
         String status,
         GradeDTO grade,
         boolean autoGraded,
-        List<GradedQuestionResponseDTO> questionResponses, // ✅ CHANGED to GradedQuestionResponseDTO
+        List<GradedQuestionResponseDTO> questionResponses,
         boolean timeExpired,
         String unitId,
         String unitName

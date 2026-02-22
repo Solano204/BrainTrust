@@ -1,4 +1,3 @@
-// File: src/app/features/admin/components/ManageGrades.tsx
 "use client";
 
 import { useState } from "react";
@@ -103,7 +102,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
 
   if (!isOpen) return null;
 
-  // Show unit grades view with ManageUnitGrades component
   if (viewMode === "unit" && selectedUnit) {
     return (
       <ManageUnitGrades
@@ -141,7 +139,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
           </button>
         </div>
 
-        {/* View Selector */}
         <div className="px-6 pt-4 flex gap-2">
           <button
             onClick={() => setViewMode("course")}
@@ -167,10 +164,8 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {viewMode === "unit" ? (
-            // Unit selection
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900 mb-4">
                 Select a Unit
@@ -192,9 +187,7 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
               ))}
             </div>
           ) : (
-            // Course grades view
             <>
-              {/* Stats */}
               <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="text-sm text-blue-600">Total Students</div>
@@ -235,7 +228,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
                 </div>
               </div>
 
-              {/* Bulk Actions */}
               {Object.keys(editingGrades).length > 0 && (
                 <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
                   <div className="text-blue-900 font-medium">
@@ -269,7 +261,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
                 </div>
               )}
 
-              {/* Grades Table */}
               {isLoading ? (
                 <div className="text-center py-8 flex items-center justify-center gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
@@ -307,7 +298,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
                             </div>
 
                             {isEditing ? (
-                              // Edit mode
                               <div className="space-y-2">
                                 <div className="flex gap-2 items-center">
                                   <label className="text-sm font-medium text-gray-700 w-20">
@@ -354,7 +344,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
                                 </div>
                               </div>
                             ) : (
-                              // View mode
                               <div className="space-y-1">
                                 <div className="text-sm text-gray-600">
                                   <span className="font-medium">Grade:</span>{" "}
@@ -368,17 +357,10 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
                                     </span>
                                   )}
                                 </div>
-                                {/* {enrollment.finalGrade?.feedback && (
-                                  <div className="text-sm text-gray-600">
-                                    <span className="font-medium">Feedback:</span>{' '}
-                                    {enrollment.finalGrade.feedback}
-                                  </div>
-                                )} */}
                               </div>
                             )}
                           </div>
 
-                          {/* Actions */}
                           <div className="flex gap-2">
                             {isEditing ? (
                               <>
@@ -412,7 +394,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
                                   handleStartEdit(
                                     enrollment.studentId,
                                     Number(enrollment.finalGrade?.value) || 0 // Convert string to number
-                                    // enrollment.finalGrade?.feedback
                                   )
                                 }
                                 className="px-3 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition"
@@ -436,7 +417,6 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-6 border-t border-gray-200">
           <button
             onClick={onClose}

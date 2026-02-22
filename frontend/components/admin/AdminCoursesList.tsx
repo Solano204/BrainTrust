@@ -1,4 +1,3 @@
-// File: src/app/features/admin/components/AdminCoursesList.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,17 +30,15 @@ export function AdminCoursesList({
   const [sort, setSort] = useState('createdAt,desc');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setPage(0); // Reset to first page when search changes
+      setPage(0);
     }, 500);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Build query params
   const queryParams = {
     page,
     size: pageSize,
@@ -127,7 +124,6 @@ export function AdminCoursesList({
         </button>
       </div>
 
-      {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -180,7 +176,6 @@ export function AdminCoursesList({
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="text-sm text-gray-500">Total Courses</div>
@@ -195,7 +190,6 @@ export function AdminCoursesList({
        
       </div>
 
-      {/* Sorting Controls */}
       <div className="flex gap-4 text-sm">
         <button
           onClick={() => handleSortChange('name')}
@@ -211,7 +205,6 @@ export function AdminCoursesList({
         </button>
       </div>
 
-      {/* Courses Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => (
           <div
@@ -220,7 +213,6 @@ export function AdminCoursesList({
               course.active ? 'border-gray-200' : 'border-gray-300 opacity-75'
             }`}
           >
-            {/* Course Image */}
             <div className="h-40 bg-gradient-to-br from-blue-500 to-purple-600 relative">
               {course.urlImage ? (
                 <img
@@ -246,7 +238,6 @@ export function AdminCoursesList({
               </div>
             </div>
 
-            {/* Course Info */}
             <div className="p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
@@ -281,7 +272,6 @@ export function AdminCoursesList({
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-2">
                 <button
                   onClick={() => onEditCourse?.(course)}
@@ -308,7 +298,6 @@ export function AdminCoursesList({
                 </button>
               </div>
 
-              {/* Management Buttons */}
               <div className="mt-3 pt-3 border-t border-gray-200 flex gap-2">
                 <button
                   onClick={() => onManageEnrollments?.(course)}
@@ -330,7 +319,6 @@ export function AdminCoursesList({
         ))}
       </div>
 
-      {/* Pagination Controls */}
       {totalPages > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-gray-200">
           <div className="text-sm text-gray-500">
@@ -410,7 +398,6 @@ export function AdminCoursesList({
         </div>
       )}
 
-      {/* Loading indicator for pagination */}
       {isLoading && page > 0 && (
         <div className="text-center py-4">
           <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />

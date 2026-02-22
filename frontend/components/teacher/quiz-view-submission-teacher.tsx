@@ -42,7 +42,6 @@ export function QuizSubmissionsView({
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [overallGrade, setOverallGrade] = React.useState<string>("");
 
-  // Helper function to normalize text for comparison
   const normalizeText = (text: string): string => {
     if (!text) return "";
     return text
@@ -51,14 +50,12 @@ export function QuizSubmissionsView({
       .replace(/[^\w]/g, "");
   };
 
-  // Initialize grades and feedbacks from submission detail
   React.useEffect(() => {
     if (submissionDetail?.questionResponses) {
       const initialGrades: { [key: string]: number } = {};
       const initialFeedbacks: { [key: string]: string } = {};
       
       submissionDetail.questionResponses.forEach((response) => {
-        // Use earnedPoints from backend
         initialGrades[response.questionId] = response.earnedPoints;
         initialFeedbacks[response.questionId] = response.teacherFeedback || '';
       });
@@ -67,7 +64,6 @@ export function QuizSubmissionsView({
       setFeedbacks(initialFeedbacks);
     }
 
-    // Set initial overall grade from submission
     if (submissionDetail?.grade?.value) {
       setOverallGrade(submissionDetail.grade.value);
     }
@@ -176,7 +172,6 @@ export function QuizSubmissionsView({
   );
   const passingScore = 70;
 
-  // Check if submission is already graded
   const isGraded = submissionDetail.status === "GRADED";
   const existingGrade = submissionDetail.grade;
   const hasGradeChanged =
@@ -223,7 +218,6 @@ export function QuizSubmissionsView({
         </div>
       </div>
 
-      {/* Existing Grade Banner */}
       {isGraded && existingGrade?.value && (
         <Card className="p-4 bg-amber-50 border-amber-300 border-2">
           <div className="flex items-start gap-3">
@@ -294,7 +288,6 @@ export function QuizSubmissionsView({
               const studentSelectedOptions = question.selectedOptions || [];
               const hasOptions = question.options && question.options.length > 0;
 
-              // For open-ended questions, check if normalized answers match
               const normalizedStudentAnswer = normalizeText(question.textAnswer);
               const normalizedCorrectAnswer = normalizeText(question.correctAnswer);
               const answersMatchNormalized =
@@ -489,7 +482,6 @@ export function QuizSubmissionsView({
               );
             })}
 
-            {/* Overall Grade Section */}
             <Card className="p-4 bg-purple-50 border-purple-200">
               <h4 className="font-semibold text-purple-800 mb-3">
                 Overall Grade Management
@@ -546,7 +538,6 @@ export function QuizSubmissionsView({
               </div>
             </Card>
 
-            {/* Total Score Summary */}
             <Card className="p-4 bg-blue-50 border-blue-200">
               <div className="flex justify-between items-start">
                 <div>
@@ -577,7 +568,6 @@ export function QuizSubmissionsView({
               </div>
             </Card>
 
-            {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button
                 onClick={handleSubmitGrades}

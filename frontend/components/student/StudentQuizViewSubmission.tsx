@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -50,15 +50,13 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
   const { user } = useAuth()
   const userType = user?.role === 'student' ? 'student' : 'teacher'
 
-  // Fetch full quiz details (includes questions, options, etc.)
-  const { 
+  const {
     data: quizDetail, 
     isLoading: isQuizLoading,
     error: quizError 
   } = useQuizDetail(quiz.id, userType)
   
-  // Fetch submission details
-  const { 
+  const {
     data: quizSubmissionDetail, 
     isLoading: isSubmissionLoading, 
     error: submissionError 
@@ -67,7 +65,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
   const isLoading = isQuizLoading || isSubmissionLoading
   const error = quizError || submissionError
 
-  // No submission state
   if (!quiz.submission) {
     return (
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
@@ -97,7 +94,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     )
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
@@ -117,7 +113,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     )
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
@@ -144,7 +139,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
   const submission = quiz.submission
   const detailedSubmission = quizSubmissionDetail
 
-  // Calculate scores
   const finalScore = detailedSubmission?.grade?.value || 0
   const maxScore = submission.grade?.maxScore || quiz.maxGrade
   const percentage = maxScore > 0 ? (finalScore / maxScore) * 100 : 0
@@ -165,7 +159,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     }
   }
 
-  // Helper function to format student answer
   const formatStudentAnswer = (question: any, answer: any) => {
     if (!answer?.studentAnswer && answer?.studentAnswer !== 0) {
       return 'No answer provided'
@@ -182,7 +175,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     }
   }
 
-  // Helper function to format correct answer
   const formatCorrectAnswer = (question: any, detailedAnswer: any) => {
     if (detailedAnswer?.correctAnswer !== undefined) {
       if (question.type === 'multiple-choice') {
@@ -259,8 +251,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                 {new Date(submission.submittedAt).toLocaleTimeString()}
               </span>
             </div>
-            
-           
 
             {submission.teacherFeedback && (
               <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg max-w-2xl mx-auto">
@@ -278,7 +268,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
           </CardContent>
         </Card>
 
-        {/* Performance Summary */}
         {quizAnswers.length > 0 && (
           <Card className="shadow-lg mb-6">
             <CardHeader>
@@ -413,7 +402,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                         </div>
                       </div>
 
-                      {/* Needs Review Notice */}
                       {needsReview && (
                         <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-300">
                           <div className="flex items-start gap-2">
@@ -430,7 +418,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                         </div>
                       )}
 
-                      {/* Expected Answer */}
                       {correctAnswerText !== 'Not available' && (
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground mb-2 block">
@@ -449,7 +436,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                         </div>
                       )}
 
-                      {/* All Options (for multiple choice) */}
                       {question.type === 'multiple-choice' && question.options && question.options.length > 0 && (
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground mb-2 block">
@@ -498,7 +484,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                         </div>
                       )}
 
-                      {/* Teacher Feedback */}
                       {detailedAnswer.feedback && (
                         <div>
                           <Label className="text-sm font-medium text-muted-foreground mb-2 block">
@@ -512,7 +497,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                         </div>
                       )}
 
-                      {/* Result Summary */}
                       <div className="flex items-center justify-between pt-3 border-t">
                         <div className="flex items-center gap-2">
                           {needsReview ? (
@@ -544,7 +528,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
           </Card>
         )}
 
-        {/* Final Grade Notice */}
         <Card className="shadow-lg mb-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">

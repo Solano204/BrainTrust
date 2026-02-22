@@ -37,7 +37,7 @@ public class QuizSubmissionEntityMapper {
         String questionGradesJson = null;
 
         try {
-            // Serialize answers
+
             if (submission.getAnswers() != null && !submission.getAnswers().isEmpty()) {
                 List<Map<String, Object>> answerMaps = submission.getAnswers().stream()
                         .map(this::mapAnswerToJson)
@@ -45,7 +45,7 @@ public class QuizSubmissionEntityMapper {
                 answersJson = objectMapper.writeValueAsString(answerMaps);
             }
 
-            // ✅ Serialize question grades
+
             if (submission.getQuestionGradesMap() != null && !submission.getQuestionGradesMap().isEmpty()) {
                 List<Map<String, Object>> gradeMaps = submission.getQuestionGradesMap().entrySet().stream()
                         .map(entry -> {
@@ -78,7 +78,7 @@ public class QuizSubmissionEntityMapper {
                 submission.getGrade() != null ? submission.getGrade().getValue() : null,
                 submission.getGrade() != null ? submission.getGrade().getMaxScore() : null,
                 submission.isAutoGraded(),
-                questionGradesJson // ✅ NEW: Include question grades JSON
+                questionGradesJson
         );
     }
 
@@ -105,7 +105,7 @@ public class QuizSubmissionEntityMapper {
             }
         }
 
-        // ✅ Deserialize question grades
+
         Map<QuizQuestionId, QuestionGrade> questionGrades = new HashMap<>();
         if (entity.getQuestionGradesJson() != null && !entity.getQuestionGradesJson().isEmpty()) {
             try {
@@ -129,7 +129,7 @@ public class QuizSubmissionEntityMapper {
             }
         }
 
-        // Create grade if exists
+
         Grade grade = null;
         if (entity.getGradeValue() != null && entity.getGradeMaxScore() != null) {
             grade = new Grade(entity.getGradeValue(), entity.getGradeMaxScore());
@@ -146,7 +146,7 @@ public class QuizSubmissionEntityMapper {
                 answers,
                 grade,
                 entity.isAutoGraded(),
-                questionGrades // ✅ Pass question grades to reconstitute
+                questionGrades
         );
     }
 

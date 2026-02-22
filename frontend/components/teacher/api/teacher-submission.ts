@@ -1,18 +1,10 @@
-// File: src/app/infrastructure/api/course-tasks-api.ts
 "use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-// =====================================================
-// MOCK CONFIGURATION
-// =====================================================
 const MOCK_ENABLED = false; // Set to false to use real API
-
-// =====================================================
-// INTERFACES - Frontend Types
-// =====================================================
 
 export interface Assignment {
   id: string;
@@ -94,7 +86,6 @@ export interface DocumentAttachment {
   storagePath: string;
 }
 
-// Backend DTOs
 interface AssignmentDTO {
   id: string;
   courseId: string;
@@ -175,11 +166,6 @@ interface DocumentDTO {
   storagePath: string;
 }
 
-// =====================================================
-// MOCK DATA
-// =====================================================
-
-// --- Mock Data ---
 const MOCK_STUDENTS = [
   {
     id: "USER-001",
@@ -483,10 +469,6 @@ const MOCK_COMPLETE_QUIZ: CompleteQuiz = {
   ]
 };
 
-// =====================================================
-// API CLIENT CONFIGURATION
-// =====================================================
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const apiClient = axios.create({
@@ -519,9 +501,6 @@ const handleApiError = async (error: unknown): Promise<never> => {
 const simulateDelay = async (ms: number = 500): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// =====================================================
-// MAPPERS: Backend DTO -> Frontend Types
-// =====================================================
 
 async function mapAssignmentDTOToAssignment(dto: AssignmentDTO): Promise<Assignment> {
   return {
@@ -603,14 +582,6 @@ async function mapCompleteQuizDTOToCompleteQuiz(dto: CompleteQuizDTO): Promise<C
   };
 }
 
-// =====================================================
-// API METHODS - MATCHING YOUR FRONTEND METHODS FROM task-inventory-api.ts
-// =====================================================
-
-/**
- * Fetch task inventory for a course
- * THIS COMBINES ASSIGNMENTS AND QUIZZES FROM BACKEND
- */
 export async function fetchTaskInventory(courseId: string): Promise<TaskInventoryItem[]> {
   if (MOCK_ENABLED) {
     await simulateDelay();
@@ -621,8 +592,6 @@ export async function fetchTaskInventory(courseId: string): Promise<TaskInventor
   try {
     if (!courseId) throw new Error("Course ID is required");
     
-    // Backend will need a combined endpoint or we fetch both separately
-    // For now, fetching assignments and quizzes separately and combining them
     const [assignmentsResponse, quizzesResponse] = await Promise.all([
       apiClient.get<AssignmentDTO[]>(`/api/assignments/course/${courseId}`),
       apiClient.get<QuizDTO[]>(`/api/quizzes/course/${courseId}/basic`)
@@ -631,7 +600,6 @@ export async function fetchTaskInventory(courseId: string): Promise<TaskInventor
     const assignments = assignmentsResponse.data;
     const quizzes = quizzesResponse.data;
 
-    // Map to TaskInventoryItem format
     const taskInventory: TaskInventoryItem[] = [
       ...assignments.map(a => ({
         id: a.id,
@@ -642,18 +610,18 @@ export async function fetchTaskInventory(courseId: string): Promise<TaskInventor
         deadline: a.dueDate,
         isOverdue: new Date(a.dueDate) < new Date(),
         courseId: a.courseId,
-        studentId: "", // This would come from context
+        studentId: "",
       })),
       ...quizzes.map(q => ({
         id: q.id,
         taskId: q.id,
         title: q.title,
-        unit: "Quiz", // Quizzes don't have unit name in basic DTO
+        unit: "Quiz",
         type: "QUIZ" as TaskType,
         deadline: q.availableUntil,
         isOverdue: new Date(q.availableUntil) < new Date(),
         courseId: q.courseId,
-        studentId: "", // This would come from context
+        studentId: "",
       }))
     ];
 
@@ -663,16 +631,12 @@ export async function fetchTaskInventory(courseId: string): Promise<TaskInventor
   }
 }
 
-/**
- * Fetch submission detail by ID
- */
 export async function fetchSubmissionDetail(submissionId: string): Promise<SubmissionDetailData> {
   if (MOCK_ENABLED) {
     await simulateDelay(600);
 
     const submission = MOCK_SUBMISSION_DETAILS[submissionId];
     if (!submission) {
-      // Generate a mock submission if not found
       const student = MOCK_STUDENTS[Math.floor(Math.random() * MOCK_STUDENTS.length)];
       const task = MOCK_ASSIGNMENTS[Math.floor(Math.random() * MOCK_ASSIGNMENTS.length)];
 
@@ -720,7 +684,6 @@ export async function fetchSubmissionDetail(submissionId: string): Promise<Submi
     if (!submissionId) throw new Error("Submission ID is required");
     const response = await apiClient.get(`/api/submissions/${submissionId}`);
     
-    // Map backend SubmissionDTO to SubmissionDetailData
     const dto = response.data;
     return {
       submission: {
@@ -741,7 +704,7 @@ export async function fetchSubmissionDetail(submissionId: string): Promise<Submi
       student: {
         id: dto.studentId,
         name: dto.studentName,
-        avatarUrl: "", // Not available in SubmissionDTO
+        avatarUrl: "",
       },
       aiAnalysis: dto.aiAnalysis || { status: "PENDING", result: null },
     };
@@ -750,9 +713,6 @@ export async function fetchSubmissionDetail(submissionId: string): Promise<Submi
   }
 }
 
-/**
- * Update submission grade and feedback WELL
- */
 export async function updateSubmissionGrade(
   submissionId: string,
   gradeData: { grade: number; feedback: string }
@@ -796,7 +756,6 @@ export async function updateSubmissionGrade(
   }
 
   try {
-    // Call backend grade endpoint
     await apiClient.put(`/api/submissions/${submissionId}/grade`, {
       submissionId: submissionId,
       gradeValue: gradeData.grade.toString(),
@@ -804,16 +763,12 @@ export async function updateSubmissionGrade(
       feedback: gradeData.feedback
     });
 
-    // Fetch updated submission
     return await fetchSubmissionDetail(submissionId);
   } catch (error) {
     return await handleApiError(error);
   }
 }
 
-/**
- * Request AI analysis for a submission
- */
 export async function requestAIAnalysis(submissionId: string): Promise<SubmissionDetailData> {
   if (MOCK_ENABLED) {
     await simulateDelay(2000);
@@ -843,8 +798,6 @@ export async function requestAIAnalysis(submissionId: string): Promise<Submissio
   }
 
   try {
-    // Backend endpoint doesn't exist in your controllers yet
-    // This would need to be implemented
     const response = await apiClient.post(`/api/submissions/${submissionId}/request-ai-analysis`);
     return await fetchSubmissionDetail(submissionId);
   } catch (error) {
@@ -852,9 +805,6 @@ export async function requestAIAnalysis(submissionId: string): Promise<Submissio
   }
 }
 
-/**
- * Download submission attachment
- */
 export async function downloadSubmissionAttachment(
   submissionId: string,
   attachmentId: string
@@ -869,7 +819,6 @@ export async function downloadSubmissionAttachment(
   }
 
   try {
-    // Backend would need to provide attachment download endpoint
     const response = await apiClient.get(
       `/api/submissions/${submissionId}/attachments/${attachmentId}/download`,
       { responseType: "blob" }
@@ -880,9 +829,6 @@ export async function downloadSubmissionAttachment(
   }
 }
 
-/**
- * Bulk update task deadlines
- */
 export async function bulkUpdateTaskDeadlines(
   courseId: string,
   updates: Array<{ taskId: string; newDeadline: string }>
@@ -907,7 +853,6 @@ export async function bulkUpdateTaskDeadlines(
   }
 
   try {
-    // Backend would need bulk update endpoint
     const response = await apiClient.put(
       `/api/courses/${courseId}/tasks/deadlines/bulk`,
       { updates }
@@ -918,9 +863,6 @@ export async function bulkUpdateTaskDeadlines(
   }
 }
 
-// =====================================================
-// TYPES FOR FRONTEND (from your task-inventory-api.ts)
-// =====================================================
 
 export interface TaskInventoryItem {
   id: string;

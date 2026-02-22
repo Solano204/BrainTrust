@@ -1,8 +1,7 @@
 package com.braintrust.aidetectition.application.dtos.dtoResponse;
 
-// 📍 aidetection/application/dtos/ConfidenceDistributionDTO.java
 public record ConfidenceDistributionDTO(
-        int high,    // > 70%
-        int medium,  // 30-70%
-        int low      // < 30%
+        int high,
+        int medium,
+        int low
 ) {}

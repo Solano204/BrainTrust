@@ -1,4 +1,3 @@
-// File: src/app/infraestructure/hooks/gradebook/use-gradebook.ts
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -28,13 +27,11 @@ export function useGradebook(courseId: string) {
       console.log("User role:", user?.role, "User ID:", user?.id);
 
       if (isStudent && user?.id) {
-        // Load student's personal gradebook
         console.log("Fetching student gradebook...");
         const studentGradebook = await fetchStudentGradebook(courseId, user.id);
         console.log("Fetched student gradebook:", studentGradebook);
         setGradebook(studentGradebook);
       } else if (isTeacher) {
-        // Load all students' gradebooks for the course
         console.log("Fetching course gradebooks...");
         const gradebooks = await fetchCourseGradebooks(courseId);
         console.log("Fetched course gradebooks:", gradebooks);
@@ -55,7 +52,7 @@ export function useGradebook(courseId: string) {
     
     try {
       await assignFinalGrade(courseId, studentId, gradeValue, feedback);
-      await loadGradebookData(); // Refresh data
+      await loadGradebookData();
     } catch (err) {
       throw err;
     }
@@ -66,7 +63,7 @@ export function useGradebook(courseId: string) {
     
     try {
       await assignUnitFinalGrade(unitId, studentId, gradeValue, feedback);
-      await loadGradebookData(); // Refresh data
+      await loadGradebookData();
     } catch (err) {
       throw err;
     }
@@ -95,7 +92,6 @@ export function useGradebook(courseId: string) {
   };
 }
 
-// CURRENTLY WORKS
 export function useUnitGrades(unitId: string) {
   const [unitGrades, setUnitGrades] = useState<UnitGradeDTO[]>([]);
   const [loading, setLoading] = useState(true);

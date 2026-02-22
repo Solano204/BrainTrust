@@ -15,7 +15,6 @@ import { z } from "zod"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-// Zod validation schemas
 const multipleChoiceQuestionSchema = z.object({
   id: z.string(),
   type: z.literal("multiple-choice"),
@@ -89,7 +88,6 @@ const quizFormSchema = z.object({
     .min(1, "Quiz must have at least one question")
     .max(100, "Quiz cannot have more than 100 questions")
 }).refine((data) => {
-  // Validate that all multiple-choice questions have filled options
   return data.questions.every(q => {
     if (q.type === "multiple-choice") {
       return q.options.every(opt => opt.trim().length > 0)
@@ -100,7 +98,6 @@ const quizFormSchema = z.object({
   message: "All multiple-choice options must be filled",
   path: ["questions"]
 }).refine((data) => {
-  // Validate due date is in the future if provided
   if (data.dueDate) {
     const dueDateTime = new Date(data.dueDate)
     return dueDateTime > new Date()
@@ -180,30 +177,15 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
     append(newQuestion as any)
   }
 
-  const updateQuestion = (index: number, updates: Partial<Question>) => {
-    const currentQuestion = watchedQuestions[index]
-    update(index, { ...currentQuestion, ...updates } as any)
-    trigger(`questions.${index}`)
-  }
-
   const deleteQuestion = (index: number) => {
     remove(index)
     trigger("questions")
   }
 
-  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
-    const currentQuestion = watchedQuestions[questionIndex]
-    if (currentQuestion.type === "multiple-choice" && currentQuestion.options) {
-      const newOptions = [...currentQuestion.options]
-      newOptions[optionIndex] = value
-      updateQuestion(questionIndex, { options: newOptions })
-    }
-  }
-
   const addOption = (questionIndex: number) => {
     const currentQuestion = watchedQuestions[questionIndex]
     if (currentQuestion.type === "multiple-choice" && currentQuestion.options) {
-      updateQuestion(questionIndex, { options: [...currentQuestion.options, ""] })
+      setValue(`questions.${questionIndex}.options`, [...currentQuestion.options, ""])
     }
   }
 
@@ -211,15 +193,14 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
     const currentQuestion = watchedQuestions[questionIndex]
     if (currentQuestion.type === "multiple-choice" && currentQuestion.options && currentQuestion.options.length > 2) {
       const newOptions = currentQuestion.options.filter((_, i) => i !== optionIndex)
-      const newCorrectAnswer = currentQuestion.correctAnswer === optionIndex 
-        ? 0 
-        : (currentQuestion.correctAnswer || 0) > optionIndex 
-        ? (currentQuestion.correctAnswer || 0) - 1 
+      const newCorrectAnswer = currentQuestion.correctAnswer === optionIndex
+        ? 0
+        : (currentQuestion.correctAnswer || 0) > optionIndex
+        ? (currentQuestion.correctAnswer || 0) - 1
         : currentQuestion.correctAnswer
-      updateQuestion(questionIndex, { 
-        options: newOptions, 
-        correctAnswer: newCorrectAnswer 
-      })
+
+      setValue(`questions.${questionIndex}.options`, newOptions)
+      setValue(`questions.${questionIndex}.correctAnswer`, newCorrectAnswer)
     }
   }
 
@@ -307,7 +288,7 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                   <p className="text-sm text-red-500">{errors.title.message}</p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="time-limit">Time Limit (minutes)</Label>
                 <Controller
@@ -329,7 +310,7 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                   <p className="text-sm text-red-500">{errors.timeLimit.message}</p>
                 )}
               </div>
-              
+
               <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="quiz-description">Description</Label>
                 <Controller
@@ -349,7 +330,7 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                   <p className="text-sm text-red-500">{errors.description.message}</p>
                 )}
               </div>
-              
+
               <div className="space-y-2 md:col-span-1">
                 <Label htmlFor="max-grade-quiz">Maximum Grade *</Label>
                 <Controller
@@ -371,7 +352,7 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                   <p className="text-sm text-red-500">{errors.maxGrade.message}</p>
                 )}
               </div>
-              
+
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="due-date">Due Date</Label>
                 <Controller
@@ -393,7 +374,6 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
             </div>
           </Card>
 
-          {/* Questions */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -434,7 +414,7 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
               const optionsError = getQuestionError(index, 'options')
               const expectedAnswerError = getQuestionError(index, 'expectedAnswer')
               const pointsError = getQuestionError(index, 'points')
-              
+
               return (
                 <Card key={field.id} className={`p-6 ${questionError || optionsError || expectedAnswerError || pointsError ? 'border-red-300' : ''}`}>
                   <div className="space-y-4">
@@ -451,11 +431,16 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                               {question.type === "multiple-choice" ? "Multiple Choice" : "Open Answer"}
                             </Badge>
                           </div>
-                          <Input
-                            value={question.question}
-                            onChange={(e) => updateQuestion(index, { question: e.target.value })}
-                            placeholder="Enter your question"
-                            className={questionError ? "border-red-500" : ""}
+                          <Controller
+                            name={`questions.${index}.question`}
+                            control={control}
+                            render={({ field }) => (
+                              <Input
+                                {...field}
+                                placeholder="Enter your question"
+                                className={questionError ? "border-red-500" : ""}
+                              />
+                            )}
                           />
                           {questionError && (
                             <p className="text-sm text-red-500">{questionError}</p>
@@ -463,12 +448,19 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          value={question.points}
-                          onChange={(e) => updateQuestion(index, { points: parseInt(e.target.value) || 1 })}
-                          className={`w-20 ${pointsError ? "border-red-500" : ""}`}
-                          min="1"
+                        <Controller
+                          name={`questions.${index}.points`}
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              type="number"
+                              value={field.value}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              className={`w-20 ${pointsError ? "border-red-500" : ""}`}
+                              min="1"
+                            />
+                          )}
                         />
                         <span className="text-sm text-muted-foreground">pts</span>
                         <Button
@@ -486,7 +478,6 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                       <p className="text-sm text-red-500 ml-8">{pointsError}</p>
                     )}
 
-                    {/* Multiple Choice Options */}
                     {question.type === "multiple-choice" && question.options && (
                       <div className="space-y-3 ml-8">
                         <div className="flex items-center justify-between">
@@ -505,21 +496,31 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                         </div>
                         {question.options.map((option, optIndex) => (
                           <div key={optIndex} className="flex items-center gap-3">
-                            <input
-                              type="radio"
-                              name={`correct-${field.id}`}
-                              checked={question.correctAnswer === optIndex}
-                              onChange={() => updateQuestion(index, { correctAnswer: optIndex })}
-                              className="h-4 w-4 text-blue-600 flex-shrink-0"
+                            <Controller
+                              name={`questions.${index}.correctAnswer`}
+                              control={control}
+                              render={({ field }) => (
+                                <input
+                                  type="radio"
+                                  checked={field.value === optIndex}
+                                  onChange={() => field.onChange(optIndex)}
+                                  className="h-4 w-4 text-blue-600 flex-shrink-0"
+                                />
+                              )}
                             />
                             <span className="font-semibold text-sm w-6 flex-shrink-0">
                               {String.fromCharCode(65 + optIndex)})
                             </span>
-                            <Input
-                              value={option}
-                              onChange={(e) => updateOption(index, optIndex, e.target.value)}
-                              placeholder={`Option ${optIndex + 1}`}
-                              className={`flex-1 ${!option.trim() && optionsError ? "border-red-500" : ""}`}
+                            <Controller
+                              name={`questions.${index}.options.${optIndex}`}
+                              control={control}
+                              render={({ field }) => (
+                                <Input
+                                  {...field}
+                                  placeholder={`Option ${optIndex + 1}`}
+                                  className={`flex-1 ${!field.value.trim() && optionsError ? "border-red-500" : ""}`}
+                                />
+                              )}
                             />
                             {question.options && question.options.length > 2 && (
                               <Button
@@ -543,19 +544,23 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
                       </div>
                     )}
 
-                    {/* Open-Ended Answer Space */}
                     {question.type === "open-ended" && (
                       <div className="ml-8">
                         <Label htmlFor={`expected-answer-${field.id}`} className="text-sm font-semibold text-primary/80 mb-2 block">
                           Model Answer / Expected Response (For Grading Reference)
                         </Label>
-                        <Textarea
-                          id={`expected-answer-${field.id}`}
-                          value={question.expectedAnswer || ''}
-                          onChange={(e) => updateQuestion(index, { expectedAnswer: e.target.value })}
-                          placeholder="Enter the expected answer or key points here for reference (students won't see this)."
-                          rows={3}
-                          className={`bg-gray-50 dark:bg-gray-900/50 border-primary/30 ${expectedAnswerError ? "border-red-500" : ""}`}
+                        <Controller
+                          name={`questions.${index}.expectedAnswer`}
+                          control={control}
+                          render={({ field }) => (
+                            <Textarea
+                              {...field}
+                              id={`expected-answer-${field.id}`}
+                              placeholder="Enter the expected answer or key points here for reference (students won't see this)."
+                              rows={3}
+                              className={`bg-gray-50 dark:bg-gray-900/50 border-primary/30 ${expectedAnswerError ? "border-red-500" : ""}`}
+                            />
+                          )}
                         />
                         {expectedAnswerError && (
                           <p className="text-sm text-red-500 mt-1">{expectedAnswerError}</p>

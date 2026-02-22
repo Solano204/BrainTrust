@@ -1,4 +1,3 @@
-// File: src/components/teacher-student/gradebook-units-view.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -38,25 +37,21 @@ export function GradebookUnitsView({
   const [isAssigningGrade, setIsAssigningGrade] = useState(false);
   const [unitTasks, setUnitTasks] = useState<Record<string, any[]>>({}); // Store unit tasks separately
 
-  // Use the units hook
-  const { 
+  const {
     units: courseUnits, 
     isLoading: isLoadingUnits, 
     error: unitsError 
   } = useCourseAllUnits(courseId);
 
-  // Filter units by search term
   const filteredUnits = courseUnits.filter(unit =>
     unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     unit.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Initialize unit tasks when student gradebook loads
   useEffect(() => {
     if (studentGradebook && studentGradebook.tasks) {
       const groupedTasks: Record<string, any[]> = {};
       
-      // Group tasks by unit name
       studentGradebook.tasks.forEach(task => {
         if (!groupedTasks[task.unitName]) {
           groupedTasks[task.unitName] = [];
@@ -68,8 +63,7 @@ export function GradebookUnitsView({
     }
   }, [studentGradebook]);
 
-  // Calculate unit grades for student view
-  const getUnitGrade = (unitName: string): { 
+  const getUnitGrade = (unitName: string): {
     grade: string; 
     color: string; 
     completed: number; 
@@ -177,13 +171,11 @@ export function GradebookUnitsView({
         </div>
       </div>
 
-      {/* Student View - Show grades in unit cards */}
       {!isTeacher && studentGradebook && (
         <div className="space-y-6">
           {/* Overall Grade Summary */}
         
 
-          {/* Units Grid with Grades */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredUnits.map((unit) => {
               const unitGrade = getUnitGrade(unit.name);
@@ -218,7 +210,6 @@ export function GradebookUnitsView({
         </div>
       )}
 
-      {/* Teacher View - No grades shown, just navigation */}
       {isTeacher && (
         <div className="space-y-6">
           <Card>
@@ -266,7 +257,6 @@ export function GradebookUnitsView({
             </CardContent>
           </Card>
 
-          {/* Teacher's Student List */}
           {courseGradebooks && courseGradebooks.length > 0 && (
             <Card>
               <CardHeader>
@@ -393,7 +383,6 @@ export function GradebookUnitsView({
         </Card>
       )}
 
-      {/* Student View - No Gradebook Data */}
       {!isTeacher && !studentGradebook && filteredUnits.length > 0 && (
         <Card>
           <CardContent className="pt-6">

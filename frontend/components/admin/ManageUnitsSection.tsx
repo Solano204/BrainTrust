@@ -1,4 +1,3 @@
-// File: src/app/features/admin/components/ManageUnitsSection.tsx
 'use client';
 
 import { useState } from 'react';
@@ -74,7 +73,6 @@ export function ManageUnitsSection({ courseId, courseName }: ManageUnitsSectionP
                 )}
               </div>
 
-              {/* Unit Info */}
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
@@ -85,7 +83,6 @@ export function ManageUnitsSection({ courseId, courseName }: ManageUnitsSectionP
                     </span>
                   </div>
 
-                  {/* Delete Button */}
                   <button
                     onClick={() => handleDeleteUnit(unit.id)}
                     className={`px-3 py-2 rounded transition ${
@@ -113,7 +110,6 @@ export function ManageUnitsSection({ courseId, courseName }: ManageUnitsSectionP
   );
 }
 
-// Also export an integrated version for the course detail view
 interface CourseUnitsCardProps {
   courseId: string;
   courseName: string;

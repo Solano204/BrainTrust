@@ -32,8 +32,8 @@ public record CreateAssignmentFrontendDTO(
         @Size(min = 10, message = "Instructions must be at least 10 characters")
         String instructions,
 
-        List<FrontendDocumentDTO> attachments, // ✅ Frontend-extracted documents (metadata + text)
+        List<FrontendDocumentDTO> attachments,
         List<String> links,
-        String targetType, // "INDIVIDUAL" or "TEAM"
-        String submissionFormat // "DIGITAL" or "NOTEBOOK"
+        String targetType,
+        String submissionFormat
 ) {}

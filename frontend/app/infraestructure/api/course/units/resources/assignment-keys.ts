@@ -1,6 +1,5 @@
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
 
-// File: src/app/features/courses/api/assignment-keys.ts
 export const assignmentKeys = {
   all: ["assignments"] as const,
   lists: () => [...assignmentKeys.all, "list"] as const,

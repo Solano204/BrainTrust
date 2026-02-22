@@ -13,7 +13,7 @@ import java.util.List;
 })
 public class PageJpaEntity {
 
-    // ✅ Field order should match database column order
+
     @Id
     @Column(name = "id", length = 50)
     private String id;
@@ -48,10 +48,9 @@ public class PageJpaEntity {
     @OneToMany(mappedBy = "page", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DocumentJpaEntity> attachments = new ArrayList<>();
 
-    // Default constructor
+
     public PageJpaEntity() {}
 
-    // Constructor matching database column order
     public PageJpaEntity(String id, String courseId, String unitId, String title, String content,
                          LocalDateTime createdAt, LocalDateTime lastModified, boolean published) {
         this.id = id;
@@ -64,7 +63,7 @@ public class PageJpaEntity {
         this.published = published;
     }
 
-    // Helper methods
+
     public void addAttachment(DocumentJpaEntity document) {
         if (document != null) {
             attachments.add(document);
@@ -79,7 +78,6 @@ public class PageJpaEntity {
         }
     }
 
-    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

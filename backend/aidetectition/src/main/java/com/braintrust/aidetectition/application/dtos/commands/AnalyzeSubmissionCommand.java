@@ -9,5 +9,5 @@ public record AnalyzeSubmissionCommand(
         @NotBlank(message = "Content is required")
         String content,
 
-        String preferredModel  // Optional
+        String preferredModel
 ) {}

@@ -31,13 +31,11 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         this.questionGrades = new HashMap<>();
     }
 
-    // Factory Method
     public static QuizSubmission start(QuizId quizId, UserId studentId, int attemptNumber) {
         QuizSubmissionId id = QuizSubmissionId.generate();
         return new QuizSubmission(id, quizId, studentId, attemptNumber);
     }
 
-    // Reconstitute
     public static QuizSubmission reconstitute(QuizSubmissionId id, QuizId quizId,
                                               UserId studentId, int attemptNumber,
                                               LocalDateTime startedAt, LocalDateTime submittedAt,
@@ -59,7 +57,7 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         return submission;
     }
 
-    // Domain Behavior
+
     public void answerQuestion(QuizQuestionId questionId, List<Integer> selectedOptions, String textAnswer) {
         if (status != QuizSubmissionStatus.IN_PROGRESS) {
             throw new IllegalStateException("Cannot answer questions after submission");
@@ -67,7 +65,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
 
         QuizAnswer answer = new QuizAnswer(questionId, selectedOptions, textAnswer);
 
-        // Remove previous answer if exists
         answers.removeIf(a -> a.getQuestionId().equals(questionId));
         answers.add(answer);
     }
@@ -80,19 +77,16 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         this.submittedAt = LocalDateTime.now();
         this.status = QuizSubmissionStatus.SUBMITTED;
 
-        // Auto-grade multiple choice questions
         if (canAutoGrade(quiz)) {
             autoGrade(quiz);
         }
     }
 
-    // ✅ NEW: Method for manual grading WITH individual question grades
     public void manualGrade(Map<QuizQuestionId, QuestionGrade> questionGrades) {
         if (status != QuizSubmissionStatus.SUBMITTED && status != QuizSubmissionStatus.GRADED) {
             throw new IllegalStateException("Can only grade submitted quizzes");
         }
 
-        // Calculate totals from question grades
         int totalEarned = questionGrades.values().stream()
                 .mapToInt(QuestionGrade::getEarnedPoints)
                 .sum();
@@ -105,7 +99,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
                 BigDecimal.valueOf(totalMax)
         );
 
-        // Store individual question grades
         this.questionGrades.clear();
         this.questionGrades.putAll(questionGrades);
 
@@ -113,7 +106,7 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         this.autoGraded = false;
     }
 
-    // ✅ Keep existing method for backward compatibility
+
     public void manualGrade(int earnedPoints, int totalPoints) {
         if (status != QuizSubmissionStatus.SUBMITTED && status != QuizSubmissionStatus.GRADED) {
             throw new IllegalStateException("Can only grade submitted quizzes");
@@ -131,7 +124,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         int earnedPoints = 0;
         int totalPoints = quiz.getTotalPoints();
 
-        // Clear existing question grades
         questionGrades.clear();
 
         for (QuizQuestion question : quiz.getQuestions()) {
@@ -143,7 +135,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
                 earnedPoints += question.getPoints();
             }
 
-            // Store individual question grade for auto-graded questions
             QuestionGrade qGrade = new QuestionGrade(
                     question.getId(),
                     questionEarnedPoints,
@@ -198,7 +189,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
                 .orElse(null);
     }
 
-    // Getters
     public QuizId getQuizId() { return quizId; }
     public UserId getStudentId() { return studentId; }
     public int getAttemptNumber() { return attemptNumber; }

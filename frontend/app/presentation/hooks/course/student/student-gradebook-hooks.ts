@@ -1,4 +1,3 @@
-// File: src/app/presentation/hooks/gradebook/student-gradebook-hooks.ts
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -21,13 +20,12 @@ export function useStudentGradebook(courseId: string | null, studentId: string |
       return await fetchStudentGradebook(courseId, studentId);
     },
     enabled: !!courseId && !!studentId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const exportMutation = useMutation({
     mutationFn: () => exportStudentGrades(courseId!, studentId!),
     onSuccess: (blob) => {
-      // Create download link
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -43,7 +41,6 @@ export function useStudentGradebook(courseId: string | null, studentId: string |
     }
   });
 
-  // Calculate stats from student gradebook data
   const stats = useCallback((): StudentGradebookStats | null => {
     if (!studentGradebook) return null;
 

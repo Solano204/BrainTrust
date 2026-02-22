@@ -1,4 +1,3 @@
-// lib/validations/quiz.ts
 import { z } from 'zod';
 
 export const quizValidationSchema = z.object({

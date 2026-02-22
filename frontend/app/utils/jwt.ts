@@ -1,4 +1,3 @@
-// utils/jwt.ts
 import { UserRole } from "@/app/types/authentication";
 
 interface JwtPayload {
@@ -37,6 +36,6 @@ export class JWTUtils {
     const payload = this.decodeToken(token);
     if (!payload) return null;
     
-    return payload.exp * 1000; // Convert to milliseconds
+    return payload.exp * 1000;
   }
 }

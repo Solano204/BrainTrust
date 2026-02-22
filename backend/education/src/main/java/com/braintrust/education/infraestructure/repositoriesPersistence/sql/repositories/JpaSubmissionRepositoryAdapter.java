@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
-// other imports...
+
 
 @Repository
 public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
@@ -106,41 +106,7 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
                 .collect(Collectors.toList());
     }
 
-    /*
-    @Override
-    public Optional<Submission> findLatestByAssignmentAndStudent(AssignmentId assignmentId, UserId studentId) {
-        log.debug("Fetching LATEST submission for Assignment {} by Student {}", assignmentId.getValue(), studentId.getValue());
-        return jpaRepository.findFirstByAssignmentIdAndStudentIdWithDocumentsOrderBySubmittedAtDesc(
-                assignmentId.getValue(),
-                studentId.getValue()
-        ).map(mapper::toDomain);
-    }
-    */
 
-    /*
-    @Override
-    public List<Submission> findByStatus(SubmissionStatus status) {
-        log.debug("Fetching submissions with Status: {}", status.name());
-        return jpaRepository.findByStatusWithDocuments(status.name())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
-
-    /*
-    @Override
-    public List<Submission> findLateSubmissions(AssignmentId assignmentId, LocalDateTime dueDate) {
-        log.warn("Querying for LATE submissions for Assignment ID {} (Due: {}).", assignmentId.getValue(), dueDate);
-        return jpaRepository.findByAssignmentIdAndSubmittedAtAfterWithDocuments(
-                        assignmentId.getValue(),
-                        dueDate
-                )
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
 
     @Override
     public List<Submission> findByCourseAndStudent(CourseId courseId, UserId studentId) {
@@ -153,44 +119,4 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
                 .collect(Collectors.toList());
     }
 
-    /*
-    @Override
-    public List<Submission> findByCourseId(CourseId courseId) {
-        log.debug("Finding submissions by Course ID: {}", courseId.getValue());
-
-        return jpaRepository.findByCourseId(courseId.getValue())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
-
-    /*
-    @Override
-    public List<Submission> findByTeamId(StudentGroupId teamId) {
-        log.debug("Fetching submissions by Team ID: {}", teamId.getValue());
-        return jpaRepository.findByTeamIdWithDocuments(teamId.getValue())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
-
-    /*
-    @Override
-    public List<Submission> findByTeamIdAndAssignmentId(StudentGroupId teamId, AssignmentId assignmentId) {
-        log.debug("Fetching submissions by Team {} and Assignment {}", teamId.getValue(), assignmentId.getValue());
-        return jpaRepository.findByTeamIdAndAssignmentIdWithDocuments(teamId.getValue(), assignmentId.getValue())
-                .stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-    */
-
-    /*
-    @Override
-    public boolean existsByAssignmentAndTeam(AssignmentId assignmentId, StudentGroupId teamId) {
-        return jpaRepository.existsByAssignmentIdAndTeamId(assignmentId.getValue(), teamId.getValue());
-    }
-    */
 }

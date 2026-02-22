@@ -17,10 +17,6 @@ public record SubmitAssignmentCommand(
         @Size(min = 10, message = "Content must be at least 10 characters")
         String content,
 
-        // ✅ FLEXIBLE: Can be null/empty for submissions without attachments
         List<MultipartFile> attachments
-
-        // ✅ FLEXIBLE: Optional team/group ID - if provided, it's a team submission
-//        String teamId
 
 ) {}

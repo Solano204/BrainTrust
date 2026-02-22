@@ -4,7 +4,6 @@ import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.shared.domain.Entity;
 
-// 📍 education/domain/model/CourseUnit.java - ENTITY
 public class CourseUnit extends Entity<UnitId> {
     private CourseId courseId;
     private String name;
@@ -19,16 +18,14 @@ public class CourseUnit extends Entity<UnitId> {
         this.numUnity = validateNumUnity(numUnity);
     }
 
-    // ✅ Factory Method for NEW CourseUnit
     public static CourseUnit create(CourseId courseId, String name, int numUnity, String description) {
         UnitId id = UnitId.generate();
         CourseUnit unit = new CourseUnit(id, courseId, name, numUnity);
         unit.description = description;
-        unit.urlImage = null; // Will be set later via setUrlImage()
+        unit.urlImage = null;
         return unit;
     }
 
-    // ✅ Factory Method with urlImage for NEW CourseUnit
     public static CourseUnit createWithImage(CourseId courseId, String name, int numUnity,
                                              String description, String urlImage) {
         UnitId id = UnitId.generate();
@@ -38,7 +35,6 @@ public class CourseUnit extends Entity<UnitId> {
         return unit;
     }
 
-    // ✅ Reconstitute method for EXISTING CourseUnit (from database)
     public static CourseUnit reconstitute(UnitId id, CourseId courseId, String name,
                                           int numUnity, String description, String urlImage) {
         CourseUnit unit = new CourseUnit(id, courseId, name, numUnity);
@@ -47,7 +43,6 @@ public class CourseUnit extends Entity<UnitId> {
         return unit;
     }
 
-    // ✅ Domain behavior - Update image URL
     public void setUrlImage(String urlImage) {
         if (urlImage != null && urlImage.trim().isEmpty()) {
             throw new IllegalArgumentException("URL image cannot be empty string");
@@ -55,7 +50,6 @@ public class CourseUnit extends Entity<UnitId> {
         this.urlImage = urlImage != null ? urlImage.trim() : null;
     }
 
-    // ✅ Domain behavior - Update unit details
     public void updateDetails(String name, String description) {
         this.name = validateName(name);
         this.description = description;
@@ -75,7 +69,6 @@ public class CourseUnit extends Entity<UnitId> {
         return numUnity;
     }
 
-    // Getters
     public CourseId getCourseId() { return courseId; }
     public String getName() { return name; }
     public String getUrlImage() { return urlImage; }

@@ -59,7 +59,7 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
         log.debug("Finding basic quizzes by Course ID: {} (without questions)", courseId.getValue());
         return jpaRepository.findByCourseIdOrderByCreatedAtDesc(courseId.getValue())
                 .stream()
-                .map(mapper::mapToBasicQuiz) // Map without questions
+                .map(mapper::mapToBasicQuiz)
                 .collect(Collectors.toList());
     }
 
@@ -113,7 +113,7 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
                 .collect(Collectors.toList());
     }
 
-    // NEW: Calendar query implementations
+
     @Override
     public List<Quiz> findQuizzesByStudentForMonth(UserId studentId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Finding quizzes for Student ID: {} for month {} to {}",

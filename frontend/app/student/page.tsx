@@ -1,4 +1,4 @@
-// Example of how to use these components in a page
+
 "use client";
 
 import { QuizView } from '@/components/student/quiz-view-submission-student';
@@ -11,7 +11,6 @@ export default function StudentAssignmentPage({ params }: { params: { id: string
   const { user } = useAuth();
   const [activeView, setActiveView] = useState<'task' | 'quiz'>('task');
   
-  // Mock data - replace with actual data fetching
   const mockAssignment = {
     id: '1',
     title: 'Research Paper on Machine Learning',
@@ -50,7 +49,7 @@ Topics to cover:
     courseUnitId: 'unit1',
     courseId: 'course1',
     maxGrade: 100,
-    timeLimit: 30, // minutes
+    timeLimit: 30,
     passingScore: 70,
     dueDate: '2024-12-31T23:59:59',
     acceptLateSubmissions: true,
@@ -83,20 +82,15 @@ Topics to cover:
   };
 
   const handleTaskSubmit = async (submission: { content: string; attachments: File[] }) => {
-    // Implement submission logic here
     console.log('Submitting task:', submission);
-    // await submitTask(submission);
   };
 
   const handleQuizSubmit = async (answers: any) => {
-    // Implement quiz submission logic here
     console.log('Submitting quiz answers:', answers);
-    // await submitQuiz(answers);
   };
 
   return (
     <div>
-      {/* View Toggle */}
       <div className="flex gap-4 mb-6">
         <Button 
           onClick={() => setActiveView('task')}
@@ -112,13 +106,11 @@ Topics to cover:
         </Button>
       </div>
 
-      {/* Conditional Rendering */}
       {activeView === 'task' ? (
         <TaskSubmissionView
           assignment={mockAssignment}
           onSubmit={handleTaskSubmit}
           onDownloadAttachment={(attachment) => {
-            // Implement download logic
             console.log('Downloading:', attachment);
           }}
         />

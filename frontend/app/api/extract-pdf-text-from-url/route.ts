@@ -1,13 +1,14 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
-// Disable worker for Node.js environment
-pdfjsLib.GlobalWorkerOptions.workerSrc = false as any;
+//pdfjsLib.GlobalWorkerOptions.workerSrc = false as any;
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.js');
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   const typedArray = new Uint8Array(buffer);
-  
-  // Load PDF with worker disabled
+
   const loadingTask = pdfjsLib.getDocument({
     data: typedArray,
     useWorkerFetch: false,

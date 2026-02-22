@@ -36,7 +36,6 @@ public class EnrollmentJpaEntity {
     @Column(name = "final_grade_max_score", precision = 10, scale = 2)
     private BigDecimal finalGradeMaxScore;
 
-    // Constructors
     public EnrollmentJpaEntity() {}
 
     public EnrollmentJpaEntity(String id, String courseId, String studentId,
@@ -51,7 +50,7 @@ public class EnrollmentJpaEntity {
         this.finalGradeMaxScore = finalGradeMaxScore;
     }
 
-    // Getters and Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

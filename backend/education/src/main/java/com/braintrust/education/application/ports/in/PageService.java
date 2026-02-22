@@ -12,42 +12,28 @@ import java.util.List;
 
 public interface PageService {
 
-    // Commands
     PageId createPage(CreatePageCommand command);
     void updateContent(UpdatePageContentCommand command);
     public void addLinksToPage(String pageId, List<String> urls);
     public void addAttachmentsToPage(String pageId, List<AddPageAttachmentCommand> attachments);
 
-    /*
-    void publishPage(PublishPageCommand command);
-    */
-
-    /*
-    PageDTO createCompletePage(CreateCompletePageCommand command);
-    */
-
 
     void addBulkAttachmentsJson(PageId pageId, List<FrontendDocumentDTO> attachments);
 
-    // For single JSON attachment
     void addSingleAttachmentJson(PageId pageId, FrontendDocumentDTO attachment);
     void updatePage(UpdatePageCommand command);
 
 
-
-    // NEW LINK MANAGEMENT METHODS
     void addLinkToPage(PageId pageId, String linkUrl);
     void removeLinkFromPage(PageId pageId, String linkUrl);
     void removeLinksFromPage(PageId pageId, List<String> links);
     void clearLinksFromPage(PageId pageId);
 
-    // NEW ATTACHMENT MANAGEMENT METHODS
     void addAttachmentToPage(PageId pageId, MultipartFile file);
     void removeAttachmentFromPage(PageId pageId, String documentName);
     void removeAttachmentsFromPage(PageId pageId, List<String> documentNames);
     void clearAttachmentsFromPage(PageId pageId);
 
-    // Queries
     PageDTO getPageById(PageId pageId);
     List<PageDTO> getPagesByCourse(CourseId courseId);
     List<PageDTO> getPagesByUnit(UnitId unitId);
@@ -57,6 +43,5 @@ public interface PageService {
 
     PageDTO createPageWithFileAttachments(CreatePageWithAttachmentsCommand command);
 
-    // NEW: Delete page
     void deletePage(PageId pageId);
 }

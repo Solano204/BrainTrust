@@ -6,7 +6,7 @@ import com.braintrust.shared.domain.exception.BusinessRuleException;
 
 import java.util.Map;
 
-// 📍 identity/domain/exceptions/EmailAlreadyExistsException.java
+
 public class EmailAlreadyExistsException extends BusinessRuleException {
 
     public EmailAlreadyExistsException(String message) {

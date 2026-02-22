@@ -1,5 +1,4 @@
-// File: src/app/features/timeline/api/timeline-api.ts
-"use server";
+ "use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
@@ -8,34 +7,21 @@ import { AssignmentId, CourseId, Document, Score, UserId } from "@/app/domain/va
 import {  Question } from "@/app/domain/entities/CourseEntities";
 import { QuizId, UnitId } from "@/app/domain/valueObjects/CourseValues";
 
-// --- MOCKING CONFIGURATION AND DATA ---
-
-/**
- * Flag to enable/disable mocking.
- * Set to true to use mock data, false to use the real backend.
- */
 const isMockEnabled = true;
 
 export interface Quiz {
-  /** Unique identifier for the quiz. */
   id: QuizId;
   description: string;
-  /** Link back to the parent course unit. */
   courseUnitId: UnitId;
   courseId: CourseId; 
 
   idUser: UserId;
-  /** Name of the quiz (e.g., "UCD Fundamentals Quiz"). */
   title: string;
-  /** Maximum number of times a student can take the quiz. */
   maxGrade: number;
-  /** Time limit in minutes (or seconds). */
   timeLimit: number;
-  /** Percentage required to pass (e.g., 70). */
   passingScore: number;
 
   dueDate: string | null;
-  /** Array of Question objects. */
   questions: Question[];
   acceptLateSubmissions: boolean;
 }
@@ -46,13 +32,11 @@ export interface Assignment {
   courseId: CourseId; 
   unitId: CourseId;
   description: string;
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
   createdAt: string;
   urls: string[];
   attachments: Document[];
   links: string[];
   deliveryMode: deliveryMode;
-  /** Java: LocalDateTime, serialized to ISO 8601 string */
   dueDate: string | null;
   maxScore: Score;
   instructions: string;
@@ -62,9 +46,7 @@ export interface Assignment {
 }
 
 
-// Mock timeline data combining assignments and quizzes
 const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
-  // Upcoming assignments
   {
     id: "sub-task-1",
     title: "Wireframe Design Projects",
@@ -125,7 +107,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     allowLateSubmissions: false,
     idUser: "user-001"
   },
-  // Upcoming quizzes
+
   {
     id: "sub-quiz-1",
     title: "UX Design Fundamentals Quizss",
@@ -135,8 +117,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     maxGrade: 100,
     timeLimit: 30,
     passingScore: 70,
-    // Original: 2024-03-16 -> Updated: 2025-11-15 (Upcoming)
-    dueDate: "2025-11-15T23:59:00Z", 
+    dueDate: "2025-11-15T23:59:00Z",
     acceptLateSubmissions: true,
     idUser: "user-001",
     questions: [
@@ -167,8 +148,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     maxGrade: 100,
     timeLimit: 60,
     passingScore: 65,
-    // Original: 2024-03-19 -> Updated: 2025-11-19 (Upcoming)
-    dueDate: "2025-11-29T23:59:00Z", 
+    dueDate: "2025-11-29T23:59:00Z",
     acceptLateSubmissions: true,
     idUser: "user-001",
     questions: [
@@ -186,7 +166,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
       }
     ]
   },
-  // Recent assignments (for teacher view)
+
   {
     id: "task-102",
     title: "User Research Report",
@@ -217,7 +197,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     idUser: "user-001"
 
   },
-  // Recent quiz (for teacher view)
+
   {
     id: "quiz-102",
     title: "User Research Methods Assessment",
@@ -227,8 +207,7 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     maxGrade: 100,
     timeLimit: 45,
     passingScore: 75,
-    // Original: 2024-03-13 -> Updated: 2025-11-10 (Recent Past Date - Today)
-    dueDate: "**2025-11-10T23:59:00Z**", 
+    dueDate: "**2025-11-10T23:59:00Z**",
     acceptLateSubmissions: false,
     idUser: "user-001",
     questions: [
@@ -251,14 +230,11 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
   }
 ];
 
-// Track dismissed items
 const DISMISSED_ITEMS = new Set<string>();
 
-// Utility to simulate network delay for mock data
 const simulateDelay = (ms: number = 500) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// --- API CLIENT CONFIGURATION (ONLY USED WHEN MOCKING IS DISABLED) ---
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -287,9 +263,6 @@ const handleApiError = (error: unknown) => {
   throw error;
 };
 
-/**
- * Fetch latest tasks and quizzes for timeline (this week only)
- */
 export async function fetchTimelineResources(
   userId: string,
   weekStart: string,
@@ -302,29 +275,24 @@ export async function fetchTimelineResources(
     const weekEndDate = new Date(weekStartDate);
     weekEndDate.setDate(weekEndDate.getDate() + 7);
     
-    // Filter resources based on date range and user type
     const filteredResources = MOCK_TIMELINE_RESOURCES.filter(resource => {
       if (!resource.dueDate) return false;
       
       const resourceDate = new Date(resource.dueDate);
       const isInWeek = resourceDate >= weekStartDate && resourceDate < weekEndDate;
       
-      // Remove dismissed items
       if (DISMISSED_ITEMS.has(resource.id)) {
         return false;
       }
       
-      // For students, only show upcoming resources
       if (userType === 'student') {
         const now = new Date();
         return isInWeek && resourceDate >= now;
       }
       
-      // For teachers, show both upcoming and recent resources
       return isInWeek;
     });
 
-    // Sort by due date (soonest first)
     filteredResources.sort((a, b) => {
       const dateA = new Date(a.dueDate || '').getTime();
       const dateB = new Date(b.dueDate || '').getTime();
@@ -359,14 +327,11 @@ export async function fetchTimelineResources(
   }
 }
 
-/**
- * Mark timeline item as completed/dismissed
- */
+
 export async function dismissTimelineItem(itemId: string): Promise<void> {
   if (isMockEnabled) {
     await simulateDelay(300);
     
-    // Check if item exists
     const itemExists = MOCK_TIMELINE_RESOURCES.some(resource => resource.id === itemId);
     
     if (!itemExists) {
@@ -374,7 +339,6 @@ export async function dismissTimelineItem(itemId: string): Promise<void> {
       throw new Error(`Timeline item not found: ${itemId}`);
     }
     
-    // Add to dismissed items set
     DISMISSED_ITEMS.add(itemId);
     
     console.log(`MOCK: Dismissed timeline item ${itemId}`);
@@ -392,10 +356,6 @@ export async function dismissTimelineItem(itemId: string): Promise<void> {
   }
 }
 
-// Additional mock functions for timeline management
-/**
- * Restore dismissed timeline item
- */
 export async function restoreTimelineItem(itemId: string): Promise<void> {
   if (isMockEnabled) {
     await simulateDelay(300);
@@ -421,9 +381,7 @@ export async function restoreTimelineItem(itemId: string): Promise<void> {
   }
 }
 
-/**
- * Clear all dismissed timeline items
- */
+
 export async function clearDismissedTimelineItems(): Promise<void> {
   if (isMockEnabled) {
     await simulateDelay(300);
@@ -445,9 +403,6 @@ export async function clearDismissedTimelineItems(): Promise<void> {
   }
 }
 
-/**
- * Get timeline statistics
- */
 export async function getTimelineStats(
   userId: string,
   userType: 'teacher' | 'student'
@@ -508,9 +463,6 @@ export async function getTimelineStats(
   }
 }
 
-/**
- * Add custom timeline item
- */
 export async function addCustomTimelineItem(
   itemData: Omit<Assignment, "id" | "createdAt" | "submissions"> | Omit<Quiz, "id">
 ): Promise<Assignment | Quiz> {
@@ -520,7 +472,6 @@ export async function addCustomTimelineItem(
     let newItem: Assignment | Quiz;
     
     if ('deliveryMode' in itemData) {
-      // It's an Assignment
       newItem = {
         ...itemData,
         id: `timeline-task-${Date.now()}`,
@@ -528,7 +479,6 @@ export async function addCustomTimelineItem(
         submissions: []
       } as Assignment;
     } else {
-      // It's a Quiz
       newItem = {
         ...itemData,
         id: `timeline-quiz-${Date.now()}`

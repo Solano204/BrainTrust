@@ -1,6 +1,6 @@
 package com.braintrust.identity.application.dtos.dtos;
 
-// 📍 identity/application/dtos/AuthenticationResult.java
+
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -10,7 +10,7 @@ public record AuthenticationResult(
         UserDTO user,
         String accessToken,
         String refreshToken,
-        Long expiresIn,  // in seconds
+        Long expiresIn,
         String tokenType,
         String failureReason
 ) {

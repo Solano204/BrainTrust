@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CourseTaskOverview.tsx
 "use client"
 
 import { useAuth } from "@/app/context/AuthContext"
@@ -16,8 +15,6 @@ export function CourseTaskOverview({ courseId }: CourseTaskOverviewProps) {
     return isStudent ? (
         <StudentCourseTaskOverview courseId={courseId} />
     ) : (
-        // Keep the existing teacher view (your original CourseTaskOverview component)
-        // Just rename it to TeacherCourseTaskOverview or keep as is
         < CourseTaskOverviewTeacher courseId={courseId} />
        
     )

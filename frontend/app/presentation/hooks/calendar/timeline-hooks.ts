@@ -1,4 +1,3 @@
-// File: src/app/features/timeline/hooks/timeline-hooks.ts
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,8 +25,7 @@ export function useTimelineMutations() {
   const dismissItemMutation = useMutation({
     mutationFn: (itemId: string) => dismissTimelineItem(itemId),
     onSuccess: (_, itemId) => {
-      // Invalidate timeline queries
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: timelineKeys.all 
       });
     },

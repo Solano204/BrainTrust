@@ -2,7 +2,6 @@ package com.braintrust.education.domain.valueobjects;
 
 import com.braintrust.shared.domain.ValueObject;
 
-// 📍 education/domain/valueobjects/CourseCode.java
 public class CourseCode extends ValueObject {
     private final String value;
 
@@ -15,9 +14,7 @@ public class CourseCode extends ValueObject {
         if (code == null || code.trim().isEmpty()) {
             throw new IllegalArgumentException("Course code cannot be null or empty");
         }
-//        if (!code.matches("[A-Z0-9-]+")) {
-//            throw new IllegalArgumentException("Course code can only contain letters, numbers and hyphens");
-//        }
+
         if (code.length() > 50) {
             throw new IllegalArgumentException("Course code cannot exceed 50 characters");
         }

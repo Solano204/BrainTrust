@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CourseDashboard.tsx
 "use client";
 
 import * as React from "react";
@@ -37,7 +36,6 @@ export function CourseDashboard() {
   const isStudent = userType === "student";
   const userId = user?.id;
 
-  // Role-based data fetching
   const {
     data: courses = [],
     isLoading,
@@ -45,10 +43,8 @@ export function CourseDashboard() {
     refetch,
   } = isStudent ? useStudentCourses(userId!) : useCoursesByTeacher(userId!);
 
-  // Mutations - only for teachers
   const { createCourse, updateCourse, deleteCourse } = useCourseMutations();
 
-  // Local state
   const [deleteConfirmId, setDeleteConfirmId] = React.useState<CourseId | null>(
     null
   );
@@ -57,7 +53,6 @@ export function CourseDashboard() {
     undefined
   );
 
-  // Event handlers
   const handleCreateCourse = () => {
     if (isStudent) return;
     setCourseToEdit(undefined);
@@ -87,11 +82,9 @@ export function CourseDashboard() {
 
     try {
       if (courseId) {
-        // UPDATE EXISTING COURSE
         console.log("Updating course with ID:", courseId);
         console.log("Has new image file:", !!imageFile);
 
-        // Get the current course to access the old image URL
         const currentCourse = courses.find((c) => c.id === courseId);
         const oldImageUrl = currentCourse?.urlImage;
 
@@ -109,7 +102,6 @@ export function CourseDashboard() {
           }
         );
       } else {
-        // CREATE NEW COURSE (no need to delete anything)
         console.log("Creating new course");
         console.log("Has image file:", !!imageFile);
 
@@ -148,7 +140,6 @@ export function CourseDashboard() {
     });
   };
 
-  // Course Card Component
   const CourseCard: React.FC<{ course: Course }> = ({ course }) => {
     const displayColor = "bg-primary";
     const isPendingDelete = deleteConfirmId === course.id;
@@ -158,7 +149,6 @@ export function CourseDashboard() {
         className={`flex flex-col border-l-4 ${displayColor} bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 hover:scale-[1.02] overflow-hidden`}
         style={{ borderColor: "var(--tw-colors-blue-600)" }}
       >
-        {/* Image Section */}
         <div
           className="relative h-32 w-full bg-cover bg-center overflow-hidden"
           style={{
@@ -180,7 +170,6 @@ export function CourseDashboard() {
           </div>
         </div>
 
-        {/* Card Body */}
         <div className="p-6 flex flex-col space-y-4">
           <div className="space-y-1">
             <p
@@ -315,7 +304,6 @@ export function CourseDashboard() {
         </Alert>
       )}
 
-      {/* Course List Grid */}
       {!isLoading && !error && courses.length > 0 && (
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {courses.map((course) => (
@@ -344,7 +332,6 @@ export function CourseDashboard() {
         </div>
       )}
 
-      {/* Course Form Modal */}
       {!isStudent && (
         <CourseFormModal
           open={isFormModalOpen}

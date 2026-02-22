@@ -28,7 +28,7 @@ public class MockStorageService implements StorageService {
     @Override
     public FileUploadDTO uploadFile(MultipartFile file, String path) {
         try {
-            // Simulate processing delay
+
             Thread.sleep(ThreadLocalRandom.current().nextInt(500, 1500));
 
             String originalFileName = file.getOriginalFilename();
@@ -36,7 +36,7 @@ public class MockStorageService implements StorageService {
             String uniqueFileName = generateUniqueFileName(fileExtension);
             String storagePath = path + "/" + uniqueFileName;
 
-            // Generate mock URL
+
             String fileUrl = String.format("%s/%s/%d/%d",
                     MOCK_BASE_URL,
                     originalFileName,
@@ -97,7 +97,7 @@ public class MockStorageService implements StorageService {
 
     @Override
     public boolean isStorageAvailable() {
-        return true; // Mock storage is always available
+        return true;
     }
 
     private String getFileExtension(String fileName) {

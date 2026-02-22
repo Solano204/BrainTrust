@@ -34,10 +34,9 @@ public class DocumentJpaEntity {
     @JoinColumn(name = "page_id")
     private PageJpaEntity page;
 
-    // Constructors
     public DocumentJpaEntity() {}
 
-    // Constructor for assignment documents
+
     public DocumentJpaEntity(String name, String storagePath, AssignmentJpaEntity assignment) {
         this.name = name;
         this.storagePath = storagePath;
@@ -46,7 +45,6 @@ public class DocumentJpaEntity {
         this.page = null;
     }
 
-    // Constructor for submission documents
     public DocumentJpaEntity(String name, String storagePath, SubmissionJpaEntity submission) {
         this.name = name;
         this.storagePath = storagePath;
@@ -55,7 +53,6 @@ public class DocumentJpaEntity {
         this.page = null;
     }
 
-    // Constructor for page documents
     public DocumentJpaEntity(String name, String storagePath, PageJpaEntity page) {
         this.name = name;
         this.storagePath = storagePath;
@@ -64,7 +61,7 @@ public class DocumentJpaEntity {
         this.submission = null;
     }
 
-    // Getters and setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

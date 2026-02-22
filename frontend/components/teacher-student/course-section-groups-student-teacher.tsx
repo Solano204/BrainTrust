@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CourseGroups.tsx
 "use client";
 
 import { useState, useMemo } from "react"
@@ -13,7 +12,6 @@ import { useAuth } from "@/app/context/AuthContext"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
-// Import types and interfaces
 import type { UserId, CourseId } from "@/app/domain/valueObjects/CourseValues"
 import { 
   Team,
@@ -29,7 +27,6 @@ interface CourseGroupsProps {
   courseId: CourseId
 }
 
-// User interface for local use
 interface User {
   id: UserId
   name: string
@@ -40,8 +37,7 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
   const { user: currentUser } = useAuth();
   const isTeacher = currentUser?.role === 'teacher';
   
-  // React Query for data fetching
-  const { 
+  const {
     data: teamsData, 
     isLoading: isLoadingTeams,
     error: teamsError,
@@ -58,8 +54,7 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
 
   const availableUsers = availableUsersData?.users || [];
 
-  // Team mutations
-  const { 
+  const {
     createTeam, 
     deleteTeam,
     addMembers,
@@ -67,7 +62,6 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
     updateTeamInfo
   } = useTeamMutations();
 
-  // Local state
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showAddMemberModal, setShowAddMemberModal] = useState(false)
@@ -79,7 +73,6 @@ export function CourseGroups({ courseId }: CourseGroupsProps) {
   const [deleteConfirmTeam, setDeleteConfirmTeam] = useState<string | null>(null)
   const [showTeamDetail, setShowTeamDetail] = useState(false)
 
-  // Event handlers
   const handleCreateTeam = async () => {
     if (!isTeacher) return;
     
@@ -157,19 +150,15 @@ const newTeamData: TeamWithIds = {
     removeMember.mutate({ courseId, teamId, memberId });
   };
 
-  // Helper function to get user details by ID
   const getUserById = (userId: UserId): User | undefined => {
     return availableUsers.find(user => user.id === userId)
   }
 
-  // Get member user IDs from team members
   const getTeamMemberIds = (team: Team): UserId[] => {
     return Array.from(team.members).map(member => member.userId)
   }
 
-  // Get available users for adding to teams (excluding users already in the selected team)
   const filteredAvailableUsers = useMemo(() => {
-    // Get all users already in teams (except current selected team)
     const usersInOtherTeams = new Set<UserId>();
     teams.forEach(team => {
       if (!selectedTeam || team.teamId !== selectedTeam.teamId) {
@@ -177,14 +166,12 @@ const newTeamData: TeamWithIds = {
       }
     });
     
-    // Filter available users by search query and exclude those in other teams
-    return availableUsers.filter(user => 
+    return availableUsers.filter(user =>
       !usersInOtherTeams.has(user.id) && 
       user.name.toLowerCase().includes(memberSearchQuery.toLowerCase())
     );
   }, [availableUsers, teams, selectedTeam, memberSearchQuery]);
 
-  // STUDENT VIEW - Read Only
   if (!isTeacher) {
     return (
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
@@ -193,7 +180,6 @@ const newTeamData: TeamWithIds = {
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Class Groups</h1>
         </div>
 
-        {/* Teams Grid - Read Only */}
         {isLoadingTeams ? (
           <div className="text-center text-muted-foreground py-12">
             <Loader2 className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
@@ -216,7 +202,6 @@ const newTeamData: TeamWithIds = {
           </div>
         )}
 
-        {/* Empty State */}
         {teams.length === 0 && !isLoadingTeams && (
           <Card className="text-center p-12 border-2 border-dashed">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -225,7 +210,6 @@ const newTeamData: TeamWithIds = {
           </Card>
         )}
 
-        {/* Team Detail Modal */}
         <Dialog open={showTeamDetail} onOpenChange={setShowTeamDetail}>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -248,7 +232,6 @@ const newTeamData: TeamWithIds = {
     );
   }
 
-  // TEACHER VIEW - Full Access
   if (isLoadingTeams) {
     return (
       <div className="p-8 text-center text-muted-foreground">
@@ -272,7 +255,6 @@ const newTeamData: TeamWithIds = {
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      {/* Header with Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Team Management</h1>
         <Button 
@@ -285,7 +267,6 @@ const newTeamData: TeamWithIds = {
         </Button>
       </div>
 
-      {/* Teams Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {teams.map((team) => (
           <TeamCard
@@ -315,7 +296,6 @@ const newTeamData: TeamWithIds = {
         ))}
       </div>
 
-      {/* Empty State */}
       {teams.length === 0 && !isLoadingTeams && (
         <Card className="text-center p-12 border-2 border-dashed">
           <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -327,7 +307,6 @@ const newTeamData: TeamWithIds = {
         </Card>
       )}
 
-      {/* Create Team Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
@@ -407,7 +386,6 @@ const newTeamData: TeamWithIds = {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Team Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
@@ -455,7 +433,6 @@ const newTeamData: TeamWithIds = {
         </DialogContent>
       </Dialog>
 
-      {/* Add Member Modal */}
       <Dialog open={showAddMemberModal} onOpenChange={setShowAddMemberModal}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -524,7 +501,6 @@ const newTeamData: TeamWithIds = {
   )
 }
 
-// Enhanced Team Card Component (Teacher)
 interface TeamCardProps {
   team: Team;
   availableUsers: User[];
@@ -675,7 +651,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
           </div>
         </div>
 
-        {/* Delete Confirmation */}
         {isTeacher && isPendingDelete && (
           <div className="flex gap-2 pt-2 border-t border-border">
             <Button 
@@ -713,7 +688,6 @@ const TeamCard: React.FC<TeamCardProps> = ({
   );
 };
 
-// Team Card for Students (Read Only)
 const TeamCardReadOnly: React.FC<{
   team: Team;
   availableUsers: User[];
@@ -786,7 +760,6 @@ const TeamCardReadOnly: React.FC<{
   );
 };
 
-// Team Detail View (Shared)
 const TeamDetailView: React.FC<{
   team: Team;
   getUserById: (userId: UserId) => User | undefined;

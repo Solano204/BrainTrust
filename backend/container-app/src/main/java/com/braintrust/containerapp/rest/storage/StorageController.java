@@ -20,6 +20,7 @@ import java.util.Map;
 @RequestMapping("/api/storage")
 @CrossOrigin(origins = "*")
 @Slf4j
+
 public class StorageController {
 
 
@@ -32,9 +33,6 @@ public class StorageController {
         this.storageService = storageService;
     }
 
-    /**
-     * Upload a single file
-     */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponseDTO> uploadFile(
             @RequestParam("file") MultipartFile file,
@@ -64,9 +62,6 @@ public class StorageController {
         }
     }
 
-    /**
-     * Upload multiple files
-     */
     @PostMapping(value = "/upload/multiple", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponseDTO> uploadMultipleFiles(
             @RequestParam("files") MultipartFile[] files,
@@ -90,9 +85,6 @@ public class StorageController {
                 .body(new SuccessResponseDTO(true, "Files uploaded successfully", uploadResults));
     }
 
-    /**
-     * Delete a file by URL
-     */
     @DeleteMapping("/delete")
     public ResponseEntity<SuccessResponseDTO> deleteFile(@RequestParam("url") String fileUrl) {
         log.info("Deleting file: {}", fileUrl);
@@ -114,9 +106,6 @@ public class StorageController {
         }
     }
 
-    /**
-     * Check storage health/availability
-     */
     @GetMapping("/health")
     public ResponseEntity<SuccessResponseDTO> checkStorageHealth() {
         log.debug("Checking storage health");
@@ -139,9 +128,6 @@ public class StorageController {
         }
     }
 
-    /**
-     * Get file information
-     */
     @GetMapping("/info")
     public ResponseEntity<SuccessResponseDTO> getFileInfo(@RequestParam("url") String fileUrl) {
         log.debug("Getting file info: {}", fileUrl);

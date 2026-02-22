@@ -1,4 +1,4 @@
-// File: src/app/features/admin/components/AdminCoursesPage.tsx
+
 'use client';
 
 import { useState } from 'react';
@@ -58,7 +58,6 @@ export default function AdminCoursesPage() {
         onCreateCourse={handleCreateCourse}
       />
 
-      {/* Create/Edit Course Modal */}
       <CreateEditCourseModal
         course={selectedCourse}
         isOpen={modalState.createEdit}
@@ -66,7 +65,6 @@ export default function AdminCoursesPage() {
         onSuccess={closeAllModals}
       />
 
-      {/* Manage Enrollments Modal */}
       {selectedCourse && (
         <ManageEnrollments
           course={selectedCourse}
@@ -75,7 +73,6 @@ export default function AdminCoursesPage() {
         />
       )}
 
-      {/* Manage Grades Modal */}
       {selectedCourse && (
         <ManageGrades
           course={selectedCourse}

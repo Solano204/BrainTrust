@@ -19,10 +19,6 @@ import {
     Activity
 } from "lucide-react"
 
-// ==========================================
-// 🎯 TIPOS
-// ==========================================
-
 interface CourseReport {
     id: string
     courseName: string
@@ -46,9 +42,6 @@ interface StudentPerformance {
     lastActivity: string
 }
 
-// ==========================================
-// 🗄️ DATOS MOCK
-// ==========================================
 
 const mockCourseReports: CourseReport[] = [
     {
@@ -119,9 +112,6 @@ const mockStudentPerformance: StudentPerformance[] = [
     }
 ]
 
-// ==========================================
-// 📊 RESUMEN GENERAL
-// ==========================================
 
 function OverviewStats() {
     const stats = [
@@ -202,9 +192,6 @@ function OverviewStats() {
     )
 }
 
-// ==========================================
-// 📈 GRÁFICO SIMPLE (SVG)
-// ==========================================
 
 function SimpleBarChart({ data, label }: { data: number[], label: string }) {
     const max = Math.max(...data)
@@ -229,9 +216,6 @@ function SimpleBarChart({ data, label }: { data: number[], label: string }) {
     )
 }
 
-// ==========================================
-// 📋 REPORTE DE CURSOS
-// ==========================================
 
 function CourseReportsTab() {
     const [reports] = useState(mockCourseReports)
@@ -262,7 +246,6 @@ function CourseReportsTab() {
                 />
             </Card>
 
-            {/* Desktop Table */}
             <Card className="hidden lg:block overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-muted/50">
@@ -323,7 +306,6 @@ function CourseReportsTab() {
                 </table>
             </Card>
 
-            {/* Mobile Cards */}
             <div className="lg:hidden space-y-4">
                 {filteredReports.map((report) => (
                     <Card key={report.id} className="p-4">
@@ -367,9 +349,6 @@ function CourseReportsTab() {
     )
 }
 
-// ==========================================
-// 👥 RENDIMIENTO DE ESTUDIANTES
-// ==========================================
 
 function StudentPerformanceTab() {
     const [students] = useState(mockStudentPerformance)
@@ -391,7 +370,6 @@ function StudentPerformanceTab() {
 
     return (
         <div className="space-y-6">
-            {/* Search */}
             <Card className="p-4">
                 <Input
                     placeholder="Buscar estudiante..."
@@ -400,7 +378,6 @@ function StudentPerformanceTab() {
                 />
             </Card>
 
-            {/* Desktop Table */}
             <Card className="hidden lg:block overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-muted/50">
@@ -460,7 +437,6 @@ function StudentPerformanceTab() {
                 </table>
             </Card>
 
-            {/* Mobile Cards */}
             <div className="lg:hidden space-y-4">
                 {filteredStudents.map((student) => (
                     <Card key={student.id} className="p-4">
@@ -491,14 +467,9 @@ function StudentPerformanceTab() {
     )
 }
 
-// ==========================================
-// 🎯 COMPONENTE PRINCIPAL
-// ==========================================
-
 export default function AdminReportsModule() {
     return (
         <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-background min-h-screen">
-            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold">Reportes y Analíticas</h1>
@@ -518,10 +489,8 @@ export default function AdminReportsModule() {
                 </div>
             </div>
 
-            {/* Overview Stats */}
             <OverviewStats />
 
-            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="p-6">
                     <SimpleBarChart
@@ -537,7 +506,6 @@ export default function AdminReportsModule() {
                 </Card>
             </div>
 
-            {/* Tabs */}
             <Tabs defaultValue="courses" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="courses" className="gap-2">

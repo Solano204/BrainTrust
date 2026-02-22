@@ -1,4 +1,3 @@
-// File: src/app/infraestructure/api/task/student-task-keys.ts
 export const studentTaskKeys = {
     all: ["studentTasks"] as const,
     course: (courseId: string, studentId: string) => [...studentTaskKeys.all, "course", courseId, "student", studentId] as const,

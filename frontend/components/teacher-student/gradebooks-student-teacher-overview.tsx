@@ -1,4 +1,3 @@
-// File: src/components/teacher-student/gradebooks-overview-student-teacher.tsx
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +46,6 @@ export function CourseGradebook({ courseId }: CourseGradebookProps) {
     );
   }
 
-  // Check if user has permission to view gradebook
   if (!isStudent && !isTeacher) {
     return (
       <Card>
@@ -62,7 +60,6 @@ export function CourseGradebook({ courseId }: CourseGradebookProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gradebook</h1>
@@ -103,7 +100,6 @@ export function CourseGradebook({ courseId }: CourseGradebookProps) {
         </div>
       </div>
 
-      {/* Gradebook content will be rendered by parent component */}
       <div className="text-center text-muted-foreground py-8">
         <p>Please use the navigation above to switch between Units view and Course Overview.</p>
       </div>

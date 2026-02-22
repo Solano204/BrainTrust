@@ -5,16 +5,6 @@
       <stringProp name="TestPlan.comments">
 🎯 STRESS TEST - GET /api/submissions/{submissionId}
 
-Objetivo: Encontrar el punto de quiebre del endpoint
-Estrategia: Incremento gradual hasta que falle
-Inicio: 100 usuarios
-Incremento: +100 usuarios cada 2 minutos
-Máximo: 2000 usuarios o hasta crash
-
-¿Qué medir?
-- ¿En qué punto falla? (usuarios/throughput)
-- ¿Qué tipo de error? (timeout, 5xx, etc.)
-- ¿Se recupera automáticamente?
       </stringProp>
       <elementProp name="TestPlan.user_defined_variables" elementType="Arguments">
         <collectionProp name="Arguments.arguments">

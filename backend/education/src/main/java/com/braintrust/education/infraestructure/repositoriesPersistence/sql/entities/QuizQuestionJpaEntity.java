@@ -10,7 +10,7 @@ public class QuizQuestionJpaEntity {
     @Column(name = "id", length = 50)
     private String id;
 
-    // ✅ FIXED: Proper ManyToOne relationship with QuizJpaEntity
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = false)
     private QuizJpaEntity quiz;
@@ -42,7 +42,7 @@ public class QuizQuestionJpaEntity {
         this.correctAnswer = correctAnswer;
     }
 
-    // ✅ Getters and Setters
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

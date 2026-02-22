@@ -23,10 +23,10 @@ public interface EnrollmentJpaRepository extends JpaRepository<EnrollmentJpaEnti
 
     boolean existsByCourseIdAndStudentId(String courseId, String studentId);
 
-    // NEW METHOD: Count enrollments by course and status
+
     long countByCourseIdAndStatus(String courseId, String status);
 
-    // NEW METHOD: Find student IDs by course and status
+
     @Query("SELECT e.studentId FROM EnrollmentJpaEntity e WHERE e.courseId = :courseId AND e.status = :status")
     List<String> findStudentIdsByCourseIdAndStatus(@Param("courseId") String courseId, @Param("status") String status);
 }

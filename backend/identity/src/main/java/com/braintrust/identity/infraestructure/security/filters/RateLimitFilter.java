@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.filter.OncePerRequestFilter;
-// other imports...
+
 
 public class RateLimitFilter extends OncePerRequestFilter {
 
@@ -29,7 +29,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RateLimitService rateLimitService;
     private final JwtService jwtUtil;
 
-    // Endpoints públicos que no necesitan rate limiting estricto
     private static final String[] PUBLIC_ENDPOINTS = {
             "/actuator/health",
             "/v3/api-docs",
@@ -47,7 +46,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        // Skip rate limiting para endpoints públicos específicos
         String requestPath = request.getRequestURI();
         for (String publicEndpoint : PUBLIC_ENDPOINTS) {
             if (requestPath.startsWith(publicEndpoint)) {
@@ -68,7 +66,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private String getClientIdentifier(HttpServletRequest request) {
-        // Prioridad 1: Email del JWT (usuarios autenticados)
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
@@ -82,7 +79,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
             }
         }
 
-        // Prioridad 2: IP del cliente
         return "ip:" + getClientIP(request);
     }
 
@@ -90,7 +86,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
 
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // Tomar solo la primera IP (cliente real)
             return xForwardedFor.split(",")[0].trim();
         }
 
@@ -106,7 +101,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String method = request.getMethod();
         String path = request.getRequestURI();
 
-        // Diferentes límites para diferentes endpoints
         if (path.contains("/authenticate") || path.contains("/login")) {
             return "auth";
         } else if (path.contains("/register")) {
@@ -118,8 +112,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-
-
     //ERRRORASO
     private void handleRateLimitExceeded(HttpServletResponse response, String clientIdentifier)
             throws IOException {
@@ -127,7 +119,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         response.setStatus(429); // Too Many Requests
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setHeader("Retry-After", "60"); // Reintentar en 60 segundos
+        response.setHeader("Retry-After", "60");
 
         String errorJson = String.format(
                 "{\"error\":\"Rate limit exceeded\",\"message\":\"Too many requests. Please try again in 60 seconds.\",\"status\":429}",

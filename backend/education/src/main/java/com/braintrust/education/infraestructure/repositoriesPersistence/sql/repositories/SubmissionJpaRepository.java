@@ -20,7 +20,7 @@ public interface SubmissionJpaRepository extends JpaRepository<SubmissionJpaEnti
     List<SubmissionJpaEntity> findByStatus(String status);
     List<SubmissionJpaEntity> findByAssignmentIdAndSubmittedAtAfter(String assignmentId, LocalDateTime dueDate);
 
-    // ✅ NEW: Find submissions by course and student (requires JOIN with assignments)
+
     @Query("SELECT s FROM SubmissionJpaEntity s " +
             "JOIN AssignmentJpaEntity a ON s.assignmentId = a.id " +
             "WHERE a.courseId = :courseId AND s.studentId = :studentId")
@@ -28,7 +28,7 @@ public interface SubmissionJpaRepository extends JpaRepository<SubmissionJpaEnti
             @Param("courseId") String courseId,
             @Param("studentId") String studentId);
 
-    // ✅ NEW: Find submissions by course (requires JOIN with assignments)
+
     @Query("SELECT s FROM SubmissionJpaEntity s " +
             "JOIN AssignmentJpaEntity a ON s.assignmentId = a.id " +
             "WHERE a.courseId = :courseId")

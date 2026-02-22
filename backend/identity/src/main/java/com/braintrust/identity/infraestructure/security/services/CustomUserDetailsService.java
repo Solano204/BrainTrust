@@ -1,6 +1,5 @@
 package com.braintrust.identity.infraestructure.security.services;
 
-// 📍 identity/infrastructure/security/CustomUserDetailsService.java
 
 import com.braintrust.identity.application.ports.out.UserRepository;
 import com.braintrust.identity.domain.model.User;

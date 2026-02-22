@@ -1,4 +1,3 @@
-// File: src/app/features/courses/components/CoursesSection.tsx
 "use client"
 
 import { Card } from "@/components/ui/card"
@@ -23,21 +22,17 @@ interface CoursesSectionProps {
 }
 
 export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
-    // Carousel States
     const [currentIndex, setCurrentIndex] = useState(0);
     const initialItemsPerView = 2;
     
-    // Toggle full view
-    const [showAllCourses, setShowAllCourses] = useState(false); 
+    const [showAllCourses, setShowAllCourses] = useState(false);
 
-    // REAL API CALL with teacher ID
-    const { 
+    const {
         data: courses = [], 
         isLoading, 
         error 
     } = useCoursesByTeacher(teacherId);
     
-    // --- Carousel Logic ---
     const itemsPerView = showAllCourses ? courses.length : initialItemsPerView;
     
     const canScrollUp = currentIndex > 0 && !showAllCourses;
@@ -55,10 +50,8 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
         }
     };
     
-    // Determine which courses to show based on the mode
     const visibleCourses = showAllCourses ? courses : courses.slice(currentIndex, currentIndex + initialItemsPerView);
 
-    // Button Handler
     const handleViewAllClick = () => {
         setShowAllCourses(prev => !prev);
         if (!showAllCourses) {
@@ -105,11 +98,9 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
         );
     }
 
-    // Dynamic height calculation
     const carouselHeight = showAllCourses ? 'auto' : 'h-[20rem]';
     const transformStyle = showAllCourses ? 'none' : `translateY(-${currentIndex * (200 + 16)}px)`;
 
-    // Calculate course statistics
     const totalStudents = courses.reduce((total, course) => {
         return total + (course.enrollments?.length || 0);
     }, 0);
@@ -151,7 +142,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
                     </button>
                 )}
 
-                {/* Carousel Content */}
                 <div className={`overflow-hidden ${carouselHeight}`}>
                     <div
                         className={`transition-transform duration-500 ease-out space-y-4 ${showAllCourses ? 'grid grid-cols-1 sm:grid-cols-1 gap-4' : ''}`}
@@ -231,7 +221,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
                     </div>
                 </div>
 
-                {/* Down Arrow (Only visible in carousel mode) */}
                 {!showAllCourses && (
                     <button
                         onClick={scrollDown}
@@ -245,7 +234,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
                     </button>
                 )}
 
-                {/* Indicators (Only visible in carousel mode) */}
                 {!showAllCourses && courses.length > initialItemsPerView && (
                     <div className="flex justify-center gap-1.5 mt-6">
                         {courses.map((_, index) => (
@@ -264,7 +252,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
                 )}
             </div>
 
-            {/* View All Toggle Button */}
             {courses.length > initialItemsPerView && (
                 <button 
                     onClick={handleViewAllClick}

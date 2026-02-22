@@ -41,13 +41,12 @@ public class Quiz extends AggregateRoot<QuizId> {
         this.timeLimitMinutes = timeLimitMinutes;
     }
 
-    // ✅ Update factory method
     public static Quiz create(CourseId courseId, UnitId unitId, String title, String description,
                               LocalDateTime availableFrom, LocalDateTime availableUntil,
                               Integer timeLimitMinutes) {
         QuizId id = QuizId.generate();
         Quiz quiz = new Quiz(id, courseId, title);
-        quiz.unitId = unitId; // ✅ Set unitId
+        quiz.unitId = unitId;
         quiz.description = description;
         quiz.availableFrom = availableFrom;
         quiz.availableUntil = availableUntil;
@@ -55,7 +54,6 @@ public class Quiz extends AggregateRoot<QuizId> {
         return quiz;
     }
 
-    // ✅ Update reconstitute method
     public static Quiz reconstitute(QuizId id, CourseId courseId, UnitId unitId, String title,
                                     String description, LocalDateTime availableFrom,
                                     LocalDateTime availableUntil, Integer timeLimitMinutes,
@@ -63,7 +61,7 @@ public class Quiz extends AggregateRoot<QuizId> {
                                     boolean showCorrectAnswers, LocalDateTime createdAt,
                                     List<QuizQuestion> questions, boolean active) {
         Quiz quiz = new Quiz(id, courseId, title);
-        quiz.unitId = unitId; // ✅ Set unitId
+        quiz.unitId = unitId;
         quiz.description = description;
         quiz.availableFrom = availableFrom;
         quiz.availableUntil = availableUntil;
@@ -79,7 +77,6 @@ public class Quiz extends AggregateRoot<QuizId> {
         return quiz;
     }
 
-    // 🎯 Domain Behavior
     public void addQuestion(QuizQuestion question) {
         questions.add(question);
     }
@@ -105,10 +102,8 @@ public class Quiz extends AggregateRoot<QuizId> {
                 .sum();
     }
 
-    // ✅ NEW: Check if quiz has submissions
+
     public boolean hasSubmissions() {
-        // This would need to check if there are any quiz submissions
-        // For now, return false - you'll need to implement this based on your submission tracking
         return false;
     }
 
@@ -120,8 +115,6 @@ public class Quiz extends AggregateRoot<QuizId> {
     }
 
 
-
-    // Getters
     public UnitId getUnitId() { return unitId; }
     public CourseId getCourseId() { return courseId; }
     public String getTitle() { return title; }
