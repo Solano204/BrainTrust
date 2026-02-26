@@ -9,5 +9,7 @@ public record UpdateQuizCommand(
         Integer timeLimitMinutes,
         int maxAttempts,
         boolean shuffleQuestions,
-        boolean showCorrectAnswers
+        boolean showCorrectAnswers,
+        boolean allowSeeResults,   // ✅ NEW
+        double totalScore          // ✅ NEW
 ) {}

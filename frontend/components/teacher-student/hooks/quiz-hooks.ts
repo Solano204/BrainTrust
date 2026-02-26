@@ -27,10 +27,28 @@ export function useQuizzesByUnit(courseId: CourseId | null, unitId: UnitId | nul
     queryKey: quizKeys.list(courseId || "", unitId || ""),
     queryFn: () => fetchQuizzesByUnit(courseId!, unitId!),
     enabled: !!courseId && !!unitId,
-    staleTime: 0, // Cambiado a 0 para siempre obtener datos frescos
-    refetchOnMount: true, // Cambiado a true
-    refetchOnWindowFocus: true, // Cambiado a true
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+}
+function redistributePoints(questions: Question[], newTotalScore: number): Record<string, number> {
+  const currentTotal = questions.reduce((s, q) => s + (q.points ?? 0), 0);
+  const pointUpdates: Record<string, number> = {};
+
+  if (currentTotal === 0) {
+    // Distribute evenly when there are no existing points
+    const even = +(newTotalScore / questions.length).toFixed(2);
+    questions.forEach((q) => { pointUpdates[q.id] = even; });
+    return pointUpdates;
+  }
+
+  questions.forEach((q) => {
+    const weight = (q.points ?? 0) / currentTotal;
+    pointUpdates[q.id] = +( newTotalScore * weight).toFixed(2);
+  });
+
+  return pointUpdates;
 }
 
 export function useQuizDetail(quizId: string | null) {
@@ -38,11 +56,12 @@ export function useQuizDetail(quizId: string | null) {
     queryKey: quizKeys.detail(quizId || ""),
     queryFn: () => fetchQuizDetail(quizId!),
     enabled: !!quizId,
-    staleTime: 0, // Cambiado a 0
-    refetchOnMount: true, // Cambiado a true
-    refetchOnWindowFocus: true, // Cambiado a true
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
+
 
 export function useQuizMutations() {
   const queryClient = useQueryClient();
@@ -129,11 +148,15 @@ export function useQuizMutations() {
       });
     }
   });
-
+ // ── UPDATE ────────────────────────────────────────────────────────────────
+  /**
+   * After updating quiz settings, if `totalScore` changed we automatically
+   * redistribute question points proportionally.
+   */
   const updateQuizMutation = useMutation({
     mutationFn: async ({
       quizId,
-      quizData
+      quizData,
     }: {
       quizId: string;
       quizData: Partial<Omit<Quiz, "id" | "courseId" | "courseUnitId" | "createdAt">>;
@@ -146,151 +169,92 @@ export function useQuizMutations() {
     onSuccess: async (updatedQuiz, variables) => {
       console.log("🎉 [Hook] Update success");
 
-      // Setear en cache
+      // Cache the freshly updated quiz
       if (updatedQuiz?.id) {
-        queryClient.setQueryData(
-          quizKeys.detail(updatedQuiz.id),
-          updatedQuiz
-        );
+        queryClient.setQueryData(quizKeys.detail(updatedQuiz.id), updatedQuiz);
       }
 
-      // Invalidar el quiz específico
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
+      // ── Redistribute points when totalScore changed ───────────────────────
+      const newTotalScore = variables.quizData.totalScore;
+      if (newTotalScore !== undefined && updatedQuiz?.questions?.length > 0) {
+        // Only redistribute existing (non-temp) questions
+        const existingQuestions = updatedQuiz.questions.filter((q) => !q.id.startsWith("temp_"));
 
-      // Invalidar todas las listas
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.lists(),
-        refetchType: 'active'
-      });
+        if (existingQuestions.length > 0) {
+          const pointUpdates = redistributePoints(existingQuestions, newTotalScore);
+          console.log("📊 [Hook] Redistributing points:", pointUpdates);
 
-      // Forzar refetch
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
+          try {
+            await updateQuestionsPointsBulk(variables.quizId, pointUpdates);
+            console.log("✅ [Hook] Points redistributed successfully");
+          } catch (err) {
+            console.error("❌ [Hook] Failed to redistribute points:", err);
+          }
+        }
+      }
+
+      // Invalidate & refetch
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.invalidateQueries({ queryKey: quizKeys.lists(), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
     },
-    onError: (error) => {
-      console.error("❌ [Hook] Error updating quiz:", error);
-    }
+    onError: (error) => { console.error("❌ [Hook] Error updating quiz:", error); },
   });
 
+  // ── DELETE ────────────────────────────────────────────────────────────────
   const deleteQuizMutation = useMutation({
     mutationFn: async (quizId: string) => {
-      console.log("🗑️ [Hook] Deleting quiz:", quizId);
       await deleteQuiz(quizId);
       return quizId;
     },
     onSuccess: async (quizId) => {
-      console.log("🎉 [Hook] Delete success");
-
-      // Invalidar todas las listas
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.lists(),
-        refetchType: 'active'
-      });
-
-      // Remover el quiz específico del cache
-      queryClient.removeQueries({
-        queryKey: quizKeys.detail(quizId)
-      });
-
-      // Refetch todas las listas
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.lists(),
-        type: 'active'
-      });
+      await queryClient.invalidateQueries({ queryKey: quizKeys.lists(), refetchType: "active" });
+      queryClient.removeQueries({ queryKey: quizKeys.detail(quizId) });
+      await queryClient.refetchQueries({ queryKey: quizKeys.lists(), type: "active" });
     },
-    onError: (error) => {
-      console.error("❌ [Hook] Error deleting quiz:", error);
-    }
+    onError: (error) => { console.error("❌ [Hook] Error deleting quiz:", error); },
   });
 
+  // ── QUESTIONS ─────────────────────────────────────────────────────────────
   const addQuestionMutation = useMutation({
-    mutationFn: ({
-      quizId,
-      question
-    }: {
-      quizId: string;
-      question: Omit<Question, "id" | "text" | "maxPoints">;
-    }) => addQuizQuestion(quizId, question),
+    mutationFn: ({ quizId, question }: { quizId: string; question: Omit<Question, "id" | "text" | "maxPoints"> }) =>
+      addQuizQuestion(quizId, question),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const addQuestionsBulkMutation = useMutation({
-    mutationFn: ({
-      quizId,
-      questions
-    }: {
-      quizId: string;
-      questions: Omit<Question, "id" | "text" | "maxPoints">[];
-    }) => addQuizQuestionsBulk(quizId, questions),
+    mutationFn: ({ quizId, questions }: { quizId: string; questions: Omit<Question, "id" | "text" | "maxPoints">[] }) =>
+      addQuizQuestionsBulk(quizId, questions),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.lists(),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.invalidateQueries({ queryKey: quizKeys.lists(), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const deleteQuestionsBulkMutation = useMutation({
-    mutationFn: ({
-      quizId,
-      questionIds
-    }: {
-      quizId: string;
-      questionIds: string[];
-    }) => deleteQuizQuestionsBulk(quizId, questionIds),
+    mutationFn: ({ quizId, questionIds }: { quizId: string; questionIds: string[] }) =>
+      deleteQuizQuestionsBulk(quizId, questionIds),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.lists(),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.invalidateQueries({ queryKey: quizKeys.lists(), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const updateQuestionsBulkMutation = useMutation({
     mutationFn: ({
       quizId,
-      updates
+      updates,
     }: {
       quizId: string;
       updates: Array<{
         questionId: string;
         questionText?: string;
-        type?: 'multiple-choice' | 'open-ended';
+        type?: "multiple-choice" | "open-ended";
         points?: number;
         options?: string[];
         correctAnswer?: number | string;
@@ -299,124 +263,64 @@ export function useQuizMutations() {
       }>;
     }) => updateQuizQuestionsBulk(quizId, updates),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const updateQuestionsPointsBulkMutation = useMutation({
-    mutationFn: ({
-      quizId,
-      questionPoints
-    }: {
-      quizId: string;
-      questionPoints: Record<string, number>;
-    }) => updateQuestionsPointsBulk(quizId, questionPoints),
+    mutationFn: ({ quizId, questionPoints }: { quizId: string; questionPoints: Record<string, number> }) =>
+      updateQuestionsPointsBulk(quizId, questionPoints),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const updateQuestionsTextBulkMutation = useMutation({
-    mutationFn: ({
-      quizId,
-      questionTexts
-    }: {
-      quizId: string;
-      questionTexts: Record<string, string>;
-    }) => updateQuestionsTextBulk(quizId, questionTexts),
+    mutationFn: ({ quizId, questionTexts }: { quizId: string; questionTexts: Record<string, string> }) =>
+      updateQuestionsTextBulk(quizId, questionTexts),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const updateQuestionsAnswersBulkMutation = useMutation({
-    mutationFn: ({
-      quizId,
-      questionAnswers
-    }: {
-      quizId: string;
-      questionAnswers: Record<string, string>;
-    }) => updateQuestionsAnswersBulk(quizId, questionAnswers),
+    mutationFn: ({ quizId, questionAnswers }: { quizId: string; questionAnswers: Record<string, string> }) =>
+      updateQuestionsAnswersBulk(quizId, questionAnswers),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const updateQuestionsOptionsBulkMutation = useMutation({
     mutationFn: ({
       quizId,
-      questionOptions
+      questionOptions,
     }: {
       quizId: string;
-      questionOptions: Record<string, {
-        options: string[];
-        correctAnswer: number;
-      }>;
+      questionOptions: Record<string, { options: string[]; correctAnswer: number }>;
     }) => updateQuestionsOptionsBulk(quizId, questionOptions),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   const updateQuestionsTypesBulkMutation = useMutation({
     mutationFn: ({
       quizId,
-      questionTypes
+      questionTypes,
     }: {
       quizId: string;
-      questionTypes: Record<string, 'multiple-choice' | 'open-ended'>;
+      questionTypes: Record<string, "multiple-choice" | "open-ended">;
     }) => updateQuestionsTypesBulk(quizId, questionTypes),
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        refetchType: 'active'
-      });
-
-      await queryClient.refetchQueries({
-        queryKey: quizKeys.detail(variables.quizId),
-        type: 'active'
-      });
-    }
+      await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
+      await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
+    },
   });
 
   return {
@@ -433,9 +337,10 @@ export function useQuizMutations() {
     updateQuestionsTextBulk: updateQuestionsTextBulkMutation,
     updateQuestionsAnswersBulk: updateQuestionsAnswersBulkMutation,
     updateQuestionsOptionsBulk: updateQuestionsOptionsBulkMutation,
-    updateQuestionsTypesBulk: updateQuestionsTypesBulkMutation
+    updateQuestionsTypesBulk: updateQuestionsTypesBulkMutation,
   };
 }
+
 
 export function useQuizQuestionsManager(quizId: string) {
   const {
@@ -443,13 +348,11 @@ export function useQuizQuestionsManager(quizId: string) {
     deleteQuestionsBulk,
     updateQuestionsBulk,
     updateQuestionsPointsBulk,
-    updateQuestionsOptionsBulk
+    updateQuestionsOptionsBulk,
   } = useQuizMutations();
   const { data: quiz, refetch } = useQuizDetail(quizId);
 
-  const handleAddMultipleQuestions = async (
-    questions: Omit<Question, "id" | "text" | "maxPoints">[]
-  ) => {
+  const handleAddMultipleQuestions = async (questions: Omit<Question, "id" | "text" | "maxPoints">[]) => {
     const result = await addQuestionsBulk.mutateAsync({ quizId, questions });
     await refetch();
     return result;
@@ -462,16 +365,15 @@ export function useQuizQuestionsManager(quizId: string) {
   };
 
   const handleUpdateAllQuestions = async (questions: Question[]) => {
-    const updates = questions.map(q => ({
+    const updates = questions.map((q) => ({
       questionId: q.id,
       questionText: q.question,
       type: q.type,
       points: q.points,
-      options: q.type === 'multiple-choice' ? q.options || [] : undefined,
-      correctAnswer: q.type === 'multiple-choice' ? q.correctAnswer || 0 : undefined,
-      expectedAnswer: q.type === 'open-ended' ? q.expectedAnswer || '' : undefined
+      options: q.type === "multiple-choice" ? q.options || [] : undefined,
+      correctAnswer: q.type === "multiple-choice" ? q.correctAnswer || 0 : undefined,
+      expectedAnswer: q.type === "open-ended" ? q.expectedAnswer || "" : undefined,
     }));
-
     const result = await updateQuestionsBulk.mutateAsync({ quizId, updates });
     await refetch();
     return result;
@@ -491,22 +393,18 @@ export function useQuizQuestionsManager(quizId: string) {
     return result;
   };
 
-  const handleImportQuestions = async (
-    questions: Question[],
-    replaceExisting: boolean = false
-  ) => {
-    const questionsToImport = questions.map(q => ({
+  const handleImportQuestions = async (questions: Question[], replaceExisting = false) => {
+    const questionsToImport = questions.map((q) => ({
       question: q.question,
       type: q.type,
       points: q.points,
       options: q.options,
       correctAnswer: q.correctAnswer,
-      expectedAnswer: q.expectedAnswer
+      expectedAnswer: q.expectedAnswer,
     })) as Omit<Question, "id" | "text" | "maxPoints">[];
 
     if (replaceExisting && quiz?.questions.length) {
-      const existingQuestionIds = quiz.questions.map(q => q.id);
-      await deleteQuestionsBulk.mutateAsync({ quizId, questionIds: existingQuestionIds });
+      await deleteQuestionsBulk.mutateAsync({ quizId, questionIds: quiz.questions.map((q) => q.id) });
     }
 
     const result = await addQuestionsBulk.mutateAsync({ quizId, questions: questionsToImport });
@@ -516,18 +414,16 @@ export function useQuizQuestionsManager(quizId: string) {
 
   const handleCloneQuestions = async (questionIds: string[]) => {
     if (!quiz) throw new Error("Quiz not loaded");
-
     const questionsToClone = quiz.questions
-      .filter(q => questionIds.includes(q.id))
-      .map(q => ({
+      .filter((q) => questionIds.includes(q.id))
+      .map((q) => ({
         question: q.question,
         type: q.type,
         points: q.points,
         options: q.options,
         correctAnswer: q.correctAnswer,
-        expectedAnswer: q.expectedAnswer
+        expectedAnswer: q.expectedAnswer,
       })) as Omit<Question, "id" | "text" | "maxPoints">[];
-
     const result = await addQuestionsBulk.mutateAsync({ quizId, questions: questionsToClone });
     await refetch();
     return result;
@@ -541,18 +437,15 @@ export function useQuizQuestionsManager(quizId: string) {
     bulkUpdateOptions: handleBulkUpdateOptions,
     importQuestions: handleImportQuestions,
     cloneQuestions: handleCloneQuestions,
-
-    isLoading: addQuestionsBulk.isPending ||
-               deleteQuestionsBulk.isPending ||
-               updateQuestionsBulk.isPending,
+    isLoading: addQuestionsBulk.isPending || deleteQuestionsBulk.isPending || updateQuestionsBulk.isPending,
     isAdding: addQuestionsBulk.isPending,
     isDeleting: deleteQuestionsBulk.isPending,
     isUpdating: updateQuestionsBulk.isPending,
-
     quiz,
-    refetch
+    refetch,
   };
 }
+
 
 export function useBulkPointsEditor(quizId: string) {
   const { updateQuestionsPointsBulk } = useQuizMutations();
@@ -560,44 +453,25 @@ export function useBulkPointsEditor(quizId: string) {
 
   const applyPointsToAll = async (points: number) => {
     if (!quiz) throw new Error("Quiz not loaded");
-
     const pointUpdates: Record<string, number> = {};
-    quiz.questions.forEach(q => {
-      pointUpdates[q.id] = points;
-    });
-
+    quiz.questions.forEach((q) => { pointUpdates[q.id] = points; });
     const result = await updateQuestionsPointsBulk.mutateAsync({ quizId, questionPoints: pointUpdates });
     await refetch();
     return result;
   };
 
-  const applyPointsByType = async (
-    type: 'multiple-choice' | 'open-ended',
-    points: number
-  ) => {
+  const applyPointsByType = async (type: "multiple-choice" | "open-ended", points: number) => {
     if (!quiz) throw new Error("Quiz not loaded");
-
     const pointUpdates: Record<string, number> = {};
-    quiz.questions
-      .filter(q => q.type === type)
-      .forEach(q => {
-        pointUpdates[q.id] = points;
-      });
-
+    quiz.questions.filter((q) => q.type === type).forEach((q) => { pointUpdates[q.id] = points; });
     const result = await updateQuestionsPointsBulk.mutateAsync({ quizId, questionPoints: pointUpdates });
     await refetch();
     return result;
   };
 
-  const applyPointsToSelected = async (
-    questionIds: string[],
-    points: number
-  ) => {
+  const applyPointsToSelected = async (questionIds: string[], points: number) => {
     const pointUpdates: Record<string, number> = {};
-    questionIds.forEach(id => {
-      pointUpdates[id] = points;
-    });
-
+    questionIds.forEach((id) => { pointUpdates[id] = points; });
     const result = await updateQuestionsPointsBulk.mutateAsync({ quizId, questionPoints: pointUpdates });
     await refetch();
     return result;
@@ -607,6 +481,6 @@ export function useBulkPointsEditor(quizId: string) {
     applyPointsToAll,
     applyPointsByType,
     applyPointsToSelected,
-    isUpdating: updateQuestionsPointsBulk.isPending
-  };
+    isUpdating: updateQuestionsPointsBulk.isPending,
+ };
 }

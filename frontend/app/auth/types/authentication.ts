@@ -109,6 +109,7 @@ export const PERMISSIONS = {
   USER_MANAGEMENT: 'admin:users',
   SYSTEM_SETTINGS: 'admin:settings',
   COURSE_MANAGEMENT: 'admin:courses',
+  CATALOG_MANAGEMENT: 'admin:catalogs',
 
   TEACHER_DASHBOARD: 'teacher:dashboard',
   MANAGE_CLASSES: 'teacher:classes',
@@ -124,6 +125,7 @@ export const PERMISSIONS = {
   TAKE_QUIZZES: 'student:quizzes',
 } as const;
 
+// PERMISSION IN THE INIT OF THE LOGIN 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   admin: Object.values(PERMISSIONS),
   teacher: [

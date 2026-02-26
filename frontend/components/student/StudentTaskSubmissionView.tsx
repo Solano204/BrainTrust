@@ -19,6 +19,12 @@ import {
     TrendingUp,
     Bot
 } from "lucide-react"
+import { SubmissionTask } from '@/app/shared/models/assignment.model'
+
+export interface AttachmentData {
+    name: string;
+    storagePath: string;
+}
 
 interface StudentAssignment {
   id: string
@@ -51,7 +57,7 @@ interface StudentAssignment {
 }
 
 interface StudentTaskSubmissionViewProps {
-  assignment: StudentAssignment
+  assignment: SubmissionTask
   onExit: () => void
 }
 
@@ -61,12 +67,23 @@ const Label = ({ children, className }: { children: React.ReactNode; className?:
     </label>
 )
 
+const handleDownload = (file: AttachmentData) => {
+    const link = document.createElement('a')
+    link.href = file.storagePath
+    link.download = file.name
+    link.target = '_blank'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+}
+
 export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSubmissionViewProps) {
 
     console.log(assignment)
     const isSubmitted = assignment.submission?.status === 'SUBMITTED' || assignment.submission?.status === 'GRADED'
     const isGraded = assignment.submission?.status === 'GRADED'
 
+    
     if (!assignment.submission) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
@@ -252,7 +269,12 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
                                                         Uploaded: {new Date(file.createdAt).toLocaleString()}
                                                     </p>
                                                 </div>
-                                                <Button variant="outline" size="sm" className="gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2"
+                                                    onClick={() => handleDownload(file)}
+                                                >
                                                     <Download className="h-4 w-4" />
                                                     Download
                                                 </Button>

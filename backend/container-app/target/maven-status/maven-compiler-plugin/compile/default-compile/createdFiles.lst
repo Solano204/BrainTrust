@@ -12,6 +12,7 @@ com\braintrust\containerapp\rest\course\ExtendDueDateRequest.class
 com\braintrust\containerapp\rest\course\PageController.class
 com\braintrust\containerapp\rest\iadetection\AnalysisController.class
 com\braintrust\containerapp\rest\course\QuizSubmissionController.class
+com\braintrust\containerapp\rest\identity\CatalogController.class
 com\braintrust\containerapp\rest\course\StudentGroupController.class
 com\braintrust\containerapp\rest\course\GoogleAITestController$AskQuestionRequest.class
 com\braintrust\containerapp\BrainTrustApplication.class

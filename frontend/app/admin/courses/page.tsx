@@ -6,7 +6,7 @@ import { AdminCoursesList } from '@/components/admin/AdminCoursesList';
 import { CreateEditCourseModal } from '@/components/admin/CreateEditCourseModal';
 import { ManageEnrollments } from '@/components/admin/ManageEnrollments';
 import { ManageGrades } from '@/components/admin/ManageGrades';
-import { AdminCourse } from  '@/components/admin/api/coursesApi';
+import { AdminCourse } from '@/app/shared/models/admin-course.model';
 
 export default function AdminCoursesPage() {
   const [selectedCourse, setSelectedCourse] = useState<AdminCourse | null>(null);

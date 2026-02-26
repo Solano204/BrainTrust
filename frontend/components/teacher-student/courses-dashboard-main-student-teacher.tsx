@@ -43,6 +43,8 @@ export function CourseDashboard() {
     refetch,
   } = isStudent ? useStudentCourses(userId!) : useCoursesByTeacher(userId!);
 
+
+  console.log("COURSES ", courses)
   const { createCourse, updateCourse, deleteCourse } = useCourseMutations();
 
   const [deleteConfirmId, setDeleteConfirmId] = React.useState<CourseId | null>(

@@ -1,7 +1,6 @@
 package com.braintrust.education.application.dtos.dtos;
 
-import com.braintrust.education.application.dtos.commands.QuestionOptionDTO;
-
+import java.math.BigDecimal;
 import java.util.List;
 
 public record QuizSubmissionDetailDTO(
@@ -15,6 +14,8 @@ public record QuizSubmissionDetailDTO(
         String submittedAt,
         String status,
         GradeDTO grade,
+        BigDecimal finalGrade,        // ✅ NEW — scaled to quiz totalScore
+        boolean canViewResults,       // ✅ NEW — student can see answers/feedback
         boolean autoGraded,
         List<GradedQuestionResponseDTO> questionResponses,
         boolean timeExpired,

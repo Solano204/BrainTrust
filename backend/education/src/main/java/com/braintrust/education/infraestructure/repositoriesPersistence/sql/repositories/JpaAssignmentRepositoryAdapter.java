@@ -8,9 +8,11 @@ import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.Mapper.AssignmentEntityMapper;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,12 +36,30 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
         log.info("Initialized JpaAssignmentRepositoryAdapter.");
     }
 
+    // JpaAssignmentRepositoryAdapter.java
     @Override
+    @Transactional
     public Assignment save(Assignment assignment) {
         log.info("Saving Assignment ID {} to database (Course ID: {}).",
                 assignment.getId().getValue(), assignment.getCourseId().getValue());
-        AssignmentJpaEntity entity = mapper.toEntity(assignment);
-        AssignmentJpaEntity savedEntity = jpaRepository.save(entity);
+
+        AssignmentJpaEntity entity = jpaRepository
+                .findByIdWithDocumentsAndLinks(assignment.getId().getValue())
+                .orElse(new AssignmentJpaEntity());
+
+        mapper.updateEntity(entity, assignment);
+
+        // Build desired docs ONLY from what the domain says — after removal
+        List<String[]> desiredDocs = assignment.getAttachments().stream()
+                .map(d -> new String[]{d.getName(), d.getStoragePath()})
+                .toList();
+        entity.syncDocuments(desiredDocs);
+
+        List<String> desiredLinks = new ArrayList<>(assignment.getLinks());
+        entity.syncLinks(desiredLinks);
+
+        // saveAndFlush forces Hibernate to immediately fire DELETE for orphans
+        AssignmentJpaEntity savedEntity = jpaRepository.saveAndFlush(entity);
         log.info("Assignment saved/updated. Mapping entity back to domain model.");
         return mapper.toDomain(savedEntity);
     }

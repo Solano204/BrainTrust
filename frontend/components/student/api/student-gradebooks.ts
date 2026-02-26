@@ -253,6 +253,8 @@ export async function assignUnitFinalGrade(
         `/api/unit-grades/unit/${unitId}/student/${studentId}/final-grade`,
         { gradeValue, feedback: feedback || "" }
     );
+
+    console.log(`Assigned final grade for student ${studentId} in unit ${unitId}: ${gradeValue}`);
   } catch (error) {
     return handleApiError(error);
   }

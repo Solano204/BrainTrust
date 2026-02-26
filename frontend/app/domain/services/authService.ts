@@ -15,9 +15,9 @@ class AuthService {
   private baseURL = AUTH_CONFIG.API_BASE_URL;
 
   async login(credentials: LoginRequest): Promise<TokenResponse> {
-    if (AUTH_CONFIG.MOCK_MODE) {
-      return this.mockLogin(credentials);
-    }
+    // if (AUTH_CONFIG.MOCK_MODE) {
+    //   return this.mockLogin(credentials);
+    // }
     return this.realLogin(credentials);
   }
 

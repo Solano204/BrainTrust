@@ -10,9 +10,7 @@ import {
   PaginatedResponseDTO,
 } from "@/app/shared/dtos/course.dto";
 
-import {
-  EnrollmentDTO,
-} from "@/app/shared/dtos/enrollment.dto";
+import { EnrollmentDTO } from "@/app/shared/dtos/enrollment.dto";
 
 import { UnitGradeDTO } from "@/app/shared/dtos/grade.dto";
 import { TeacherDTO, StudentDTO } from "@/app/shared/dtos/user.dto";
@@ -27,7 +25,10 @@ import {
   UpdateStudentGradeCommand,
 } from "@/app/shared/dtos/commands/course.commands";
 
-import { PaginatedResponse, PaginationParams } from "@/app/shared/types/pagination";
+import {
+  PaginatedResponse,
+  PaginationParams,
+} from "@/app/shared/types/pagination";
 
 import {
   mapPaginatedResponseFromBackend,
@@ -46,36 +47,35 @@ import {
 
 import { Teacher, Student } from "@/app/shared/models/user.model";
 
-
 export async function fetchAllCoursesPaginated(
-    params: PaginationParams = {}
+  params: PaginationParams = {},
 ): Promise<PaginatedResponse<AdminCourse>> {
   try {
     const {
       page = 0,
       size = 20,
-      sort = 'createdAt,desc',
+      sort = "createdAt,desc",
       search,
       active,
       teacherId,
       grade,
-      group
+      group,
     } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
       size: size.toString(),
-      sort
+      sort,
     });
 
-    if (search) queryParams.append('name', search);
-    if (active !== undefined) queryParams.append('active', active.toString());
-    if (teacherId) queryParams.append('teacherId', teacherId);
-    if (grade) queryParams.append('grade', grade);
-    if (group) queryParams.append('group', group);
+    if (search) queryParams.append("name", search);
+    if (active !== undefined) queryParams.append("active", active.toString());
+    if (teacherId) queryParams.append("teacherId", teacherId);
+    if (grade) queryParams.append("grade", grade);
+    if (group) queryParams.append("group", group);
 
     const { data } = await apiClient.get<PaginatedResponseDTO<CourseDTO>>(
-        `/api/courses/paginated?${queryParams.toString()}`
+      `/api/courses/paginated?${queryParams.toString()}`,
     );
 
     return mapPaginatedResponseFromBackend(data, mapCourseFromBackend);
@@ -85,32 +85,32 @@ export async function fetchAllCoursesPaginated(
 }
 
 export async function fetchActiveCoursesPaginated(
-    params: Omit<PaginationParams, 'active'> = {}
+  params: Omit<PaginationParams, "active"> = {},
 ): Promise<PaginatedResponse<AdminCourse>> {
   try {
     const {
       page = 0,
       size = 20,
-      sort = 'name,asc',
+      sort = "name,asc",
       search,
       teacherId,
       grade,
-      group
+      group,
     } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
       size: size.toString(),
-      sort
+      sort,
     });
 
-    if (search) queryParams.append('name', search);
-    if (teacherId) queryParams.append('teacherId', teacherId);
-    if (grade) queryParams.append('grade', grade);
-    if (group) queryParams.append('group', group);
+    if (search) queryParams.append("name", search);
+    if (teacherId) queryParams.append("teacherId", teacherId);
+    if (grade) queryParams.append("grade", grade);
+    if (group) queryParams.append("group", group);
 
     const { data } = await apiClient.get<PaginatedResponseDTO<CourseDTO>>(
-        `/api/courses/active/paginated?${queryParams.toString()}`
+      `/api/courses/active/paginated?${queryParams.toString()}`,
     );
 
     return mapPaginatedResponseFromBackend(data, mapCourseFromBackend);
@@ -120,33 +120,33 @@ export async function fetchActiveCoursesPaginated(
 }
 
 export async function fetchCoursesByTeacherPaginated(
-    teacherId: string,
-    params: Omit<PaginationParams, 'teacherId'> = {}
+  teacherId: string,
+  params: Omit<PaginationParams, "teacherId"> = {},
 ): Promise<PaginatedResponse<AdminCourse>> {
   try {
     const {
       page = 0,
       size = 20,
-      sort = 'name,asc',
+      sort = "name,asc",
       search,
       active,
       grade,
-      group
+      group,
     } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
       size: size.toString(),
-      sort
+      sort,
     });
 
-    if (search) queryParams.append('name', search);
-    if (active !== undefined) queryParams.append('active', active.toString());
-    if (grade) queryParams.append('grade', grade);
-    if (group) queryParams.append('group', group);
+    if (search) queryParams.append("name", search);
+    if (active !== undefined) queryParams.append("active", active.toString());
+    if (grade) queryParams.append("grade", grade);
+    if (group) queryParams.append("group", group);
 
     const { data } = await apiClient.get<PaginatedResponseDTO<CourseDTO>>(
-        `/api/courses/teacher/${teacherId}/paginated?${queryParams.toString()}`
+      `/api/courses/teacher/${teacherId}/paginated?${queryParams.toString()}`,
     );
 
     return mapPaginatedResponseFromBackend(data, mapCourseFromBackend);
@@ -156,34 +156,34 @@ export async function fetchCoursesByTeacherPaginated(
 }
 
 export async function searchCoursesByNamePaginated(
-    name: string,
-    params: Omit<PaginationParams, 'search'> = {}
+  name: string,
+  params: Omit<PaginationParams, "search"> = {},
 ): Promise<PaginatedResponse<AdminCourse>> {
   try {
     const {
       page = 0,
       size = 20,
-      sort = 'name,asc',
+      sort = "name,asc",
       active,
       teacherId,
       grade,
-      group
+      group,
     } = params;
 
     const queryParams = new URLSearchParams({
       name,
       page: page.toString(),
       size: size.toString(),
-      sort
+      sort,
     });
 
-    if (active !== undefined) queryParams.append('active', active.toString());
-    if (teacherId) queryParams.append('teacherId', teacherId);
-    if (grade) queryParams.append('grade', grade);
-    if (group) queryParams.append('group', group);
+    if (active !== undefined) queryParams.append("active", active.toString());
+    if (teacherId) queryParams.append("teacherId", teacherId);
+    if (grade) queryParams.append("grade", grade);
+    if (group) queryParams.append("group", group);
 
     const { data } = await apiClient.get<PaginatedResponseDTO<CourseDTO>>(
-        `/api/courses/search?${queryParams.toString()}`
+      `/api/courses/search?${queryParams.toString()}`,
     );
 
     return mapPaginatedResponseFromBackend(data, mapCourseFromBackend);
@@ -191,7 +191,6 @@ export async function searchCoursesByNamePaginated(
     return handleApiError(error);
   }
 }
-
 
 export async function fetchCourseById(courseId: string): Promise<AdminCourse> {
   try {
@@ -203,12 +202,15 @@ export async function fetchCourseById(courseId: string): Promise<AdminCourse> {
 }
 
 export async function createCourse(
-    command: CreateCourseCommand
+  command: CreateCourseCommand,
 ): Promise<AdminCourse> {
   try {
     // Remover urlImage si existe, ya que el endpoint básico no lo acepta
     const { urlImage, ...commandWithoutImage } = command;
-    const { data } = await apiClient.post<CourseDTO>("/api/courses", commandWithoutImage);
+    const { data } = await apiClient.post<CourseDTO>(
+      "/api/courses",
+      commandWithoutImage,
+    );
     return mapCourseFromBackend(data);
   } catch (error) {
     return handleApiError(error);
@@ -216,15 +218,19 @@ export async function createCourse(
 }
 
 export async function createCourseWithImage(
-    command: CreateCourseCommand
+  command: CreateCourseCommand,
 ): Promise<AdminCourse> {
   try {
+    const { urlImage, ...rest } = command; // destructure urlImage out
+
+    const payload = {
+      ...rest,        // spread everything EXCEPT urlImage
+      imageUrl: urlImage, // map to the field name the backend expects
+    };
+
     const { data } = await apiClient.post<CourseDTO>(
-        "/api/courses/with-image",
-        {
-          ...command,
-          imageUrl: command.urlImage || ""
-        }
+      "/api/courses/with-image",
+      payload,
     );
     return mapCourseFromBackend(data);
   } catch (error) {
@@ -233,13 +239,13 @@ export async function createCourseWithImage(
 }
 
 export async function updateCourse(
-    courseId: string,
-    command: UpdateCourseCommand
+  courseId: string,
+  command: UpdateCourseCommand,
 ): Promise<AdminCourse> {
   try {
     const { data } = await apiClient.put<CourseDTO>(
-        `/api/courses/${courseId}`,
-        command
+      `/api/courses/${courseId}`,
+      command,
     );
     return mapCourseFromBackend(data);
   } catch (error) {
@@ -260,11 +266,11 @@ export async function deleteCourse(courseId: string): Promise<void> {
 ========================= */
 
 export async function fetchCourseUnits(
-    courseId: string
+  courseId: string,
 ): Promise<AdminCourseUnit[]> {
   try {
     const { data } = await apiClient.get<CourseUnitDTO[]>(
-        `/api/courses/${courseId}/units`
+      `/api/courses/${courseId}/units`,
     );
     return data.map(mapCourseUnitFromBackend);
   } catch (error) {
@@ -273,8 +279,8 @@ export async function fetchCourseUnits(
 }
 
 export async function deleteUnit(
-    courseId: string,
-    unitId: string
+  courseId: string,
+  unitId: string,
 ): Promise<void> {
   try {
     await apiClient.delete(`/api/courses/${courseId}/units/${unitId}`);
@@ -283,13 +289,12 @@ export async function deleteUnit(
   }
 }
 
-
 export async function fetchCourseEnrollments(
-    courseId: string
+  courseId: string,
 ): Promise<AdminEnrollment[]> {
   try {
     const { data } = await apiClient.get<EnrollmentDTO[]>(
-        `/api/courses/${courseId}/enrollments`
+      `/api/courses/${courseId}/enrollments`,
     );
     return data.map(mapEnrollmentFromBackend);
   } catch (error) {
@@ -298,8 +303,8 @@ export async function fetchCourseEnrollments(
 }
 
 export async function searchStudentsForCourse(
-    courseId: string,
-    searchTerm: string
+  courseId: string,
+  searchTerm: string,
 ): Promise<Student[]> {
   try {
     if (!searchTerm || searchTerm.trim().length === 0) {
@@ -307,35 +312,33 @@ export async function searchStudentsForCourse(
     }
 
     const { data } = await apiClient.get<StudentDTO[]>(
-        `/api/courses/${courseId}/enrollments/search`,
-        {
-          params: { query: searchTerm.trim() }
-        }
+      `/api/courses/${courseId}/enrollments/search`,
+      {
+        params: { query: searchTerm.trim() },
+      },
     );
 
     return data
-        .filter(dto => !dto.isAlreadyEnrolled)
-        .map(mapStudentFromBackend);
+      .filter((dto) => !dto.isAlreadyEnrolled)
+      .map(mapStudentFromBackend);
   } catch (error) {
     return handleApiError(error);
   }
 }
 
 export async function bulkEnrollStudents(
-    courseId: string,
-    studentIds: string[]
+  courseId: string,
+  studentIds: string[],
 ): Promise<{ enrollmentIds: string[]; courseId: string }> {
   try {
     const command: BulkEnrollCommand = { studentIds };
 
     const { data } = await apiClient.post(
-        `/api/courses/${courseId}/enrollments/bulk`,
-        command
+      `/api/courses/${courseId}/enrollments/bulk`,
+      command,
     );
 
-    const enrollmentIds = Array.isArray(data.data)
-        ? data.data
-        : [data.data];
+    const enrollmentIds = Array.isArray(data.data) ? data.data : [data.data];
 
     return { enrollmentIds, courseId };
   } catch (error) {
@@ -344,14 +347,14 @@ export async function bulkEnrollStudents(
 }
 
 export async function bulkUnenrollStudents(
-    courseId: string,
-    studentIds: string[]
+  courseId: string,
+  studentIds: string[],
 ): Promise<void> {
   try {
     const command: BulkUnenrollCommand = { studentIds };
 
     await apiClient.delete(`/api/courses/${courseId}/enrollments/bulk`, {
-      data: command
+      data: command,
     });
   } catch (error) {
     return handleApiError(error);
@@ -359,8 +362,8 @@ export async function bulkUnenrollStudents(
 }
 
 export async function unenrollStudent(
-    courseId: string,
-    studentId: string
+  courseId: string,
+  studentId: string,
 ): Promise<void> {
   try {
     await apiClient.delete(`/api/courses/${courseId}/enrollments/${studentId}`);
@@ -369,15 +372,14 @@ export async function unenrollStudent(
   }
 }
 
-
 export async function fetchCourseGrades(
-    courseId: string
+  courseId: string,
 ): Promise<AdminEnrollment[]> {
   try {
     const enrollments = await fetchCourseEnrollments(courseId);
 
-    return enrollments.filter(e =>
-        e.status === 'ACTIVE' || e.finalGrade !== null
+    return enrollments.filter(
+      (e) => e.status === "ACTIVE" || e.finalGrade !== null,
     );
   } catch (error) {
     return handleApiError(error);
@@ -385,14 +387,14 @@ export async function fetchCourseGrades(
 }
 
 export async function assignFinalGrade(
-    courseId: string,
-    studentId: string,
-    command: AssignFinalGradeCommand
+  courseId: string,
+  studentId: string,
+  command: AssignFinalGradeCommand,
 ): Promise<void> {
   try {
     await apiClient.put(
-        `/api/gradebook/course/${courseId}/student/${studentId}/final-grade`,
-        command
+      `/api/gradebook/course/${courseId}/student/${studentId}/final-grade`,
+      command,
     );
   } catch (error) {
     return handleApiError(error);
@@ -400,12 +402,12 @@ export async function assignFinalGrade(
 }
 
 export async function bulkUpdateCourseGrades(
-    courseId: string,
-    grades: UpdateStudentGradeCommand[]
+  courseId: string,
+  grades: UpdateStudentGradeCommand[],
 ): Promise<void> {
   try {
     await apiClient.put(`/api/gradebook/course/${courseId}/bulk-grades`, {
-      grades
+      grades,
     });
   } catch (error) {
     return handleApiError(error);
@@ -415,7 +417,7 @@ export async function bulkUpdateCourseGrades(
 export async function fetchUnitGrades(unitId: string): Promise<UnitGradeDTO[]> {
   try {
     const { data } = await apiClient.get<UnitGradeDTO[]>(
-        `/api/unit-grades/unit/${unitId}`
+      `/api/unit-grades/unit/${unitId}`,
     );
     return data;
   } catch (error) {
@@ -424,14 +426,14 @@ export async function fetchUnitGrades(unitId: string): Promise<UnitGradeDTO[]> {
 }
 
 export async function assignUnitFinalGrade(
-    unitId: string,
-    studentId: string,
-    command: AssignUnitFinalGradeCommand
+  unitId: string,
+  studentId: string,
+  command: AssignUnitFinalGradeCommand,
 ): Promise<void> {
   try {
     await apiClient.put(
-        `/api/unit-grades/unit/${unitId}/student/${studentId}/final-grade`,
-        command
+      `/api/unit-grades/unit/${unitId}/student/${studentId}/final-grade`,
+      command,
     );
   } catch (error) {
     return handleApiError(error);
@@ -439,25 +441,24 @@ export async function assignUnitFinalGrade(
 }
 
 export async function bulkUpdateUnitGrades(
-    unitId: string,
-    grades: UpdateStudentGradeCommand[]
+  unitId: string,
+  grades: UpdateStudentGradeCommand[],
 ): Promise<void> {
   try {
     await apiClient.put(`/api/unit-grades/unit/${unitId}/bulk-grades`, {
-      grades
+      grades,
     });
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-
 export async function fetchAllTeachers(): Promise<Teacher[]> {
   try {
     const endpoints = [
-      '/api/users/role/teacher',
-      '/api/users/role/admin',
-      '/api/users/role/student'
+      "/api/users/role/teacher",
+      "/api/users/role/admin",
+      "/api/users/role/student",
     ];
 
     let lastError;
@@ -472,35 +473,35 @@ export async function fetchAllTeachers(): Promise<Teacher[]> {
       }
     }
 
-    throw lastError || new Error('No teacher endpoints available');
+    throw lastError || new Error("No teacher endpoints available");
   } catch (error) {
     return handleApiError(error);
   }
 }
 
 export async function fetchAllTeachersPaginated(
-    params: PaginationParams = {}
+  params: PaginationParams = {},
 ): Promise<PaginatedResponse<Teacher>> {
   try {
     const {
       page = 0,
       size = 20,
-      sort = 'fullName,asc',
+      sort = "fullName,asc",
       search,
-      active
+      active,
     } = params;
 
     const queryParams = new URLSearchParams({
       page: page.toString(),
       size: size.toString(),
-      sort
+      sort,
     });
 
-    if (search) queryParams.append('search', search);
-    if (active !== undefined) queryParams.append('active', active.toString());
+    if (search) queryParams.append("search", search);
+    if (active !== undefined) queryParams.append("active", active.toString());
 
     const { data } = await apiClient.get<PaginatedResponseDTO<TeacherDTO>>(
-        `/api/users/role/teacher/paginated?${queryParams.toString()}`
+      `/api/users/role/teacher/paginated?${queryParams.toString()}`,
     );
 
     return mapPaginatedResponseFromBackend(data, mapTeacherFromBackend);
@@ -520,7 +521,7 @@ export async function fetchAllTeachersPaginated(
       totalElements: allTeachers.length,
       totalPages: Math.ceil(allTeachers.length / size),
       first: page === 0,
-      last: endIndex >= allTeachers.length
+      last: endIndex >= allTeachers.length,
     };
   }
 }
@@ -533,17 +534,18 @@ export async function searchTeachers(searchTerm: string): Promise<Teacher[]> {
 
     try {
       const { data } = await apiClient.get<TeacherDTO[]>(
-          '/api/users/teachers/search',
-          {
-            params: { query: searchTerm.trim() }
-          }
+        "/api/users/teachers/search",
+        {
+          params: { query: searchTerm.trim() },
+        },
       );
       return data.map(mapTeacherFromBackend);
     } catch {
       const allTeachers = await fetchAllTeachers();
-      return allTeachers.filter((teacher: Teacher) =>
+      return allTeachers.filter(
+        (teacher: Teacher) =>
           teacher.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
+          teacher.email.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
   } catch (error) {
@@ -554,23 +556,22 @@ export async function searchTeachers(searchTerm: string): Promise<Teacher[]> {
 export async function getCourseStats(): Promise<CourseStatsDTO> {
   try {
     const { data } = await apiClient.get<CourseStatsDTO>(
-        '/api/admin/courses/stats'
+      "/api/admin/courses/stats",
     );
     return data;
   } catch (error) {
     const paginatedResponse = await fetchAllCoursesPaginated({
       page: 0,
-      size: 1000
+      size: 1000,
     });
 
     const courses = paginatedResponse.content;
-    const activeCourses = courses.filter(c => c.active).length;
-    const inactiveCourses = courses.filter(c => !c.active).length;
+    const activeCourses = courses.filter((c) => c.active).length;
+    const inactiveCourses = courses.filter((c) => !c.active).length;
     const totalStudents = courses.reduce((sum, c) => sum + c.studentCount, 0);
-    const uniqueTeachers = new Set(courses.map(c => c.teacherId)).size;
-    const averageStudentsPerCourse = courses.length > 0
-        ? totalStudents / courses.length
-        : 0;
+    const uniqueTeachers = new Set(courses.map((c) => c.teacherId)).size;
+    const averageStudentsPerCourse =
+      courses.length > 0 ? totalStudents / courses.length : 0;
 
     return {
       totalCourses: courses.length,
@@ -578,7 +579,8 @@ export async function getCourseStats(): Promise<CourseStatsDTO> {
       inactiveCourses,
       totalStudents,
       totalTeachers: uniqueTeachers,
-      averageStudentsPerCourse: Math.round(averageStudentsPerCourse * 100) / 100
+      averageStudentsPerCourse:
+        Math.round(averageStudentsPerCourse * 100) / 100,
     };
   }
 }
@@ -593,16 +595,22 @@ export async function getCourseEnrollmentStats(courseId: string): Promise<{
   try {
     const enrollments = await fetchCourseEnrollments(courseId);
 
-    const active = enrollments.filter(e => e.status === 'ACTIVE').length;
-    const completed = enrollments.filter(e => e.status === 'COMPLETED').length;
-    const cancelled = enrollments.filter(e => e.status === 'CANCELLED').length;
+    const active = enrollments.filter((e) => e.status === "ACTIVE").length;
+    const completed = enrollments.filter(
+      (e) => e.status === "COMPLETED",
+    ).length;
+    const cancelled = enrollments.filter(
+      (e) => e.status === "CANCELLED",
+    ).length;
 
     const gradesWithValues = enrollments
-        .filter(e => e.finalGrade?.value != null)
-        .map(e => parseFloat(e.finalGrade!.value));
+      .filter((e) => e.finalGrade?.value != null)
+      .map((e) => parseFloat(e.finalGrade!.value));
 
-    const averageGrade = gradesWithValues.length > 0
-        ? gradesWithValues.reduce((sum, grade) => sum + grade, 0) / gradesWithValues.length
+    const averageGrade =
+      gradesWithValues.length > 0
+        ? gradesWithValues.reduce((sum, grade) => sum + grade, 0) /
+          gradesWithValues.length
         : 0;
 
     return {
@@ -610,7 +618,7 @@ export async function getCourseEnrollmentStats(courseId: string): Promise<{
       active,
       completed,
       cancelled,
-      averageGrade: Math.round(averageGrade * 100) / 100
+      averageGrade: Math.round(averageGrade * 100) / 100,
     };
   } catch (error) {
     return handleApiError(error);

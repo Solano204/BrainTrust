@@ -22,7 +22,8 @@ import {
   Timer,
   Eye,
   FileQuestion,
-  Lock, 
+  Lock,
+  EyeOff, 
 } from "lucide-react";
 import { Quiz, QuizAnswer, SubmissionQuiz } from "@/app/domain/entities/CourseEntities";
 import {
@@ -43,10 +44,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { QuizSubmission } from "@/app/shared/models/quiz.model";
 
 interface QuizViewProps {
   quiz: Quiz;
-  existingSubmission?: SubmissionQuiz;
+  existingSubmission?: QuizSubmission;
   onSubmit: (answers: Record<string, QuizAnswer>) => Promise<void>;
   onExit?: () => void;
 }
@@ -61,6 +63,8 @@ export const QuizView: React.FC<QuizViewProps> = ({
   onSubmit,
   onExit,
 }) => {
+
+  console.log("DATA OF QUIZ", quiz)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [timeRemaining, setTimeRemaining] = useState<number>(
@@ -919,7 +923,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
 interface QuizResultsProps {
   quiz: Quiz;
-  submission: SubmissionQuiz;
+  submission: QuizSubmission;
   userAnswers: QuizAnswers;
   onExit?: () => void;
 }
@@ -930,96 +934,122 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   userAnswers,
   onExit,
 }) => {
-  const hasDetailedData = submission.quizData;
-  const quizAnswers = submission.quizData?.answers || [];
+  const hasDetailedData = !!submission.quizData;
+  const quizAnswers = submission.quizData?.answers ?? [];
 
+
+  // ── canViewResults: quiz.allowSeeResults is set by the teacher when creating/editing
+  // the quiz. submission.canViewResults is the runtime flag from the backend
+  // (QuizSubmissionDetailDTO.canViewResults). Both must be true to show answers.
+
+  const canViewResults: boolean =
+    (quiz.allowSeeResults ?? false);
+
+  // ── Score calculation ──────────────────────────────────────────────────────
   const totalMaxScore = quiz.questions.reduce((total, q) => total + q.points, 0);
 
   const calculatedScore = quizAnswers.reduce((total, answer) => {
-    if (typeof answer.points === 'number') {
-      return total + answer.points;
-    }
-
+    if (typeof answer.points === "number") return total + answer.points;
     if (answer.isCorrect) {
-       const question = quiz.questions.find(q => q.id === answer.questionId);
-       return total + (question?.points || 0);
+      const question = quiz.questions.find((q) => q.id === answer.questionId);
+      return total + (question?.points ?? 0);
     }
     return total;
   }, 0);
 
-  const finalScore = submission.grade?.value || calculatedScore;
-
+  const finalScore = submission.grade?.value ?? calculatedScore;
   const percentage = totalMaxScore > 0 ? (finalScore / totalMaxScore) * 100 : 0;
-
   const passed = percentage >= 70;
 
-  const correctCount = quizAnswers.filter(a => a.isCorrect === true).length;
-  const incorrectCount = quizAnswers.filter(a => a.isCorrect === false).length;
-  const pendingCount = quizAnswers.filter(a => a.isCorrect === undefined).length;
+  const correctCount = quizAnswers.filter((a) => a.isCorrect === true).length;
+  const incorrectCount = quizAnswers.filter((a) => a.isCorrect === false).length;
+  const pendingCount = quizAnswers.filter((a) => a.isCorrect === undefined).length;
 
-  const formatStudentAnswer = (question: any, answer: any) => {
-    if (!answer?.studentAnswer && answer?.studentAnswer !== 0) {
-      return "No answer provided";
-    }
-
+  // ── Student answer display ─────────────────────────────────────────────────
+  const formatStudentAnswer = (question: any, answer: any): string => {
+    const raw = answer?.studentAnswer;
+    if (raw === undefined || raw === null || raw === "") return "No answer provided";
     if (question.type === "multiple-choice") {
-      const optionIndex = Number(answer.studentAnswer);
-      if (question.options && question.options[optionIndex] !== undefined) {
-        return question.options[optionIndex];
-      }
-      return `Option ${optionIndex + 1}`;
-    } else {
-      return String(answer.studentAnswer || "");
+      const idx = Number(raw);
+      return question.options?.[idx] ?? `Option ${idx + 1}`;
     }
+    return String(raw);
   };
 
-  const formatCorrectAnswer = (question: any, detailedAnswer: any) => {
-    if (question.type !== "multiple-choice") {
-        if (question.correctAnswer) return question.correctAnswer;
-        return "Requires teacher grading";
-    }
+  // ── Correct answer resolution ──────────────────────────────────────────────
+  // For MULTIPLE CHOICE: detailedAnswer.correctAnswer comes from the backend as
+  // the option TEXT string (GradedQuestionResponseDTO.correctAnswer), so we find
+  // the matching index in question.options.
+  //
+  // For OPEN ENDED: detailedAnswer.correctAnswer is the expected answer text
+  // directly from the backend. The quiz question's expectedAnswer is stripped
+  // for students in fetchQuizDetail, so the submission response is the only
+  // reliable source.
+  const resolveCorrectAnswer = (
+    question: any,
+    detailedAnswer: any
+  ): { text: string; optionIndex?: number } => {
+    if (question.type === "multiple-choice") {
+      // detailedAnswer.correctAnswer may be option TEXT or a numeric index string
+      if (detailedAnswer?.correctAnswer !== undefined && detailedAnswer.correctAnswer !== null) {
+        const asText = String(detailedAnswer.correctAnswer);
+        const asNumber = Number(asText);
 
-    if (detailedAnswer?.correctAnswer !== undefined) {
-      const correctIndex = Number(detailedAnswer.correctAnswer);
-      if (question.options && question.options[correctIndex] !== undefined) {
-        return question.options[correctIndex];
+        // Try numeric index first
+        if (!isNaN(asNumber) && question.options?.[asNumber] !== undefined) {
+          return { text: question.options[asNumber], optionIndex: asNumber };
+        }
+        // Try exact text match
+        const matchIdx = question.options?.findIndex((o: string) => o === asText) ?? -1;
+        if (matchIdx >= 0) return { text: asText, optionIndex: matchIdx };
+        // Return as-is (unknown format)
+        return { text: asText };
       }
-      return `Option ${correctIndex + 1}`;
-    }
-
-    if (question.correctAnswer !== undefined) {
-      const correctIndex = Number(question.correctAnswer);
-      if (question.options && question.options[correctIndex] !== undefined) {
-        return question.options[correctIndex];
+      // Fall back to question.correctAnswer (numeric index)
+      if (question.correctAnswer !== undefined) {
+        const idx = Number(question.correctAnswer);
+        return {
+          text: question.options?.[idx] ?? `Option ${idx + 1}`,
+          optionIndex: idx,
+        };
       }
-      return `Option ${correctIndex + 1}`;
+      return { text: "Not available" };
     }
 
-    return "Not available";
+    // Open-ended ─────────────────────────────────────────────────────────────
+    // Priority: submission response correctAnswer (most reliable, comes from backend)
+    if (detailedAnswer?.correctAnswer) return { text: detailedAnswer.correctAnswer };
+    // Fallback: quiz question expectedAnswer (only present if not stripped)
+    if (question.expectedAnswer) return { text: question.expectedAnswer };
+    if (question.correctAnswer && typeof question.correctAnswer === "string") {
+      return { text: question.correctAnswer };
+    }
+    return { text: "" };
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Results Header */}
+
+        {/* ── Results Header ── */}
         <Card className="shadow-lg mb-6 text-center">
           <CardContent className="p-8">
-            <div
-              className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-              }`}
-            >
-              {passed ? (
-                <CheckCircle className="h-10 w-10" />
-              ) : (
-                <HelpCircle className="h-10 w-10" />
-              )}
+            <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
+              passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+            }`}>
+              {passed ? <CheckCircle className="h-10 w-10" /> : <HelpCircle className="h-10 w-10" />}
             </div>
 
-            <h1 className="text-3xl font-bold mb-2">
-              {passed ? "Quiz Completed!" : "Quiz Finished"}
-            </h1>
+            <h1 className="text-3xl font-bold mb-2">{passed ? "Quiz Completed!" : "Quiz Finished"}</h1>
             <p className="text-lg text-muted-foreground mb-4">{quiz.title}</p>
+
+            {/* Visible indicator when answers are hidden */}
+            {!canViewResults && (
+              <div className="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full text-sm text-amber-800">
+                <EyeOff className="h-4 w-4" />
+                Correct answers are not available for this quiz
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-md mx-auto">
               <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -1031,15 +1061,13 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 <p className="text-sm text-muted-foreground">Max Score</p>
               </div>
               <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-purple-600">
-                  {Math.round(percentage)}%
-                </p>
+                <p className="text-2xl font-bold text-purple-600">{Math.round(percentage)}%</p>
                 <p className="text-sm text-muted-foreground">Percentage</p>
               </div>
               {hasDetailedData && (
                 <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                   <p className="text-2xl font-bold text-orange-600">
-                    {Math.round((submission.quizData?.timeSpent || 0) / 60)}m
+                    {Math.round((submission.quizData?.timeSpent ?? 0) / 60)}m
                   </p>
                   <p className="text-sm text-muted-foreground">Time Spent</p>
                 </div>
@@ -1049,99 +1077,75 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             {submission.teacherFeedback && (
               <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg max-w-md mx-auto">
                 <p className="font-semibold mb-2">Teacher Feedback:</p>
-                <p className="text-sm text-muted-foreground">
-                  {submission.teacherFeedback}
-                </p>
+                <p className="text-sm text-muted-foreground">{submission.teacherFeedback}</p>
               </div>
             )}
           </CardContent>
         </Card>
 
+        {/* ── Question Review ── */}
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Question Review</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Question Review</span>
+              {!canViewResults && (
+                <span className="text-sm font-normal text-muted-foreground flex items-center gap-1">
+                  <EyeOff className="h-4 w-4" />
+                  Answers hidden
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {quiz.questions.map((question, index) => {
-              const detailedAnswer = quizAnswers.find(
-                (a) => a.questionId === question.id
-              );
+              const detailedAnswer = quizAnswers.find((a) => a.questionId === question.id);
               const userAnswer = userAnswers[question.id];
+              const sourceAnswer = userAnswer ?? detailedAnswer;
 
-              const studentAnswerText = formatStudentAnswer(
-                question,
-                userAnswer || detailedAnswer
-              );
-              const correctAnswerText = formatCorrectAnswer(
-                question,
-                detailedAnswer
-              );
+              const studentAnswerText = formatStudentAnswer(question, sourceAnswer);
+              const { text: correctAnswerText, optionIndex: correctOptionIndex } =
+                resolveCorrectAnswer(question, detailedAnswer);
 
-              const isOpenEnded = question.type !== 'multiple-choice';
-              
-              let needsReview = detailedAnswer && detailedAnswer.isCorrect === undefined;
-              if (isOpenEnded && detailedAnswer) {
-                 if (detailedAnswer.isCorrect === undefined && detailedAnswer.points === 0) {
-                     needsReview = true;
-                 }
-              }
+              const isOpenEnded = question.type !== "multiple-choice";
+              const needsReview =
+                detailedAnswer?.isCorrect === undefined ||
+                (isOpenEnded && detailedAnswer?.isCorrect === undefined);
 
-              let displayPoints = detailedAnswer?.points || 0;
+              let displayPoints = detailedAnswer?.points ?? 0;
               if (detailedAnswer?.isCorrect && displayPoints === 0) {
-                  displayPoints = question.points;
+                displayPoints = question.points;
               }
 
               return (
                 <div key={question.id} className="border rounded-lg p-4">
+                  {/* Question header */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-semibold">Question {index + 1}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {question.question}
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">{question.question}</p>
                     </div>
                     <div className="flex gap-2 flex-col items-end">
                       {detailedAnswer && (
                         <>
-                          {/* Show individual question score */}
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                displayPoints === question.points
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="text-sm"
-                            >
-                              Score: {displayPoints}/{question.points}
-                            </Badge>
-                          </div>
-
+                          <Badge
+                            variant={displayPoints === question.points ? "default" : "secondary"}
+                            className="text-sm"
+                          >
+                            Score: {displayPoints}/{question.points}
+                          </Badge>
                           {detailedAnswer.feedback && (
-                            <Badge variant="outline" className="text-xs">
-                              Teacher Reviewed
-                            </Badge>
+                            <Badge variant="outline" className="text-xs">Teacher Reviewed</Badge>
                           )}
-
                           {needsReview ? (
-                            <Badge
-                              variant="secondary"
-                              className="bg-yellow-100 text-yellow-800 border-yellow-300"
-                            >
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
                               Pending Review
                             </Badge>
                           ) : (
                             <Badge
-                              variant={
-                                detailedAnswer.isCorrect
-                                  ? "default"
-                                  : "destructive"
-                              }
+                              variant={detailedAnswer.isCorrect ? "default" : "destructive"}
                               className="text-xs"
                             >
-                              {detailedAnswer.isCorrect
-                                ? "Correct"
-                                : "Incorrect"}
+                              {detailedAnswer.isCorrect ? "Correct" : "Incorrect"}
                             </Badge>
                           )}
                         </>
@@ -1150,34 +1154,26 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   </div>
 
                   <div className="space-y-3">
-                    {/* Student Answer */}
+                    {/* ── Student's answer ── */}
                     <div>
-                      <strong className="text-sm block mb-1">
-                        Your answer:
-                      </strong>
-                      <div
-                        className={`p-3 rounded border ${
-                          needsReview
-                            ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700"
-                            : detailedAnswer?.isCorrect
-                            ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
-                            : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-                        }`}
-                      >
-                        <p className="text-sm font-medium">
-                          {studentAnswerText}
-                        </p>
-                        {question.type === "multiple-choice" &&
-                          userAnswer?.studentAnswer !== undefined && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Selected option{" "}
-                              {Number(userAnswer.studentAnswer) + 1}
-                            </p>
-                          )}
+                      <strong className="text-sm block mb-1">Your answer:</strong>
+                      <div className={`p-3 rounded border ${
+                        needsReview
+                          ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700"
+                          : detailedAnswer?.isCorrect
+                          ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
+                          : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+                      }`}>
+                        <p className="text-sm font-medium">{studentAnswerText}</p>
+                        {question.type === "multiple-choice" && sourceAnswer?.studentAnswer !== undefined && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Selected option {Number(sourceAnswer.studentAnswer) + 1}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Needs Review Notice */}
+                    {/* ── Pending review notice ── */}
                     {needsReview && (
                       <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-300">
                         <div className="flex items-start gap-2">
@@ -1187,100 +1183,108 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                               This answer is pending teacher review
                             </p>
                             <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
-                              Your answer may be correct but uses different
-                              wording or requires manual grading. Your teacher will review it.
+                              Your answer may be correct but uses different wording or requires manual grading.
                             </p>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    {!needsReview && (
-                        <div>
-                        <strong className="text-sm block mb-1">
-                            Expected answer:
-                        </strong>
-                        <div className="p-3 rounded border bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                    {/* ── Expected answer — only shown when canViewResults=true ── */}
+                    {!needsReview && canViewResults && (
+                      <div>
+                        <strong className="text-sm block mb-1">Expected answer:</strong>
+
+                        {isOpenEnded ? (
+                          correctAnswerText ? (
+                            <div className="p-3 rounded border bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                {correctAnswerText}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="p-3 rounded border bg-gray-50 border-gray-200">
+                              <p className="text-sm text-muted-foreground italic">
+                                No reference answer provided for this question.
+                              </p>
+                            </div>
+                          )
+                        ) : (
+                          <div className="p-3 rounded border bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                             <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                            {correctAnswerText}
+                              {correctAnswerText}
                             </p>
-                            {question.type === "multiple-choice" &&
-                            detailedAnswer?.correctAnswer !== undefined && (
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                Option {Number(detailedAnswer.correctAnswer) + 1}
-                                </p>
+                            {correctOptionIndex !== undefined && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                Option {correctOptionIndex + 1}
+                              </p>
                             )}
-                        </div>
-                        </div>
+                          </div>
+                        )}
+                      </div>
                     )}
 
-                    {question.type === "multiple-choice" &&
-                      question.options &&
-                      question.options.length > 0 && (
-                        <div>
-                          <strong className="text-sm block mb-1">
-                            All options:
-                          </strong>
-                          <div className="space-y-1">
-                            {question.options.map((option, optIndex) => {
-                              const isStudentChoice =
-                                userAnswer?.studentAnswer === optIndex;
-                              const isCorrectAnswer =
-                                detailedAnswer?.correctAnswer ===
-                                  optIndex.toString() ||
-                                Number(detailedAnswer?.correctAnswer) ===
-                                  optIndex;
+                    {/* ── Answers hidden message — only shown when canViewResults=false ── */}
+                    {!needsReview && !canViewResults && (
+                      <div className="p-3 rounded border bg-gray-50 border-gray-200 flex items-center gap-2">
+                        <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <p className="text-sm text-muted-foreground italic">
+                          Correct answer is not available for this quiz.
+                        </p>
+                      </div>
+                    )}
 
-                              return (
-                                <div
-                                  key={optIndex}
-                                  className={`p-2 rounded text-sm ${
-                                    isStudentChoice && isCorrectAnswer
-                                      ? "bg-green-100 border border-green-300 dark:bg-green-900/30 dark:border-green-700"
-                                      : isStudentChoice
-                                      ? "bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700"
-                                      : isCorrectAnswer
-                                      ? "bg-blue-100 border border-blue-300 dark:bg-blue-900/30 dark:border-blue-700"
-                                      : "bg-gray-100 dark:bg-gray-800"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
-                                      {String.fromCharCode(65 + optIndex)}
-                                    </span>
-                                    <span className="flex-1">{option}</span>
-                                    <div className="flex gap-1">
-                                      {isStudentChoice && (
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                        >
-                                          Your choice
-                                        </Badge>
-                                      )}
-                                      {isCorrectAnswer && (
-                                        <Badge
-                                          variant="default"
-                                          className="text-xs"
-                                        >
-                                          Correct
-                                        </Badge>
-                                      )}
-                                    </div>
+                    {/* ── Multiple choice: all options ── */}
+                    {question.type === "multiple-choice" && question.options && question.options.length > 0 && (
+                      <div>
+                        <strong className="text-sm block mb-1">All options:</strong>
+                        <div className="space-y-1">
+                          {question.options.map((option, optIndex) => {
+                            const isStudentChoice = Number(sourceAnswer?.studentAnswer) === optIndex;
+
+                            // Only highlight correct option if canViewResults is true
+                            const isCorrectOption =
+                              canViewResults &&
+                              (correctOptionIndex === optIndex || correctAnswerText === option);
+
+                            return (
+                              <div
+                                key={optIndex}
+                                className={`p-2 rounded text-sm ${
+                                  isStudentChoice && isCorrectOption
+                                    ? "bg-green-100 border border-green-300 dark:bg-green-900/30 dark:border-green-700"
+                                    : isStudentChoice
+                                    ? "bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700"
+                                    : isCorrectOption
+                                    ? "bg-blue-100 border border-blue-300 dark:bg-blue-900/30 dark:border-blue-700"
+                                    : "bg-gray-100 dark:bg-gray-800"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                    {String.fromCharCode(65 + optIndex)}
+                                  </span>
+                                  <span className="flex-1">{option}</span>
+                                  <div className="flex gap-1">
+                                    {isStudentChoice && (
+                                      <Badge variant="outline" className="text-xs">Your choice</Badge>
+                                    )}
+                                    {isCorrectOption && (
+                                      <Badge variant="default" className="text-xs">Correct</Badge>
+                                    )}
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                    {/* Teacher Feedback for this question */}
+                    {/* ── Teacher feedback per question ── */}
                     {detailedAnswer?.feedback && (
                       <div>
-                        <strong className="text-sm block mb-1">
-                          Teacher Feedback:
-                        </strong>
+                        <strong className="text-sm block mb-1">Teacher Feedback:</strong>
                         <div className="p-3 rounded border bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800">
                           <p className="text-sm text-purple-800 dark:text-purple-200">
                             {detailedAnswer.feedback}
@@ -1295,7 +1299,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Performance Summary */}
+        {/* ── Performance Summary ── */}
         {hasDetailedData && (
           <Card className="shadow-lg mt-6">
             <CardHeader>
@@ -1304,32 +1308,20 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">
-                    {correctCount}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Correct Answers
-                  </p>
+                  <p className="text-2xl font-bold text-green-600">{correctCount}</p>
+                  <p className="text-sm text-muted-foreground">Correct Answers</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-red-600">
-                    {incorrectCount}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Incorrect Answers
-                  </p>
+                  <p className="text-2xl font-bold text-red-600">{incorrectCount}</p>
+                  <p className="text-sm text-muted-foreground">Incorrect Answers</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {pendingCount}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Pending Review
-                  </p>
+                  <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
+                  <p className="text-sm text-muted-foreground">Pending Review</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-purple-600">
-                    {Math.round((submission.quizData?.timeSpent || 0) / 60)}m
+                    {Math.round((submission.quizData?.timeSpent ?? 0) / 60)}m
                   </p>
                   <p className="text-sm text-muted-foreground">Total Time</p>
                 </div>
@@ -1338,7 +1330,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           </Card>
         )}
 
-        {/* Final Grade Notice */}
+        {/* ── Final Grade Notice ── */}
         <Card className="shadow-lg mt-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200">
           <CardContent className="p-6">
             <div className="flex items-start gap-3">
@@ -1349,13 +1341,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 </h3>
                 <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
                   Your current grade for this quiz is{" "}
-                  <strong>
-                    {Math.round(finalScore * 100) / 100} / {totalMaxScore}
-                  </strong>{" "}
+                  <strong>{Math.round(finalScore * 100) / 100} / {totalMaxScore}</strong>{" "}
                   ({Math.round(percentage)}%).
                   {pendingCount > 0 && (
                     <>
-                      <br/>
+                      <br />
                       <span className="text-yellow-600 font-semibold">
                         Note: There are {pendingCount} questions pending review. Your final grade may increase once the teacher grades them.
                       </span>
@@ -1363,22 +1353,20 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   )}
                 </p>
                 {submission.status === "GRADED" && (
-                  <Badge variant="default" className="bg-blue-600">
-                    Graded by Teacher
-                  </Badge>
+                  <Badge variant="default" className="bg-blue-600">Graded by Teacher</Badge>
                 )}
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Action Button */}
         <div className="text-center mt-6">
           <Button onClick={onExit} size="lg" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Return to Course
           </Button>
         </div>
+
       </div>
     </div>
   );

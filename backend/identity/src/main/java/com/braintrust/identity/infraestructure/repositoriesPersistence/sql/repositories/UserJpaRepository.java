@@ -1,6 +1,5 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories;
 
-import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.UserJpaEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,40 +16,86 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
 
     Optional<UserJpaEntity> findByEmail(String email);
     Optional<UserJpaEntity> findByPersonId(String personId);
-    List<UserJpaEntity> findByRole(Role role);
     List<UserJpaEntity> findByActiveTrue();
     boolean existsByEmail(String email);
-
-    @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
-            "WHERE (LOWER(p.firstName) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
-            "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :name, '%')) OR " +
-            "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :name, '%')))")
-    Page<UserJpaEntity> findByNameContainingWithPerson(@Param("name") String name, Pageable pageable);
-
-    @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
-            "WHERE u.role = :role ORDER BY p.firstName ASC, p.lastName ASC")
-    Page<UserJpaEntity> findByRoleOrderByPersonNameAsc(@Param("role") Role role, Pageable pageable);
-
-    @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
-            "WHERE u.role = :role ORDER BY p.firstName DESC, p.lastName DESC")
-    Page<UserJpaEntity> findByRoleOrderByPersonNameDesc(@Param("role") Role role, Pageable pageable);
-
-    @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
-            "WHERE u.role = :role")
-    Page<UserJpaEntity> findByRoleWithPerson(@Param("role") Role role, Pageable pageable);
-
-    Page<UserJpaEntity> findByRole(Role role, Pageable pageable);
     Page<UserJpaEntity> findAll(Pageable pageable);
+
+    // --- Role queries ---
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.roleId = :roleId")
+    List<UserJpaEntity> findByRoleId(@Param("roleId") Integer roleId);
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.roleId = :roleId")
+    Page<UserJpaEntity> findByRoleId(@Param("roleId") Integer roleId, Pageable pageable);
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.active = true")
     Page<UserJpaEntity> findByActiveTrue(Pageable pageable);
 
-    @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
-            "WHERE u.personId IN :personIds")
-    Page<UserJpaEntity> findByPersonIdIn(@Param("personIds") List<String> personIds, Pageable pageable);
+    // --- PersonId queries ---
 
-    @Query("SELECT u FROM UserJpaEntity u JOIN PersonJpaEntity p ON u.personId = p.id " +
-            "WHERE u.personId IN :personIds AND u.role = :role")
-    Page<UserJpaEntity> findByPersonIdInAndRole(
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.personId IN :personIds")
+    Page<UserJpaEntity> findByPersonIdIn(
+            @Param("personIds") List<String> personIds, Pageable pageable);
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.personId IN :personIds AND u.roleId = :roleId")
+    Page<UserJpaEntity> findByPersonIdInAndRoleId(
             @Param("personIds") List<String> personIds,
-            @Param("role") Role role,
+            @Param("roleId") Integer roleId,
             Pageable pageable);
+
+    // --- Name search (native: firstName/lastName are @Transient, must use catalog join) ---
+
+    @Query(value = """
+            SELECT u.* FROM users u
+            JOIN persons p ON u.person_id = p.id
+            JOIN cat_first_names fn ON p.first_name_id = fn.id
+            JOIN cat_last_names ln ON p.last_name_id = ln.id
+            WHERE LOWER(fn.first_name) LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(ln.last_name) LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(CONCAT(fn.first_name, ' ', ln.last_name)) LIKE LOWER(CONCAT('%', :name, '%'))
+            """,
+            countQuery = """
+            SELECT COUNT(u.id) FROM users u
+            JOIN persons p ON u.person_id = p.id
+            JOIN cat_first_names fn ON p.first_name_id = fn.id
+            JOIN cat_last_names ln ON p.last_name_id = ln.id
+            WHERE LOWER(fn.first_name) LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(ln.last_name) LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(CONCAT(fn.first_name, ' ', ln.last_name)) LIKE LOWER(CONCAT('%', :name, '%'))
+            """,
+            nativeQuery = true)
+    Page<UserJpaEntity> findByNameContainingWithPerson(
+            @Param("name") String name, Pageable pageable);
+
+    // --- Role + Person name ordering (native: same reason) ---
+
+    @Query(value = """
+            SELECT u.* FROM users u
+            JOIN persons p ON u.person_id = p.id
+            JOIN cat_first_names fn ON p.first_name_id = fn.id
+            JOIN cat_last_names ln ON p.last_name_id = ln.id
+            WHERE u.role_id = :roleId
+            ORDER BY fn.first_name ASC, ln.last_name ASC
+            """,
+            countQuery = "SELECT COUNT(u.id) FROM users u WHERE u.role_id = :roleId",
+            nativeQuery = true)
+    Page<UserJpaEntity> findByRoleIdOrderByPersonNameAsc(
+            @Param("roleId") Integer roleId, Pageable pageable);
+
+    @Query(value = """
+            SELECT u.* FROM users u
+            JOIN persons p ON u.person_id = p.id
+            JOIN cat_first_names fn ON p.first_name_id = fn.id
+            JOIN cat_last_names ln ON p.last_name_id = ln.id
+            WHERE u.role_id = :roleId
+            ORDER BY fn.first_name DESC, ln.last_name DESC
+            """,
+            countQuery = "SELECT COUNT(u.id) FROM users u WHERE u.role_id = :roleId",
+            nativeQuery = true)
+    Page<UserJpaEntity> findByRoleIdOrderByPersonNameDesc(
+            @Param("roleId") Integer roleId, Pageable pageable);
+
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.roleId = :roleId")
+    Page<UserJpaEntity> findByRoleIdWithPerson(
+            @Param("roleId") Integer roleId, Pageable pageable);
 }

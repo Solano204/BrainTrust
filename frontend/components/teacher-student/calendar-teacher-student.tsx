@@ -177,6 +177,9 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     error: quizzesError,
   } = useQuizzesByMonth(userId, monthStartString, userType);
 
+
+  console.log("QUIZES ",quizzes)
+  console.log("TASKS",tasks)
   const { data: userTeam } = useUserTeam(userId);
 
   const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(

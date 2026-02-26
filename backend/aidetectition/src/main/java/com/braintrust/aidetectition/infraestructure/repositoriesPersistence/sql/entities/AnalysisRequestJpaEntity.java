@@ -37,7 +37,11 @@ public class AnalysisRequestJpaEntity {
     @Column(name = "confidence_level", length = 20)
     private String confidenceLevel;
 
+//    @Column(name = "detected_segments_json", columnDefinition = "jsonb")
+//    private String detectedSegmentsJson;
+
     @Column(name = "detected_segments_json", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String detectedSegmentsJson;
 
     @Column(name = "error_message", columnDefinition = "TEXT")

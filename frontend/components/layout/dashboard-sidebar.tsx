@@ -61,6 +61,12 @@ const getNavigationItems = (normalizedRole: string) => {
       permission: PERMISSIONS.USER_MANAGEMENT 
     },
     { 
+      name: "Gestión de Catálogos", 
+      icon: BarChart3, 
+      href: "/admin/catalogs", 
+      permission: PERMISSIONS.CATALOG_MANAGEMENT 
+    },
+    { 
       name: "Settings", 
       icon: Settings, 
       href: "/settings", 
@@ -100,11 +106,14 @@ export function DashboardSidebar({
   console.log('=== SIDEBAR ROLE ===', currentRole);
 
   const navigation = getNavigationItems(currentRole).filter(item => {
+    console.log(`Checking permission for ${item.name}:`, item.permission);
     if (!item.permission) return true;
     return hasPermission(item.permission);
   });
 
   const handleNavClick = (href: string, name: string) => {
+
+   console.log(`Navigating to ${name} (${href})`);
     onNavigate(name)
     router.push(href)
     onClose()

@@ -23,75 +23,36 @@ public class AssignmentLinkHelper {
 
     public void addLink(AssignmentId assignmentId, String link) {
         log.info("🔗 Adding link to Assignment ID: {}", assignmentId.getValue());
-
-        try {
-            Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
-            assignment.addLink(link);
-            assignmentRepository.save(assignment);
-
-            log.info("✅ Link added to Assignment {}", assignmentId.getValue());
-
-        } catch (Exception e) {
-            log.error("❌ Failed to add link to Assignment {}: {}",
-                    assignmentId.getValue(), e.getMessage(), e);
-            throw e;
-        }
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.addLink(link);
+        assignmentRepository.save(assignment);
+        log.info("✅ Link added to Assignment {}", assignmentId.getValue());
     }
 
     public void addLinks(AssignmentId assignmentId, List<String> links) {
         log.info("🔗 Adding {} links to Assignment ID: {}",
                 links != null ? links.size() : 0, assignmentId.getValue());
-
-        try {
-            Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
-
-            if (links != null && !links.isEmpty()) {
-                assignment.addLinks(links);
-                assignmentRepository.save(assignment);
-            }
-
-            log.info("✅ {} links added to Assignment {}",
-                    links != null ? links.size() : 0, assignmentId.getValue());
-
-        } catch (Exception e) {
-            log.error("❌ Failed to add links to Assignment {}: {}",
-                    assignmentId.getValue(), e.getMessage(), e);
-            throw e;
-        }
+        if (links == null || links.isEmpty()) return;
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.addLinks(links);
+        assignmentRepository.save(assignment);
+        log.info("✅ {} links added to Assignment {}", links.size(), assignmentId.getValue());
     }
 
     public void removeLink(AssignmentId assignmentId, String link) {
-        log.info("🔗 Removing link from Assignment ID: {}", assignmentId.getValue());
-
-        try {
-            Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
-            assignment.removeLink(link);
-            assignmentRepository.save(assignment);
-
-            log.info("✅ Link removed from Assignment {}", assignmentId.getValue());
-
-        } catch (Exception e) {
-            log.error("❌ Failed to remove link from Assignment {}: {}",
-                    assignmentId.getValue(), e.getMessage(), e);
-            throw e;
-        }
+        log.info("🔗 Removing link '{}' from Assignment ID: {}", link, assignmentId.getValue());
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.removeLink(link);
+        assignmentRepository.save(assignment);
+        log.info("✅ Link removed from Assignment {}", assignmentId.getValue());
     }
 
     public void clearLinks(AssignmentId assignmentId) {
         log.info("🔗 Clearing all links for Assignment ID: {}", assignmentId.getValue());
-
-        try {
-            Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
-            assignment.clearLinks();
-            assignmentRepository.save(assignment);
-
-            log.info("✅ All links cleared for Assignment {}", assignmentId.getValue());
-
-        } catch (Exception e) {
-            log.error("❌ Failed to clear links for Assignment {}: {}",
-                    assignmentId.getValue(), e.getMessage(), e);
-            throw e;
-        }
+        Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
+        assignment.clearLinks();
+        assignmentRepository.save(assignment);
+        log.info("✅ All links cleared for Assignment {}", assignmentId.getValue());
     }
 
     private Assignment findAssignmentByIdOrThrow(AssignmentId assignmentId) {

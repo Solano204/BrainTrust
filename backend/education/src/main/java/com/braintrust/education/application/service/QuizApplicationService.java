@@ -50,13 +50,13 @@ public class QuizApplicationService implements QuizService {
         log.info("Creating quiz '{}' for course {}", command.title(), courseId.getValue());
 
         Quiz quiz = Quiz.create(
-                courseId,
-                unitId,
-                command.title(),
-                command.description(),
+                courseId, unitId,
+                command.title(), command.description(),
                 dateHelper.parseDateTimeNullable(command.availableFrom()),
                 dateHelper.parseDateTimeNullable(command.availableUntil()),
-                command.timeLimitMinutes()
+                command.timeLimitMinutes(),
+                command.allowSeeResults(),   // ✅ NEW
+                command.totalScore()         // ✅ NEW
         );
 
         Quiz saved = quizRepository.save(quiz);
@@ -104,15 +104,13 @@ public class QuizApplicationService implements QuizService {
             }
 
             Quiz quiz = Quiz.create(
-                    courseId,
-                    unitId,
-                    command.title(),
-                    command.description(),
-                    availableFrom,
-                    availableUntil,
-                    command.timeLimitMinutes()
+                    courseId, unitId,
+                    command.title(), command.description(),
+                    availableFrom, availableUntil,
+                    command.timeLimitMinutes(),
+                    command.allowSeeResults(),   // ✅ NEW
+                    command.totalScore()         // ✅ NEW
             );
-
             log.info("✅ Quiz object created, adding {} questions...", command.questions().size());
 
             int questionIndex = 0;
@@ -151,12 +149,13 @@ public class QuizApplicationService implements QuizService {
         LocalDateTime availableUntil = dateHelper.parseDateTimeNullable(command.availableUntil());
 
         quiz.update(
-                command.title(),
-                command.description(),
-                availableFrom,
-                availableUntil,
-                command.timeLimitMinutes()
+                command.title(), command.description(),
+                availableFrom, availableUntil,
+                command.timeLimitMinutes(),
+                command.allowSeeResults(),   // ✅ NEW
+                command.totalScore()         // ✅ NEW
         );
+
         quizRepository.save(quiz);
         log.info("Quiz updated");
     }

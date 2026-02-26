@@ -14,6 +14,7 @@ import {
   QuizSubmissionDetailForGradingDTO,
   QuizSubmissionBasicDTO,
   SuccessResponseDTO,
+  QuizSubmissionDetailDTONew,
 } from "@/app/shared/dtos/quiz.dto";
 
 import {
@@ -49,6 +50,7 @@ import {
   mapQuizSubmissionDetailFromBackend,
   mapQuizSubmissionDetailForGradingFromBackend,
   mapQuizAnswersToCommand,
+  mapQuizSubmissionDetailFromBackendNew,
 } from "@/app/shared/mappers/quiz.mappers";
 
 function mapCreateQuizToBackendCommand(
@@ -66,7 +68,8 @@ function mapCreateQuizToBackendCommand(
     const question: QuizQuestionData = {
       questionText: q.question,
       questionType: q.type === "multiple-choice" ? "MULTIPLE_CHOICE" : "OPEN_ENDED",
-      points: q.points,
+      // q.points is already computed as (percentage/100 * maxGrade) by the form's onSubmit
+      points: q.points ?? 0,
       options: [],
       correctAnswer,
     };
@@ -96,6 +99,10 @@ function mapCreateQuizToBackendCommand(
     timeLimitMinutes: quizData.timeLimit || 0,
     availableFrom: formatDate(quizData.dueDate),
     availableUntil: formatDate(quizData.dueDate),
+    // ── NEW fields ────────────────────────────────────────────────────────────
+    allowSeeResults: (quizData as any).allowSeeResults ?? false,
+    totalScore: (quizData as any).totalScore ?? quizData.maxGrade ?? 100,
+    // ─────────────────────────────────────────────────────────────────────────
     questions,
   };
 }
@@ -117,6 +124,8 @@ function mapUpdateQuizToBackendCommand(
   command.maxAttempts = quizData.maxAttempts || 1;
   command.shuffleQuestions = quizData.shuffleQuestions || false;
   command.showCorrectAnswers = quizData.showCorrectAnswers || false;
+  command.allowSeeResults = (quizData as any).allowSeeResults ?? false;  // ✅ NEW
+  command.totalScore = (quizData as any).totalScore ?? quizData.maxGrade ?? 100; // ✅ NEW
 
   return command;
 }
@@ -158,7 +167,7 @@ export async function createQuiz(
     quizData: Omit<Quiz, "id" | "courseId" | "courseUnitId" | "createdAt" | "active" | "availableNow">
 ): Promise<Quiz> {
   try {
-    console.log("🚀 Creating quiz with data:", { courseId, unitId, title: quizData.title });
+    console.log("🚀 Creating quiz with data:", quizData);
 
     const command = mapCreateQuizToBackendCommand(quizData);
     command.courseId = courseId;
@@ -166,9 +175,9 @@ export async function createQuiz(
 
     console.log("📤 Sending command to backend:", command);
 
-    const { data } = await apiClient.post<SuccessResponseDTO>(
-        "/api/quizzes/with-questions",
-        command
+   const { data } = await apiClient.post<SuccessResponseDTO>(
+       "/api/quizzes/with-questions",
+       command
     );
 
     console.log("✅ Quiz created, response:", data);
@@ -585,10 +594,11 @@ export async function fetchQuizSubmissionDetail(
     submissionId: string
 ): Promise<QuizSubmissionDetail> {
   try {
-    const { data } = await apiClient.get<QuizSubmissionDetailDTO>(
+    const { data } = await apiClient.get<QuizSubmissionDetailDTONew>(
         `/api/quiz-submissions/${submissionId}/detail`
     );
-    return mapQuizSubmissionDetailFromBackend(data);
+    console.log("Raw quiz submission detail from backend:", data);
+    return mapQuizSubmissionDetailFromBackendNew(data);
   } catch (error) {
     return handleApiError(error);
   }
@@ -642,37 +652,50 @@ export async function submitQuiz(params: {
 }
 
 export async function gradeQuizSubmission(
-    submissionId: string,
-    grades: { questionId: string; earnedPoints: number; maxPoints: number; feedback?: string }[],
-    overallGrade?: { earnedPoints: number; totalPoints: number }
+  submissionId: string,
+  grades: {
+    questionId: string;
+    earnedPoints: number;  // raw points earned for this question
+    maxPoints: number;     // max points for this question
+    feedback?: string;
+  }[],
+  overallGrade?: {
+    earnedPoints: number;
+    totalPoints: number;   // this should be the quiz totalScore (e.g. 22)
+  }
 ): Promise<QuizSubmissionDetail> {
   try {
-    const earnedPoints = overallGrade?.earnedPoints ?? grades.reduce((sum, g) => sum + g.earnedPoints, 0);
-    const totalPoints = overallGrade?.totalPoints ?? grades.reduce((sum, g) => sum + g.maxPoints, 0);
+    // Sum of raw question points (used only if no overallGrade supplied)
+    const rawEarned = grades.reduce((sum, g) => sum + g.earnedPoints, 0);
+    const rawMax = grades.reduce((sum, g) => sum + g.maxPoints, 0);
+
+    // If an overallGrade is provided (weighted, scaled to totalScore), use it.
+    // Otherwise fall back to raw sum.
+    const finalEarned = overallGrade?.earnedPoints ?? rawEarned;
+    const finalTotal  = overallGrade?.totalPoints  ?? rawMax;
 
     const command: GradeQuizSubmissionCommand = {
       quizSubmissionId: submissionId,
-      earnedPoints,
-      totalPoints,
+      earnedPoints: Math.round(finalEarned * 100) / 100,  // 2 decimal precision
+      totalPoints: finalTotal,
       questionGrades: grades.map((grade) => ({
         questionId: grade.questionId,
         earnedPoints: grade.earnedPoints,
         maxPoints: grade.maxPoints,
-        feedback: grade.feedback || "",
+        feedback: grade.feedback ?? "",
       })),
     };
 
     await apiClient.post(
-        `/api/quiz-submissions/${submissionId}/grade`,
-        command
+      `/api/quiz-submissions/${submissionId}/grade`,
+      command
     );
 
-    return await fetchQuizSubmissionDetailForGrading(submissionId);
+    return await fetchQuizSubmissionDetail(submissionId);
   } catch (error) {
     return handleApiError(error);
   }
 }
-
 export async function deleteQuizSubmission(submissionId: string): Promise<void> {
   try {
     await apiClient.delete(`/api/quiz-submissions/${submissionId}`);

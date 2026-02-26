@@ -34,7 +34,6 @@ public interface QuizJpaRepository extends JpaRepository<QuizJpaEntity, String> 
         WHERE q.courseId IN (
             SELECT e.courseId FROM EnrollmentJpaEntity e 
             WHERE e.studentId = :studentId 
-            AND e.status = 'ACTIVE'
         )
         AND q.active = true
         AND (
@@ -77,7 +76,6 @@ public interface QuizJpaRepository extends JpaRepository<QuizJpaEntity, String> 
         WHERE q.courseId IN (
             SELECT e.courseId FROM EnrollmentJpaEntity e 
             WHERE e.studentId = :studentId 
-            AND e.status = 'ACTIVE'
         )
         AND q.active = true
         AND (

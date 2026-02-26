@@ -70,6 +70,7 @@ export function AssignmentInfoView({ assignment, onClose }: AssignmentInfoViewPr
   const [isAddingFiles, setIsAddingFiles] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  console.log("assignment in info view", assignment);
   React.useEffect(() => {
     setEditData({
       title: assignment.title,

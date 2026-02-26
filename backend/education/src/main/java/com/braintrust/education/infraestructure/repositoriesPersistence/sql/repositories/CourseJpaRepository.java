@@ -14,10 +14,12 @@ import java.util.Optional;
 @Repository
 public interface CourseJpaRepository extends JpaRepository<CourseJpaEntity, String> {
 
-    @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId AND e.status = 'ACTIVE'")
+//    @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId AND e.status = 'ACTIVE' ")
+    @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId  ")
     List<CourseJpaEntity> findByStudentId(@Param("studentId") String studentId);
 
-    @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId AND e.status = 'ACTIVE'")
+   // @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId AND e.status = 'ACTIVE'")
+    @Query("SELECT DISTINCT c FROM CourseJpaEntity c JOIN c.enrollments e WHERE e.studentId = :studentId ")
     Page<CourseJpaEntity> findByStudentId(@Param("studentId") String studentId, Pageable pageable);
 
     List<CourseJpaEntity> findByTeacherId(String teacherId);

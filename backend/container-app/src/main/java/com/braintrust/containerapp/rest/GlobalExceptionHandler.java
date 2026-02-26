@@ -1,8 +1,10 @@
 package com.braintrust.containerapp.rest;
 
+import com.braintrust.identity.domain.exceptions.CatalogInUseException;
 import com.braintrust.identity.domain.exceptions.InvalidPasswordException;
 import com.braintrust.identity.infraestructure.security.exception.JwtTokenException;
 import com.braintrust.shared.application.dtos.dtos.ErrorResponseDTO;
+import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
 import com.braintrust.shared.domain.exception.DomainException;
 import com.braintrust.shared.domain.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,21 @@ public class GlobalExceptionHandler {
 
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+
+
+    @ExceptionHandler(CatalogInUseException.class)
+    public ResponseEntity<SuccessResponseDTO> handleCatalogInUse(CatalogInUseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new SuccessResponseDTO(false, ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<SuccessResponseDTO> handleRuntime(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new SuccessResponseDTO(false, ex.getMessage(), null));
+    }
+
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleNotFoundException(

@@ -205,6 +205,7 @@ export interface Quiz {
   availableNow?: boolean;
   courseName?: string;
   unitName?: string;
+  allowSeeResults: boolean;
 }
 
 

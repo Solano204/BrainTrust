@@ -15,15 +15,17 @@ public class QuizDtoMapper {
         return new QuizDTO(
                 quiz.getId().getValue(),
                 quiz.getCourseId().getValue(),
-                "Course Name", // TODO: Resolve from CourseService
+                "Course Name",
                 quiz.getTitle(),
                 quiz.getDescription(),
-                quiz.getAvailableFrom() != null ? quiz.getAvailableFrom().toString() : null,
+                quiz.getAvailableFrom()  != null ? quiz.getAvailableFrom().toString()  : null,
                 quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().toString() : null,
                 quiz.getTimeLimitMinutes(),
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
                 quiz.isShowCorrectAnswers(),
+                quiz.isAllowSeeResults(),   // ✅ NEW
+                quiz.getTotalScore(),       // ✅ NEW
                 quiz.getTotalPoints(),
                 quiz.getQuestions().size(),
                 quiz.getCreatedAt().toString(),
@@ -33,9 +35,6 @@ public class QuizDtoMapper {
         );
     }
 
-    /**
-     * Maps Quiz entity to MinimalQuizDTO
-     */
     public MinimalQuizDTO toMinimalQuizDTO(Quiz quiz) {
         return new MinimalQuizDTO(
                 quiz.getId().getValue(),
@@ -52,16 +51,18 @@ public class QuizDtoMapper {
         return new CompleteQuizDTO(
                 quiz.getId().getValue(),
                 quiz.getCourseId().getValue(),
-                "Course Name", // TODO: Resolve from CourseService
+                "Course Name",
                 quiz.getUnitId() != null ? quiz.getUnitId().getValue() : null,
                 quiz.getTitle(),
                 quiz.getDescription(),
-                quiz.getAvailableFrom() != null ? quiz.getAvailableFrom().toString() : null,
+                quiz.getAvailableFrom()  != null ? quiz.getAvailableFrom().toString()  : null,
                 quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().toString() : null,
                 quiz.getTimeLimitMinutes(),
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
                 quiz.isShowCorrectAnswers(),
+                quiz.isAllowSeeResults(),   // ✅ NEW
+                quiz.getTotalScore(),       // ✅ NEW
                 quiz.getTotalPoints(),
                 quiz.getQuestions().size(),
                 quiz.getCreatedAt().toString(),
@@ -75,25 +76,20 @@ public class QuizDtoMapper {
         List<QuestionOptionDTO> options = question.getOptions().stream()
                 .map(opt -> new QuestionOptionDTO(opt.getText(), opt.isCorrect()))
                 .collect(Collectors.toList());
-
         return new QuizQuestionDTO(
                 question.getId().getValue(),
                 question.getQuestionText(),
                 question.getType().name(),
                 question.getPoints(),
                 options,
-                null // Don't expose correct answer in basic DTO
+                null
         );
     }
 
-    /**
-     * Maps QuizQuestion to CompleteQuizQuestionDTO (with correct answer)
-     */
     public CompleteQuizQuestionDTO toCompleteQuestionDTO(QuizQuestion question) {
         List<QuestionOptionDTO> options = question.getOptions().stream()
                 .map(opt -> new QuestionOptionDTO(opt.getText(), opt.isCorrect()))
                 .collect(Collectors.toList());
-
         return new CompleteQuizQuestionDTO(
                 question.getId().getValue(),
                 question.getQuestionText(),
@@ -105,14 +101,10 @@ public class QuizDtoMapper {
     }
 
     public List<QuizDTO> toQuizDTOList(List<Quiz> quizzes) {
-        return quizzes.stream()
-                .map(this::toQuizDTO)
-                .collect(Collectors.toList());
+        return quizzes.stream().map(this::toQuizDTO).collect(Collectors.toList());
     }
 
     public List<QuizQuestionDTO> toQuestionDTOList(List<QuizQuestion> questions) {
-        return questions.stream()
-                .map(this::toQuestionDTO)
-                .collect(Collectors.toList());
+        return questions.stream().map(this::toQuestionDTO).collect(Collectors.toList());
     }
 }

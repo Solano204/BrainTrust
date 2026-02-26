@@ -79,4 +79,18 @@ public class DocumentJpaEntity {
 
     public PageJpaEntity getPage() { return page; }
     public void setPage(PageJpaEntity page) { this.page = page; }
+
+    // DocumentJpaEntity.java — add these two methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DocumentJpaEntity)) return false;
+        DocumentJpaEntity that = (DocumentJpaEntity) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }
