@@ -25,6 +25,8 @@ export interface Quiz {
     showCorrectAnswers: boolean;
     totalPoints: number;
     questionCount: number;
+    allowSeeResults: boolean;
+    totalScore: number;
     courseName: string;
     createdAt: string;
     active: boolean;
@@ -140,6 +142,7 @@ export interface QuizSubmission {
     grade: QuizGrade | null;
     teacherFeedback: string | null;
     quizData: QuizSubmissionData;
+    canViewResults: boolean;
 }
 
 export interface QuizGrade {

@@ -10,6 +10,8 @@ public record CreateQuizWithQuestionsCommand(
         String availableFrom,
         String availableUntil,
         Integer timeLimitMinutes,
+        boolean allowSeeResults,   // ✅ NEW
+        double totalScore,         // ✅ NEW
         List<QuizQuestionData> questions
 ) {
     public record QuizQuestionData(

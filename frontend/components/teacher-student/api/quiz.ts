@@ -50,6 +50,7 @@ export interface CompleteQuizDTO {
   totalPoints: number;
   questionCount: number;
   createdAt: string;
+   allowSeeResults: boolean;
   active: boolean;
   availableNow: boolean;
   questions: CompleteQuizQuestionDTO[];
@@ -265,6 +266,7 @@ async function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Promise<Quiz> {
     totalPoints: dto.totalPoints,
     questionCount: dto.questionCount,
     createdAt: dto.createdAt,
+    allowSeeResults: dto.allowSeeResults,
     active: dto.active,
     availableNow: dto.availableNow,
     courseName: dto.courseName,
@@ -298,12 +300,10 @@ async function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Promise<Quiz> {
           });
           
           const correctIndexByFlag = q.options.findIndex(opt => opt.correct === true);
-          console.log("Correct index by flag:", correctIndexByFlag);
           
           const correctIndexByText = q.options.findIndex(opt =>
             opt.text === q.correctAnswer
           );
-          console.log("Correct index by text match:", correctIndexByText);
           
           if (correctIndexByFlag >= 0) {
             correctAnswer = correctIndexByFlag;
@@ -529,7 +529,7 @@ export async function fetchQuizDetail(
   try {
     const response = await apiClient.get<CompleteQuizDTO>(`/api/quizzes/${quizId}/complete`);
     
-    console.log("RAW BACKEND RESPONSE WITH OPTIONS:");
+    console.log("RAW BACKEND RESPONSE WITH OPTIONS:", response.data);
     if (response.data.questions) {
       response.data.questions.forEach((q, i) => {
         console.log(`Question ${i + 1}:`, {

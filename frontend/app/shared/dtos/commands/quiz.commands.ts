@@ -5,14 +5,16 @@ import { QuestionOptionDTO } from "@/app/shared/dtos/quiz.dto";
 ========================= */
 
 export interface CreateQuizWithQuestionsCommand {
-    courseId: string;
-    unitId: string;
-    title: string;
-    description: string;
-    availableFrom?: string;
-    availableUntil?: string;
-    timeLimitMinutes?: number;
-    questions: QuizQuestionData[];
+  courseId: string;
+  unitId: string;
+  title: string;
+  description: string;
+  availableFrom?: string;
+  availableUntil?: string;
+  timeLimitMinutes?: number;
+  allowSeeResults: boolean;   // ← ADD THIS
+  totalScore: number;         // ← ADD THIS
+  questions: QuizQuestionData[];
 }
 
 export interface QuizQuestionData {
@@ -38,8 +40,9 @@ export interface UpdateQuizCommand {
     maxAttempts?: number;
     shuffleQuestions?: boolean;
     showCorrectAnswers?: boolean;
+    allowSeeResults?: boolean;   // ✅ NEW
+    totalScore?: number;         // ✅ NEW
 }
-
 /* =========================
    QUESTION MANAGEMENT
 ========================= */

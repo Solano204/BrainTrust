@@ -59,16 +59,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const initializeAuth = useCallback(async () => {
 
-    if (isMockActive) {
-      setAuthState({
-        user: createMockUser(mockUser),
-        isAuthenticated: true,
-        isLoading: false,
-        accessToken: MOCK_TOKENS.accessToken,
-        refreshToken: MOCK_TOKENS.refreshToken,
-      });
-      return;
-    }
+    // if (isMockActive) {
+    //   setAuthState({
+    //     user: createMockUser(mockUser),
+    //     isAuthenticated: true,
+    //     isLoading: false,
+    //     accessToken: MOCK_TOKENS.accessToken,
+    //     refreshToken: MOCK_TOKENS.refreshToken,
+    //   });
+    //   return;
+    // }
 
     try {
       const response = await fetch('/api/auth/initialize', {
@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isLoading: false,
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
+          
           });
         } else {
           setAuthState({
@@ -126,16 +127,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
 
-    if (isMockActive) {
-      setAuthState({
-        user: createMockUser({ ...mockUser, email, name: email.split('@')[0] }),
-        isAuthenticated: true,
-        isLoading: false,
-        accessToken: MOCK_TOKENS.accessToken,
-        refreshToken: MOCK_TOKENS.refreshToken,
-      });
-      return { success: true };
-    }
+    // if (isMockActive) {
+    //   setAuthState({
+    //     user: createMockUser({ ...mockUser, email, name: email.split('@')[0] }),
+    //     isAuthenticated: true,
+    //     isLoading: false,
+    //     accessToken: MOCK_TOKENS.accessToken,
+    //     refreshToken: MOCK_TOKENS.refreshToken,
+    //   });
+    //   return { success: true };
+    // }
 
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -173,16 +174,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (userData: { email: string; password: string; name: string; role: UserRole }) => {
 
-    if (isMockActive) {
-      setAuthState({
-        user: createMockUser({ ...mockUser, ...userData }),
-        isAuthenticated: true,
-        isLoading: false,
-        accessToken: MOCK_TOKENS.accessToken,
-        refreshToken: MOCK_TOKENS.refreshToken,
-      });
-      return { success: true };
-    }
+    // if (isMockActive) {
+    //   setAuthState({
+    //     user: createMockUser({ ...mockUser, ...userData }),
+    //     isAuthenticated: true,
+    //     isLoading: false,
+    //     accessToken: MOCK_TOKENS.accessToken,
+    //     refreshToken: MOCK_TOKENS.refreshToken,
+    //   });
+    //   return { success: true };
+    // }
 
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -250,14 +251,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshTokens = async (): Promise<boolean> => {
 
-    if (isMockActive) {
-      setAuthState(prev => ({
-        ...prev,
-        accessToken: MOCK_TOKENS.accessToken,
-        refreshToken: MOCK_TOKENS.refreshToken,
-      }));
-      return true;
-    }
+    // if (isMockActive) {
+    //   setAuthState(prev => ({
+    //     ...prev,
+    //     accessToken: MOCK_TOKENS.accessToken,
+    //     refreshToken: MOCK_TOKENS.refreshToken,
+    //   }));
+    //   return true;
+    // }
 
     if (!authState.refreshToken) return false;
 
@@ -291,6 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasPermission = (permission: string): boolean => {
+
     if (!authState.user) return false;
     return authState.user.permissions.includes(permission);
   };

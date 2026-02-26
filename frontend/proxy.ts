@@ -9,6 +9,7 @@ const roleBasedRoutes = {
     '/admin/dashboard',
     '/admin/users',
     '/admin/courses',
+    '/admin/catalogs',
     '/admin/analytics',
     '/admin/settings'
   ],

@@ -45,4 +45,19 @@ public class AssignmentLinkJpaEntity {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+
+    // AssignmentLinkJpaEntity.java — add these two methods
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AssignmentLinkJpaEntity)) return false;
+        AssignmentLinkJpaEntity that = (AssignmentLinkJpaEntity) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

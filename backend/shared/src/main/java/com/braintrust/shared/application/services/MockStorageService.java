@@ -1,4 +1,4 @@
-package com.braintrust.shared.application.services.storage;
+package com.braintrust.shared.application.services;
 
 import com.braintrust.shared.application.dtos.dtos.FileUploadDTO;
 import com.braintrust.shared.application.ports.in.StorageService;
@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
-@Slf4j
 public class MockStorageService implements StorageService {
 
     private static final String MOCK_BASE_URL = "https://picsum.photos/seed";

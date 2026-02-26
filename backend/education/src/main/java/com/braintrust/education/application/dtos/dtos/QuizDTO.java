@@ -1,7 +1,5 @@
 package com.braintrust.education.application.dtos.dtos;
 
-import java.util.List;
-
 public record QuizDTO(
         String id,
         String courseId,
@@ -14,6 +12,8 @@ public record QuizDTO(
         int maxAttempts,
         boolean shuffleQuestions,
         boolean showCorrectAnswers,
+        boolean allowSeeResults,   // ✅ NEW
+        double totalScore,         // ✅ NEW
         int totalPoints,
         int questionCount,
         String createdAt,

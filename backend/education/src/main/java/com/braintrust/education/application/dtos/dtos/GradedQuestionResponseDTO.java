@@ -18,4 +18,5 @@ public record GradedQuestionResponseDTO(
         String textAnswer,
         String correctAnswer,
         boolean isCorrect
+
 ) {}

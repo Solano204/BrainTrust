@@ -2,10 +2,7 @@ package com.braintrust.education.infraestructure.repositoriesPersistence.sql.ent
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -17,6 +14,7 @@ import java.util.stream.Collectors;
         @Index(name = "idx_submission_format", columnList = "submission_format")
 })
 public class AssignmentJpaEntity {
+
     @Id
     @Column(name = "id", length = 50)
     private String id;
@@ -51,12 +49,17 @@ public class AssignmentJpaEntity {
     @Column(name = "submission_format", length = 20, nullable = false)
     private String submissionFormat = "DIGITAL";
 
-
-    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<DocumentJpaEntity> documents = new ArrayList<>();
+//    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+//    private List<DocumentJpaEntity> documents = new ArrayList<>();
 
     @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<AssignmentLinkJpaEntity> links = new HashSet<>();
+
+
+
+    @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<DocumentJpaEntity> documents = new LinkedHashSet<>();
+
 
     @Column(name = "target_type", length = 20, nullable = false)
     private String targetType = "INDIVIDUAL";
@@ -81,11 +84,7 @@ public class AssignmentJpaEntity {
         this.submissionFormat = submissionFormat != null ? submissionFormat : "DIGITAL";
     }
 
-
-    public String getSubmissionFormat() { return submissionFormat; }
-    public void setSubmissionFormat(String submissionFormat) {
-        this.submissionFormat = submissionFormat != null ? submissionFormat : "DIGITAL";
-    }
+    // ── Document helpers ──────────────────────────────────────────────────────
 
     public void addDocument(DocumentJpaEntity document) {
         documents.add(document);
@@ -93,25 +92,91 @@ public class AssignmentJpaEntity {
     }
 
     public void removeDocument(DocumentJpaEntity document) {
-        documents.remove(document);
+        // Set.remove() uses equals() which needs id — safer to match by name+path
+        documents.removeIf(d ->
+                d.getName().equals(document.getName()) &&
+                        d.getStoragePath().equals(document.getStoragePath())
+        );
         document.setAssignment(null);
     }
 
+    public void removeAttachmentByName(String name) {
+        this.documents.removeIf(d -> d.getName().equals(name));
+    }
+    // AssignmentJpaEntity.java — replace syncDocuments
+
+
+
+    // AssignmentJpaEntity.java — replace syncDocuments entirely
+    public void syncDocuments(List<String[]> desiredNameAndPath) {
+
+        // Deduplicate by name — keep only first occurrence of each name
+        Map<String, String> desiredMap = new LinkedHashMap<>(); // name → storagePath
+        for (String[] pair : desiredNameAndPath) {
+            desiredMap.putIfAbsent(pair[0], pair[1]); // pair[0]=name, pair[1]=path
+        }
+
+        // Remove documents whose NAME is not in desired set
+        List<DocumentJpaEntity> toRemove = new ArrayList<>(documents);
+        toRemove.removeIf(d -> desiredMap.containsKey(d.getName()));
+        for (DocumentJpaEntity d : toRemove) {
+            documents.removeIf(doc ->
+                    doc.getName().equals(d.getName()) &&
+                            doc.getStoragePath().equals(d.getStoragePath())
+            );
+            d.setAssignment(null);
+        }
+
+        // Add documents whose name is not yet present
+        Set<String> currentNames = documents.stream()
+                .map(DocumentJpaEntity::getName)
+                .collect(Collectors.toSet());
+
+        for (Map.Entry<String, String> entry : desiredMap.entrySet()) {
+            if (!currentNames.contains(entry.getKey())) {
+                DocumentJpaEntity newDoc = new DocumentJpaEntity();
+                newDoc.setName(entry.getKey());
+                newDoc.setStoragePath(entry.getValue());
+                addDocument(newDoc);
+            }
+        }
+    }
+
+
+    /**
+     * Syncs the links collection to exactly match the desired URL set.
+     * Mutates the SAME collection instance so Hibernate tracks every change.
+     */
+    public void syncLinks(List<String> desiredUrls) {
+        Set<String> desiredSet = new HashSet<>(desiredUrls);
+
+        // Remove links not in desired set
+        links.removeIf(l -> !desiredSet.contains(l.getLinkUrl()));
+
+        // Build set of URLs still present
+        Set<String> currentUrls = links.stream()
+                .map(AssignmentLinkJpaEntity::getLinkUrl)
+                .collect(Collectors.toSet());
+
+        // Add new links
+        for (String url : desiredUrls) {
+            if (!currentUrls.contains(url)) {
+                links.add(new AssignmentLinkJpaEntity(this, url));
+            }
+        }
+    }
+
+    // ── Legacy link helpers (kept for compatibility) ──────────────────────────
+
     public void addLink(String linkUrl) {
         if (linkUrl != null && !linkUrl.trim().isEmpty()) {
-            AssignmentLinkJpaEntity link = new AssignmentLinkJpaEntity(this, linkUrl.trim());
-            links.add(link);
+            links.add(new AssignmentLinkJpaEntity(this, linkUrl.trim()));
         }
     }
 
     public void addLinks(List<String> linkUrls) {
-        if (linkUrls != null && !linkUrls.isEmpty()) {
-            for (String linkUrl : linkUrls) {
-                if (linkUrl != null && !linkUrl.trim().isEmpty()) {
-                    AssignmentLinkJpaEntity link = new AssignmentLinkJpaEntity(this, linkUrl.trim());
-                    links.add(link);
-                }
-            }
+        if (linkUrls != null) {
+            linkUrls.forEach(this::addLink);
         }
     }
 
@@ -130,6 +195,8 @@ public class AssignmentJpaEntity {
                 .map(AssignmentLinkJpaEntity::getLinkUrl)
                 .collect(Collectors.toList());
     }
+
+    // ── Getters / Setters ─────────────────────────────────────────────────────
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -161,25 +228,29 @@ public class AssignmentJpaEntity {
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 
-    public List<DocumentJpaEntity> getDocuments() { return documents; }
-    public void setDocuments(List<DocumentJpaEntity> documents) {
-        this.documents = documents;
+    public String getSubmissionFormat() { return submissionFormat; }
+    public void setSubmissionFormat(String submissionFormat) {
+        this.submissionFormat = submissionFormat != null ? submissionFormat : "DIGITAL";
+    }
 
-        if (documents != null) {
-            for (DocumentJpaEntity document : documents) {
-                document.setAssignment(this);
-            }
-        }
+    // Getter returns List (converts Set → List)
+    public List<DocumentJpaEntity> getDocuments() {
+        return new ArrayList<>(documents);
+    }
+
+    // Setter accepts List (converts List → Set)
+    public void setDocuments(List<DocumentJpaEntity> documents) {
+        this.documents = documents != null
+                ? new LinkedHashSet<>(documents)
+                : new LinkedHashSet<>();
+        this.documents.forEach(d -> d.setAssignment(this));
     }
 
     public Set<AssignmentLinkJpaEntity> getLinks() { return links; }
     public void setLinks(Set<AssignmentLinkJpaEntity> links) {
         this.links = links;
-
         if (links != null) {
-            for (AssignmentLinkJpaEntity link : links) {
-                link.setAssignment(this);
-            }
+            links.forEach(l -> l.setAssignment(this));
         }
     }
 

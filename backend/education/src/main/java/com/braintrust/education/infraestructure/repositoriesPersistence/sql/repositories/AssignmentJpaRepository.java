@@ -104,7 +104,7 @@ public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEnti
         WHERE a.courseId IN (
             SELECT e.courseId FROM EnrollmentJpaEntity e 
             WHERE e.studentId = :studentId 
-            AND e.status = 'ACTIVE'
+         
         )
         AND a.dueDate >= :weekStart 
         AND a.dueDate < :weekEnd
@@ -141,7 +141,7 @@ public interface AssignmentJpaRepository extends JpaRepository<AssignmentJpaEnti
         WHERE a.courseId IN (
             SELECT e.courseId FROM EnrollmentJpaEntity e 
             WHERE e.studentId = :studentId 
-            AND e.status = 'ACTIVE'
+            
         )
         AND a.dueDate >= :monthStart 
         AND a.dueDate < :monthEnd

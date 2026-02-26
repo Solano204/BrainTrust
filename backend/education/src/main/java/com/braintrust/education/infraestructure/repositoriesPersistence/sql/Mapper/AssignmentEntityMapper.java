@@ -9,88 +9,139 @@ import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentLinkJpaEntity;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.DocumentJpaEntity;
-import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.braintrust.education.infraestructure.repositoriesPersistence.sql.repositories.AssignmentJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class AssignmentEntityMapper {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(AssignmentEntityMapper.class);
+    private static final Logger log = LoggerFactory.getLogger(AssignmentEntityMapper.class);
 
     private final UnitRepository courseUnitRepository;
+    private final AssignmentJpaRepository assignmentJpaRepository;
 
-    public AssignmentEntityMapper(UnitRepository courseUnitRepository) {
+    public AssignmentEntityMapper(UnitRepository courseUnitRepository,
+                                  AssignmentJpaRepository assignmentJpaRepository) {
         this.courseUnitRepository = courseUnitRepository;
+        this.assignmentJpaRepository = assignmentJpaRepository;
+    }
+
+
+
+    // AssignmentEntityMapper.java — add this method
+    public void updateEntity(AssignmentJpaEntity entity, Assignment domain) {
+        // AssignmentEntityMapper.java
+            entity.setId(domain.getId().getValue());
+            entity.setCourseId(domain.getCourseId().getValue());
+            entity.setUnit(domain.getUnitId().getValue());
+            entity.setTitle(domain.getTitle());
+            entity.setDescription(domain.getDescription());
+            entity.setCreatedAt(domain.getCreatedAt());
+            entity.setDueDate(domain.getDueDate());
+            entity.setMaxPoints(domain.getMaxScore().getMaxPoints());
+            entity.setInstructions(domain.getInstructions());
+            entity.setActive(domain.isActive());
+            entity.setTargetType(domain.getTargetType().name());
+            entity.setSubmissionFormat(domain.getSubmissionFormat().name());
+            // DO NOT touch documents or links here — handled by syncDocuments/syncLinks
+
+        // Use syncDocuments/syncLinks — mutates the SAME collection Hibernate tracks
+        List<String[]> desiredDocs = domain.getAttachments().stream()
+                .map(d -> new String[]{d.getName(), d.getStoragePath()})
+                .toList();
+        entity.syncDocuments(desiredDocs); // already exists in your entity!
+
+        List<String> desiredLinks = domain.getLinks(); // whatever your domain exposes
+        entity.syncLinks(desiredLinks); // already exists in your entity!
     }
 
 
     public AssignmentJpaEntity toEntity(Assignment assignment) {
         log.info("Mapping Assignment Domain ID {} to JPA Entity.", assignment.getId().getValue());
 
-
-        CourseUnit unitEntity = null;
+        String unitIdValue = null;
         if (assignment.getUnitId() != null) {
-            unitEntity = courseUnitRepository.findById(UnitId.fromString(assignment.getUnitId().getValue()))
+            CourseUnit unitEntity = courseUnitRepository
+                    .findById(UnitId.fromString(assignment.getUnitId().getValue()))
                     .orElseThrow(() -> {
                         log.error("CourseUnit not found for Unit ID: {}", assignment.getUnitId().getValue());
-                        return new IllegalArgumentException("CourseUnit not found: " + assignment.getUnitId().getValue());
+                        return new IllegalArgumentException(
+                                "CourseUnit not found: " + assignment.getUnitId().getValue());
                     });
+            unitIdValue = unitEntity.getId().toString();
         }
 
-        AssignmentJpaEntity entity = new AssignmentJpaEntity(
-                assignment.getId().getValue(),
-                assignment.getCourseId().getValue(),
-                unitEntity.getId().toString(),
-                assignment.getTitle(),
-                assignment.getDescription(),
-                assignment.getCreatedAt(),
-                assignment.getDueDate(),
-                assignment.getMaxScore().getMaxPoints(),
-                assignment.getInstructions(),
-                assignment.isActive(),
-                assignment.getTargetType().name(),
-                assignment.getSubmissionFormat().name()
-        );
+        Optional<AssignmentJpaEntity> existingOpt =
+                assignmentJpaRepository.findByIdWithDocumentsAndLinks(assignment.getId().getValue());
 
-        if (assignment.getAttachments() != null && !assignment.getAttachments().isEmpty()) {
-            log.trace("Mapping {} attachments for Assignment ID {}.",
-                    assignment.getAttachmentCount(), assignment.getId().getValue());
+        AssignmentJpaEntity entity;
+
+        if (existingOpt.isPresent()) {
+            // ── UPDATE path ───────────────────────────────────────────────────
+            entity = existingOpt.get();
+            entity.setCourseId(assignment.getCourseId().getValue());
+            entity.setUnit(unitIdValue);
+            entity.setTitle(assignment.getTitle());
+            entity.setDescription(assignment.getDescription());
+            entity.setDueDate(assignment.getDueDate());
+            entity.setMaxPoints(assignment.getMaxScore().getMaxPoints());
+            entity.setInstructions(assignment.getInstructions());
+            entity.setActive(assignment.isActive());
+            entity.setTargetType(assignment.getTargetType().name());
+            entity.setSubmissionFormat(assignment.getSubmissionFormat().name());
+
+            // Build the desired name+path pairs from the domain object
+            List<String[]> desiredDocs = assignment.getAttachments().stream()
+                    .map(doc -> new String[]{doc.getName(), doc.getStoragePath()})
+                    .collect(Collectors.toList());
+
+            // Use syncDocuments — mutates the SAME Hibernate-tracked collection
+            entity.syncDocuments(desiredDocs);
+
+            // Use syncLinks — mutates the SAME Hibernate-tracked collection
+            entity.syncLinks(new ArrayList<>(assignment.getLinks()));
+
+        } else {
+            // ── INSERT path ───────────────────────────────────────────────────
+            entity = new AssignmentJpaEntity(
+                    assignment.getId().getValue(),
+                    assignment.getCourseId().getValue(),
+                    unitIdValue,
+                    assignment.getTitle(),
+                    assignment.getDescription(),
+                    assignment.getCreatedAt(),
+                    assignment.getDueDate(),
+                    assignment.getMaxScore().getMaxPoints(),
+                    assignment.getInstructions(),
+                    assignment.isActive(),
+                    assignment.getTargetType().name(),
+                    assignment.getSubmissionFormat().name()
+            );
 
             List<DocumentJpaEntity> documentEntities = assignment.getAttachments().stream()
-                    .map(doc -> toDocumentEntity(doc, entity))
+                    .map(doc -> {
+                        DocumentJpaEntity d = new DocumentJpaEntity();
+                        d.setName(doc.getName());
+                        d.setStoragePath(doc.getStoragePath());
+                        d.setAssignment(entity);
+                        return d;
+                    })
                     .collect(Collectors.toList());
             entity.setDocuments(documentEntities);
-        } else {
-            entity.setDocuments(new ArrayList<>());
-            log.trace("No attachments found for Assignment ID {}.", assignment.getId().getValue());
-        }
-
-
-        if (assignment.getLinks() != null && !assignment.getLinks().isEmpty()) {
-            log.trace("Mapping {} links for Assignment ID {}.",
-                    assignment.getLinkCount(), assignment.getId().getValue());
 
             Set<AssignmentLinkJpaEntity> linkEntities = assignment.getLinks().stream()
-                    .map(linkUrl -> new AssignmentLinkJpaEntity(entity, linkUrl))
+                    .map(url -> new AssignmentLinkJpaEntity(entity, url))
                     .collect(Collectors.toSet());
             entity.setLinks(linkEntities);
-        } else {
-            entity.setLinks(new HashSet<>());
-            log.trace("No links found for Assignment ID {}.", assignment.getId().getValue());
         }
 
         return entity;
     }
-
 
     public Assignment toDomain(AssignmentJpaEntity entity) {
         log.info("Mapping Assignment JPA Entity ID {} to Domain Model.", entity.getId());
@@ -105,10 +156,8 @@ public class AssignmentEntityMapper {
 
         Score maxScore = new Score(0, entity.getMaxPoints());
 
-
         List<Document> documents = new ArrayList<>();
         if (entity.getDocuments() != null && !entity.getDocuments().isEmpty()) {
-            log.trace("Mapping {} attached documents from entity.", entity.getDocuments().size());
             documents = entity.getDocuments().stream()
                     .map(this::toDomainDocument)
                     .collect(Collectors.toList());
@@ -116,23 +165,22 @@ public class AssignmentEntityMapper {
 
         List<String> links = new ArrayList<>();
         if (entity.getLinks() != null && !entity.getLinks().isEmpty()) {
-            log.trace("Mapping {} links from entity.", entity.getLinks().size());
             links = entity.getLinks().stream()
                     .map(AssignmentLinkJpaEntity::getLinkUrl)
                     .collect(Collectors.toList());
         }
 
         AssignmentTargetType targetType = AssignmentTargetType.valueOf(entity.getTargetType());
+
         SubmissionFormat submissionFormat;
         try {
             submissionFormat = SubmissionFormat.valueOf(entity.getSubmissionFormat());
         } catch (IllegalArgumentException e) {
             submissionFormat = SubmissionFormat.DIGITAL;
         }
+
         return Assignment.reconstitute(
-                id,
-                courseId,
-                unitId,
+                id, courseId, unitId,
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getCreatedAt(),
@@ -145,23 +193,10 @@ public class AssignmentEntityMapper {
                 entity.isActive(),
                 targetType,
                 submissionFormat
-        );}
-
-
-    private DocumentJpaEntity toDocumentEntity(Document doc, AssignmentJpaEntity assignment) {
-        log.trace("Mapping Document: {}", doc.getName());
-
-        DocumentJpaEntity entity = new DocumentJpaEntity();
-        entity.setName(doc.getName());
-        entity.setStoragePath(doc.getStoragePath());
-        entity.setAssignment(assignment);
-        return entity;
+        );
     }
 
     private Document toDomainDocument(DocumentJpaEntity entity) {
-        return new Document(
-                entity.getName(),
-                entity.getStoragePath()
-        );
+        return new Document(entity.getName(), entity.getStoragePath());
     }
 }

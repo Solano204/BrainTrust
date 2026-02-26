@@ -7,7 +7,6 @@ import com.braintrust.education.infraestructure.repositoriesPersistence.sql.enti
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -29,6 +28,7 @@ public class QuizEntityMapper {
     public QuizJpaEntity toEntity(Quiz quiz) {
         log.debug("Mapping Quiz Domain {} to JPA Entity", quiz.getId().getValue());
 
+        // ✅ FIX: result is now assigned to `entity`
         QuizJpaEntity entity = new QuizJpaEntity(
                 quiz.getId().getValue(),
                 quiz.getCourseId().getValue(),
@@ -41,10 +41,11 @@ public class QuizEntityMapper {
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
                 quiz.isShowCorrectAnswers(),
+                quiz.isAllowSeeResults(),   // ✅ NEW
+                quiz.getTotalScore(),       // ✅ NEW
                 quiz.getCreatedAt(),
                 quiz.isActive()
         );
-
 
         if (quiz.getQuestions() != null && !quiz.getQuestions().isEmpty()) {
             List<QuizQuestionJpaEntity> questionEntities = quiz.getQuestions().stream()
@@ -114,6 +115,8 @@ public class QuizEntityMapper {
                 entity.getMaxAttempts(),
                 entity.isShuffleQuestions(),
                 entity.isShowCorrectAnswers(),
+                entity.isAllowSeeResults(),   // ✅ NEW
+                entity.getTotalScore(),       // ✅ NEW
                 entity.getCreatedAt(),
                 questions,
                 entity.isActive()
@@ -170,8 +173,10 @@ public class QuizEntityMapper {
                 entity.getMaxAttempts(),
                 entity.isShuffleQuestions(),
                 entity.isShowCorrectAnswers(),
+                entity.isAllowSeeResults(),   // ✅ NEW
+                entity.getTotalScore(),       // ✅ NEW
                 entity.getCreatedAt(),
-                new ArrayList<>(),
+                new ArrayList<>(),            // basic quiz = no questions loaded
                 entity.isActive()
         );
     }

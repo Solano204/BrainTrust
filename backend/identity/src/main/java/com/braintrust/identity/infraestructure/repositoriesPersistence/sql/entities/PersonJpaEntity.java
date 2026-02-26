@@ -1,6 +1,5 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities;
 
-
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -12,11 +11,11 @@ public class PersonJpaEntity {
     @Column(name = "id", length = 50)
     private String id;
 
-    @Column(name = "first_name", length = 255, nullable = false)
-    private String firstName;
+    @Column(name = "first_name_id", nullable = false)
+    private Integer firstNameId;
 
-    @Column(name = "last_name", length = 255, nullable = false)
-    private String lastName;
+    @Column(name = "last_name_id", nullable = false)
+    private Integer lastNameId;
 
     @Column(name = "gender", length = 20)
     private String gender;
@@ -30,49 +29,54 @@ public class PersonJpaEntity {
     @Column(name = "image_path", length = 500)
     private String imagePath;
 
-    @Column(name = "address_street", length = 255)
+    @Column(name = "street_id")
+    private Integer streetId;
+
+    @Column(name = "colony_id")
+    private Integer colonyId;
+
+    @Column(name = "municipality_id")
+    private Integer municipalityId;
+
+    @Column(name = "state_id")
+    private Integer stateId;
+
+    @Column(name = "postal_code_id")
+    private Integer postalCodeId;
+
+    // Transient fields for display (populated via joins/queries)
+    @Transient
+    private String firstName;
+
+    @Transient
+    private String lastName;
+
+    @Transient
     private String addressStreet;
 
-    @Column(name = "address_colony", length = 100)
+    @Transient
     private String addressColony;
 
-    @Column(name = "address_municipality", length = 100)
+    @Transient
     private String addressMunicipality;
 
-    @Column(name = "address_state", length = 100)
+    @Transient
     private String addressState;
 
-    @Column(name = "address_postal_code", length = 10)
+    @Transient
     private String addressPostalCode;
 
     public PersonJpaEntity() {}
 
-    public PersonJpaEntity(String id, String firstName, String lastName, String gender,
-                           String phone, LocalDate registrationDate, String imagePath,
-                           String addressStreet, String addressColony, String addressMunicipality,
-                           String addressState, String addressPostalCode) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.gender = gender;
-        this.phone = phone;
-        this.registrationDate = registrationDate;
-        this.imagePath = imagePath;
-        this.addressStreet = addressStreet;
-        this.addressColony = addressColony;
-        this.addressMunicipality = addressMunicipality;
-        this.addressState = addressState;
-        this.addressPostalCode = addressPostalCode;
-    }
-
+    // Getters and Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public Integer getFirstNameId() { return firstNameId; }
+    public void setFirstNameId(Integer firstNameId) { this.firstNameId = firstNameId; }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    public Integer getLastNameId() { return lastNameId; }
+    public void setLastNameId(Integer lastNameId) { this.lastNameId = lastNameId; }
 
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
@@ -85,6 +89,27 @@ public class PersonJpaEntity {
 
     public String getImagePath() { return imagePath; }
     public void setImagePath(String imagePath) { this.imagePath = imagePath; }
+
+    public Integer getStreetId() { return streetId; }
+    public void setStreetId(Integer streetId) { this.streetId = streetId; }
+
+    public Integer getColonyId() { return colonyId; }
+    public void setColonyId(Integer colonyId) { this.colonyId = colonyId; }
+
+    public Integer getMunicipalityId() { return municipalityId; }
+    public void setMunicipalityId(Integer municipalityId) { this.municipalityId = municipalityId; }
+
+    public Integer getStateId() { return stateId; }
+    public void setStateId(Integer stateId) { this.stateId = stateId; }
+
+    public Integer getPostalCodeId() { return postalCodeId; }
+    public void setPostalCodeId(Integer postalCodeId) { this.postalCodeId = postalCodeId; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
     public String getAddressStreet() { return addressStreet; }
     public void setAddressStreet(String addressStreet) { this.addressStreet = addressStreet; }

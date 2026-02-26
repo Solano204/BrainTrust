@@ -1,6 +1,5 @@
 package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities;
 
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -24,9 +23,8 @@ public class UserJpaEntity {
     @Column(name = "password_hash", length = 255, nullable = false)
     private String passwordHash;
 
-    @Column(name = "role", length = 20, nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(name = "role_id", nullable = false)
+    private Integer roleId;
 
     @Column(name = "active", nullable = false)
     private boolean active;
@@ -45,12 +43,38 @@ public class UserJpaEntity {
         this.personId = personId;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.role = Role.valueOf(role);
+        this.roleId = switch (Role.valueOf(role)) {
+            case STUDENT     -> 1;
+            case TEACHER     -> 2;
+            case ADMIN       -> 3;
+            case SYS_MANAGER -> 4;
+        };
         this.active = active;
         this.studentId = studentId;
         this.createdAt = createdAt;
     }
 
+    public Role getRole() {
+        return switch (roleId) {
+            case 1 -> Role.STUDENT;
+            case 2 -> Role.TEACHER;
+            case 3 -> Role.ADMIN;
+            case 4 -> Role.SYS_MANAGER;
+            default -> throw new IllegalArgumentException("Unknown role_id: " + roleId);
+        };
+    }
+
+    public void setRole(String role) {
+        this.roleId = switch (Role.valueOf(role)) {
+            case STUDENT     -> 1;
+            case TEACHER     -> 2;
+            case ADMIN       -> 3;
+            case SYS_MANAGER -> 4;
+        };
+    }
+
+    public Integer getRoleId() { return roleId; }
+    public void setRoleId(Integer roleId) { this.roleId = roleId; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -63,9 +87,6 @@ public class UserJpaEntity {
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-
-    public Role getRole() { return role; }
-    public void setRole(String role) { this.role = Role.valueOf(role); }
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }

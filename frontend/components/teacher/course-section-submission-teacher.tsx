@@ -27,9 +27,11 @@ import {
 } from "@/app/presentation/hooks/task/task-inventory-hooks";
 import { useQuizzesByCourseWithoutDetails } from "@/components/teacher/hooks/quiz-hooks";
 import { useCourseAllUnits } from "@/components/teacher/hooks/courses-hooks";
-import { StudentSubmissionQuiz, SubmissionTask } from "../student/api/student-submission";
+
 import { SubmissionDetailView } from "./task-view-submission-teacher";
 import { QuizSubmissionsView } from "./quiz-view-submission-teacher";
+import { SubmissionTask } from "@/app/shared/models/assignment.model";
+import { StudentSubmissionQuiz } from "@/app/shared/models/quiz.model";
 
 interface CourseTaskOverviewProps {
   courseId: string;
@@ -440,16 +442,21 @@ export function CourseTaskOverviewTeacher({
     );
   }
 
-  if (selectedTask) {
-    return (
-      <SubmissionDetailView
-        data={selectedTask}
-        onBack={handleBackFromTask}
-        onUpdateGrade={updateGrade.mutate}
-        isUpdatingGrade={updateGrade.isPending}
-      />
-    );
-  }
+ if (selectedTask) {
+  return (
+    <SubmissionDetailView
+      data={selectedTask}
+      onBack={handleBackFromTask}
+      onUpdateGrade={updateGrade.mutate}
+      onDownloadAttachment={(attachment) => {
+        if (attachment.storagePath) {
+          window.open(attachment.storagePath, '_blank');
+        }
+      }}
+      isUpdatingGrade={updateGrade.isPending}
+    />
+  );
+}
 
   if (selectedQuiz) {
 

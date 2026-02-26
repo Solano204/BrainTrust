@@ -17,11 +17,12 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="aidetectition" options="-parameters" />
-      <module name="container-app" options="-parameters" />
-      <module name="education" options="-parameters" />
-      <module name="identity" options="-parameters" />
-      <module name="shared" options="-parameters" />
+      <module name="aidetectition" options="-parameters --enable-preview" />
+      <module name="braintrust-parent" options="" />
+      <module name="container-app" options="-parameters --enable-preview" />
+      <module name="education" options="-parameters --enable-preview" />
+      <module name="identity" options="-parameters --enable-preview" />
+      <module name="shared" options="-parameters --enable-preview" />
     </option>
   </component>
 </project>

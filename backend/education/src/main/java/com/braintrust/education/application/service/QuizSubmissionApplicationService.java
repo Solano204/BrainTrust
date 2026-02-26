@@ -109,33 +109,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public QuizSubmissionId submitQuizWithAnswers(SubmitQuizWithAnswersCommand command) {
-        QuizId quizId = QuizId.fromString(command.quizId());
-        UserId studentId = UserId.fromString(command.studentId());
 
-        log.info("Student {} submitting quiz {} with {} answers in single call",
-                studentId.getValue(), quizId.getValue(), command.answers().size());
-
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new QuizNotFoundException("Quiz not found"));
-
-        validateQuizSubmission(quiz, quizId, studentId);
-
-        int currentAttempts = submissionRepository.countAttempts(quizId, studentId);
-        QuizSubmission submission = QuizSubmission.start(quizId, studentId, currentAttempts + 1);
-
-        processAnswers(submission, command.answers());
-        submission.submit(quiz);
-        QuizSubmission saved = submissionRepository.save(submission);
-
-        syncGradeAfterSubmission(saved, quiz);
-
-        log.info("Quiz submitted with {} answers. Submission ID: {}",
-                command.answers().size(), saved.getId().getValue());
-
-        return saved.getId();
-    }
 
     @Override
     @Transactional(readOnly = true)
@@ -150,6 +124,56 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
         return submissionMapper.mapToDetailDTO(submission, quiz, studentName);
     }
 
+
+    @Override
+    public QuizSubmissionId submitQuizWithAnswers(SubmitQuizWithAnswersCommand command) {
+        QuizId  quizId    = QuizId.fromString(command.quizId());
+        UserId  studentId = UserId.fromString(command.studentId());
+
+        log.info("Student {} submitting quiz {} with {} answers",
+                studentId.getValue(), quizId.getValue(), command.answers().size());
+
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found"));
+
+        validateQuizSubmission(quiz, quizId, studentId);
+
+        int currentAttempts = submissionRepository.countAttempts(quizId, studentId);
+        QuizSubmission submission = QuizSubmission.start(quizId, studentId, currentAttempts + 1);
+
+        processAnswers(submission, command.answers());
+        submission.submit(quiz);  // autoGrade + canViewResults snapshot happen inside
+
+        // ✅ If not auto-graded yet, finalGrade is null until manual grading
+        // If auto-graded, computeFinalGrade was already called inside autoGrade()
+
+        QuizSubmission saved = submissionRepository.save(submission);
+        syncGradeAfterSubmission(saved, quiz);
+
+        log.info("Quiz submitted. Submission ID: {}", saved.getId().getValue());
+        return saved.getId();
+    }
+
+    @Override
+    public void gradeQuizSubmission(GradeQuizSubmissionCommand command) {
+        QuizSubmissionId submissionId = QuizSubmissionId.fromString(command.quizSubmissionId());
+
+        QuizSubmission submission = findSubmissionByIdOrThrow(submissionId);
+        Quiz quiz = quizRepository.findById(submission.getQuizId())
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found"));
+
+        Map<QuizQuestionId, QuestionGrade> questionGrades = converter.toQuestionGrades(command);
+        validatePointsConsistency(command, questionGrades);
+        applyManualGrading(submission, command, questionGrades);
+
+        // ✅ Scale raw points to quiz's totalScore
+        submission.computeFinalGrade(quiz.getTotalScore());
+
+        submissionRepository.save(submission);
+        syncGradesAfterManualGrading(submission, quiz, command, questionGrades);
+
+        log.info("Quiz graded and finalGrade computed for submission {}", submissionId.getValue());
+    }
     @Override
     @Transactional(readOnly = true)
     public List<QuizSubmissionDTO> getSubmissionsByCourse(CourseId courseId) {
@@ -161,27 +185,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public void gradeQuizSubmission(GradeQuizSubmissionCommand command) {
-        QuizSubmissionId submissionId = QuizSubmissionId.fromString(command.quizSubmissionId());
-        log.info("Manually grading quiz submission {} with {} question grades",
-                submissionId.getValue(), command.questionGrades().size());
-
-        QuizSubmission submission = findSubmissionByIdOrThrow(submissionId);
-        Quiz quiz = quizRepository.findById(submission.getQuizId())
-                .orElseThrow(() -> new QuizNotFoundException("Quiz not found"));
-
-        Map<QuizQuestionId, QuestionGrade> questionGrades = converter.toQuestionGrades(command);
-        validatePointsConsistency(command, questionGrades);
-
-        applyManualGrading(submission, command, questionGrades);
-        submissionRepository.save(submission);
-
-        syncGradesAfterManualGrading(submission, quiz, command, questionGrades);
-
-        log.info("Quiz graded with {} question grades and synced to gradebook", questionGrades.size());
-    }
-
+ 
     @Override
     public void deleteSubmission(QuizSubmissionId submissionId) {
         log.warn("🗑️ Deleting quiz submission ID: {}", submissionId.getValue());

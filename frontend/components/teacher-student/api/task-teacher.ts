@@ -36,6 +36,7 @@ export interface AssignmentDTO {
   submissionFormat: submissionFormat;
   attachments: DocumentDTO[];
   externalLinks: string[];
+  links: string[];
   createdAt: string;
   active: boolean;
   availableNow: boolean;
@@ -96,8 +97,8 @@ async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment>
     description: dto.description,
     createdAt: dto.createdAt,
     attachments: dto.attachments || [],
-    urls: dto.externalLinks || [],
-    links: [],
+    urls: dto.links || [],
+    links:dto.links || [],
     deliveryMode: dto.targetType === "INDIVIDUAL" ? "INDIVIDUAL" : "TEAM",
     submissionFormat: dto.submissionFormat || "DIGITAL",
     dueDate: dto.dueDate || null,
@@ -418,12 +419,12 @@ export async function addLinkToAssignment(
   try {
     console.log(`Adding link to assignment ${assignmentId}:`, link);
     
-    await apiClient.post<SuccessResponseDTO>(
+   const response = await apiClient.post<SuccessResponseDTO>(
       `/api/assignments/${assignmentId}/links`,
       { link }
     );
     
-    console.log("✅ Link added successfully");
+    console.log("✅ Link added successfully",response);
   } catch (error) {
     console.error("❌ Error adding link:", error);
     return await handleApiError(error);

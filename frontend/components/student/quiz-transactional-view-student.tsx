@@ -80,6 +80,7 @@ export function StudentQuizView({
     );
   }
 
+  console.log("Quiz data:", quiz);
   return (
     <QuizView
       quiz={quiz}

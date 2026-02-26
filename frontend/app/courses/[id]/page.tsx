@@ -152,7 +152,7 @@ export default function CoursePage() {
               isTeacher={isTeacher}
               studentGradebook={isStudent ? gradebook : undefined}
               courseGradebooks={isTeacher ? courseGradebooks : undefined}
-              onAssignFinalGrade={assignFinalGrade}
+              onAssignFinalGrade={assignUnitFinalGrade}
             />
           ) : (
             <GradebookCourseView

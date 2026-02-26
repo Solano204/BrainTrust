@@ -17,17 +17,67 @@ import {
   ChevronUp,
   Circle,
   AlertCircle,
+  Scale,
+  Info,
 } from "lucide-react";
 import { useQuizMutations, useQuizSubmissionDetail } from "./hooks/quiz-hooks";
 
 interface QuizSubmissionsViewProps {
   submissionId: string;
   onBack: () => void;
+  /** The quiz's totalScore (e.g. 22). Used for weight-based grading.
+   *  If not provided, falls back to sum of question maxPoints. */
+  quizTotalScore?: number;
 }
+
+// ─── Weight helpers ───────────────────────────────────────────────────────────
+
+/**
+ * Given the list of question responses, compute each question's weight (%)
+ * as its proportion of the total maxPoints sum.
+ * e.g. Q1 has 10pts out of 40 total → weight = 25%
+ */
+function computeWeights(
+  questionResponses: { questionId: string; maxPoints: number }[]
+): Record<string, number> {
+  const totalMaxPoints = questionResponses.reduce((s, q) => s + q.maxPoints, 0);
+  if (totalMaxPoints === 0) return {};
+  const weights: Record<string, number> = {};
+  questionResponses.forEach((q) => {
+    weights[q.questionId] =
+      Math.round((q.maxPoints / totalMaxPoints) * 10000) / 100; // 2 decimal %
+  });
+  return weights;
+}
+
+/**
+ * Compute the weighted final grade scaled to quizTotalScore.
+ * Formula: Σ (earnedPoints_i / maxPoints_i) * weight_i * quizTotalScore
+ */
+function computeWeightedFinalGrade(
+  grades: Record<string, number>,
+  questionResponses: { questionId: string; maxPoints: number }[],
+  weights: Record<string, number>,
+  quizTotalScore: number
+): number {
+  let weightedSum = 0;
+  questionResponses.forEach((q) => {
+    const earned = grades[q.questionId] ?? 0;
+    const max = q.maxPoints;
+    const weight = (weights[q.questionId] ?? 0) / 100; // convert % to decimal
+    if (max > 0) {
+      weightedSum += (earned / max) * weight;
+    }
+  });
+  return Math.round(weightedSum * quizTotalScore * 100) / 100;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function QuizSubmissionsView({
   submissionId,
   onBack,
+  quizTotalScore,
 }: QuizSubmissionsViewProps) {
   const { gradeSubmission } = useQuizMutations();
 
@@ -37,94 +87,111 @@ export function QuizSubmissionsView({
     error: submissionError,
   } = useQuizSubmissionDetail(submissionId);
 
-  const [grades, setGrades] = React.useState<{ [key: string]: number }>({});
-  const [feedbacks, setFeedbacks] = React.useState<{ [key: string]: string }>({});
+  const [grades, setGrades] = React.useState<Record<string, number>>({});
+  const [feedbacks, setFeedbacks] = React.useState<Record<string, string>>({});
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [overallGrade, setOverallGrade] = React.useState<string>("");
+  const [showWeightTable, setShowWeightTable] = React.useState(false);
 
-  const normalizeText = (text: string): string => {
-    if (!text) return "";
-    return text
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .replace(/[^\w]/g, "");
-  };
+  // ── Derived values ──────────────────────────────────────────────────────────
+
+  const questionResponses = submissionDetail?.questionResponses ?? [];
+
+  /** Total quiz score (either passed as prop or sum of maxPoints) */
+  const resolvedTotalScore = React.useMemo(() => {
+    if (quizTotalScore && quizTotalScore > 0) return quizTotalScore;
+    return questionResponses.reduce((s, q) => s + q.maxPoints, 0);
+  }, [quizTotalScore, questionResponses]);
+
+  /** Weight (%) per question */
+  const weights = React.useMemo(
+    () => computeWeights(questionResponses),
+    [questionResponses]
+  );
+
+  /** Weighted point value per question = weight% × resolvedTotalScore */
+  const weightedPointValues = React.useMemo(() => {
+    const result: Record<string, number> = {};
+    questionResponses.forEach((q) => {
+      const weight = (weights[q.questionId] ?? 0) / 100;
+      result[q.questionId] =
+        Math.round(weight * resolvedTotalScore * 100) / 100;
+    });
+    return result;
+  }, [weights, resolvedTotalScore, questionResponses]);
+
+  /** Weighted final grade (scaled to resolvedTotalScore) */
+  const weightedFinalGrade = React.useMemo(
+    () =>
+      computeWeightedFinalGrade(
+        grades,
+        questionResponses,
+        weights,
+        resolvedTotalScore
+      ),
+    [grades, questionResponses, weights, resolvedTotalScore]
+  );
+
+  /** Percentage score */
+  const scorePercentage = resolvedTotalScore > 0
+    ? Math.round((weightedFinalGrade / resolvedTotalScore) * 100)
+    : 0;
+
+  // ── Effects ─────────────────────────────────────────────────────────────────
 
   React.useEffect(() => {
     if (submissionDetail?.questionResponses) {
-      const initialGrades: { [key: string]: number } = {};
-      const initialFeedbacks: { [key: string]: string } = {};
-      
+      const initialGrades: Record<string, number> = {};
+      const initialFeedbacks: Record<string, string> = {};
       submissionDetail.questionResponses.forEach((response) => {
         initialGrades[response.questionId] = response.earnedPoints;
-        initialFeedbacks[response.questionId] = response.teacherFeedback || '';
+        initialFeedbacks[response.questionId] = response.teacherFeedback ?? "";
       });
-      
       setGrades(initialGrades);
       setFeedbacks(initialFeedbacks);
     }
-
     if (submissionDetail?.grade?.value) {
       setOverallGrade(submissionDetail.grade.value);
     }
   }, [submissionDetail]);
 
-  const calculateScore = () => {
-    if (!submissionDetail) return 0;
+  // ── Handlers ─────────────────────────────────────────────────────────────────
 
-    const totalPoints = submissionDetail.questionResponses.reduce(
-      (sum, q) => sum + q.maxPoints,
-      0
-    );
-    const earnedPoints = Object.values(grades).reduce(
-      (sum, score) => sum + (score || 0),
-      0
-    );
-    return totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
-  };
-
-  const calculateTotalPoints = () => {
-    return Object.values(grades).reduce((sum, score) => sum + (score || 0), 0);
+  const normalizeText = (text: string): string => {
+    if (!text) return "";
+    return text.toLowerCase().replace(/\s+/g, "").replace(/[^\w]/g, "");
   };
 
   const handleGradeChange = (questionId: string, score: number) => {
-    const question = submissionDetail?.questionResponses.find(
-      (q) => q.questionId === questionId
-    );
-    const maxPoints = question?.maxPoints || 0;
+    const question = questionResponses.find((q) => q.questionId === questionId);
+    const maxPoints = question?.maxPoints ?? 0;
     const normalizedScore = Math.max(0, Math.min(score, maxPoints));
-
-    setGrades((prev) => ({
-      ...prev,
-      [questionId]: normalizedScore,
-    }));
+    setGrades((prev) => ({ ...prev, [questionId]: normalizedScore }));
   };
 
   const handleFeedbackChange = (questionId: string, feedback: string) => {
-    setFeedbacks((prev) => ({
-      ...prev,
-      [questionId]: feedback,
-    }));
-  };
-
-  const handleOverallGradeChange = (value: string) => {
-    setOverallGrade(value);
+    setFeedbacks((prev) => ({ ...prev, [questionId]: feedback }));
   };
 
   const handleSubmitGrades = () => {
     if (!submissionDetail) return;
 
-    const gradeUpdates = Object.entries(grades).map(([questionId, score]) => ({
-      questionId,
-      score: score || 0,
-      feedback: feedbacks[questionId] || '',
+    const gradeUpdates = questionResponses.map((q) => ({
+      questionId: q.questionId,
+      earnedPoints: grades[q.questionId] ?? 0,
+      maxPoints: q.maxPoints,
+      feedback: feedbacks[q.questionId] ?? "",
     }));
 
     gradeSubmission.mutate(
       {
         submissionId: submissionDetail.id,
         grades: gradeUpdates,
-        overallGrade: overallGrade,
+        // Pass weighted final grade scaled to resolvedTotalScore
+        overallGrade: {
+          earnedPoints: weightedFinalGrade,
+          totalPoints: resolvedTotalScore,
+        },
       },
       {
         onSuccess: (updatedSubmission) => {
@@ -137,13 +204,7 @@ export function QuizSubmissionsView({
     );
   };
 
-  const getCurrentScore = (questionId: string): number => {
-    return grades[questionId] || 0;
-  };
-
-  const getCurrentFeedback = (questionId: string): string => {
-    return feedbacks[questionId] || '';
-  };
+  // ── Loading / Error states ────────────────────────────────────────────────
 
   if (isSubmissionLoading) {
     return (
@@ -164,60 +225,58 @@ export function QuizSubmissionsView({
     );
   }
 
-  const score = calculateScore();
-  const totalPoints = calculateTotalPoints();
-  const maxTotalPoints = submissionDetail.questionResponses.reduce(
-    (sum, q) => sum + q.maxPoints,
-    0
-  );
   const passingScore = 70;
-
   const isGraded = submissionDetail.status === "GRADED";
   const existingGrade = submissionDetail.grade;
   const hasGradeChanged =
-    isGraded && existingGrade?.value && overallGrade !== existingGrade.value;
+    isGraded &&
+    existingGrade?.value &&
+    String(weightedFinalGrade) !== existingGrade.value;
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
             <ArrowLeft className="h-4 w-4" /> Back to Inventory
           </Button>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {submissionDetail.quizTitle} - Student Submission
+            {submissionDetail.quizTitle} — Student Submission
           </h1>
           <p className="text-muted-foreground mt-2">
             Student: {submissionDetail.studentName} ({submissionDetail.studentId})
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>
-                Submitted: {new Date(submissionDetail.submittedAt).toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>
-                Score: {score}% ({totalPoints}/{maxTotalPoints} points)
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>Status: {submissionDetail.status}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>Attempt: {submissionDetail.attemptNumber}</span>
-            </div>
+        <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span>
+              Submitted:{" "}
+              {new Date(submissionDetail.submittedAt).toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>
+              Score: {scorePercentage}% ({weightedFinalGrade}/
+              {resolvedTotalScore} pts)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>Status: {submissionDetail.status}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>Attempt: {submissionDetail.attemptNumber}</span>
           </div>
         </div>
       </div>
 
+      {/* ── Already graded warning ── */}
       {isGraded && existingGrade?.value && (
         <Card className="p-4 bg-amber-50 border-amber-300 border-2">
           <div className="flex items-start gap-3">
@@ -232,7 +291,7 @@ export function QuizSubmissionsView({
                   {existingGrade.maxScore} ({existingGrade.percentage}%)
                 </p>
                 <p className="text-xs text-amber-700 mt-2">
-                  You can modify the grade below. The existing grade will be
+                  You can modify grades below. The existing grade will be
                   preserved until you save changes.
                 </p>
               </div>
@@ -241,19 +300,139 @@ export function QuizSubmissionsView({
         </Card>
       )}
 
-      {/* Submission View */}
+      {/* ── Weight Table Toggle ── */}
+      <Card className="p-4 border-purple-200 bg-purple-50">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Scale className="h-5 w-5 text-purple-700" />
+            <h3 className="font-semibold text-purple-900">
+              Question Weight Distribution
+            </h3>
+            <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
+              Total Score: {resolvedTotalScore} pts
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowWeightTable((v) => !v)}
+            className="gap-2 border-purple-300 text-purple-800 hover:bg-purple-100"
+          >
+            <Info className="h-4 w-4" />
+            {showWeightTable ? "Hide" : "Show"} Weight Table
+          </Button>
+        </div>
+
+        {showWeightTable && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-purple-100">
+                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
+                    Question
+                  </th>
+                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
+                    Raw Points
+                  </th>
+                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
+                    Weight (%)
+                  </th>
+                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
+                    Calculation
+                  </th>
+                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
+                    Weighted Value
+                  </th>
+                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
+                    Earned (Weighted)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {questionResponses.map((q, idx) => {
+                  const weight = weights[q.questionId] ?? 0;
+                  const wpv = weightedPointValues[q.questionId] ?? 0;
+                  const earned = grades[q.questionId] ?? 0;
+                  const weightedEarned =
+                    q.maxPoints > 0
+                      ? Math.round(
+                          (earned / q.maxPoints) * wpv * 100
+                        ) / 100
+                      : 0;
+
+                  return (
+                    <tr
+                      key={q.questionId}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-purple-50/40"}
+                    >
+                      <td className="p-3 border border-purple-200 font-medium">
+                        Question #{idx + 1}
+                      </td>
+                      <td className="p-3 border border-purple-200">
+                        {earned} / {q.maxPoints}
+                      </td>
+                      <td className="p-3 border border-purple-200">
+                        <span className="font-semibold text-purple-700">
+                          {weight}%
+                        </span>
+                      </td>
+                      <td className="p-3 border border-purple-200 text-muted-foreground font-mono text-xs">
+                        {resolvedTotalScore} × {(weight / 100).toFixed(2)} ×
+                        ({earned}/{q.maxPoints})
+                      </td>
+                      <td className="p-3 border border-purple-200 text-purple-800 font-semibold">
+                        {wpv} pts
+                      </td>
+                      <td className="p-3 border border-purple-200">
+                        <span
+                          className={
+                            weightedEarned >= wpv * 0.7
+                              ? "text-green-700 font-semibold"
+                              : "text-red-700 font-semibold"
+                          }
+                        >
+                          {weightedEarned} pts
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="bg-purple-200 font-bold">
+                  <td className="p-3 border border-purple-300">TOTAL</td>
+                  <td className="p-3 border border-purple-300">—</td>
+                  <td className="p-3 border border-purple-300">100%</td>
+                  <td className="p-3 border border-purple-300">—</td>
+                  <td className="p-3 border border-purple-300 text-purple-900">
+                    {resolvedTotalScore} pts
+                  </td>
+                  <td className="p-3 border border-purple-300 text-purple-900">
+                    {weightedFinalGrade} pts
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      {/* ── Submission Card ── */}
       <Card className="p-4 border-l-4 border-blue-500">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="font-semibold text-lg">
               Student {submissionDetail.studentName}
             </h3>
-            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
               <span>
-                Submitted: {new Date(submissionDetail.submittedAt).toLocaleString()}
+                Submitted:{" "}
+                {new Date(submissionDetail.submittedAt).toLocaleString()}
               </span>
-              <Badge variant={score >= passingScore ? "default" : "secondary"}>
-                Score: {score}% ({totalPoints}/{maxTotalPoints} points)
+              <Badge
+                variant={scorePercentage >= passingScore ? "default" : "secondary"}
+              >
+                {scorePercentage}% ({weightedFinalGrade}/{resolvedTotalScore} pts)
               </Badge>
               <span>Status: {submissionDetail.status}</span>
               {submissionDetail.autoGraded && (
@@ -261,51 +440,81 @@ export function QuizSubmissionsView({
               )}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setIsExpanded(!isExpanded)}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-              {isExpanded ? "Collapse" : "Expand"}
-            </Button>
-          </div>
+          <Button
+            onClick={() => setIsExpanded(!isExpanded)}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+            {isExpanded ? "Collapse" : "Expand"}
+          </Button>
         </div>
 
         {isExpanded && (
           <div className="space-y-4 mt-4 pt-4 border-t">
-            {submissionDetail.questionResponses.map((question, index) => {
-              const isMultipleChoice = question.questionType === "MULTIPLE_CHOICE";
+            {/* ── Questions ── */}
+            {questionResponses.map((question, index) => {
+              const isMultipleChoice =
+                question.questionType === "MULTIPLE_CHOICE";
               const isOpenEnded = question.questionType === "OPEN_ENDED";
-              const currentScore = getCurrentScore(question.questionId);
-              const currentFeedback = getCurrentFeedback(question.questionId);
-              const studentSelectedOptions = question.selectedOptions || [];
-              const hasOptions = question.options && question.options.length > 0;
+              const currentScore = grades[question.questionId] ?? 0;
+              const currentFeedback = feedbacks[question.questionId] ?? "";
+              const studentSelectedOptions = question.selectedOptions ?? [];
+              const hasOptions =
+                question.options && question.options.length > 0;
 
-              const normalizedStudentAnswer = normalizeText(question.textAnswer);
-              const normalizedCorrectAnswer = normalizeText(question.correctAnswer);
+              const normalizedStudentAnswer = normalizeText(
+                question.textAnswer
+              );
+              const normalizedCorrectAnswer = normalizeText(
+                question.correctAnswer
+              );
               const answersMatchNormalized =
                 normalizedStudentAnswer &&
                 normalizedCorrectAnswer &&
                 normalizedStudentAnswer === normalizedCorrectAnswer;
+
+              // Weight info for this question
+              const qWeight = weights[question.questionId] ?? 0;
+              const qWPV = weightedPointValues[question.questionId] ?? 0;
+              const qWeightedEarned =
+                question.maxPoints > 0
+                  ? Math.round(
+                      (currentScore / question.maxPoints) * qWPV * 100
+                    ) / 100
+                  : 0;
 
               return (
                 <div
                   key={question.questionId}
                   className="p-4 bg-muted/30 rounded-lg"
                 >
-                  <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-medium">
-                      Question {index + 1} - {question.maxPoints} points
-                    </h4>
+                  {/* Question header */}
+                  <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-medium">Question {index + 1}</h4>
+                      {/* Weight badge */}
+                      <span className="text-xs bg-purple-100 text-purple-800 border border-purple-200 rounded-full px-2 py-0.5 font-semibold">
+                        Weight: {qWeight}%
+                      </span>
+                      {/* Weighted point value badge */}
+                      <span className="text-xs bg-blue-100 text-blue-800 border border-blue-200 rounded-full px-2 py-0.5 font-semibold">
+                        Value: {qWPV} / {resolvedTotalScore} pts
+                      </span>
+                      {/* Raw points */}
+                      <span className="text-xs text-muted-foreground">
+                        (Raw: {question.maxPoints} pts)
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={question.isCorrect ? "default" : "secondary"}>
+                      <Badge
+                        variant={question.isCorrect ? "default" : "secondary"}
+                      >
                         {question.questionType.replace("_", " ")}
                       </Badge>
                       {question.isAutoGraded && (
@@ -325,20 +534,22 @@ export function QuizSubmissionsView({
 
                   <p className="mb-3 font-medium">{question.questionText}</p>
 
-                  {/* Student Answer Section */}
+                  {/* ── Student Answer ── */}
                   <div className="mb-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <strong className="text-sm">Student's Answer:</strong>
-                    </div>
+                    <strong className="text-sm">Student's Answer:</strong>
 
                     {isMultipleChoice && hasOptions ? (
                       <div className="mt-2 space-y-2">
                         {question.options.map((option, optIndex) => {
-                          const isSelected = studentSelectedOptions.includes(optIndex);
+                          const isSelected =
+                            studentSelectedOptions.includes(optIndex);
                           const isCorrectOption = option.correct;
-                          const isStudentAnswerCorrect = isSelected && isCorrectOption;
-                          const isStudentAnswerIncorrect = isSelected && !isCorrectOption;
-                          const isCorrectButNotSelected = !isSelected && isCorrectOption;
+                          const isStudentAnswerCorrect =
+                            isSelected && isCorrectOption;
+                          const isStudentAnswerIncorrect =
+                            isSelected && !isCorrectOption;
+                          const isCorrectButNotSelected =
+                            !isSelected && isCorrectOption;
 
                           return (
                             <div
@@ -367,7 +578,8 @@ export function QuizSubmissionsView({
                                 </div>
                                 <div className="flex-1">
                                   <span className="font-medium text-base">
-                                    {String.fromCharCode(65 + optIndex)}. {option.text}
+                                    {String.fromCharCode(65 + optIndex)}.{" "}
+                                    {option.text}
                                   </span>
                                   <div className="mt-2 flex flex-wrap gap-2">
                                     {isSelected && (
@@ -390,7 +602,9 @@ export function QuizSubmissionsView({
                                             : "bg-yellow-600 text-white"
                                         }
                                       >
-                                        {isSelected ? "✓ Correct" : "★ Correct Answer"}
+                                        {isSelected
+                                          ? "✓ Correct"
+                                          : "★ Correct Answer"}
                                       </Badge>
                                     )}
                                   </div>
@@ -407,7 +621,9 @@ export function QuizSubmissionsView({
                             Student's Response:
                           </label>
                           <Textarea
-                            value={question.textAnswer || "No answer provided"}
+                            value={
+                              question.textAnswer || "No answer provided"
+                            }
                             readOnly
                             className={`min-h-[100px] ${
                               answersMatchNormalized
@@ -416,26 +632,46 @@ export function QuizSubmissionsView({
                             }`}
                           />
                         </div>
-
                         {question.correctAnswer && (
                           <div className="p-3 bg-blue-50 rounded-lg border-2 border-blue-400">
                             <label className="text-sm text-blue-800 font-semibold block mb-1">
                               Expected Answer:
                             </label>
-                            <p className="text-sm text-blue-800">{question.correctAnswer}</p>
+                            <p className="text-sm text-blue-800">
+                              {question.correctAnswer}
+                            </p>
                           </div>
                         )}
                       </div>
                     ) : null}
                   </div>
 
-                  {/* Grading Section */}
+                  {/* ── Grading Section ── */}
                   <div className="mt-6 pt-4 border-t space-y-4">
+                    {/* Weighted score preview */}
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg flex flex-wrap items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <Scale className="h-4 w-4 text-purple-600" />
+                        <span className="text-purple-800 font-semibold">
+                          Weighted Score:
+                        </span>
+                        <span className="font-bold text-purple-900">
+                          {qWeightedEarned} / {qWPV} pts
+                        </span>
+                      </div>
+                      <span className="text-purple-600 text-xs">
+                        ({currentScore}/{question.maxPoints} raw × {qWeight}%
+                        weight × {resolvedTotalScore} total)
+                      </span>
+                    </div>
+
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="text-sm font-medium">Points:</label>
+                        <label className="text-sm font-medium">
+                          Raw Points:
+                        </label>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Adjust score (0 - {question.maxPoints} points)
+                          Adjust score (0 – {question.maxPoints} points)
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -458,7 +694,7 @@ export function QuizSubmissionsView({
                       </div>
                     </div>
 
-                    {/* Feedback Section */}
+                    {/* Feedback */}
                     <div>
                       <label className="text-sm font-medium block mb-2">
                         Teacher Feedback (Optional):
@@ -466,22 +702,27 @@ export function QuizSubmissionsView({
                       <Textarea
                         value={currentFeedback}
                         onChange={(e) =>
-                          handleFeedbackChange(question.questionId, e.target.value)
+                          handleFeedbackChange(
+                            question.questionId,
+                            e.target.value
+                          )
                         }
                         placeholder="Provide feedback for this question..."
                         className="min-h-[80px]"
                       />
-                      {question.teacherFeedback && question.teacherFeedback !== currentFeedback && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Previous feedback: {question.teacherFeedback}
-                        </p>
-                      )}
+                      {question.teacherFeedback &&
+                        question.teacherFeedback !== currentFeedback && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Previous feedback: {question.teacherFeedback}
+                          </p>
+                        )}
                     </div>
                   </div>
                 </div>
               );
             })}
 
+            {/* ── Overall Grade Management ── */}
             <Card className="p-4 bg-purple-50 border-purple-200">
               <h4 className="font-semibold text-purple-800 mb-3">
                 Overall Grade Management
@@ -493,51 +734,45 @@ export function QuizSubmissionsView({
                     Current Grade:
                   </p>
                   <p className="text-lg font-bold text-purple-700">
-                    {existingGrade.value} / {existingGrade.maxScore} ({existingGrade.percentage}%)
+                    {existingGrade.value} / {existingGrade.maxScore} (
+                    {existingGrade.percentage}%)
                   </p>
                 </div>
               )}
 
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-purple-900 block mb-2">
-                    {hasGradeChanged ? "New Grade:" : "Overall Grade:"}
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="text"
-                      value={overallGrade}
-                      onChange={(e) => handleOverallGradeChange(e.target.value)}
-                      placeholder={`Auto-calculated: ${totalPoints}`}
-                      className="max-w-xs"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      / {maxTotalPoints} points
-                    </span>
-                  </div>
-                  <p className="text-xs text-purple-700 mt-2">
-                    Leave empty to use auto-calculated score: {totalPoints} points
-                  </p>
-                </div>
+              {/* Auto-calculated weighted grade display */}
+              <div className="p-3 bg-white rounded-lg border border-purple-300 mb-4">
+                <p className="text-sm font-semibold text-purple-900 mb-1">
+                  Auto-Calculated Weighted Grade:
+                </p>
+                <p className="text-lg font-bold text-purple-700">
+                  {weightedFinalGrade} / {resolvedTotalScore} pts (
+                  {scorePercentage}%)
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Calculated from question weights × raw scores
+                </p>
+              </div>
 
-                {hasGradeChanged && (
-                  <div className="p-3 bg-amber-100 rounded-lg border border-amber-400">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm text-amber-900 font-semibold">
-                          Grade will be updated
-                        </p>
-                        <p className="text-xs text-amber-800 mt-1">
-                          Previous: {existingGrade.value} → New: {overallGrade || totalPoints}
-                        </p>
-                      </div>
+              {hasGradeChanged && (
+                <div className="p-3 bg-amber-100 rounded-lg border border-amber-400">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-amber-900 font-semibold">
+                        Grade will be updated
+                      </p>
+                      <p className="text-xs text-amber-800 mt-1">
+                        Previous: {existingGrade?.value} → New:{" "}
+                        {weightedFinalGrade}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </Card>
 
+            {/* ── Score Summary ── */}
             <Card className="p-4 bg-blue-50 border-blue-200">
               <div className="flex justify-between items-start">
                 <div>
@@ -546,28 +781,36 @@ export function QuizSubmissionsView({
                   </h4>
                   <div className="mt-2 space-y-1">
                     <p className="text-sm text-blue-700">
-                      Current grade: <strong>{score}%</strong> ({totalPoints}/{maxTotalPoints} points)
+                      Weighted grade:{" "}
+                      <strong>
+                        {weightedFinalGrade} / {resolvedTotalScore} pts (
+                        {scorePercentage}%)
+                      </strong>
                     </p>
                     <p className="text-sm text-blue-700">
                       Passing score: {passingScore}% required
                     </p>
                   </div>
                 </div>
-
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-800">
-                    {totalPoints} / {maxTotalPoints}
+                    {weightedFinalGrade} / {resolvedTotalScore}
                   </div>
                   <Badge
-                    variant={score >= passingScore ? "default" : "secondary"}
+                    variant={
+                      scorePercentage >= passingScore ? "default" : "secondary"
+                    }
                     className="mt-2"
                   >
-                    {score >= passingScore ? "✓ PASSING" : "✗ NOT PASSING"}
+                    {scorePercentage >= passingScore
+                      ? "✓ PASSING"
+                      : "✗ NOT PASSING"}
                   </Badge>
                 </div>
               </div>
             </Card>
 
+            {/* ── Save Button ── */}
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button
                 onClick={handleSubmitGrades}

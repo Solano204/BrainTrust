@@ -7,6 +7,7 @@ import {
     QuizSubmissionDetailForStudentDTO,
     QuizSubmissionDetailForGradingDTO,
     GradeDTO,
+    QuizSubmissionDetailDTONew,
 } from "@/app/shared/dtos/quiz.dto";
 
 import {
@@ -75,8 +76,50 @@ export function mapQuizFromBackend(dto: CompleteQuizDTO): Quiz {
         createdAt: dto.createdAt,
         active: dto.active,
         availableNow: dto.availableNow,
+        allowSeeResults: dto.allowSeeResults,
+        totalScore: dto.totalScore
     };
 }
+
+
+
+export function mapQuizSubmissionDetailFromBackendNew(
+  dto: QuizSubmissionDetailDTONew
+): QuizSubmissionDetail {
+  return {
+    id: dto.id,
+    quizId: dto.quizId,
+    quizTitle: dto.quizTitle,
+    studentId: dto.studentId,
+    studentName: dto.studentName,
+    attemptNumber: dto.attemptNumber,
+    startedAt: dto.startedAt,
+    submittedAt: dto.submittedAt,
+    status: dto.status,
+    grade: dto.grade,
+    finalGrade: dto.finalGrade ?? null,       // ✅ NEW
+    canViewResults: dto.canViewResults ?? false, // ✅ NEW
+    autoGraded: dto.autoGraded,
+    timeExpired: dto.timeExpired,
+    unitId: dto.unitId ?? "",
+    unitName: dto.unitName ?? "",
+    questionResponses: dto.questionResponses.map((qr) => ({
+      questionId: qr.questionId,
+      questionText: qr.questionText,
+      questionType: qr.questionType,
+      maxPoints: qr.maxPoints,        // ✅ FIXED: was qr.points (wrong field)
+      earnedPoints: qr.earnedPoints,  // ✅ FIXED: was qr.points (always same)
+      teacherFeedback: qr.teacherFeedback ?? "",
+      isAutoGraded: qr.isAutoGraded,
+      options: qr.options ?? [],
+      selectedOptions: qr.selectedOptions ?? [],
+      textAnswer: qr.textAnswer ?? "",
+      correctAnswer: qr.correctAnswer ?? "",
+      isCorrect: qr.isCorrect,
+    })),
+  };
+}
+
 
 /* =========================
    SIMPLE SUBMISSION MAPPERS
@@ -217,6 +260,63 @@ export function mapQuizSubmissionDetailForGradingFromBackend(
 /* =========================
    EXTENDED SUBMISSION MAPPER (para compatibilidad)
 ========================= */
+
+export function mapQuizSubmissionFromBackendNew(
+  dto: QuizSubmissionDetailForStudentDTO
+): QuizSubmission {
+  let timeSpent = 0;
+  if (dto.startedAt && dto.submittedAt) {
+    const started = new Date(dto.startedAt).getTime();
+    const submitted = new Date(dto.submittedAt).getTime();
+    timeSpent = Math.max(0, submitted - started) / 1000;
+  }
+
+  const answers: ExtendedQuizAnswer[] = dto.questionResponses.map((qr) => ({
+    questionId: qr.questionId,
+    questionText: qr.questionText,
+    questionType: qr.questionType.toLowerCase() as QuestionType,
+    studentAnswer:
+      qr.questionType === "MULTIPLE_CHOICE"
+        ? (qr.selectedOptions?.[0] ?? -1)
+        : qr.textAnswer || "",
+    // ✅ correctAnswer from submission — used for open-ended expected answer
+    correctAnswer: qr.correctAnswer,
+    points: qr.earnedPoints,
+    maxPoints: qr.maxPoints,
+    isCorrect: qr.isCorrect,
+    feedback: qr.teacherFeedback || "",
+  }));
+
+  const totalScore = answers.reduce((sum, ans) => sum + ans.points, 0);
+  const maxScore = answers.reduce((sum, ans) => sum + ans.maxPoints, 0);
+
+  return {
+    id: dto.id,
+    quizId: dto.quizId,
+    studentId: dto.studentId,
+    courseId: dto.unitId || dto.quizId,
+    studentName: dto.studentName,
+    content: JSON.stringify(answers),
+    
+    submittedAt: dto.submittedAt,
+    status: dto.status,
+    // ✅ canViewResults carried from backend into the model
+    canViewResults: dto.canViewResults ?? false,
+    grade: dto.grade
+      ? {
+          value: parseFloat(dto.grade.value),
+          maxScore: parseFloat(dto.grade.maxScore),
+        }
+      : { value: totalScore, maxScore },
+    teacherFeedback: "",
+    quizData: {
+      answers,
+      timeSpent: Math.round(timeSpent),
+      totalScore,
+      maxScore,
+    },
+  };
+}
 
 export function mapQuizSubmissionFromBackend(
     dto: QuizSubmissionDetailForStudentDTO
