@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-
 @Repository
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> {
 
@@ -20,33 +19,37 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
     boolean existsByEmail(String email);
     Page<UserJpaEntity> findAll(Pageable pageable);
 
-    // --- Role queries ---
-
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.roleId = :roleId")
+    // ✅ CHANGED: u.role.id instead of u.roleId
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.role.id = :roleId")
     List<UserJpaEntity> findByRoleId(@Param("roleId") Integer roleId);
 
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.roleId = :roleId")
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.role.id = :roleId")
     Page<UserJpaEntity> findByRoleId(@Param("roleId") Integer roleId, Pageable pageable);
 
     @Query("SELECT u FROM UserJpaEntity u WHERE u.active = true")
     Page<UserJpaEntity> findByActiveTrue(Pageable pageable);
 
-    // --- PersonId queries ---
-
     @Query("SELECT u FROM UserJpaEntity u WHERE u.personId IN :personIds")
     Page<UserJpaEntity> findByPersonIdIn(
             @Param("personIds") List<String> personIds, Pageable pageable);
 
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.personId IN :personIds AND u.roleId = :roleId")
+    // ✅ CHANGED: u.role.id instead of u.roleId
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.personId IN :personIds AND u.role.id = :roleId")
     Page<UserJpaEntity> findByPersonIdInAndRoleId(
             @Param("personIds") List<String> personIds,
             @Param("roleId") Integer roleId,
             Pageable pageable);
 
-    // --- Name search (native: firstName/lastName are @Transient, must use catalog join) ---
+    // ✅ CHANGED: u.role.id instead of u.roleId
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.role.id = :roleId")
+    Page<UserJpaEntity> findByRoleIdWithPerson(
+            @Param("roleId") Integer roleId, Pageable pageable);
 
+    // Native queries use SQL column names — these stay the same
+    // because they join through user_roles table directly
     @Query(value = """
             SELECT u.* FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
             JOIN persons p ON u.person_id = p.id
             JOIN cat_first_names fn ON p.first_name_id = fn.id
             JOIN cat_last_names ln ON p.last_name_id = ln.id
@@ -56,6 +59,7 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
             """,
             countQuery = """
             SELECT COUNT(u.id) FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
             JOIN persons p ON u.person_id = p.id
             JOIN cat_first_names fn ON p.first_name_id = fn.id
             JOIN cat_last_names ln ON p.last_name_id = ln.id
@@ -67,35 +71,31 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
     Page<UserJpaEntity> findByNameContainingWithPerson(
             @Param("name") String name, Pageable pageable);
 
-    // --- Role + Person name ordering (native: same reason) ---
-
     @Query(value = """
             SELECT u.* FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
             JOIN persons p ON u.person_id = p.id
             JOIN cat_first_names fn ON p.first_name_id = fn.id
             JOIN cat_last_names ln ON p.last_name_id = ln.id
-            WHERE u.role_id = :roleId
+            WHERE ur.role_id = :roleId
             ORDER BY fn.first_name ASC, ln.last_name ASC
             """,
-            countQuery = "SELECT COUNT(u.id) FROM users u WHERE u.role_id = :roleId",
+            countQuery = "SELECT COUNT(u.id) FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role_id = :roleId",
             nativeQuery = true)
     Page<UserJpaEntity> findByRoleIdOrderByPersonNameAsc(
             @Param("roleId") Integer roleId, Pageable pageable);
 
     @Query(value = """
             SELECT u.* FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
             JOIN persons p ON u.person_id = p.id
             JOIN cat_first_names fn ON p.first_name_id = fn.id
             JOIN cat_last_names ln ON p.last_name_id = ln.id
-            WHERE u.role_id = :roleId
+            WHERE ur.role_id = :roleId
             ORDER BY fn.first_name DESC, ln.last_name DESC
             """,
-            countQuery = "SELECT COUNT(u.id) FROM users u WHERE u.role_id = :roleId",
+            countQuery = "SELECT COUNT(u.id) FROM users u JOIN user_roles ur ON u.id = ur.user_id WHERE ur.role_id = :roleId",
             nativeQuery = true)
     Page<UserJpaEntity> findByRoleIdOrderByPersonNameDesc(
-            @Param("roleId") Integer roleId, Pageable pageable);
-
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.roleId = :roleId")
-    Page<UserJpaEntity> findByRoleIdWithPerson(
             @Param("roleId") Integer roleId, Pageable pageable);
 }

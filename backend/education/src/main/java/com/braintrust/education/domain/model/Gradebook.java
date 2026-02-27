@@ -99,6 +99,10 @@ public class Gradebook extends AggregateRoot<GradebookId> {
         this.lastCalculated = LocalDateTime.now();
     }
 
+    public void setCalculatedTotalDirect(BigDecimal average) {
+        this.calculatedTotal = average;
+        this.lastCalculated = LocalDateTime.now();
+    }
     public BigDecimal getDisplayGradeValue() {
         return finalGrade != null ? finalGrade : calculatedTotal;
     }

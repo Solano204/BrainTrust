@@ -3,9 +3,8 @@
 
 import { useAuth } from "@/app/context/AuthContext"
 import { PERMISSIONS } from "@/app/types/authentication"
+import PersonalDataView from "@/components/admin/AdminPersonalData"
 import { redirect } from "next/navigation"
-import AdminUsersModule from "@/components/admin/AdminUsersModule"
-import AccountManagementView from "@/components/admin/AdminUsersModule"
 
 export default function AdminUsersPage() {
     const { hasPermission, isLoading } = useAuth()
@@ -22,5 +21,5 @@ export default function AdminUsersPage() {
         redirect("/")
     }
 
-    return <AccountManagementView />
+    return <PersonalDataView />
 }

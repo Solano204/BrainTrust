@@ -4,5 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record AssignFinalGradeCommand(
         @NotBlank String gradeValue,
-        String feedback
+        String feedback,
+                String courseId  // NEW FIELD
+
 ) {}

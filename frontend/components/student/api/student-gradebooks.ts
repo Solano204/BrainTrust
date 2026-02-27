@@ -246,15 +246,16 @@ export async function assignUnitFinalGrade(
     unitId: string,
     studentId: string,
     gradeValue: string,
-    feedback?: string
+    feedback?: string,
+    courseId?: string
 ): Promise<void> {
   try {
+
     await apiClient.put(
         `/api/unit-grades/unit/${unitId}/student/${studentId}/final-grade`,
-        { gradeValue, feedback: feedback || "" }
+        { gradeValue, feedback: feedback || "", courseId }
     );
 
-    console.log(`Assigned final grade for student ${studentId} in unit ${unitId}: ${gradeValue}`);
   } catch (error) {
     return handleApiError(error);
   }

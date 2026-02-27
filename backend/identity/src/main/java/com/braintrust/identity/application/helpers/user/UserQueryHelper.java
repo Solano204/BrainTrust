@@ -2,13 +2,16 @@ package com.braintrust.identity.application.helpers.user;
 
 import com.braintrust.identity.application.dtos.dtos.MinimalUserInfoDTO;
 import com.braintrust.identity.application.dtos.dtos.UserDTO;
+import com.braintrust.identity.application.dtos.dtos.catalog.RoleActivityDTO;
 import com.braintrust.identity.application.ports.out.PersonRepository;
 import com.braintrust.identity.application.ports.out.UserRepository;
 import com.braintrust.identity.domain.exceptions.UserNotFoundException;
 import com.braintrust.identity.domain.model.Person;
-import com.braintrust.identity.domain.model.User;
 import com.braintrust.identity.domain.model.Role;
+import com.braintrust.identity.domain.model.User;
 import com.braintrust.identity.domain.valueobjects.*;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.CatRoleActivityJpaEntity;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories.CatRoleActivityJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -32,11 +36,54 @@ public class UserQueryHelper {
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
+    private final CatRoleActivityJpaRepository roleActivityRepository;
 
-    public UserQueryHelper(UserRepository userRepository, PersonRepository personRepository) {
+    public UserQueryHelper(UserRepository userRepository,
+                           PersonRepository personRepository,
+                           CatRoleActivityJpaRepository roleActivityRepository) {
         this.userRepository = userRepository;
         this.personRepository = personRepository;
+        this.roleActivityRepository = roleActivityRepository;
     }
+
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
+    private List<RoleActivityDTO> getActivitiesForRoleId(Integer roleId) {
+        return roleActivityRepository.findByRoleId(roleId)
+                .stream()
+                .map(a -> new RoleActivityDTO(a.getCode(), a.getActivity(), a.getDescription()))
+                .toList();
+    }
+
+    private Map<Integer, List<RoleActivityDTO>> loadActivitiesMap() {
+        return roleActivityRepository.findAll()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        CatRoleActivityJpaEntity::getRoleId,
+                        Collectors.mapping(
+                                a -> new RoleActivityDTO(a.getCode(), a.getActivity(), a.getDescription()),
+                                Collectors.toList()
+                        )
+                ));
+    }
+
+    private Integer toRoleId(Role role) {
+        return switch (role) {
+            case STUDENT -> 1;
+            case TEACHER -> 2;
+            case ADMIN   -> 3;
+        };
+    }
+
+    // Builds a UserDTO with person + activities in one place
+    private UserDTO buildUserDTO(User user, Map<Integer, List<RoleActivityDTO>> activitiesMap) {
+        Person person = personRepository.findById(user.getPersonId()).orElse(null);
+        List<RoleActivityDTO> activities = activitiesMap
+                .getOrDefault(toRoleId(user.getRole()), List.of());
+        return toUserDTO(user, person, activities);
+    }
+
+    // ─── Public query methods ─────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(UserId userId) {
@@ -44,8 +91,9 @@ public class UserQueryHelper {
 
         User user = findUserByIdOrThrow(userId, userRepository);
         Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
+        List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(user.getRole()));
 
-        return toUserDTO(user, person);
+        return toUserDTO(user, person, activities);
     }
 
     @Transactional(readOnly = true)
@@ -53,10 +101,12 @@ public class UserQueryHelper {
         log.debug("📊 Fetching User DTO by Email: {}", email.getValue());
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email.getValue()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with email: " + email.getValue()));
         Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
+        List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(user.getRole()));
 
-        return toUserDTO(user, person);
+        return toUserDTO(user, person, activities);
     }
 
     @Transactional(readOnly = true)
@@ -64,31 +114,31 @@ public class UserQueryHelper {
         log.debug("📊 Fetching User DTO by Person ID: {}", personId.getValue());
 
         User user = userRepository.findByPersonId(personId)
-                .orElseThrow(() -> new UserNotFoundException("User not found for person: " + personId.getValue()));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found for person: " + personId.getValue()));
         Person person = findPersonByIdOrThrow(personId, personRepository);
+        List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(user.getRole()));
 
-        return toUserDTO(user, person);
+        return toUserDTO(user, person, activities);
     }
 
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllUsers(Pageable pageable) {
-        log.debug("📊 Fetching all users with pagination. Page: {}, Size: {}",
+        log.debug("📊 Fetching all users. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
         long startTime = System.currentTimeMillis();
 
         try {
             Page<User> userPage = userRepository.findAll(pageable);
+            Map<Integer, List<RoleActivityDTO>> activitiesMap = loadActivitiesMap();
 
             List<UserDTO> dtos = userPage.getContent().stream()
-                    .map(user -> {
-                        Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person);
-                    })
+                    .map(user -> buildUserDTO(user, activitiesMap))
                     .collect(Collectors.toList());
 
-            long duration = System.currentTimeMillis() - startTime;
             log.info("✅ Retrieved page {} of {} users (total: {}) in {}ms",
-                    pageable.getPageNumber(), dtos.size(), userPage.getTotalElements(), duration);
+                    pageable.getPageNumber(), dtos.size(),
+                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
 
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
 
@@ -100,7 +150,7 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public Page<UserDTO> getUsersByRole(Role role, Pageable pageable) {
-        log.debug("📊 Fetching users by Role: {} with pagination. Page: {}, Size: {}",
+        log.debug("📊 Fetching users by Role: {}. Page: {}, Size: {}",
                 role.name(), pageable.getPageNumber(), pageable.getPageSize());
         long startTime = System.currentTimeMillis();
 
@@ -110,16 +160,19 @@ public class UserQueryHelper {
 
             Page<User> userPage = userRepository.findByRole(roleJpa, pageable);
 
+            // Only load activities for this specific role — more efficient
+            List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(role));
+
             List<UserDTO> dtos = userPage.getContent().stream()
                     .map(user -> {
                         Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person);
+                        return toUserDTO(user, person, activities);
                     })
                     .collect(Collectors.toList());
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved page {} of {} users with role {} (total: {}) in {}ms",
-                    pageable.getPageNumber(), dtos.size(), role.name(), userPage.getTotalElements(), duration);
+            log.info("✅ Retrieved {} users with role {} (total: {}) in {}ms",
+                    dtos.size(), role.name(),
+                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
 
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
 
@@ -131,7 +184,7 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByRole(Role role) {
-        log.debug("📊 Fetching users by Role: {}", role.name());
+        log.debug("📊 Fetching all users by Role: {}", role.name());
         long startTime = System.currentTimeMillis();
 
         try {
@@ -139,16 +192,17 @@ public class UserQueryHelper {
                     com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name())
             );
 
+            List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(role));
+
             List<UserDTO> dtos = users.stream()
                     .map(user -> {
                         Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person);
+                        return toUserDTO(user, person, activities);
                     })
                     .collect(Collectors.toList());
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved {} users with role {} in {}ms", dtos.size(), role.name(), duration);
-
+            log.info("✅ Retrieved {} users with role {} in {}ms",
+                    dtos.size(), role.name(), System.currentTimeMillis() - startTime);
             return dtos;
 
         } catch (Exception e) {
@@ -159,23 +213,20 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public Page<UserDTO> searchUsersByName(String name, Pageable pageable) {
-        log.debug("🔍 Searching users by name: '{}' with pagination. Page: {}, Size: {}",
-                name, pageable.getPageNumber(), pageable.getPageSize());
+        log.debug("🔍 Searching users by name: '{}'", name);
         long startTime = System.currentTimeMillis();
 
         try {
             Page<User> userPage = userRepository.findByNameContaining(name, pageable);
+            Map<Integer, List<RoleActivityDTO>> activitiesMap = loadActivitiesMap();
 
             List<UserDTO> dtos = userPage.getContent().stream()
-                    .map(user -> {
-                        Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person);
-                    })
+                    .map(user -> buildUserDTO(user, activitiesMap))
                     .collect(Collectors.toList());
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Found {} users matching '{}' in page {} (total: {}) in {}ms",
-                    dtos.size(), name, pageable.getPageNumber(), userPage.getTotalElements(), duration);
+            log.info("✅ Found {} users matching '{}' (total: {}) in {}ms",
+                    dtos.size(), name,
+                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
 
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
 
@@ -187,26 +238,26 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public Page<UserDTO> searchUsersByNameAndRole(String name, Role role, Pageable pageable) {
-        log.debug("🔍 Searching users by name: '{}' and role: {} with pagination. Page: {}, Size: {}",
-                name, role.name(), pageable.getPageNumber(), pageable.getPageSize());
+        log.debug("🔍 Searching users by name: '{}' and role: {}", name, role.name());
         long startTime = System.currentTimeMillis();
 
-        com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
-                com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
-
         try {
+            com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
+                    com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
+
             Page<User> userPage = userRepository.findByNameContainingAndRole(name, roleJpa, pageable);
+            List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(role));
 
             List<UserDTO> dtos = userPage.getContent().stream()
                     .map(user -> {
                         Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person);
+                        return toUserDTO(user, person, activities);
                     })
                     .collect(Collectors.toList());
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Found {} users matching '{}' with role {} in page {} (total: {}) in {}ms",
-                    dtos.size(), name, role.name(), pageable.getPageNumber(), userPage.getTotalElements(), duration);
+            log.info("✅ Found {} users matching '{}' with role {} (total: {}) in {}ms",
+                    dtos.size(), name, role.name(),
+                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
 
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
 
@@ -219,7 +270,7 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public List<MinimalUserInfoDTO> searchUsersByName(String searchQuery, Role role) {
-        log.info("Searching users by name: '{}' with role filter: {}", searchQuery, role);
+        log.info("🔍 Searching users by name: '{}' with role: {}", searchQuery, role);
 
         try {
             List<User> users = userRepository.findByRole(
@@ -233,7 +284,7 @@ public class UserQueryHelper {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("Failed to search users by name '{}': {}", searchQuery, e.getMessage(), e);
+            log.error("❌ Failed to search users by name '{}': {}", searchQuery, e.getMessage(), e);
             throw new RuntimeException("Failed to search users", e);
         }
     }
@@ -245,17 +296,14 @@ public class UserQueryHelper {
 
         try {
             List<User> users = userRepository.findActiveUsers();
+            Map<Integer, List<RoleActivityDTO>> activitiesMap = loadActivitiesMap();
 
             List<UserDTO> dtos = users.stream()
-                    .map(user -> {
-                        Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person);
-                    })
+                    .map(user -> buildUserDTO(user, activitiesMap))
                     .collect(Collectors.toList());
 
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved {} active users in {}ms", dtos.size(), duration);
-
+            log.info("✅ Retrieved {} active users in {}ms",
+                    dtos.size(), System.currentTimeMillis() - startTime);
             return dtos;
 
         } catch (Exception e) {
@@ -267,111 +315,15 @@ public class UserQueryHelper {
     @Transactional(readOnly = true)
     public MinimalUserInfoDTO getMinimalUserInfo(UserId userId) {
         log.debug("📊 Fetching minimal user info for User ID: {}", userId.getValue());
-        long startTime = System.currentTimeMillis();
 
         try {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> {
-                        log.warn("❌ User not found for minimal info: {}", userId.getValue());
-                        return new UserNotFoundException("User not found: " + userId.getValue());
-                    });
+                    .orElseThrow(() -> new UserNotFoundException(
+                            "User not found: " + userId.getValue()));
 
             Person person = personRepository.findById(user.getPersonId())
-                    .orElseThrow(() -> {
-                        log.warn("❌ Person not found for user: {}", userId.getValue());
-                        return new UserNotFoundException("Person not found for user: " + userId.getValue());
-                    });
-
-            MinimalUserInfoDTO result = new MinimalUserInfoDTO(
-                    user.getId().getValue(),
-                    person.getId().getValue(),
-                    person.getFirstName(),
-                    person.getLastName(),
-                    person.getFullName()
-            );
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.debug("✅ Minimal user info retrieved in {}ms for User ID: {}", duration, userId.getValue());
-
-            return result;
-
-        } catch (UserNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("❌ Failed to fetch minimal user info for User {}: {}", userId.getValue(), e.getMessage(), e);
-            throw new RuntimeException("Failed to fetch minimal user info", e);
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds) {
-        log.debug("📊 Fetching minimal user info for {} user IDs", userIds.size());
-        long startTime = System.currentTimeMillis();
-
-        try {
-            List<MinimalUserInfoDTO> result = userIds.stream()
-                    .map(this::getMinimalUserInfoSafe)
-                    .collect(Collectors.toList());
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved minimal info for {} users in {}ms", result.size(), duration);
-
-            return result;
-
-        } catch (Exception e) {
-            log.error("❌ Failed to fetch minimal user info: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to fetch minimal user info", e);
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public List<UserDTO> getUsersByIds(List<String> userIds) {
-        log.debug("📊 Fetching {} users by IDs", userIds.size());
-        long startTime = System.currentTimeMillis();
-
-        try {
-            List<UserDTO> users = userIds.stream()
-                    .map(userId -> {
-                        try {
-                            return getUserById(UserId.fromString(userId));
-                        } catch (Exception e) {
-                            log.warn("Failed to fetch user {}: {}", userId, e.getMessage());
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved {} users by IDs in {}ms", users.size(), duration);
-
-            return users;
-
-        } catch (Exception e) {
-            log.error("❌ Failed to fetch users by IDs: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to fetch users by IDs", e);
-        }
-    }
-
-    private boolean matchesSearchQuery(User user, String searchQuery) {
-        try {
-            Person person = personRepository.findById(user.getPersonId()).orElse(null);
-            if (person == null) return false;
-
-            String searchLower = searchQuery.toLowerCase();
-            return person.getFullName().toLowerCase().contains(searchLower) ||
-                    person.getFirstName().toLowerCase().contains(searchLower) ||
-                    person.getLastName().toLowerCase().contains(searchLower);
-        } catch (Exception e) {
-            log.warn("Error filtering user {}: {}", user.getId().getValue(), e.getMessage());
-            return false;
-        }
-    }
-
-    private MinimalUserInfoDTO toMinimalUserInfo(User user) {
-        try {
-            Person person = personRepository.findById(user.getPersonId())
-                    .orElseThrow(() -> new UserNotFoundException("Person not found"));
+                    .orElseThrow(() -> new UserNotFoundException(
+                            "Person not found for user: " + userId.getValue()));
 
             return new MinimalUserInfoDTO(
                     user.getId().getValue(),
@@ -380,8 +332,71 @@ public class UserQueryHelper {
                     person.getLastName(),
                     person.getFullName()
             );
+
+        } catch (UserNotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("Failed to map user {} to DTO: {}", user.getId().getValue(), e.getMessage());
+            log.error("❌ Failed to fetch minimal user info for User {}: {}",
+                    userId.getValue(), e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch minimal user info", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds) {
+        log.debug("📊 Fetching minimal user info for {} IDs", userIds.size());
+
+        return userIds.stream()
+                .map(this::getMinimalUserInfoSafe)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDTO> getUsersByIds(List<String> userIds) {
+        log.debug("📊 Fetching {} users by IDs", userIds.size());
+
+        return userIds.stream()
+                .map(userId -> {
+                    try {
+                        return getUserById(UserId.fromString(userId));
+                    } catch (Exception e) {
+                        log.warn("⚠️ Failed to fetch user {}: {}", userId, e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
+    private boolean matchesSearchQuery(User user, String searchQuery) {
+        try {
+            Person person = personRepository.findById(user.getPersonId()).orElse(null);
+            if (person == null) return false;
+            String q = searchQuery.toLowerCase();
+            return person.getFullName().toLowerCase().contains(q)
+                    || person.getFirstName().toLowerCase().contains(q)
+                    || person.getLastName().toLowerCase().contains(q);
+        } catch (Exception e) {
+            log.warn("⚠️ Error filtering user {}: {}", user.getId().getValue(), e.getMessage());
+            return false;
+        }
+    }
+
+    private MinimalUserInfoDTO toMinimalUserInfo(User user) {
+        try {
+            Person person = personRepository.findById(user.getPersonId())
+                    .orElseThrow(() -> new UserNotFoundException("Person not found"));
+            return new MinimalUserInfoDTO(
+                    user.getId().getValue(),
+                    person.getId().getValue(),
+                    person.getFirstName(),
+                    person.getLastName(),
+                    person.getFullName()
+            );
+        } catch (Exception e) {
+            log.warn("⚠️ Failed to map user {}: {}", user.getId().getValue(), e.getMessage());
             return null;
         }
     }
@@ -389,14 +404,10 @@ public class UserQueryHelper {
     private MinimalUserInfoDTO getMinimalUserInfoSafe(String userId) {
         try {
             User user = userRepository.findById(UserId.fromString(userId)).orElse(null);
-            if (user == null) {
-                return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
-            }
+            if (user == null) return fallbackMinimal(userId);
 
             Person person = personRepository.findById(user.getPersonId()).orElse(null);
-            if (person == null) {
-                return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
-            }
+            if (person == null) return fallbackMinimal(userId);
 
             return new MinimalUserInfoDTO(
                     userId,
@@ -406,8 +417,12 @@ public class UserQueryHelper {
                     person.getFullName()
             );
         } catch (Exception e) {
-            log.warn("Failed to fetch minimal info for user {}: {}", userId, e.getMessage());
-            return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
+            log.warn("⚠️ Failed to fetch minimal info for user {}: {}", userId, e.getMessage());
+            return fallbackMinimal(userId);
         }
+    }
+
+    private MinimalUserInfoDTO fallbackMinimal(String userId) {
+        return new MinimalUserInfoDTO(userId, "unknown", "Unknown", "User", "Unknown User");
     }
 }

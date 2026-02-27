@@ -41,6 +41,7 @@ export function GradebookCourseView({
     };
   };
 
+  
   const getGradeColor = (percentage: number): string => {
     if (percentage >= 90) return 'text-green-600';
     if (percentage >= 80) return 'text-blue-600';
@@ -79,7 +80,7 @@ export function GradebookCourseView({
   };
 
   const courseStats = calculateCourseStats();
-
+  const displayedGrade = studentGradebook?.finalGrade && studentGradebook.finalGrade !== 'N/A' ? studentGradebook.finalGrade : null;
   const getUnitGrades = () => {
     if (!studentGradebook) return [];
 
@@ -124,7 +125,6 @@ export function GradebookCourseView({
   };
 
   const unitGrades = getUnitGrades();
-
   return (
     <div className="space-y-6">
       {!isTeacher && studentGradebook && (
@@ -140,24 +140,30 @@ export function GradebookCourseView({
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Final Course Grade</span>
                 <span className={`text-3xl font-bold ${getGradeColor(percentage)}`}>
-                  {studentGradebook.finalGrade}
+                  {studentGradebook.calculatedTotal}
                 </span>
               </div>
               
               
               
              
-              {studentGradebook.finalGrade && (
-                <div className="mt-4 p-4 bg-muted rounded-lg">
-                 
-                  {studentGradebook.finalFeedback && (
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <p className="font-medium">Feedback:</p>
-                      <p className="mt-1">{studentGradebook.finalFeedback}</p>
-                    </div>
-                  )}
+             {/* calculatedTotal / finalGrade + feedback block */}
+            {displayedGrade && (
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className={`font-bold text-lg ${getGradeColor(percentage)}`}>
+                    {displayedGrade}
+                  </span>
                 </div>
-              )}
+
+                {studentGradebook.finalFeedback  && (
+                  <div className="text-sm text-muted-foreground border-t pt-2">
+                    <p className="font-medium">Feedback:</p>
+                    <p className="mt-1">{studentGradebook.finalFeedback}</p>
+                  </div>
+                )}
+              </div>
+            )}
             </CardContent>
           </Card>
         </>

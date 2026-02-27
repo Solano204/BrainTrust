@@ -18,7 +18,7 @@ interface GradebookUnitDetailProps {
   unitId: string;
   onBack: () => void;
   isTeacher: boolean;
-  onAssignUnitGrade?: (unitId: string, studentId: string, gradeValue: string, feedback?: string) => Promise<void>;
+  onAssignUnitFinalGrade?: (unitId: string, studentId: string, gradeValue: string, courseId: string, feedback?: string) => Promise<void>;
 }
 
 interface GradeItem {
@@ -44,7 +44,7 @@ export function GradebookUnitDetail({
   unitId,
   onBack,
   isTeacher,
-  onAssignUnitGrade
+  onAssignUnitFinalGrade
 }: GradebookUnitDetailProps) {
   const { user } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -110,11 +110,11 @@ export function GradebookUnitDetail({
   const students = transformUnitGradesToStudents();
 
   const handleAssignGrade = async (student: any) => {
-    if (!onAssignUnitGrade || !gradeValue.trim()) return;
+    if (!onAssignUnitFinalGrade || !gradeValue.trim()) return;
     
     try {
       setIsAssigningGrade(true);
-      await onAssignUnitGrade(unitId, student.id, gradeValue, feedback);
+      await onAssignUnitFinalGrade(unitId, student.id, gradeValue, feedback);
       setSelectedStudent(null);
       setGradeValue('');
       setFeedback('');

@@ -53,12 +53,25 @@ const getNavigationItems = (normalizedRole: string) => {
       href: "/admin/courses", 
       permission: PERMISSIONS.COURSE_MANAGEMENT 
     },
+    { 
+      name: "Gestión de Datos Personales", 
+      icon: BookOpen, 
+      href: "/admin/personal", 
+      permission: PERMISSIONS.PERSONAL_DATA_MANAGEMENT 
+    },
+   
 
     { 
       name: "Gestión de Usuarios", 
       icon: Users, 
       href: "/admin/users", 
       permission: PERMISSIONS.USER_MANAGEMENT 
+    },
+     { 
+      name: "Gestión de  Actividades", 
+      icon: BookOpen, 
+      href: "/admin/activities", 
+      permission: PERMISSIONS.ACTIVITIES 
     },
     { 
       name: "Gestión de Catálogos", 

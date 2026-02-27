@@ -4,10 +4,7 @@ import com.braintrust.education.application.dtos.commands.AddUnitGradeFeedbackCo
 import com.braintrust.education.application.dtos.commands.BulkUpdateUnitGradesCommand;
 import com.braintrust.education.application.dtos.dtos.FinalGradeDTO;
 import com.braintrust.education.application.dtos.dtos.UnitGradeDTO;
-import com.braintrust.education.domain.valueobjects.AssignmentId;
-import com.braintrust.education.domain.valueobjects.Grade;
-import com.braintrust.education.domain.valueobjects.QuizId;
-import com.braintrust.education.domain.valueobjects.UnitId;
+import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 
 import java.math.BigDecimal;
@@ -18,9 +15,9 @@ public interface UnitGradeService {
     void addFeedback(AddUnitGradeFeedbackCommand command);
     void bulkUpdateUnitGrades(BulkUpdateUnitGradesCommand command);
 
-    void assignFinalGrade(UnitId unitId, UserId studentId, BigDecimal finalGrade, String feedback);
     FinalGradeDTO getFinalGrade(UnitId unitId, UserId studentId);
-
+    // com.braintrust.education.application.ports.in.UnitGradeService
+    void assignFinalGrade(UnitId unitId, UserId studentId, BigDecimal finalGrade, String feedback, CourseId courseId);
     void recalculateUnitGrade(UnitId unitId, UserId studentId);
     void addAssignmentGradeToUnit(UnitId unitId, UserId studentId, AssignmentId assignmentId, Grade grade);
     void addQuizGradeToUnit(UnitId unitId, UserId studentId, QuizId quizId, Grade grade);

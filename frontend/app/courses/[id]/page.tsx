@@ -33,17 +33,18 @@ export default function CoursePage() {
   const params = useParams();
   const courseId = params.id as string;
 
-  const {
-    gradebook,
-    courseGradebooks,
-    loading: gradebookLoading,
-    error: gradebookError,
-    isStudent,
-    isTeacher,
-    assignFinalGrade,
-    assignUnitFinalGrade,
-    refresh: refreshGradebook
-  } = useGradebook(courseId);
+const {
+  gradebook,
+  courseGradebooks,
+  loading: gradebookLoading,
+  error: gradebookError,
+  isStudent,
+  isTeacher,
+  assignFinalGrade,
+  assignUnitFinalGrade,
+  assignCourseFinalGrade,   // ← ADD THIS
+  refresh: refreshGradebook
+} = useGradebook(courseId);
 
   const handleViewChange = (view: CourseView) => {
     setCurrentView(view);
@@ -96,7 +97,7 @@ export default function CoursePage() {
           unitId={selectedGradebookUnit}
           onBack={handleBackFromGradebookUnit}
           isTeacher={isTeacher}
-          onAssignUnitGrade={assignUnitFinalGrade}
+  onAssignUnitFinalGrade={assignUnitFinalGrade}          // ← renamed prop
         />
       );
     }
@@ -147,13 +148,13 @@ export default function CoursePage() {
 
           gradebookView === "units" ? (
             <GradebookUnitsView
-              courseId={courseId}
-              onSelectUnit={handleSelectGradebookUnit}
-              isTeacher={isTeacher}
-              studentGradebook={isStudent ? gradebook : undefined}
-              courseGradebooks={isTeacher ? courseGradebooks : undefined}
-              onAssignFinalGrade={assignUnitFinalGrade}
-            />
+  courseId={courseId}
+  onSelectUnit={handleSelectGradebookUnit}
+  isTeacher={isTeacher}
+  studentGradebook={isStudent ? gradebook : undefined}
+  courseGradebooks={isTeacher ? courseGradebooks : undefined}
+  onAssignCourseFinalGrade={assignCourseFinalGrade}      // ← NEW prop
+/>
           ) : (
             <GradebookCourseView
               courseId={courseId}

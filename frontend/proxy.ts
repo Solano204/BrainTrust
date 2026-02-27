@@ -11,7 +11,9 @@ const roleBasedRoutes = {
     '/admin/courses',
     '/admin/catalogs',
     '/admin/analytics',
-    '/admin/settings'
+    '/admin/settings',
+    '/admin/personal',
+    '/admin/activities'
   ],
   teacher: [
     "/",
@@ -85,39 +87,44 @@ export function proxy(request: NextRequest) {
   const checkRouteAccess = () => {
     // Check if it's a shared route (EXACT MATCH)
     if (sharedRoutes.includes(pathname)) {
+      console.log('Access granted to shared route:', pathname);
       return userRole !== 'guest'; // Any authenticated user can access
     }
 
     // Check admin routes (EXACT MATCH)
     if (roleBasedRoutes.admin.includes(pathname as any) && userRole === 'admin') {
+      console.log('Access granted to admin route:', pathname);
       return true;
     }
 
     // Check teacher routes (EXACT MATCH)
     if ((pathname.includes("/courses") ||  roleBasedRoutes.teacher.includes(pathname as any)) && (userRole === 'teacher')) {
+      console.log('Access granted to teacher route:', pathname);
       return true;
     }
 
 
      if ((pathname.includes("/courses") ||  roleBasedRoutes.teacher.includes(pathname as any)) && (userRole === 'student')) {
+      console.log('Access granted to student route:', pathname);
       return true;
     }
     
-
+    console.warn(`Access denied for role: ${userRole} on path: ${pathname}`);
     return false;
   };
 
   const hasAccess = checkRouteAccess();
 
   if (!hasAccess) {
+    console.warn(`Access denied for role: ${userRole} on path: ${pathname}`);
     // Redirect to appropriate dashboard based on role
-    if (userRole === 'teacher') {
-      return NextResponse.redirect(new URL('/', request.url));
-    } else if (userRole === 'student') {
-      return NextResponse.redirect(new URL('/', request.url));
-    } else if (userRole === 'admin') {
-      return NextResponse.redirect(new URL('/admin/users', request.url));
-    }
+    // if (userRole === 'teacher') {
+    //   return NextResponse.redirect(new URL('/', request.url));
+    // } else if (userRole === 'student') {
+    //   return NextResponse.redirect(new URL('/', request.url));
+    // } else if (userRole === 'admin') {
+    //   return NextResponse.redirect(new URL('/admin/users', request.url));
+    // }
 
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }

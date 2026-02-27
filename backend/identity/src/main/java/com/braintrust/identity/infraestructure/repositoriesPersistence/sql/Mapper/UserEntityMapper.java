@@ -4,7 +4,9 @@ package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.Mapp
 
 import com.braintrust.identity.domain.model.*;
 import com.braintrust.identity.domain.valueobjects.*;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.CatRoleJpaEntity;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.UserJpaEntity;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories.CatRoleJpaRepository;
 import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
 import org.springframework.stereotype.Component;
 
@@ -12,44 +14,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class UserEntityMapper {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(UserEntityMapper.class);
+    private static final Logger log = LoggerFactory.getLogger(UserEntityMapper.class);
+
+    private final CatRoleJpaRepository catRoleJpaRepository;
+
+    public UserEntityMapper(CatRoleJpaRepository catRoleJpaRepository) {
+        this.catRoleJpaRepository = catRoleJpaRepository;
+    }
 
     public UserJpaEntity toEntity(User user) {
-        log.debug("Mapping User Domain ID {} to JPA Entity. Email: {}",
-                user.getId().getValue(), user.getEmail().getValue());
+        CatRoleJpaEntity roleEntity = catRoleJpaRepository
+                .findByCodeIgnoreCase(user.getRole().name())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Role not found: " + user.getRole().name()));
 
-        return new UserJpaEntity(
+        UserJpaEntity entity = new UserJpaEntity(
                 user.getId().getValue(),
                 user.getPersonId().getValue(),
                 user.getEmail().getValue(),
-                user.getPassword().getHash(), // Storing hash
+                user.getPassword().getHash(),
                 user.getRole().name(),
                 user.isActive(),
                 user.getStudentId(),
                 user.getCreatedAt()
         );
+        entity.setRoleEntity(roleEntity); // ✅ attach the role
+        return entity;
     }
 
     public User toDomain(UserJpaEntity entity) {
-        log.debug("Mapping User JPA Entity {} back to Domain Model. Role: {}",
-                entity.getId(), entity.getRole());
-
-        PersonId personId = PersonId.fromString(entity.getPersonId());
-        Email email = new Email(entity.getEmail());
-        Password password = Password.fromHash(entity.getPasswordHash());
-        Role role = Role.valueOf(entity.getRole().name());
-
         return User.reconstitute(
                 UserId.fromString(entity.getId()),
-                personId,
-                email,
-                password,
-                role,
+                PersonId.fromString(entity.getPersonId()),
+                new Email(entity.getEmail()),
+                Password.fromHash(entity.getPasswordHash()),
+                Role.valueOf(entity.getRole().name()), // ✅ reads from CatRoleJpaEntity.code
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getStudentId()

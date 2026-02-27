@@ -1,5 +1,6 @@
 package com.braintrust.containerapp.rest.course;
 
+import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.identity.application.dtos.commands.AssignFinalGradeCommand;
 import com.braintrust.education.application.dtos.commands.BulkUpdateUnitGradesCommand;
 import com.braintrust.education.application.dtos.dtos.UnitGradeDTO;
@@ -29,12 +30,12 @@ public class UnitGradeController {
             @PathVariable String studentId,
             @RequestBody AssignFinalGradeCommand command) {
 
-
         unitGradeService.assignFinalGrade(
                 UnitId.fromString(unitId),
                 UserId.fromString(studentId),
                 new BigDecimal(command.gradeValue()),
-                command.feedback()
+                command.feedback(),
+                command.courseId() != null ? CourseId.fromString(command.courseId()) : null
         );
 
         return ResponseEntity.ok().build();

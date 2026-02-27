@@ -23,8 +23,15 @@ public class UserJpaEntity {
     @Column(name = "password_hash", length = 255, nullable = false)
     private String passwordHash;
 
-    @Column(name = "role_id", nullable = false)
-    private Integer roleId;
+    // ✅ NO @Column role_id here — it lives in user_roles junction table
+    // ✅ CORRECT — role_id is a direct column on the users table
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private CatRoleJpaEntity role;
 
     @Column(name = "active", nullable = false)
     private boolean active;
@@ -43,38 +50,25 @@ public class UserJpaEntity {
         this.personId = personId;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.roleId = switch (Role.valueOf(role)) {
-            case STUDENT     -> 1;
-            case TEACHER     -> 2;
-            case ADMIN       -> 3;
-            case SYS_MANAGER -> 4;
-        };
+        // role entity will be set separately via setRole()
         this.active = active;
         this.studentId = studentId;
         this.createdAt = createdAt;
     }
 
+    // ✅ Returns the infrastructure Role enum via CatRoleJpaEntity.code
     public Role getRole() {
-        return switch (roleId) {
-            case 1 -> Role.STUDENT;
-            case 2 -> Role.TEACHER;
-            case 3 -> Role.ADMIN;
-            case 4 -> Role.SYS_MANAGER;
-            default -> throw new IllegalArgumentException("Unknown role_id: " + roleId);
-        };
+        if (role == null) throw new IllegalStateException("User has no role assigned");
+        return Role.valueOf(role.getCode());
     }
 
-    public void setRole(String role) {
-        this.roleId = switch (Role.valueOf(role)) {
-            case STUDENT     -> 1;
-            case TEACHER     -> 2;
-            case ADMIN       -> 3;
-            case SYS_MANAGER -> 4;
-        };
+    // ✅ getRoleId() derived from the relationship — used by existing queries
+    public Integer getRoleId() {
+        return role != null ? role.getId() : null;
     }
 
-    public Integer getRoleId() { return roleId; }
-    public void setRoleId(Integer roleId) { this.roleId = roleId; }
+    public CatRoleJpaEntity getRoleEntity() { return role; }
+    public void setRoleEntity(CatRoleJpaEntity role) { this.role = role; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }

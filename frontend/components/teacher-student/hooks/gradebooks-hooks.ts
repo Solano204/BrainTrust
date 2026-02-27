@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
-import { StudentGradebook , UnitGradeDTO, assignFinalGrade, assignUnitFinalGrade, exportStudentGrades, fetchCourseGradebooks, fetchStudentGradebook, fetchUnitGrades } from '@/components/student/api/student-gradebooks';
+import { StudentGradebook, UnitGradeDTO, assignFinalGrade, assignUnitFinalGrade, exportStudentGrades, fetchCourseGradebooks, fetchStudentGradebook, fetchUnitGrades } from '@/components/student/api/student-gradebooks';
 
 export function useGradebook(courseId: string) {
   const { user } = useAuth();
@@ -23,21 +23,12 @@ export function useGradebook(courseId: string) {
       setLoading(true);
       setError(null);
 
-      console.log("Loading gradebook for course:", courseId);
-      console.log("User role:", user?.role, "User ID:", user?.id);
-
       if (isStudent && user?.id) {
-        console.log("Fetching student gradebook...");
         const studentGradebook = await fetchStudentGradebook(courseId, user.id);
-        console.log("Fetched student gradebook:", studentGradebook);
         setGradebook(studentGradebook);
       } else if (isTeacher) {
-        console.log("Fetching course gradebooks...");
         const gradebooks = await fetchCourseGradebooks(courseId);
-        console.log("Fetched course gradebooks:", gradebooks);
         setCourseGradebooks(gradebooks || []);
-      } else {
-        console.log("No gradebook data to load - user not student or teacher");
       }
     } catch (err) {
       console.error("Error loading gradebook:", err);
@@ -49,7 +40,6 @@ export function useGradebook(courseId: string) {
 
   const handleAssignFinalGrade = async (studentId: string, gradeValue: string, feedback?: string) => {
     if (!isTeacher) return;
-    
     try {
       await assignFinalGrade(courseId, studentId, gradeValue, feedback);
       await loadGradebookData();
@@ -58,11 +48,33 @@ export function useGradebook(courseId: string) {
     }
   };
 
-  const handleAssignUnitFinalGrade = async (unitId: string, studentId: string, gradeValue: string, feedback?: string) => {
+  const handleAssignUnitFinalGrade = async (
+    unitId: string,
+    studentId: string,
+    gradeValue: string,
+    incomingCourseId: string,
+    feedback?: string,
+  ) => {
     if (!isTeacher) return;
-    
+
+    // DEBUG — remove once confirmed working
+    console.log('[useGradebook] handleAssignUnitFinalGrade called with:', {
+      unitId,
+      studentId,
+      gradeValue,
+      incomingCourseId,
+      feedback,
+      hookCourseId: courseId,
+    });
+
+    // Use the hook's own courseId (closure from page.tsx useParams) as source
+    // of truth; fall back to incomingCourseId if somehow the closure is stale.
+    const resolvedCourseId = courseId || incomingCourseId;
+
+    console.log('[useGradebook] resolvedCourseId:', resolvedCourseId);
+
     try {
-      await assignUnitFinalGrade(unitId, studentId, gradeValue, feedback);
+      await assignUnitFinalGrade(unitId, studentId, gradeValue, feedback, resolvedCourseId);
       await loadGradebookData();
     } catch (err) {
       throw err;
@@ -78,18 +90,34 @@ export function useGradebook(courseId: string) {
     }
   };
 
-  return {
-    gradebook,
-    courseGradebooks,
-    loading,
-    error,
-    isStudent,
-    isTeacher,
-    assignFinalGrade: handleAssignFinalGrade,
-    assignUnitFinalGrade: handleAssignUnitFinalGrade,
-    exportGrades: handleExportGrades,
-    refresh: loadGradebookData
-  };
+ const handleAssignCourseFinalGrade = async (
+  studentId: string,
+  gradeValue: string,
+  feedback?: string
+) => {
+  if (!isTeacher) return;
+  try {
+    await assignFinalGrade(courseId, studentId, gradeValue, feedback);
+    await loadGradebookData();
+  } catch (err) {
+    throw err;
+  }
+};
+
+// In the return object, rename for clarity:
+return {
+  gradebook,
+  courseGradebooks,
+  loading,
+  error,
+  isStudent,
+  isTeacher,
+  assignCourseFinalGrade: handleAssignCourseFinalGrade,  // ← NEW clear name
+  assignUnitFinalGrade: handleAssignUnitFinalGrade,
+  assignFinalGrade: handleAssignFinalGrade,              // ← keep old one too
+  exportGrades: handleExportGrades,
+  refresh: loadGradebookData
+}
 }
 
 export function useUnitGrades(unitId: string) {
@@ -105,15 +133,13 @@ export function useUnitGrades(unitId: string) {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (!unitId) {
         setUnitGrades([]);
         return;
       }
 
-      console.log("Fetching unit grades for unit:", unitId);
       const grades = await fetchUnitGrades(unitId);
-      console.log("UNIT GRADES fetched:", grades);
       setUnitGrades(grades || []);
     } catch (err) {
       console.error("Error loading unit grades:", err);

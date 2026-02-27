@@ -19,8 +19,8 @@ interface GradebookUnitsViewProps {
   isTeacher: boolean;
   studentGradebook?: StudentGradebook | null;
   courseGradebooks?: any[];
-  // ✅ Signature now matches assignUnitFinalGrade: (unitId, studentId, gradeValue, feedback)
-  onAssignFinalGrade?: (unitId: string, studentId: string, gradeValue: string, feedback?: string) => Promise<void>;
+  onAssignUnitFinalGrade?: (unitId: string, studentId: string, gradeValue: string, courseId: string, feedback?: string) => Promise<void>;
+  onAssignCourseFinalGrade?: (studentId: string, gradeValue: string, feedback?: string) => Promise<void>;  // ← NEW
 }
 
 export function GradebookUnitsView({
@@ -29,7 +29,8 @@ export function GradebookUnitsView({
   isTeacher,
   studentGradebook,
   courseGradebooks,
-  onAssignFinalGrade
+  onAssignUnitFinalGrade,
+  onAssignCourseFinalGrade,   // ← NEW
 }: GradebookUnitsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [gradeValue, setGradeValue] = useState('');
@@ -43,7 +44,14 @@ export function GradebookUnitsView({
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
   const [unitTasks, setUnitTasks] = useState<Record<string, any[]>>({});
-
+  // Separate state for each dialog type
+  const [unitDialogStudentId, setUnitDialogStudentId] = useState<string | null>(null);
+  const [courseDialogStudentId, setCourseDialogStudentId] = useState<string | null>(null);
+  const resetDialogState = () => {
+    setGradeValue('');
+    setFeedback('');
+    setSelectedUnitId(null);
+  };
   const {
     units: courseUnits,
     isLoading: isLoadingUnits,
@@ -88,24 +96,40 @@ export function GradebookUnitsView({
     return { grade: `${percentage.toFixed(1)}%`, color, completed: gradedTasks.length, total: tasks.length, tasks };
   };
 
-  // ✅ Now receives unitId explicitly and passes it as first arg to onAssignFinalGrade
-  const handleAssignGrade = async (gradebook: any, unitId: string) => {
-    if (!onAssignFinalGrade || !gradeValue.trim() || !unitId) return;
 
+  // Handler for UNIT grade
+  const handleAssignUnitGrade = async (gradebook: any, unitId: string) => {
+    if (!onAssignUnitFinalGrade || !gradeValue.trim() || !unitId) return;
     try {
       setIsAssigningGrade(true);
-      await onAssignFinalGrade(unitId, gradebook.studentId, gradeValue, feedback);
-      // Reset dialog state
-      setOpenDialogStudentId(null);
+      await onAssignUnitFinalGrade(unitId, gradebook.studentId, gradeValue, courseId, feedback);
+      setUnitDialogStudentId(null);
       setSelectedUnitId(null);
       setGradeValue('');
       setFeedback('');
     } catch (error) {
-      console.error('Failed to assign grade:', error);
+      console.error('Failed to assign unit grade:', error);
     } finally {
       setIsAssigningGrade(false);
     }
   };
+
+  // Handler for COURSE final grade
+  const handleAssignCourseGrade = async (gradebook: any) => {
+    if (!onAssignCourseFinalGrade || !gradeValue.trim()) return;
+    try {
+      setIsAssigningGrade(true);
+      await onAssignCourseFinalGrade(gradebook.studentId, gradeValue, feedback);
+      setCourseDialogStudentId(null);
+      setGradeValue('');
+      setFeedback('');
+    } catch (error) {
+      console.error('Failed to assign course grade:', error);
+    } finally {
+      setIsAssigningGrade(false);
+    }
+  };
+
 
   const handleOpenDialog = (studentId: string) => {
     setOpenDialogStudentId(studentId);
@@ -269,102 +293,72 @@ export function GradebookUnitsView({
                         </TableCell>
                         <TableCell>
                           {/* ✅ Dialog is controlled per-row via openDialogStudentId */}
-                          <Dialog
-                            open={openDialogStudentId === gradebook.studentId}
-                            onOpenChange={(open) => {
-                              if (!open) handleCloseDialog();
-                            }}
-                          >
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleOpenDialog(gradebook.studentId)}
-                              >
-                                Assign Final Grade
-                              </Button>
-                            </DialogTrigger>
+                          {/* ── DIALOG 2: Assign Course Final Grade ── */}
+    <Dialog
+      open={courseDialogStudentId === gradebook.studentId}
+      onOpenChange={(open) => {
+        if (!open) { setCourseDialogStudentId(null); resetDialogState(); }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={() => { setCourseDialogStudentId(gradebook.studentId); resetDialogState(); }}
+        >
+          Course Grade
+        </Button>
+      </DialogTrigger>
 
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Assign Final Course Grade</DialogTitle>
-                                <DialogDescription>
-                                  Set the final course grade for {gradebook.studentName}
-                                </DialogDescription>
-                              </DialogHeader>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign Course Final Grade</DialogTitle>
+          <DialogDescription>
+            Set the overall final grade for {gradebook.studentName} in this course
+          </DialogDescription>
+        </DialogHeader>
 
-                              <div className="space-y-4">
-                                {/* ✅ Unit selector — teacher picks which unit this grade belongs to */}
-                                <div>
-                                  <Label htmlFor="unit">Unit</Label>
-                                  <select
-                                    id="unit"
-                                    className="w-full border rounded-md px-3 py-2 text-sm mt-1"
-                                    value={selectedUnitId || ''}
-                                    onChange={(e) => setSelectedUnitId(e.target.value)}
-                                  >
-                                    <option value="" disabled>Select a unit</option>
-                                    {filteredUnits.map((unit) => (
-                                      <option key={unit.id} value={unit.id}>
-                                        {unit.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
+        <div className="space-y-4">
+          {/* No unit selector here — this is the course-level grade */}
+          <div>
+            <Label htmlFor="course-grade">Final Grade</Label>
+            <Input
+              id="course-grade"
+              value={gradeValue}
+              onChange={(e) => setGradeValue(e.target.value)}
+              placeholder="e.g., 90"
+            />
+          </div>
 
-                                <div>
-                                  <Label htmlFor="grade">Final Grade</Label>
-                                  <Input
-                                    id="grade"
-                                    value={gradeValue}
-                                    onChange={(e) => setGradeValue(e.target.value)}
-                                    placeholder="e.g., 95% or A"
-                                    required
-                                  />
-                                </div>
+          <div>
+            <Label htmlFor="course-feedback">Feedback</Label>
+            <Textarea
+              id="course-feedback"
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Optional feedback"
+              rows={3}
+            />
+          </div>
+        </div>
 
-                                <div>
-                                  <Label htmlFor="feedback">Feedback</Label>
-                                  <Textarea
-                                    id="feedback"
-                                    value={feedback}
-                                    onChange={(e) => setFeedback(e.target.value)}
-                                    placeholder="Optional feedback for the student"
-                                    rows={3}
-                                  />
-                                </div>
-                              </div>
-
-                              <DialogFooter>
-                                <Button
-                                  variant="outline"
-                                  onClick={handleCloseDialog}
-                                  disabled={isAssigningGrade}
-                                >
-                                  Cancel
-                                </Button>
-
-                                {/* ✅ Passes selectedUnitId to handleAssignGrade */}
-                                <Button
-                                  onClick={() => {
-                                    if (selectedUnitId) {
-                                      handleAssignGrade(gradebook, selectedUnitId);
-                                    }
-                                  }}
-                                  disabled={!gradeValue.trim() || !selectedUnitId || isAssigningGrade}
-                                >
-                                  {isAssigningGrade ? (
-                                    <>
-                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                      Assigning...
-                                    </>
-                                  ) : (
-                                    'Assign Final Grade'
-                                  )}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => { setCourseDialogStudentId(null); resetDialogState(); }}
+            disabled={isAssigningGrade}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleAssignCourseGrade(gradebook)}
+            disabled={!gradeValue.trim() || isAssigningGrade}
+          >
+            {isAssigningGrade ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Assigning...</> : 'Assign Course Grade'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
                         </TableCell>
                       </TableRow>
                     ))}
