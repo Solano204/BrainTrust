@@ -110,6 +110,8 @@ export const PERMISSIONS = {
   SYSTEM_SETTINGS: 'admin:settings',
   COURSE_MANAGEMENT: 'admin:courses',
   CATALOG_MANAGEMENT: 'admin:catalogs',
+  PERSONAL_DATA_MANAGEMENT: 'admin:personal',
+  ACTIVITIES: 'admin:activities',
 
   TEACHER_DASHBOARD: 'teacher:dashboard',
   MANAGE_CLASSES: 'teacher:classes',
@@ -137,6 +139,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.GRADE_SUBMISSIONS,
     PERMISSIONS.STUDENT_DASHBOARD,
     PERMISSIONS.VIEW_COURSES,
+    PERMISSIONS.ACTIVITIES,
   ],
   student: [
     PERMISSIONS.STUDENT_DASHBOARD,

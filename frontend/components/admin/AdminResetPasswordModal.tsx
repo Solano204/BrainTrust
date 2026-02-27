@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Shield } from "lucide-react";
 import { useAdminResetPassword } from "./hooks/useUsers";
-import { User } from "./api/usersApi";
+import { User } from "@/app/shared/models/user.model";
 
 interface AdminResetPasswordModalProps {
   user: User | null;

@@ -42,6 +42,8 @@ public class UnitGradeApplicationService implements UnitGradeService {
     private final QuizRepository quizRepository;
     private final CourseRepository courseRepository;
     private final UserService userService;
+    // Add these new dependencies to the constructor
+    private final GradebookRepository gradebookRepository;
 
     public UnitGradeApplicationService(
             UnitGradeRepository unitGradeRepository,
@@ -50,13 +52,16 @@ public class UnitGradeApplicationService implements UnitGradeService {
             AssignmentRepository assignmentRepository,
             QuizRepository quizRepository,
             CourseRepository courseRepository,
-            UserService userService) {
+            UserService userService,
+            GradebookRepository gradebookRepository) {  // NEW
         this.unitGradeRepository = unitGradeRepository;
         this.submissionRepository = submissionRepository;
         this.quizSubmissionRepository = quizSubmissionRepository;
         this.assignmentRepository = assignmentRepository;
         this.quizRepository = quizRepository;
         this.courseRepository = courseRepository;
+        this.gradebookRepository = gradebookRepository;
+
         this.userService = userService;
     }
 
@@ -78,8 +83,8 @@ public class UnitGradeApplicationService implements UnitGradeService {
                     BigDecimal finalGrade = new BigDecimal(gradeCommand.gradeValue());
                     String feedback = gradeCommand.feedback();
 
-
-                    assignFinalGrade(unitId, studentId, finalGrade, feedback);
+                    CourseId courseId = CourseId.fromString("COURSE-js");
+                    assignFinalGrade(unitId, studentId, finalGrade, feedback, courseId);
                     successCount++;
 
                     log.debug("✅ Updated unit grade for student {}: {}",
@@ -226,15 +231,70 @@ public class UnitGradeApplicationService implements UnitGradeService {
     }
 
     @Override
-    public void assignFinalGrade(UnitId unitId, UserId studentId, BigDecimal finalGrade, String feedback) {
+    public void assignFinalGrade(UnitId unitId, UserId studentId, BigDecimal finalGrade, String feedback, CourseId courseId) {
         log.info("Assigning final grade {} for student {} in unit {}",
                 finalGrade, studentId.getValue(), unitId.getValue());
 
+        // 1. Save the unit final grade
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
         unitGrade.assignFinalGrade(finalGrade, feedback);
         unitGradeRepository.save(unitGrade);
-
         log.info("Final grade assigned for unit");
+
+        // 2. If courseId provided, recalculate and update the Gradebook
+        if (courseId != null) {
+            recalculateCourseGradebook(courseId, studentId);
+        }
+    }
+
+    private void recalculateCourseGradebook(CourseId courseId, UserId studentId) {
+        log.info("Recalculating gradebook average for student {} in course {}",
+                studentId.getValue(), courseId.getValue());
+
+        List<UnitGrade> unitGrades = unitGradeRepository.findByCourseAndStudent(courseId, studentId);
+
+        if (unitGrades.isEmpty()) {
+            log.warn("No unit grades found for student {} in course {}, skipping gradebook update",
+                    studentId.getValue(), courseId.getValue());
+            return;
+        }
+
+        BigDecimal sum = BigDecimal.ZERO;
+        int count = 0;
+
+        for (UnitGrade ug : unitGrades) {
+            BigDecimal value = ug.getDisplayGradeValue();
+            if (value != null) {
+                sum = sum.add(value);
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            log.warn("All unit grades are null for student {} in course {}, skipping",
+                    studentId.getValue(), courseId.getValue());
+            return;
+        }
+
+        // ✅ This is the correct average: (66 + 55) / 2 = 60.5
+        BigDecimal average = sum.divide(BigDecimal.valueOf(count), 2, java.math.RoundingMode.HALF_UP);
+
+        log.info("Computed course average: {} / {} units = {}", sum, count, average);
+
+        Gradebook gradebook = gradebookRepository.findByCourseAndStudent(courseId, studentId)
+                .orElseGet(() -> {
+                    log.info("Creating gradebook for student {} in course {}",
+                            studentId.getValue(), courseId.getValue());
+                    return Gradebook.create(courseId, studentId);
+                });
+
+        // ✅ Use the computed average directly — NOT updateCalculatedTotal(unitGrades)
+        gradebook.setCalculatedTotalDirect(average);
+
+        gradebookRepository.save(gradebook);
+
+        log.info("Gradebook updated with average {} for student {} in course {}",
+                average, studentId.getValue(), courseId.getValue());
     }
 
     @Override

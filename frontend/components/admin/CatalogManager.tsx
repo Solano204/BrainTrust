@@ -2,6 +2,7 @@
 
 // ============================================================
 // FILE 4: components/CatalogManager.tsx
+// (role-activities section removed — now lives in ActivityManager)
 // ============================================================
 
 import { useState, useCallback } from 'react';
@@ -13,10 +14,9 @@ import {
   useColonies, useColoniesByMunicipality, useAddColony, useUpdateColony, useDeleteColony,
   useStreets, useStreetsByColony, useAddStreet, useUpdateStreet, useDeleteStreet,
   usePostalCodes, usePostalCodesByColony, useAddPostalCode, useUpdatePostalCode, useDeletePostalCode,
-  useRoles, useRolesList, useCreateRole, useUpdateRole, useDeleteRole,
-  useRoleActivities, useRoleActivitiesByRole, useCreateRoleActivity, useUpdateRoleActivity, useDeleteRoleActivity,
+  useRoles, useCreateRole, useUpdateRole, useDeleteRole,
 } from './hooks/useCatalogs';
-import type { CatRole, PagedResponse, CatalogSectionKey, CatalogRoleActivity } from '@/app/shared/admin/catalog.models';
+import type { CatRole, PagedResponse, CatalogSectionKey } from '@/app/shared/admin/catalog.models';
 import {
   Search, Plus, Pencil, Trash2, X, Check, AlertTriangle, Loader2,
   ChevronRight, ChevronLeft, User, MapPin, Building2, TreePine,
@@ -37,18 +37,20 @@ function useToasts() {
   return { toasts, push };
 }
 
-// ─── Catalog Section Config ───────────────────────────────────────
+// ─── Catalog Section Config (role-activities removed) ─────────────
 const CATALOG_SECTIONS = [
-  { key: 'first-names',     label: 'First Names',     icon: User,         color: '#6366f1' },
-  { key: 'last-names',      label: 'Last Names',      icon: User,         color: '#8b5cf6' },
-  { key: 'states',          label: 'States',          icon: MapPin,       color: '#0ea5e9' },
-  { key: 'municipalities',  label: 'Municipalities',  icon: Building2,    color: '#10b981' },
-  { key: 'colonies',        label: 'Colonies',        icon: TreePine,     color: '#f59e0b' },
-  { key: 'streets',         label: 'Streets',         icon: RouteIcon,    color: '#ef4444' },
-  { key: 'postal-codes',    label: 'Postal Codes',    icon: Hash,         color: '#ec4899' },
-  { key: 'roles',           label: 'Roles',           icon: ShieldCheck,  color: '#14b8a6' },
-  { key: 'role-activities', label: 'Role Activities', icon: Activity,     color: '#f97316' },
+  { key: 'first-names',    label: 'First Names',    icon: User,      color: '#6366f1' },
+  { key: 'last-names',     label: 'Last Names',     icon: User,      color: '#8b5cf6' },
+  { key: 'states',         label: 'States',         icon: MapPin,    color: '#0ea5e9' },
+  { key: 'municipalities', label: 'Municipalities', icon: Building2, color: '#10b981' },
+  { key: 'colonies',       label: 'Colonies',       icon: TreePine,  color: '#f59e0b' },
+  { key: 'streets',        label: 'Streets',        icon: RouteIcon, color: '#ef4444' },
+  { key: 'postal-codes',   label: 'Postal Codes',   icon: Hash,      color: '#ec4899' },
+  { key: 'roles',          label: 'Roles',          icon: ShieldCheck, color: '#14b8a6' },
 ] as const;
+
+// Narrow the key type to only what's in this component
+type CatalogSectionKeyLocal = typeof CATALOG_SECTIONS[number]['key'];
 
 // ─── Pagination Bar ───────────────────────────────────────────────
 interface PaginationBarProps {
@@ -347,8 +349,8 @@ function SimpleValuePanel({ accentColor, push, useItems, useAdd, useUpdate, useD
 
 // ─── Municipalities Panel ─────────────────────────────────────────
 function MunicipalitiesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
-  const [search, setSearch]     = useState('');
-  const [page, setPage]         = useState(0);
+  const [search, setSearch]           = useState('');
+  const [page, setPage]               = useState(0);
   const [filterState, setFilterState] = useState<number | null>(null);
   const [newStateId, setNewStateId]   = useState('');
 
@@ -358,9 +360,9 @@ function MunicipalitiesPanel({ accentColor, push }: { accentColor: string; push:
   const { data: allData,    isLoading: loadingAll }      = useMunicipalities({ page, size: 20, search: search || undefined });
   const { data: filterData, isLoading: loadingFiltered } = useMunicipalitiesByState(filterState, { page, size: 20 });
 
-  const raw      = filterState ? filterData : allData;
-  const isLoading= filterState ? loadingFiltered : loadingAll;
-  const mapped   = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.municipalityName })) } : undefined;
+  const raw       = filterState ? filterData : allData;
+  const isLoading = filterState ? loadingFiltered : loadingAll;
+  const mapped    = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.municipalityName })) } : undefined;
 
   const add = useAddMunicipality();
   const upd = useUpdateMunicipality();
@@ -413,9 +415,9 @@ function ColoniesPanel({ accentColor, push }: { accentColor: string; push: PushF
   const { data: allData,    isLoading: loadingAll }      = useColonies({ page, size: 20, search: search || undefined });
   const { data: filterData, isLoading: loadingFiltered } = useColoniesByMunicipality(filterMuni, { page, size: 20 });
 
-  const raw      = filterMuni ? filterData : allData;
-  const isLoading= filterMuni ? loadingFiltered : loadingAll;
-  const mapped   = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.colonyName })) } : undefined;
+  const raw       = filterMuni ? filterData : allData;
+  const isLoading = filterMuni ? loadingFiltered : loadingAll;
+  const mapped    = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.colonyName })) } : undefined;
 
   const add = useAddColony();
   const upd = useUpdateColony();
@@ -468,9 +470,9 @@ function StreetsPanel({ accentColor, push }: { accentColor: string; push: PushFn
   const { data: allData,    isLoading: loadingAll }      = useStreets({ page, size: 20, search: search || undefined });
   const { data: filterData, isLoading: loadingFiltered } = useStreetsByColony(filterColony, { page, size: 20 });
 
-  const raw      = filterColony ? filterData : allData;
-  const isLoading= filterColony ? loadingFiltered : loadingAll;
-  const mapped   = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.streetName })) } : undefined;
+  const raw       = filterColony ? filterData : allData;
+  const isLoading = filterColony ? loadingFiltered : loadingAll;
+  const mapped    = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.streetName })) } : undefined;
 
   const add = useAddStreet();
   const upd = useUpdateStreet();
@@ -523,9 +525,9 @@ function PostalCodesPanel({ accentColor, push }: { accentColor: string; push: Pu
   const { data: allData,    isLoading: loadingAll }      = usePostalCodes({ page, size: 20, search: search || undefined });
   const { data: filterData, isLoading: loadingFiltered } = usePostalCodesByColony(filterColony, { page, size: 20 });
 
-  const raw      = filterColony ? filterData : allData;
-  const isLoading= filterColony ? loadingFiltered : loadingAll;
-  const mapped   = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.postalCode })) } : undefined;
+  const raw       = filterColony ? filterData : allData;
+  const isLoading = filterColony ? loadingFiltered : loadingAll;
+  const mapped    = raw ? { ...raw, content: raw.content.map(d => ({ id: d.id, displayValue: d.postalCode })) } : undefined;
 
   const add = useAddPostalCode();
   const upd = useUpdatePostalCode();
@@ -599,7 +601,7 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
     setEditingId(role.id);
     setEditCode(role.code);
     setEditDesc(role.description);
-    setExpandedId(role.id); // keep expanded while editing
+    setExpandedId(role.id);
   };
 
   const handleUpdate = async () => {
@@ -624,7 +626,6 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Add button */}
       <div className="flex justify-end">
         <button onClick={() => setShowAdd(v => !v)} style={{ background: accentColor }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium shadow-sm hover:opacity-90 transition-all active:scale-95">
@@ -632,7 +633,6 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
         </button>
       </div>
 
-      {/* Add Form */}
       {showAdd && (
         <div className="p-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/80 flex flex-col gap-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">New Role</p>
@@ -653,7 +653,6 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
         </div>
       )}
 
-      {/* Role Cards */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12 gap-3 text-gray-400">
           <Loader2 className="w-5 h-5 animate-spin" /><span className="text-sm">Loading...</span>
@@ -667,22 +666,14 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
             const isEditing  = editingId  === role.id;
             return (
               <div key={role.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all">
-                {/* Role Header Row */}
                 <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-gray-50/60 transition-colors">
-                  {/* Expand toggle */}
-                  <button
-                    onClick={() => toggleExpand(role.id)}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all flex-shrink-0"
-                  >
+                  <button onClick={() => toggleExpand(role.id)}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all flex-shrink-0">
                     <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
                   </button>
-
-                  {/* ID */}
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-xs font-mono flex-shrink-0">
                     #{role.id}
                   </span>
-
-                  {/* Code — editable */}
                   <div className="w-36 flex-shrink-0">
                     {isEditing ? (
                       <input autoFocus value={editCode} onChange={e => setEditCode(e.target.value)}
@@ -695,28 +686,19 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
                       </span>
                     )}
                   </div>
-
-                  {/* Description — editable */}
-                  <div className="flex-1 min-w-0">
-                    {isEditing ? (
-                      <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                        className="w-full px-2.5 py-1 text-sm rounded-lg border border-teal-300 bg-teal-50/50 focus:outline-none focus:ring-2 focus:ring-teal-400 text-gray-800" />
-                    ) : (
-                      <span className="text-sm text-gray-600 truncate block">
-                        {role.description || <span className="text-gray-300 italic">No description</span>}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Activity count badge */}
+                  {/* {isEditing ? (
+                    <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
+                      placeholder="Description"
+                      className="flex-1 px-2.5 py-1 text-sm rounded-lg border border-teal-300 bg-teal-50/50 focus:outline-none focus:ring-2 focus:ring-teal-400 text-gray-600" />
+                  ) : (
+                    <span className="flex-1 text-sm text-gray-500 truncate">{role.description}</span>
+                  )} */}
                   {!isEditing && (
                     <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 flex-shrink-0">
                       <Activity className="w-3 h-3" />
                       {role.activities?.length ?? 0}
                     </span>
                   )}
-
-                  {/* Action buttons */}
                   <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     {isEditing ? (
                       <>
@@ -742,7 +724,6 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
                   </div>
                 </div>
 
-                {/* Activities drawer */}
                 {isExpanded && (
                   <div className="border-t border-gray-100 bg-gray-50/50">
                     {!role.activities || role.activities.length === 0 ? (
@@ -760,19 +741,13 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
                         <tbody className="divide-y divide-gray-100">
                           {role.activities.map(act => (
                             <tr key={act.id} className="hover:bg-white/80 transition-colors">
-                              <td className="px-12 py-2.5">
-                                <span className="font-mono text-gray-400">#{act.id}</span>
-                              </td>
+                              <td className="px-12 py-2.5"><span className="font-mono text-gray-400">#{act.id}</span></td>
                               <td className="px-3 py-2.5">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold"
-                                  style={{ background: accentColor + '12', color: accentColor }}>
-                                  {act.code}
-                                </span>
+                                  style={{ background: accentColor + '12', color: accentColor }}>{act.code}</span>
                               </td>
                               <td className="px-3 py-2.5 font-medium text-gray-700">{act.activity}</td>
-                              <td className="px-3 py-2.5 text-gray-500">
-                                {act.description || <span className="text-gray-300 italic">—</span>}
-                              </td>
+                              <td className="px-3 py-2.5 text-gray-500">{act.description || <span className="text-gray-300 italic">—</span>}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -788,214 +763,6 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
 
       {!isLoading && data && (
         <PaginationBar page={data.page} totalPages={data.totalPages} totalElements={data.totalElements} onPage={setPage} accentColor={accentColor} />
-      )}
-    </div>
-  );
-}
-
-// ─── Role Activities Panel ────────────────────────────────────────
-function RoleActivitiesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
-  const [page, setPage]             = useState(0);
-  const [filterRole, setFilterRole] = useState<number | null>(null);
-  const [showAdd, setShowAdd]       = useState(false);
-  const [newRoleId, setNewRoleId]   = useState('');
-  const [newCode, setNewCode]       = useState('');
-  const [newActivity, setNewActivity] = useState('');
-  const [newActivityDesc, setNewActivityDesc] = useState('');
-  const [addLoading, setAddLoading] = useState(false);
-  const [deleting, setDeleting]     = useState<number | null>(null);
-  const [editingId, setEditingId]   = useState<number | null>(null);
-  const [editCode, setEditCode]     = useState('');
-  const [editActivity, setEditActivity] = useState('');
-  const [editDesc, setEditDesc]     = useState('');
-  const [editLoading, setEditLoading] = useState(false);
-
-  const { data: rolesData }  = useRolesList();
-  const allRoles             = rolesData ?? [];
-
-  const { data: allData,    isLoading: loadingAll }      = useRoleActivities({ page, size: 20 });
-  const { data: filterData, isLoading: loadingFiltered } = useRoleActivitiesByRole(filterRole, { page, size: 20 });
-
-  const raw      = filterRole ? filterData : allData;
-  const isLoading= filterRole ? loadingFiltered : loadingAll;
-  const items    = (raw?.content ?? []) as CatalogRoleActivity[];
-
-  const create = useCreateRoleActivity();
-  const update = useUpdateRoleActivity();
-  const del    = useDeleteRoleActivity();
-
-  const handleAdd = async () => {
-    const rid = newRoleId ? Number(newRoleId) : filterRole;
-    if (!rid) return push('error', 'Select a role first');
-    if (!newCode.trim() || !newActivity.trim()) return push('error', 'Code and Activity are required');
-    setAddLoading(true);
-    try {
-      await handleMutation(
-        () => create.mutateAsync({ roleId: rid, code: newCode.trim(), activity: newActivity.trim(), description: newActivityDesc.trim() }),
-        push, 'Activity created!', m => push('warning', m)
-      );
-      setNewRoleId(''); setNewCode(''); setNewActivity(''); setNewActivityDesc(''); setShowAdd(false);
-    } finally { setAddLoading(false); }
-  };
-
-  const startEdit = (act: CatalogRoleActivity) => {
-    setEditingId(act.id);
-    setEditCode(act.code);
-    setEditActivity(act.activity);
-    setEditDesc(act.description);
-  };
-
-  const handleUpdate = async () => {
-    if (!editingId || !editCode.trim() || !editActivity.trim()) return;
-    setEditLoading(true);
-    try {
-      await handleMutation(
-        () => update.mutateAsync({ id: editingId, req: { roleId: 0, code: editCode.trim(), activity: editActivity.trim(), description: editDesc.trim() } }),
-        push, 'Activity updated!', m => push('warning', m)
-      );
-      setEditingId(null);
-    } finally { setEditLoading(false); }
-  };
-
-  const handleDelete = async (id: number) => {
-    setDeleting(id);
-    try { await handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m)); }
-    finally { setDeleting(null); }
-  };
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Filter */}
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Role:</label>
-        <select value={filterRole ?? ''} onChange={e => { setFilterRole(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 text-gray-700">
-          <option value="">All roles</option>
-          {allRoles.map(r => <option key={r.id} value={r.id}>{r.code} — {r.description}</option>)}
-        </select>
-      </div>
-
-      {/* Add button */}
-      <div className="flex justify-end">
-        <button onClick={() => setShowAdd(v => !v)} style={{ background: accentColor }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium shadow-sm hover:opacity-90 transition-all active:scale-95">
-          <Plus className="w-4 h-4" />Add Activity
-        </button>
-      </div>
-
-      {/* Add Form */}
-      {showAdd && (
-        <div className="p-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/80 flex flex-col gap-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">New Role Activity</p>
-          {!filterRole && (
-            <select value={newRoleId} onChange={e => setNewRoleId(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 text-gray-700">
-              <option value="">Select role *</option>
-              {allRoles.map(r => <option key={r.id} value={r.id}>{r.code} — {r.description}</option>)}
-            </select>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <input autoFocus value={newCode} onChange={e => setNewCode(e.target.value)} placeholder="Code *"
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 text-gray-800" />
-            <input value={newActivity} onChange={e => setNewActivity(e.target.value)} placeholder="Activity *"
-              className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 text-gray-800" />
-          </div>
-          <input value={newActivityDesc} onChange={e => setNewActivityDesc(e.target.value)} placeholder="Description (optional)"
-            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 text-gray-800" />
-          <div className="flex gap-2">
-            <button onClick={handleAdd} disabled={addLoading || !newCode.trim() || !newActivity.trim()} style={{ background: accentColor }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-all">
-              {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Create
-            </button>
-            <button onClick={() => { setShowAdd(false); setNewRoleId(''); setNewCode(''); setNewActivity(''); setNewActivityDesc(''); }}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-100 transition-all">Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="rounded-2xl border border-gray-100 overflow-hidden bg-white shadow-sm">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12 gap-3 text-gray-400">
-            <Loader2 className="w-5 h-5 animate-spin" /><span className="text-sm">Loading...</span>
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">No activities yet.</div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-14">ID</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-32">Code</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">Activity</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {items.map(act => (
-                <tr key={act.id} className="hover:bg-gray-50/60 transition-colors group">
-                  <td className="px-5 py-3">
-                    <span className="font-mono text-xs text-gray-400">#{act.id}</span>
-                  </td>
-                  <td className="px-3 py-3">
-                    {editingId === act.id ? (
-                      <input autoFocus value={editCode} onChange={e => setEditCode(e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs rounded-lg border border-orange-300 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-800" />
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold"
-                        style={{ background: accentColor + '15', color: accentColor }}>{act.code}</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3">
-                    {editingId === act.id ? (
-                      <input value={editActivity} onChange={e => setEditActivity(e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs rounded-lg border border-orange-300 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-800" />
-                    ) : (
-                      <span className="font-medium text-gray-700 text-xs">{act.activity}</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3">
-                    {editingId === act.id ? (
-                      <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                        className="w-full px-2.5 py-1 text-xs rounded-lg border border-orange-300 bg-orange-50/50 focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-800" />
-                    ) : (
-                      <span className="text-gray-500 text-xs">{act.description || <span className="text-gray-300 italic">—</span>}</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3">
-                    <div className={`flex items-center justify-end gap-1 transition-opacity ${editingId === act.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                      {editingId === act.id ? (
-                        <>
-                          <button onClick={handleUpdate} disabled={editLoading || !editCode.trim() || !editActivity.trim()}
-                            className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 disabled:opacity-40 transition-all">
-                            {editLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                          </button>
-                          <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-all">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => startEdit(act)} className="p-1.5 rounded-lg hover:bg-orange-50 text-gray-400 hover:text-orange-600 transition-all" title="Edit">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => handleDelete(act.id)} disabled={deleting === act.id}
-                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all disabled:opacity-40" title="Delete">
-                            {deleting === act.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      {!isLoading && raw && (
-        <PaginationBar page={raw.page} totalPages={raw.totalPages} totalElements={raw.totalElements} onPage={setPage} accentColor={accentColor} />
       )}
     </div>
   );
@@ -1025,7 +792,7 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
 
 // ─── Main Component ───────────────────────────────────────────────
 export function CatalogManager() {
-  const [activeSection, setActiveSection] = useState<CatalogSectionKey>('first-names');
+  const [activeSection, setActiveSection] = useState<CatalogSectionKeyLocal>('first-names');
   const { toasts, push } = useToasts();
 
   const active = CATALOG_SECTIONS.find(s => s.key === activeSection)!;
@@ -1033,25 +800,23 @@ export function CatalogManager() {
   const renderPanel = () => {
     const props = { accentColor: active.color, push };
     switch (activeSection) {
-      case 'first-names':     return <SimpleValuePanel {...props} useItems={useFirstNames} useAdd={useAddFirstName} useUpdate={useUpdateFirstName} useDelete={useDeleteFirstName} addLabel="First Name" addPlaceholder="e.g. Carlos" />;
-      case 'last-names':      return <SimpleValuePanel {...props} useItems={useLastNames}  useAdd={useAddLastName}  useUpdate={useUpdateLastName}  useDelete={useDeleteLastName}  addLabel="Last Name"  addPlaceholder="e.g. González" />;
-      case 'states':          return <SimpleValuePanel {...props} useItems={useStates}     useAdd={useAddState}     useUpdate={useUpdateState}     useDelete={useDeleteState}     addLabel="State"      addPlaceholder="e.g. Chiapas" />;
-      case 'municipalities':  return <MunicipalitiesPanel {...props} />;
-      case 'colonies':        return <ColoniesPanel {...props} />;
-      case 'streets':         return <StreetsPanel {...props} />;
-      case 'postal-codes':    return <PostalCodesPanel {...props} />;
-      case 'roles':           return <RolesPanel {...props} />;
-      case 'role-activities': return <RoleActivitiesPanel {...props} />;
+      case 'first-names':    return <SimpleValuePanel {...props} useItems={useFirstNames} useAdd={useAddFirstName} useUpdate={useUpdateFirstName} useDelete={useDeleteFirstName} addLabel="First Name" addPlaceholder="e.g. Carlos" />;
+      case 'last-names':     return <SimpleValuePanel {...props} useItems={useLastNames}  useAdd={useAddLastName}  useUpdate={useUpdateLastName}  useDelete={useDeleteLastName}  addLabel="Last Name"  addPlaceholder="e.g. González" />;
+      case 'states':         return <SimpleValuePanel {...props} useItems={useStates}     useAdd={useAddState}     useUpdate={useUpdateState}     useDelete={useDeleteState}     addLabel="State"      addPlaceholder="e.g. Chiapas" />;
+      case 'municipalities': return <MunicipalitiesPanel {...props} />;
+      case 'colonies':       return <ColoniesPanel {...props} />;
+      case 'streets':        return <StreetsPanel {...props} />;
+      case 'postal-codes':   return <PostalCodesPanel {...props} />;
+      case 'roles':          return <RolesPanel {...props} />;
     }
   };
 
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-6 font-sans">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Catalog Management</h1>
-          <p className="text-gray-500 mt-1 text-sm">Manage system catalogs — names, addresses, roles and permissions</p>
+          <p className="text-gray-500 mt-1 text-sm">Manage system catalogs — names, addresses and roles</p>
         </div>
 
         <div className="flex gap-6 max-w-6xl mx-auto">
@@ -1079,7 +844,6 @@ export function CatalogManager() {
           {/* Content */}
           <main className="flex-1 min-w-0">
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-100 shadow-sm p-6">
-              {/* Section Header */}
               <div className="flex items-center gap-3 mb-6">
                 <span className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: active.color + '18' }}>
                   <active.icon className="w-5 h-5" style={{ color: active.color }} />
@@ -1094,7 +858,6 @@ export function CatalogManager() {
                 </div>
               </div>
 
-              {/* Conflict banner */}
               <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 mb-5 text-xs text-amber-700">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span><strong>Note:</strong> Update/Delete return <code className="font-mono bg-amber-100 px-1 rounded">409 Conflict</code> when the entry is in use or has dependent records.</span>

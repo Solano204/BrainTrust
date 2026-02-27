@@ -5,191 +5,43 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/aws.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/identity/CatalogController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/identity/RoleActivityController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/ExamScoreSummaryDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatRoleDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatRoleRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogColonyDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogColonyRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogItemDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogMunicipalityDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogMunicipalityRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogPostalCodeDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogPostalCodeRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogRoleActivityDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogRoleActivityRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogStreetDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogStreetRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/CatalogValueRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/PagedResponseDTO.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/services/CatalogService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/services/RoleActivityService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/domain/exceptions/CatalogInUseException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatColonyJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatFirstNameJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatLastNameJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatMunicipalityJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatPostalCodeJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatRoleActivityJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatRoleJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatStateJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/CatStreetJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatColonyJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatFirstNameJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatLastNameJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatMunicipalityJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatPostalCodeJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatStateJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatStreetJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/RoleActivityDTO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/entities/AnalysisRequestJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/entities/AnalysisRequestJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aidetectition/target/aidetectition-0.0.1-SNAPSHOT.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/aidetectition/target/classes/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/entities/AnalysisRequestJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/aidetectition/target/classes/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/entities/AnalysisRequestJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aidetectition/target/maven-archiver/pom.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/aidetectition/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/aidetectition/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aidetectition/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/aidetectition/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/.env" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/src/main/resources/application-prod.yml" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/resources/application-prod.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/classes/application-prod.yml" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/classes/application-prod.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/GlobalExceptionHandler.class" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/GlobalExceptionHandler.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/container-app-0.0.1-SNAPSHOT.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/container-app-0.0.1-SNAPSHOT.jar.original" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/maven-archiver/pom.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/commands/CreateQuizCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/commands/CreateQuizCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/commands/UpdateQuizCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/commands/UpdateQuizCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/CompleteQuizDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/CompleteQuizDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/GradedQuestionResponseDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/GradedQuestionResponseDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/QuizDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/QuizDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/QuizSubmissionDetailDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/QuizSubmissionDetailDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/assignment/AssignmentAttachmentHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/assignment/AssignmentAttachmentHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/assignment/AssignmentLinkHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/assignment/AssignmentLinkHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/quiz/QuizDtoMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/quiz/QuizDtoMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/mappers/QuizSubmissionMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/mappers/QuizSubmissionMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/QuizApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/QuizApplicationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/QuizSubmissionApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/QuizSubmissionApplicationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Assignment.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Assignment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Quiz.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Quiz.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/QuizSubmission.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/QuizSubmission.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/valueobjects/Document.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/valueobjects/Document.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/AssignmentEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/AssignmentEntityMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizEntityMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentLinkJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentLinkJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/DocumentJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/DocumentJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizSubmissionJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizSubmissionJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/AssignmentJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/AssignmentJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/CourseJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/CourseJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaAssignmentRepositoryAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaAssignmentRepositoryAdapter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/QuizJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/QuizJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizCommand.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand$QuestionOptionData.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand$QuestionOptionData.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand$QuizQuestionData.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand$QuizQuestionData.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/CreateQuizWithQuestionsCommand.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/UpdateQuizCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/commands/UpdateQuizCommand.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/dtos/CompleteQuizDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/dtos/CompleteQuizDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/dtos/QuizDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/dtos/QuizDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/dtos/QuizSubmissionDetailDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/dtos/dtos/QuizSubmissionDetailDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/helpers/assignment/AssignmentAttachmentHelper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/helpers/assignment/AssignmentAttachmentHelper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/helpers/assignment/AssignmentLinkHelper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/helpers/assignment/AssignmentLinkHelper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/helpers/quiz/QuizDtoMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/helpers/quiz/QuizDtoMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/mappers/QuizSubmissionMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/mappers/QuizSubmissionMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/QuizApplicationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/QuizApplicationService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/QuizSubmissionApplicationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/QuizSubmissionApplicationService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Assignment.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Assignment.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Quiz.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Quiz.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/QuizSubmission.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/QuizSubmission.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/valueobjects/Document.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/valueobjects/Document.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/AssignmentEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/AssignmentEntityMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizEntityMapper$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizEntityMapper$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizEntityMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper$1.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper$2.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/QuizSubmissionEntityMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentLinkJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentLinkJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/DocumentJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/DocumentJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizSubmissionJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/QuizSubmissionJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/AssignmentJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/AssignmentJpaRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/CourseJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/CourseJpaRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaAssignmentRepositoryAdapter.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaAssignmentRepositoryAdapter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/QuizJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/QuizJpaRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/education-0.0.1-SNAPSHOT.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/maven-archiver/pom.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/PersonEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/PersonEntityMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/PersonJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/PersonJpaEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/UnitGradeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/UnitGradeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/course/UnitGradeController.class" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/course/UnitGradeController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/UnitGradeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/UnitGradeService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/UnitGradeApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/UnitGradeApplicationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/ports/in/UnitGradeService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/ports/in/UnitGradeService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/UnitGradeApplicationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/UnitGradeApplicationService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Gradebook.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Gradebook.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/Maps/EntityMaps.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/Maps/EntityMaps.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/UserDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserDtoMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserDtoMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaPersonRepositoryAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaPersonRepositoryAdapter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/PersonJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/PersonJpaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/PersonEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/PersonEntityMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/PersonJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/PersonJpaEntity.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/Maps/EntityMaps.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/Maps/EntityMaps.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/dtos/UserDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/dtos/UserDTO.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserDtoMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserDtoMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserQueryHelper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserQueryHelper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity$1.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaPersonRepositoryAdapter.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaPersonRepositoryAdapter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/PersonJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/PersonJpaRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/identity-0.0.1-SNAPSHOT.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/maven-archiver/pom.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/braintrust/shared/application/services/MockStorageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/shared/src/main/java/com/braintrust/shared/application/services/MockStorageService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/target/classes/com/braintrust/shared/application/services/storage/MockStorageService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/target/maven-archiver/pom.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/shared/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/target/shared-0.0.1-SNAPSHOT.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/admin/courses/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/admin/courses/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/admin/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/admin/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/app/admin/users/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/admin/users/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/app/auth/types/authentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/auth/types/authentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/context/AuthContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/context/AuthContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/courses/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/courses/[id]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/domain/entities/CourseEntities.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/domain/entities/CourseEntities.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/domain/services/authService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/domain/services/authService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/shared/dtos/commands/quiz.commands.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/shared/dtos/commands/quiz.commands.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/shared/dtos/quiz.dto.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/shared/dtos/quiz.dto.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/shared/mappers/quiz.mappers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/shared/mappers/quiz.mappers.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/shared/models/quiz.model.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/shared/models/quiz.model.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/app/types/authentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/types/authentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/AdminResetPasswordModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/AdminResetPasswordModal.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/components/admin/AdminUsersModule.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/AdminUsersModule.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/api/coursesApi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/api/coursesApi.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/auth/profile-modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/auth/profile-modal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/CatalogManager.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/CatalogManager.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/components/layout/dashboard-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/layout/dashboard-sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/student/StudentQuizViewSubmission.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/StudentQuizViewSubmission.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/student/StudentTaskSubmissionView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/StudentTaskSubmissionView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/student/quiz-transactional-view-student.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/quiz-transactional-view-student.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/student/quiz-view-submission-student.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/quiz-view-submission-student.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/student/tasks-transactional-view-student.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/tasks-transactional-view-student.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/api/quiz-teacher.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/api/quiz-teacher.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/api/quiz.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/api/quiz.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/api/task-teacher.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/api/task-teacher.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/calendar-teacher-student.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/calendar-teacher-student.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/courses-dashboard-main-student-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/courses-dashboard-main-student-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/gradebook-units-view.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/gradebook-units-view.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher-student/hooks/quiz-hooks.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher-student/hooks/quiz-hooks.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher/course-section-submission-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher/course-section-submission-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher/quiz-form-creator-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher/quiz-form-creator-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher/quiz-view-information-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher/quiz-view-information-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher/quiz-view-submission-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher/quiz-view-submission-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher/task-view-information-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher/task-view-information-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/teacher/task-view-submission-teacher.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/teacher/task-view-submission-teacher.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/student/api/student-gradebooks.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/api/student-gradebooks.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/proxy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/proxy.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -284,7 +136,7 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;Spring Boot.BrainTrustApplication.executor&quot;: &quot;Run&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/adding-new-catalogos&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/PROYECTO/BrainTrust/backend&quot;,
@@ -511,6 +363,12 @@
           <properties field="description" class="com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity" />
           <option name="timeStamp" value="47" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-field">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java</url>
+          <line>16</line>
+          <properties field="finalFeedback" class="com.braintrust.education.domain.model.Gradebook" />
+          <option name="timeStamp" value="84" />
+        </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/SubmissionRepository.java</url>
           <line>14</line>
@@ -622,7 +480,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/SubmissionService.java</url>
           <line>25</line>
-          <properties class="com.braintrust.education.application.ports.in.SubmissionService" method="isTeamSubmission">
+          <properties class="com.braintrust.education.application.ports.in.SubmissionService">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -631,7 +489,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/CourseService.java</url>
           <line>45</line>
-          <properties class="com.braintrust.education.application.ports.in.CourseService" method="getCourseById">
+          <properties class="com.braintrust.education.application.ports.in.CourseService">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -647,18 +505,9 @@
           <option name="timeStamp" value="58" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-method">
-          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/UnitGradeRepository.java</url>
-          <line>18</line>
-          <properties class="com.braintrust.education.application.ports.out.UnitGradeRepository" method="findByCourseAndStudent">
-            <option name="EMULATED" value="true" />
-            <option name="WATCH_EXIT" value="false" />
-          </properties>
-          <option name="timeStamp" value="59" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/out/PersonRepository.java</url>
           <line>17</line>
-          <properties class="com.braintrust.identity.application.ports.out.PersonRepository" method="findById">
+          <properties class="com.braintrust.identity.application.ports.out.PersonRepository">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -708,6 +557,24 @@
             <option name="WATCH_EXIT" value="false" />
           </properties>
           <option name="timeStamp" value="82" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/UnitGradeRepository.java</url>
+          <line>18</line>
+          <properties class="com.braintrust.education.application.ports.out.UnitGradeRepository" method="findByCourseAndStudent">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="83" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/in/UserService.java</url>
+          <line>26</line>
+          <properties class="com.braintrust.identity.application.ports.in.UserService" method="deleteUser">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="85" />
         </line-breakpoint>
         <breakpoint enabled="true" type="java-exception">
           <properties class="org.springframework.data.mapping.PropertyReferenceException" package="org.springframework.data.mapping" />
