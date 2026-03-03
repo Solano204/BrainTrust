@@ -1,1259 +1,718 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect, useCallback } from "react";
 import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Loader2,
-  Users,
-  UserCheck,
-  UserX,
-  MapPin,
-  Shield,
-  X,
-  Save,
-  Eye,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
+  Plus, Edit2, Trash2, Loader2, Users, Ban,
+  RotateCcw, AlertTriangle, Search, ChevronLeft,
+  ChevronRight, ChevronsLeft, ChevronsRight,
 } from "lucide-react";
 import {
-  useUsersPaginated,
-  useUserMutations,
-  useSearchUsersPaginated,
-} from "@/components/admin/hooks/useUsers";
+  usePersonsPaginated,
+  usePersonMutations,
+  useSearchPersonsPaginated,
+} from "@/components/admin/hooks/usePersons";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Person } from "./dtos/Person-dto";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  CreateCompleteUserCommand,
-  UpdatePersonAddressCommand,
-  UpdateUserInfoCommand,
-} from "@/app/shared/dtos/commands/user.commands";
-import { User } from "@/app/shared/models/user.model";
-import { UserRole } from "@/app/shared/dtos/user.dto";
-import { PaginationParams } from "@/app/shared/types/pagination";
+  extractInfoFromCurp,
+  formatBirthDateDisplay,
+  validateCurpFormat,
+} from "../admin/utils/Curp.utils";
 
-// ─────────────────────────────────────────────
-// UserFormModal  (Personal data + create user)
-// ─────────────────────────────────────────────
-interface UserFormModalProps {
-  open: boolean;
-  onClose: () => void;
-  initialData?: User;
-  onSave: (
-    userData:
-      | CreateCompleteUserCommand
-      | UpdateUserInfoCommand
-      | UpdatePersonAddressCommand
-  ) => void;
-  isSaving?: boolean;
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared tiny field label + input helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const inp = (extra = "") =>
+  `w-full h-8 border border-slate-300 rounded px-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed transition ${extra}`;
+
+const roInp =
+  "w-full h-8 border border-slate-200 rounded px-2 text-xs bg-slate-50 text-slate-500 cursor-not-allowed select-none flex items-center";
+
+function LabeledField({
+  label, children,
+}: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-0.5 min-w-0">
+      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
 }
 
-function UserFormModal({
-  open,
-  onClose,
-  initialData,
-  onSave,
-  isSaving,
-}: UserFormModalProps) {
-  const isEditMode = !!initialData;
+// ─────────────────────────────────────────────────────────────────────────────
+// Action Button
+// ─────────────────────────────────────────────────────────────────────────────
+function Btn({
+  label, icon: Icon, bg, onClick, disabled, loading,
+}: {
+  label: string; icon: React.ElementType; bg: string;
+  onClick: () => void; disabled?: boolean; loading?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`flex items-center justify-center gap-1.5 w-full py-2 px-2 rounded font-bold text-[11px] uppercase tracking-wide text-white transition disabled:opacity-40 disabled:cursor-not-allowed ${bg}`}
+    >
+      {loading
+        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        : <Icon className="h-3.5 w-3.5" />}
+      {label}
+    </button>
+  );
+}
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    gender: "MALE",
-    role: "STUDENT" as UserRole,
-    password: "",
-    addressStreet: "",
-    addressColony: "",
-    addressMunicipality: "",
-    addressState: "",
-    addressPostalCode: "",
-  });
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty form shape
+// ─────────────────────────────────────────────────────────────────────────────
+const EMPTY = {
+  primerNombre: "", segundoNombre: "",
+  apellidoPaterno: "", apellidoMaterno: "",
+  curp: "", rfc: "",
+  gender: "MALE", phone: "",
+  street: "", colony: "", municipality: "", state: "", postalCode: "",
+};
+type F = typeof EMPTY;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main view
+// ─────────────────────────────────────────────────────────────────────────────
+export default function PersonalDataView() {
+  // ── Pagination / search ────────────────────────────────────────────────────
+  const [search, setSearch]       = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [page, setPage]           = useState(0);
+  const [pageSize, setPageSize]   = useState(20);
+  const [sort, setSort]           = useState("registrationDate,desc");
 
   useEffect(() => {
-    if (open) {
-      if (initialData) {
-        setFormData({
-          firstName: initialData.person.firstName,
-          lastName: initialData.person.lastName,
-          email: initialData.email,
-          phone: initialData.person.phone || "",
-          gender: initialData.person.gender || "MALE",
-          role: initialData.role,
-          password: "",
-          addressStreet: initialData.person.address?.street || "",
-          addressColony: initialData.person.address?.colony || "",
-          addressMunicipality: initialData.person.address?.municipality || "",
-          addressState: initialData.person.address?.state || "",
-          addressPostalCode: initialData.person.address?.postalCode || "",
-        });
-      } else {
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: "",
-          gender: "MALE",
-          role: "STUDENT",
-          password: "",
-          addressStreet: "",
-          addressColony: "",
-          addressMunicipality: "",
-          addressState: "",
-          addressPostalCode: "",
-        });
-      }
-    }
-  }, [open, initialData]);
+    const t = setTimeout(() => { setDebounced(search); setPage(0); }, 600);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  };
+  const isSearching = debounced.trim().length >= 2;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const { data: regData,  isLoading: regLoad,  refetch: refetchReg } =
+    usePersonsPaginated({ page, size: pageSize, sort });
+  const { data: srcData,  isLoading: srcLoad,  refetch: refetchSrc } =
+    useSearchPersonsPaginated(debounced.trim(), { page, size: pageSize });
 
-    if (isEditMode) {
-      const updateUserInfoData: UpdateUserInfoCommand = {
-        userId: initialData.id,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        gender: formData.gender,
-        phone: formData.phone,
-      };
-      const updateAddressData: UpdatePersonAddressCommand = {
-        personId: initialData.person.id,
-        street: formData.addressStreet,
-        colony: formData.addressColony,
-        municipality: formData.addressMunicipality,
-        state: formData.addressState,
-        postalCode: formData.addressPostalCode,
-      };
-      onSave({
-        updateUserInfo: updateUserInfoData,
-        updateAddress: updateAddressData,
-      } as any);
+  const data         = isSearching ? srcData   : regData;
+  const isLoading    = isSearching ? srcLoad   : regLoad;
+  const refetch      = isSearching ? refetchSrc : refetchReg;
+  const persons      = data?.content       ?? [];
+  const totalEl      = data?.totalElements ?? 0;
+  const totalPg      = data?.totalPages    ?? 0;
+
+  const { createPerson, updatePersonInfo, updatePersonAddress, deletePerson } =
+    usePersonMutations();
+
+  // ── Form state ─────────────────────────────────────────────────────────────
+  const [form, setForm]               = useState<F>(EMPTY);
+  const [selected, setSelected]       = useState<Person | null>(null);
+  const [isSaving, setIsSaving]       = useState(false);
+  const [formError, setFormError]     = useState<string | null>(null);
+  const [curpInfo, setCurpInfo]       = useState<{ birthDate: string; age: number; valid: boolean; error?: string } | null>(null);
+  const [curpErr, setCurpErr]         = useState<string | null>(null);
+
+  // ── Delete dialogs ─────────────────────────────────────────────────────────
+  const [showDel, setShowDel]         = useState(false);
+  const [showLinked, setShowLinked]   = useState(false);
+  const [delErr, setDelErr]           = useState("");
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const set = (k: keyof F, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+  const clearForm = useCallback(() => {
+    setForm(EMPTY);
+    setSelected(null);
+    setCurpInfo(null);
+    setCurpErr(null);
+    setFormError(null);
+  }, []);
+
+  /** Click a row → fill the form */
+  const selectRow = (p: Person) => {
+    setSelected(p);
+    setFormError(null);
+    setCurpErr(null);
+    setForm({
+      primerNombre: p.primerNombre,
+      segundoNombre: p.segundoNombre ?? "",
+      apellidoPaterno: p.apellidoPaterno,
+      apellidoMaterno: p.apellidoMaterno ?? "",
+      curp:  p.curp  ?? "",
+      rfc:   p.rfc   ?? "",
+      gender: p.gender ?? "MALE",
+      phone:  p.phone  ?? "",
+      street:       p.address?.street       ?? "",
+      colony:       p.address?.colony       ?? "",
+      municipality: p.address?.municipality ?? "",
+      state:        p.address?.state        ?? "",
+      postalCode:   p.address?.postalCode   ?? "",
+    });
+    // derive curpInfo
+    if (p.curp && p.curp.length === 18) {
+      setCurpInfo(extractInfoFromCurp(p.curp));
+    } else if (p.birthDate && p.age != null) {
+      setCurpInfo({ birthDate: p.birthDate, age: p.age, valid: true });
     } else {
-      const createData: CreateCompleteUserCommand = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        gender: formData.gender,
-        role: formData.role,
-        addressStreet: formData.addressStreet || undefined,
-        addressColony: formData.addressColony || undefined,
-        addressMunicipality: formData.addressMunicipality || undefined,
-        addressState: formData.addressState || undefined,
-        addressPostalCode: formData.addressPostalCode || undefined,
-      };
-      onSave(createData as any);
+      setCurpInfo(null);
     }
   };
 
-  if (!open) return null;
+  /** CURP change — only in create mode */
+  const onCurpChange = (v: string) => {
+    const u = v.toUpperCase();
+    set("curp", u);
+    setCurpErr(null);
+    if (u.length === 18) {
+      if (!validateCurpFormat(u)) { setCurpErr("Formato inválido"); setCurpInfo(null); return; }
+      const info = extractInfoFromCurp(u);
+      setCurpInfo(info);
+      if (info?.valid) setForm(p => ({ ...p, curp: u, gender: info.gender }));
+    } else {
+      setCurpInfo(null);
+    }
+  };
+
+  // ── ALTAS ──────────────────────────────────────────────────────────────────
+  const handleAltas = async () => {
+    setFormError(null);
+    if (!form.primerNombre.trim() || !form.apellidoPaterno.trim()) {
+      setFormError("Primer nombre y apellido paterno son obligatorios.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await new Promise<void>((ok, fail) =>
+        createPerson.mutate({
+          primerNombre: form.primerNombre, segundoNombre: form.segundoNombre || undefined,
+          apellidoPaterno: form.apellidoPaterno, apellidoMaterno: form.apellidoMaterno || undefined,
+          curp: form.curp || undefined, rfc: form.rfc || undefined,
+          gender: form.gender, phone: form.phone || undefined,
+          street: form.street || "", colony: form.colony || "",
+          municipality: form.municipality || "", state: form.state || "", 
+          postalCode: form.postalCode || "",
+        }, { onSuccess: () => ok(), onError: (e: any) => fail(e) })
+      );
+      clearForm(); refetch();
+    } catch (e: any) { setFormError(e?.message ?? "Error al registrar."); }
+    finally { setIsSaving(false); }
+  };
+
+  // ── MODIFICAR ──────────────────────────────────────────────────────────────
+  const handleModificar = async () => {
+    if (!selected) return;
+    setFormError(null);
+    setIsSaving(true);
+    try {
+      await new Promise<void>((ok, fail) =>
+        updatePersonInfo.mutate({
+          personId: selected.id,
+          primerNombre: form.primerNombre, segundoNombre: form.segundoNombre || undefined,
+          apellidoPaterno: form.apellidoPaterno, apellidoMaterno: form.apellidoMaterno || undefined,
+          gender: form.gender, phone: form.phone || undefined,
+        }, {
+          onSuccess: () => {
+            if (form.street && form.postalCode) {
+              updatePersonAddress.mutate({
+                personId: selected.id, street: form.street, colony: form.colony,
+                municipality: form.municipality, state: form.state, postalCode: form.postalCode,
+              }, { onSuccess: () => ok(), onError: (e: any) => fail(e) });
+            } else ok();
+          },
+          onError: (e: any) => fail(e),
+        })
+      );
+      clearForm(); refetch();
+    } catch (e: any) { setFormError(e?.message ?? "Error al actualizar."); }
+    finally { setIsSaving(false); }
+  };
+
+  // ── BAJAS ──────────────────────────────────────────────────────────────────
+  const handleBajas = () => {
+    if (!selected) return;
+    if (selected.tieneUsuario) {
+      setDelErr(`${selected.nombreCompleto} tiene una cuenta vinculada. Elimina primero la cuenta.`);
+      setShowLinked(true);
+    } else { setShowDel(true); }
+  };
+
+  const confirmDelete = () => {
+    if (!selected) return;
+    deletePerson.mutate(selected.id, {
+      onSuccess: (r) => {
+        if (r.success) { setShowDel(false); clearForm(); refetch(); }
+        else { setDelErr(r.message); setShowDel(false); setShowLinked(true); }
+      },
+    });
+  };
+
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const toggleSort = (f: string) => {
+    const [cur, dir] = sort.split(",");
+    setSort(cur === f ? `${f},${dir === "asc" ? "desc" : "asc"}` : `${f},desc`);
+    setPage(0);
+  };
+  const arrow = (f: string) => sort.startsWith(f) ? (sort.endsWith("desc") ? " ↓" : " ↑") : "";
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
+  const isEdit = !!selected;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <form onSubmit={handleSubmit}>
-          <div className="flex justify-between items-center p-4 sm:p-6 border-b sticky top-0 bg-card z-10">
-            <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-3">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
-              {isEditMode ? "Editar Datos Personales" : "Crear Persona"}
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              disabled={isSaving}
-              type="button"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+    <div className="flex flex-col min-h-screen bg-gray-100 text-slate-800 text-sm font-sans">
 
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Personal Info */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-base sm:text-lg">
-                Información Personal
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="font-semibold">
-                    Nombre *
-                  </Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
+      {/* ══════════════════════════════════════════════════════════════════
+          TOP STRIP  — CURP · RFC
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="bg-slate-800 text-white flex items-center gap-3 px-4 py-2 flex-wrap">
+        <span className="font-bold text-xs uppercase tracking-widest whitespace-nowrap">
+          Registro de Personas
+        </span>
+
+        {/* CURP */}
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">CURP</span>
+          <input
+            value={form.curp}
+            onChange={(e) => !isEdit && onCurpChange(e.target.value)}
+            disabled={isSaving || isEdit}
+            maxLength={18}
+            placeholder="CURP"
+            className="h-8 w-44 border border-slate-600 rounded px-2 text-xs bg-slate-700 text-white placeholder:text-slate-400 font-mono uppercase focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:bg-slate-600 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        {/* RFC */}
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">RFC</span>
+          <input
+            value={form.rfc}
+            onChange={(e) => !isEdit && set("rfc", e.target.value.toUpperCase())}
+            disabled={isSaving || isEdit}
+            maxLength={13}
+            placeholder="RFC"
+            className="h-8 w-36 border border-slate-600 rounded px-2 text-xs bg-slate-700 text-white placeholder:text-slate-400 font-mono uppercase focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:bg-slate-600 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        {/* CURP validation hint */}
+        {(curpErr || (curpInfo && !curpInfo.valid)) && (
+          <span className="text-red-400 text-[11px] flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            {curpErr ?? curpInfo?.error}
+          </span>
+        )}
+        {curpInfo?.valid && (
+          <span className="text-green-400 text-[11px]">✅ CURP válido</span>
+        )}
+
+        {/* Search */}
+        <div className="ml-auto relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre…"
+            className="h-8 pl-7 pr-3 text-xs rounded border border-slate-600 bg-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400 w-44"
+          />
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          FORM AREA  +  ACTION BUTTONS
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="flex gap-3 p-3 flex-wrap xl:flex-nowrap">
+
+        {/* ── Left: Datos Personales + Datos Dirección ───────────────── */}
+        <div className="flex flex-col gap-3 flex-1 min-w-0">
+
+          {/* Datos Personales */}
+          <div className="bg-white rounded border border-slate-200 shadow-sm">
+            <div className="px-3 py-1.5 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-700">Datos Personales</h3>
+            </div>
+            <div className="p-3 space-y-2">
+
+              {/* Row 1: Primer Nombre · Apellido Paterno · Apellido Materno · Género */}
+              <div className="grid grid-cols-4 gap-2">
+                <LabeledField label="Primer Nombre">
+                  <input
+                    value={form.primerNombre}
+                    onChange={(e) => set("primerNombre", e.target.value)}
                     disabled={isSaving}
-                    placeholder="Ej: Juan"
+                    placeholder="Nombre"
+                    className={inp()}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="font-semibold">
-                    Apellidos *
-                  </Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
+                </LabeledField>
+                <LabeledField label="Apellido Paterno">
+                  <input
+                    value={form.apellidoPaterno}
+                    onChange={(e) => set("apellidoPaterno", e.target.value)}
                     disabled={isSaving}
-                    placeholder="Ej: Pérez García"
+                    placeholder="Paterno"
+                    className={inp()}
                   />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gender" className="font-semibold">
-                    Género *
-                  </Label>
+                </LabeledField>
+                <LabeledField label="Apellido Materno">
+                  <input
+                    value={form.apellidoMaterno}
+                    onChange={(e) => set("apellidoMaterno", e.target.value)}
+                    disabled={isSaving}
+                    placeholder="Materno"
+                    className={inp()}
+                  />
+                </LabeledField>
+                <LabeledField label="Género">
                   <select
-                    id="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    className="w-full border rounded-md px-3 py-2"
+                    value={form.gender}
+                    onChange={(e) => set("gender", e.target.value)}
                     disabled={isSaving}
+                    className={inp()}
                   >
                     <option value="MALE">Masculino</option>
                     <option value="FEMALE">Femenino</option>
                     <option value="OTHER">Otro</option>
                   </select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="font-semibold">
-                    Teléfono
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
+                </LabeledField>
+              </div>
+
+              {/* Row 2: Segundo Nombre · F. Nacimiento (read-only) · Edad (read-only) · Teléfono */}
+              <div className="grid grid-cols-4 gap-2">
+                <LabeledField label="Segundo Nombre">
+                  <input
+                    value={form.segundoNombre}
+                    onChange={(e) => set("segundoNombre", e.target.value)}
                     disabled={isSaving}
-                    placeholder="+52 961 123 4567"
+                    placeholder="Segundo (opcional)"
+                    className={inp()}
                   />
-                </div>
+                </LabeledField>
+                <LabeledField label="Fecha de Nacimiento">
+                  <div className={roInp}>
+                    {curpInfo?.valid
+                      ? formatBirthDateDisplay(curpInfo.birthDate)
+                      : <span className="text-slate-300 italic">—</span>}
+                  </div>
+                </LabeledField>
+                <LabeledField label="Edad">
+                  <div className={roInp}>
+                    {curpInfo?.valid
+                      ? `${curpInfo.age} años`
+                      : <span className="text-slate-300 italic">—</span>}
+                  </div>
+                </LabeledField>
+                <LabeledField label="Teléfono">
+                  <input
+                    value={form.phone}
+                    onChange={(e) => set("phone", e.target.value)}
+                    disabled={isSaving}
+                    placeholder="+52 961 …"
+                    className={inp()}
+                  />
+                </LabeledField>
               </div>
             </div>
+          </div>
 
-            {/* Account info — only shown on CREATE */}
-            {!isEditMode && (
-              <div className="space-y-4">
-                <h3 className="font-semibold text-base sm:text-lg">
-                  Información de Cuenta
-                </h3>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="font-semibold">
-                    Email *
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
+          {/* Datos Dirección */}
+          <div className="bg-white rounded border border-slate-200 shadow-sm">
+            <div className="px-3 py-1.5 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-700">Datos Dirección</h3>
+            </div>
+            <div className="p-3 space-y-2">
+              {/* Row 1: Calle · Colonia */}
+              <div className="grid grid-cols-3 gap-2">
+                <LabeledField label="Calle y Número" >
+                  <input
+                    value={form.street}
+                    onChange={(e) => set("street", e.target.value)}
                     disabled={isSaving}
-                    placeholder="usuario@universidad.edu"
+                    placeholder="Calle y número"
+                    className={inp()}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="font-semibold">
-                    Contraseña *
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
+                </LabeledField>
+                <LabeledField label="Colonia">
+                  <input
+                    value={form.colony}
+                    onChange={(e) => set("colony", e.target.value)}
                     disabled={isSaving}
-                    placeholder="Mínimo 8 caracteres"
-                    minLength={8}
+                    placeholder="Colonia"
+                    className={inp()}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role" className="font-semibold">
-                    Rol *
-                  </Label>
-                  <select
-                    id="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full border rounded-md px-3 py-2"
-                    disabled={isSaving}
-                  >
-                    <option value="STUDENT">Estudiante</option>
-                    <option value="TEACHER">Profesor</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
+                </LabeledField>
               </div>
-            )}
-
-            {/* Address */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Dirección {!isEditMode && "(Opcional)"}
-              </h3>
-              <div className="space-y-2">
-                <Label htmlFor="addressStreet">Calle</Label>
-                <Input
-                  id="addressStreet"
-                  value={formData.addressStreet}
-                  onChange={handleChange}
-                  disabled={isSaving}
-                  placeholder="Calle Principal #123"
-                />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="addressColony">Colonia</Label>
-                  <Input
-                    id="addressColony"
-                    value={formData.addressColony}
-                    onChange={handleChange}
+              {/* Row 2: Municipio · Estado · CP */}
+              <div className="grid grid-cols-3 gap-2">
+                <LabeledField label="Municipio">
+                  <input
+                    value={form.municipality}
+                    onChange={(e) => set("municipality", e.target.value)}
                     disabled={isSaving}
-                    placeholder="Centro"
+                    placeholder="Municipio"
+                    className={inp()}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="addressMunicipality">Municipio</Label>
-                  <Input
-                    id="addressMunicipality"
-                    value={formData.addressMunicipality}
-                    onChange={handleChange}
+                </LabeledField>
+                <LabeledField label="Estado">
+                  <input
+                    value={form.state}
+                    onChange={(e) => set("state", e.target.value)}
                     disabled={isSaving}
-                    placeholder="Comitán"
+                    placeholder="Estado"
+                    className={inp()}
                   />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="addressState">Estado</Label>
-                  <Input
-                    id="addressState"
-                    value={formData.addressState}
-                    onChange={handleChange}
+                </LabeledField>
+                <LabeledField label="Código Postal">
+                  <input
+                    value={form.postalCode}
+                    onChange={(e) => set("postalCode", e.target.value.replace(/\D/g, ""))}
                     disabled={isSaving}
-                    placeholder="Chiapas"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="addressPostalCode">Código Postal</Label>
-                  <Input
-                    id="addressPostalCode"
-                    value={formData.addressPostalCode}
-                    onChange={handleChange}
-                    disabled={isSaving}
-                    placeholder="30000"
-                    pattern="[0-9]{5}"
+                    placeholder="CP"
                     maxLength={5}
+                    inputMode="numeric"
+                    className={inp()}
                   />
-                </div>
+                </LabeledField>
               </div>
             </div>
           </div>
-
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 p-4 sm:p-6 border-t bg-muted/50 sticky bottom-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSaving}
-              className="w-full sm:w-auto"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSaving}
-              className="gap-2 w-full sm:w-auto"
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {isSaving
-                ? "Guardando..."
-                : isEditMode
-                ? "Guardar Cambios"
-                : "Crear Usuario"}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// UserDetailModal
-// ─────────────────────────────────────────────
-interface UserDetailModalProps {
-  user: User | null;
-  open: boolean;
-  onClose: () => void;
-}
-
-function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
-  if (!open || !user) return null;
-
-  const formatDate = (date: string) => {
-    try {
-      return new Date(date).toLocaleString("es-MX", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-    } catch {
-      return "Fecha inválida";
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex justify-between items-center p-4 sm:p-6 border-b sticky top-0 bg-card z-10">
-          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <Eye className="h-5 w-5" />
-            Detalles Personales
-          </h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </Button>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-6">
-          {/* Avatar + name */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 pb-4 border-b">
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-              {user.person.firstName[0]}
-              {user.person.lastName[0]}
-            </div>
-            <div className="text-center sm:text-left">
-              <h3 className="text-xl sm:text-2xl font-bold">
-                {user.person.firstName} {user.person.lastName}
-              </h3>
-              <p className="text-muted-foreground text-sm mt-1">
-                ID Persona: <span className="font-mono">{user.person.id}</span>
+        {/* ── Right: Action buttons ──────────────────────────────────── */}
+        <div className="flex flex-col gap-2 w-32 shrink-0 pt-7">
+          <Btn label="⊕ Altas"     icon={Plus}      bg="bg-green-600 hover:bg-green-700"
+            onClick={handleAltas}    disabled={isSaving || isEdit}   loading={isSaving && !isEdit} />
+          <Btn label="✎ Modificar" icon={Edit2}     bg="bg-amber-500 hover:bg-amber-600"
+            onClick={handleModificar} disabled={isSaving || !isEdit} loading={isSaving && isEdit} />
+          <Btn label="✕ Bajas"     icon={Trash2}    bg="bg-red-600 hover:bg-red-700"
+            onClick={handleBajas}    disabled={isSaving || !isEdit} />
+          <Btn label="Cancelar"    icon={Ban}       bg="bg-slate-500 hover:bg-slate-600"
+            onClick={clearForm}      disabled={isSaving} />
+          <Btn label="Actualizar"  icon={RotateCcw} bg="bg-zinc-700 hover:bg-zinc-800"
+            onClick={() => refetch()} disabled={isLoading} loading={isLoading} />
+
+          {/* selected indicator */}
+          {isEdit && (
+            <div className="mt-1 text-center bg-blue-50 border border-blue-200 rounded px-2 py-1">
+              <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wide">Editando</p>
+              <p className="text-[10px] text-blue-800 font-semibold truncate">
+                {selected!.primerNombre} {selected!.apellidoPaterno}
               </p>
-            </div>
-          </div>
-
-          {/* Personal info */}
-          <div>
-            <h4 className="font-semibold mb-3">Datos Personales</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Teléfono</p>
-                <p className="font-medium">
-                  {user.person.phone || "No registrado"}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Género</p>
-                <p className="font-medium">
-                  {user.person.gender === "MALE"
-                    ? "Masculino"
-                    : user.person.gender === "FEMALE"
-                    ? "Femenino"
-                    : user.person.gender || "No especificado"}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Fecha de registro</p>
-                <p className="font-medium">
-                  {formatDate(user.person.registrationDate)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Address */}
-          {user.person.address && (
-            <div>
-              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Dirección
-              </h4>
-              <div className="text-sm space-y-1">
-                <p>{user.person.address.street}</p>
-                <p>
-                  Col. {user.person.address.colony},{" "}
-                  {user.person.address.municipality}
-                </p>
-                <p>
-                  {user.person.address.state}, CP{" "}
-                  {user.person.address.postalCode}
-                </p>
-              </div>
             </div>
           )}
         </div>
-
-        <div className="p-4 sm:p-6 border-t sticky bottom-0 bg-card">
-          <Button onClick={onClose} className="w-full">
-            Cerrar
-          </Button>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// PaginationControls
-// ─────────────────────────────────────────────
-interface PaginationControlsProps {
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-  totalElements: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-}
-
-function PaginationControls({
-  currentPage,
-  totalPages,
-  pageSize,
-  totalElements,
-  onPageChange,
-  onPageSizeChange,
-}: PaginationControlsProps) {
-  const startItem = currentPage * pageSize + 1;
-  const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
-
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-4 pb-4">
-      <div className="text-sm text-muted-foreground">
-        Mostrando {startItem}-{endItem} de {totalElements} usuarios
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Filas por página:
-          </span>
-          <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(0)}
-            disabled={currentPage === 0}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Página {currentPage + 1} de {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(totalPages - 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// PersonalDataView  (main export)
-// ─────────────────────────────────────────────
-export default function PersonalDataView() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<
-    "all" | "student" | "teacher" | "admin"
-  >("all");
-
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showActivateModal, setShowActivateModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
-  const [sort, setSort] = useState("createdAt,desc");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-      setPage(0);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const isSearching = debouncedSearch.trim().length >= 2;
-
-  const getPaginationParams = (): PaginationParams => {
-    const params: PaginationParams = { page, size: pageSize, sort };
-    if (activeTab === "student") params.role = "STUDENT";
-    else if (activeTab === "teacher") params.role = "TEACHER";
-    else if (activeTab === "admin") params.role = "ADMIN";
-    return params;
-  };
-
-  const getSearchPaginationParams = (): Omit<PaginationParams, "search"> => ({
-    page,
-    size: pageSize,
-    sort,
-    role:
-      activeTab === "all"
-        ? undefined
-        : activeTab === "student"
-        ? "STUDENT"
-        : activeTab === "teacher"
-        ? "TEACHER"
-        : "ADMIN",
-  });
-
-  const {
-    data: paginatedResponse,
-    isLoading: isRegularLoading,
-    error: regularError,
-    refetch: refetchRegular,
-  } = useUsersPaginated(getPaginationParams());
-
-  const {
-    data: searchPaginatedResponse,
-    isLoading: isSearchLoading,
-    error: searchError,
-    refetch: refetchSearch,
-  } = useSearchUsersPaginated(debouncedSearch.trim(), getSearchPaginationParams());
-
-  const currentResponse = isSearching ? searchPaginatedResponse : paginatedResponse;
-  const isLoading = isSearching ? isSearchLoading : isRegularLoading;
-  const error = isSearching ? searchError : regularError;
-  const refetch = isSearching ? refetchSearch : refetchRegular;
-
-  const users = currentResponse?.content || [];
-  const totalElements = currentResponse?.totalElements || 0;
-  const totalPages = currentResponse?.totalPages || 0;
-
-  const {
-    createCompleteUser,
-    updateUserInfo,
-    activateUser,
-    deactivateUser,
-    deleteUser,
-    updateAddress: updateAddressMutation,
-  } = useUserMutations();
-
-  // ── Handlers ──────────────────────────────
-  const handleEdit = (user: User) => {
-    setSelectedUser(user);
-    setShowFormModal(true);
-  };
-  const handleView = (user: User) => {
-    setSelectedUser(user);
-    setShowDetailModal(true);
-  };
-  const handleToggleActive = (user: User) => {
-    setSelectedUser(user);
-    setShowActivateModal(true);
-  };
-  const handleDelete = (user: User) => {
-    setSelectedUser(user);
-    setShowDeleteModal(true);
-  };
-
-  const handleSort = (field: "firstName" | "email" | "createdAt") => {
-    const [currentField, currentDirection] = sort.split(",");
-    setSort(
-      currentField === field
-        ? `${field},${currentDirection === "asc" ? "desc" : "asc"}`
-        : `${field},desc`
-    );
-    setPage(0);
-  };
-
-  const confirmToggleActive = () => {
-    if (!selectedUser) return;
-    const mutation = selectedUser.active ? deactivateUser : activateUser;
-    mutation.mutate(selectedUser.id, {
-      onSuccess: () => {
-        setShowActivateModal(false);
-        setSelectedUser(null);
-        refetch();
-      },
-    });
-  };
-
-  const confirmDelete = () => {
-    if (!selectedUser) return;
-    deleteUser.mutate(selectedUser.id, {
-      onSuccess: () => {
-        setShowDeleteModal(false);
-        setSelectedUser(null);
-        refetch();
-      },
-    });
-  };
-
-  const handleSave = (userData: any) => {
-    if (selectedUser) {
-      updateUserInfo.mutate(userData.updateUserInfo, {
-        onSuccess: () => {
-          const a = userData.updateAddress;
-          const hasAddr =
-            a.street || a.colony || a.municipality || a.state || a.postalCode;
-          if (hasAddr) {
-            updateAddressMutation.mutate(a, {
-              onSuccess: () => {
-                setShowFormModal(false);
-                setSelectedUser(null);
-                refetch();
-              },
-              onError: () => {
-                setShowFormModal(false);
-                setSelectedUser(null);
-                refetch();
-              },
-            });
-          } else {
-            setShowFormModal(false);
-            setSelectedUser(null);
-            refetch();
-          }
-        },
-      });
-    } else {
-      createCompleteUser.mutate(userData, {
-        onSuccess: () => {
-          setShowFormModal(false);
-          setSelectedUser(null);
-          refetch();
-        },
-      });
-    }
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // ── Helpers ───────────────────────────────
-  const getRoleBadge = (role: UserRole) => {
-    const colors: Record<UserRole, string> = {
-      ADMIN: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
-      TEACHER:
-        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
-      STUDENT:
-        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-    };
-    return <Badge className={colors[role]}>{role}</Badge>;
-  };
-
-  const getStatusBadge = (active: boolean) =>
-    active ? (
-      <Badge
-        variant="default"
-        className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-      >
-        <UserCheck className="h-3 w-3 mr-1" />
-        Activo
-      </Badge>
-    ) : (
-      <Badge variant="secondary">
-        <UserX className="h-3 w-3 mr-1" />
-        Inactivo
-      </Badge>
-    );
-
-  const sortIndicator = (field: string) =>
-    sort.startsWith(field) ? (
-      <span className="ml-1 text-xs">
-        {sort.endsWith("desc") ? "↓" : "↑"}
-      </span>
-    ) : null;
-
-  // ── Loading / Error ────────────────────────
-  if (isLoading && page === 0) {
-    return (
-      <div className="p-8 text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p className="text-muted-foreground">
-          {isSearching ? "Buscando usuarios..." : "Cargando usuarios..."}
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 text-center text-destructive">
-        <div className="text-4xl mb-4">⚠️</div>
-        <p>Error al cargar usuarios. Por favor intenta de nuevo.</p>
-        <Button onClick={() => refetch()} className="mt-4">
-          Reintentar
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold">Datos Personales</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Consulta y edita la información personal de los usuarios
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            className="gap-2 w-full sm:w-auto"
-            onClick={() => refetch()}
-            disabled={isLoading}
-          >
-            <Loader2
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            Actualizar
-          </Button>
-          {/* ← Create user button lives here, not in Account view */}
-          <Button
-            onClick={() => {
-              setSelectedUser(null);
-              setShowFormModal(true);
-            }}
-            className="gap-2 w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-             Registrar Nueva Persona
-          </Button>
-        </div>
       </div>
 
-      {/* ── Role filter tabs ── */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(v: any) => {
-          setActiveTab(v);
-          setPage(0);
-        }}
-      >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" className="gap-2">
-            <Users className="h-4 w-4" />
-            Todos
-            {activeTab === "all" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="student" className="gap-2">
-            <Users className="h-4 w-4" />
-            Estudiantes
-            {activeTab === "student" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="teacher" className="gap-2">
-            <Shield className="h-4 w-4" />
-            Profesores
-            {activeTab === "teacher" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="admin" className="gap-2">
-            <Shield className="h-4 w-4" />
-            Admins
-            {activeTab === "admin" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {/* ── Search bar ── */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      {/* Error banner */}
+      {formError && (
+        <div className="mx-3 mb-2 bg-red-50 border border-red-200 text-red-700 text-xs p-2 rounded flex items-start gap-2">
+          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+          <span className="flex-1">{formError}</span>
+          <button onClick={() => setFormError(null)} className="text-red-400 hover:text-red-600 text-base leading-none">✕</button>
         </div>
-        {isSearching && (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Search className="h-3 w-3" />
-            Buscando: &quot;{debouncedSearch}&quot;
-          </Badge>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          TABLE  — click any row to load into form
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="mx-3 mb-4 flex flex-col bg-white border border-slate-300 rounded shadow-sm overflow-hidden">
+
+        {/* Thead */}
+        <div
+          className="grid bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wide select-none shrink-0"
+          style={{ gridTemplateColumns: "50px 1fr 1fr 160px 95px 45px 1fr 90px" }}
+        >
+          {([
+            ["Consec.",        ""],
+            ["Nombre Completo","primerNombre"],
+            ["Ap. Pat. / Mat.","apellidoPaterno"],
+            ["CURP",           "curp"],
+            ["Fecha Nac.",     ""],
+            ["Edad",           ""],
+            ["Dirección",      ""],
+            ["Estado",         ""],
+          ] as [string, string][]).map(([label, field]) => (
+            <div
+              key={label}
+              onClick={() => field && toggleSort(field)}
+              className={`px-2 py-2 border-r border-slate-700 last:border-0 truncate
+                ${field ? "cursor-pointer hover:bg-slate-700" : ""}`}
+            >
+              {label}{arrow(field)}
+            </div>
+          ))}
+        </div>
+
+        {/* Tbody */}
+        <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[46vh]">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-slate-400">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span className="text-xs">Cargando…</span>
+            </div>
+          ) : persons.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 text-slate-400">
+              <Users className="h-10 w-10 mb-2 opacity-30" />
+              <span className="text-xs">
+                {isSearching
+                  ? `Sin resultados para "${debounced}"`
+                  : "No hay personas registradas"}
+              </span>
+            </div>
+          ) : (
+            persons.map((person, idx) => {
+              const isSel = selected?.id === person.id;
+              return (
+                <div
+                  key={person.id}
+                  onClick={() => selectRow(person)}
+                  title="Clic para cargar datos en el formulario"
+                  className={[
+                    "grid text-xs border-b border-slate-100 cursor-pointer transition-colors",
+                    isSel
+                      ? "bg-blue-50 border-l-[3px] border-l-blue-500 font-semibold"
+                      : idx % 2 === 0
+                        ? "bg-white hover:bg-slate-50"
+                        : "bg-slate-50/70 hover:bg-slate-100",
+                  ].join(" ")}
+                  style={{ gridTemplateColumns: "50px 1fr 1fr 160px 95px 45px 1fr 90px" }}
+                >
+                  {/* Consecutivo / avatar */}
+                  <div className="px-2 py-2 flex items-center justify-center">
+                    <div
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0
+                        ${isSel ? "bg-blue-600" : "bg-emerald-600"}`}
+                    >
+                      {person.primerNombre[0]}{person.apellidoPaterno[0]}
+                    </div>
+                  </div>
+
+                  {/* Nombre completo */}
+                  <div className="px-2 py-2 flex items-center truncate text-slate-700">
+                    {person.primerNombre}
+                    {person.segundoNombre ? ` ${person.segundoNombre}` : ""}
+                  </div>
+
+                  {/* Apellidos */}
+                  <div className="px-2 py-2 flex items-center truncate text-slate-600">
+                    {person.apellidoPaterno}
+                    {person.apellidoMaterno ? ` ${person.apellidoMaterno}` : ""}
+                  </div>
+
+                  {/* CURP */}
+                  <div className="px-2 py-2 flex items-center">
+                    {person.curp
+                      ? <span className="font-mono text-[10px] bg-slate-100 px-1 rounded">{person.curp}</span>
+                      : <span className="italic text-slate-300">—</span>}
+                  </div>
+
+                  {/* F. Nacimiento */}
+                  <div className="px-2 py-2 flex items-center text-slate-500">
+                    {person.birthDate
+                      ? formatBirthDateDisplay(person.birthDate)
+                      : <span className="italic text-slate-300">—</span>}
+                  </div>
+
+                  {/* Edad */}
+                  <div className="px-2 py-2 flex items-center text-slate-500">
+                    {person.age != null ? person.age : <span className="italic text-slate-300">—</span>}
+                  </div>
+
+                  {/* Dirección */}
+                  <div className="px-2 py-2 flex items-center truncate text-slate-500">
+                    {person.address
+                      ? [person.address.street, person.address.colony, person.address.municipality]
+                          .filter(Boolean).join(", ")
+                      : <span className="italic text-slate-300">Sin dirección</span>}
+                  </div>
+
+                  {/* Estado */}
+                  <div className="px-2 py-2 flex items-center">
+                    {person.tieneUsuario
+                      ? <span className="bg-blue-100 text-blue-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">Con cuenta</span>
+                      : <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">Sin cuenta</span>}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Pagination */}
+        {persons.length > 0 && (
+          <div className="flex items-center justify-between px-3 py-1.5 bg-slate-800 text-white text-xs border-t border-slate-600 shrink-0">
+            <span className="text-slate-300">
+              {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalEl)} de {totalEl}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Filas:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}
+                className="bg-slate-700 border border-slate-500 text-white text-xs rounded px-1 py-0.5"
+              >
+                {[10, 20, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+              <button onClick={() => setPage(0)} disabled={page === 0} className="disabled:opacity-30 hover:text-blue-300"><ChevronsLeft className="h-4 w-4" /></button>
+              <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="disabled:opacity-30 hover:text-blue-300"><ChevronLeft className="h-4 w-4" /></button>
+              <span className="px-1">Pág. {page + 1}/{totalPg}</span>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPg - 1} className="disabled:opacity-30 hover:text-blue-300"><ChevronRight className="h-4 w-4" /></button>
+              <button onClick={() => setPage(totalPg - 1)} disabled={page >= totalPg - 1} className="disabled:opacity-30 hover:text-blue-300"><ChevronsRight className="h-4 w-4" /></button>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* ── Table ── */}
-      <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[160px]"
-                  onClick={() => handleSort("firstName")}
-                >
-                  Nombre {sortIndicator("firstName")}
-                </TableHead>
-                <TableHead className="min-w-[110px]">Teléfono</TableHead>
-                <TableHead className="min-w-[100px]">Género</TableHead>
-                <TableHead className="min-w-[220px]">Dirección</TableHead>
-               
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[110px]"
-                  onClick={() => handleSort("createdAt")}
-                >
-                  Registro {sortIndicator("createdAt")}
-                </TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {isSearching ? (
-                      <>
-                        <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>
-                          No se encontraron usuarios para &quot;
-                          {debouncedSearch}&quot;
-                        </p>
-                      </>
-                    ) : (
-                      "No se encontraron usuarios"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                        {user.person.firstName[0]}
-                        {user.person.lastName[0]}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {user.person.firstName} {user.person.lastName}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {user.person.phone || (
-                        <span className="italic text-muted-foreground/60">
-                          —
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {user.person.gender ? (
-                        user.person.gender === "MALE" ? (
-                          "Masculino"
-                        ) : user.person.gender === "FEMALE" ? (
-                          "Femenino"
-                        ) : (
-                          "Otro"
-                        )
-                      ) : (
-                        <span className="italic text-muted-foreground/60">
-                          —
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[220px]">
-                      {user.person.address ? (
-                        <span className="truncate block">
-                          {[
-                            user.person.address.street,
-                            user.person.address.colony,
-                            user.person.address.municipality,
-                            user.person.address.state,
-                          ]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </span>
-                      ) : (
-                        <span className="italic text-muted-foreground/60">
-                          Sin dirección
-                        </span>
-                      )}
-                    </TableCell>
-                 
-                 
-                 
-             
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(
-                        user.person.registrationDate
-                      ).toLocaleDateString("es-MX")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleView(user)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver detalles
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEdit(user)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar datos personales
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleToggleActive(user)}
-                          >
-                            {user.active ? (
-                              <>
-                                <UserX className="h-4 w-4 mr-2" />
-                                Desactivar
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Activar
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(user)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {users.length > 0 && (
-          <PaginationControls
-            currentPage={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalElements={totalElements}
-            onPageChange={handlePageChange}
-            onPageSizeChange={(s) => {
-              setPageSize(s);
-              setPage(0);
-            }}
-          />
-        )}
-      </Card>
-
-      {/* ── Modals ── */}
-      <UserFormModal
-        open={showFormModal}
-        onClose={() => {
-          setShowFormModal(false);
-          setSelectedUser(null);
-        }}
-        initialData={selectedUser || undefined}
-        onSave={handleSave}
-        isSaving={
-          createCompleteUser.isPending || updateUserInfo.isPending
-        }
-      />
-
-      <UserDetailModal
-        user={selectedUser}
-        open={showDetailModal}
-        onClose={() => {
-          setShowDetailModal(false);
-          setSelectedUser(null);
-        }}
-      />
-
-      {/* Activate / Deactivate dialog */}
-      <AlertDialog
-        open={showActivateModal}
-        onOpenChange={setShowActivateModal}
-      >
+      {/* ══════════════════════════════════════════════════════════════════
+          DELETE DIALOGS  (only dialogs left — no form modals)
+      ══════════════════════════════════════════════════════════════════ */}
+      <AlertDialog open={showDel} onOpenChange={setShowDel}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {selectedUser?.active
-                ? "Desactivar Usuario"
-                : "Activar Usuario"}
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-600" /> Eliminar Persona
             </AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro que deseas{" "}
-              {selectedUser?.active ? "desactivar" : "activar"} a{" "}
-              <strong>
-                {selectedUser?.person.firstName}{" "}
-                {selectedUser?.person.lastName}
-              </strong>
-              ?
+              ¿Eliminar a <strong>{selected?.nombreCompleto}</strong>?{" "}
+              <span className="text-red-600 font-semibold">⚠️ Esta acción no se puede deshacer.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={activateUser.isPending || deactivateUser.isPending}
-            >
-              Cancelar
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deletePerson.isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmToggleActive}
-              disabled={activateUser.isPending || deactivateUser.isPending}
+              onClick={confirmDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
+              disabled={deletePerson.isPending}
             >
-              {(activateUser.isPending || deactivateUser.isPending) && (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              )}
-              Confirmar
+              {deletePerson.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete dialog */}
-      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      <AlertDialog open={showLinked} onOpenChange={setShowLinked}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" />
-              Eliminar Usuario
+              <AlertTriangle className="h-5 w-5 text-amber-500" /> No se puede eliminar
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro que deseas eliminar permanentemente a{" "}
-              <strong>
-                {selectedUser?.person.firstName}{" "}
-                {selectedUser?.person.lastName}
-              </strong>
-              ?
-              <br />
-              <span className="text-destructive mt-2 inline-block font-semibold">
-                ⚠️ Esta acción NO se puede deshacer.
-              </span>
-            </AlertDialogDescription>
+            <AlertDialogDescription>{delErr}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteUser.isPending}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteUser.isPending}
-            >
-              {deleteUser.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Trash2 className="h-4 w-4 mr-2" />
-              )}
-              Eliminar Permanentemente
+            <AlertDialogAction onClick={() => { setShowLinked(false); setDelErr(""); }}>
+              Entendido
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

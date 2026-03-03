@@ -1,40 +1,35 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search,
+  Plus,
   Loader2,
   Users,
   UserCheck,
   UserX,
-  Mail,
   Shield,
   Trash2,
-  MoreVertical,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  AlertTriangle,
+  Ban,
+  RotateCcw,
+  Mail,
   KeyRound,
+  Power,
 } from "lucide-react";
 import {
   useUsersPaginated,
   useUserMutations,
   useSearchUsersPaginated,
 } from "@/components/admin/hooks/useUsers";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { usePersonsSummary } from "@/components/admin/hooks/usePersons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,585 +40,871 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ChangeEmailModal } from "@/components/admin/ChangeEmailModal";
-import { AdminResetPasswordModal } from "@/components/admin/AdminResetPasswordModal";
-import { User } from "@/app/shared/models/user.model";
 import { UserRole } from "@/app/shared/dtos/user.dto";
 import { PaginationParams } from "@/app/shared/types/pagination";
+import {
+  registerUserForExistingPerson,
+  changeEmail,
+} from "@/components/admin/api/usersApi";
+import { User } from "./dtos/user-dto";
 
-// ─────────────────────────────────────────────
-// PaginationControls
-// ─────────────────────────────────────────────
-interface PaginationControlsProps {
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-  totalElements: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function getInitials(user: User) {
+  return `${user.person.primerNombre?.[0] ?? ""}${user.person.apellidoPaterno?.[0] ?? ""}`.toUpperCase();
+}
+function getFullName(user: User) {
+  return (
+    user.person.nombreCompleto ||
+    `${user.person.primerNombre} ${user.person.apellidoPaterno}`
+  );
 }
 
-function PaginationControls({
-  currentPage,
-  totalPages,
-  pageSize,
-  totalElements,
-  onPageChange,
-  onPageSizeChange,
-}: PaginationControlsProps) {
-  const startItem = currentPage * pageSize + 1;
-  const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared field label wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-4 pb-4">
-      <div className="text-sm text-muted-foreground">
-        Mostrando {startItem}-{endItem} de {totalElements} usuarios
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Filas por página:
-          </span>
-          <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(0)}
-            disabled={currentPage === 0}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Página {currentPage + 1} de {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(totalPages - 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+    <div className="flex flex-col gap-0.5 min-w-0">
+      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+        {label}
+      </span>
+      {children}
     </div>
   );
 }
 
-// ─────────────────────────────────────────────
-// AccountManagementView  (main export)
-// ─────────────────────────────────────────────
+const inp = (extra = "") =>
+  `w-full h-8 border border-slate-300 rounded px-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:cursor-not-allowed transition ${extra}`;
+
+const roInp =
+  "w-full h-8 border border-slate-200 rounded px-2 text-xs bg-slate-50 text-slate-500 cursor-not-allowed select-none flex items-center truncate";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Action Button
+// ─────────────────────────────────────────────────────────────────────────────
+function Btn({
+  label,
+  icon: Icon,
+  bg,
+  onClick,
+  disabled,
+  loading,
+}: {
+  label: string;
+  icon: React.ElementType;
+  bg: string;
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`flex items-center justify-center gap-1.5 w-full py-2 px-2 rounded font-bold text-[11px] uppercase tracking-wide text-white transition disabled:opacity-40 disabled:cursor-not-allowed ${bg}`}
+    >
+      {loading ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Icon className="h-3.5 w-3.5" />
+      )}
+      {label}
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Role badge
+// ─────────────────────────────────────────────────────────────────────────────
+function RoleBadge({ role }: { role: UserRole }) {
+  const c: Record<UserRole, string> = {
+    ADMIN: "bg-red-100    text-red-800",
+    TEACHER: "bg-purple-100 text-purple-800",
+    STUDENT: "bg-blue-100   text-blue-800",
+  };
+  return <Badge className={`${c[role]} text-[10px] px-1.5`}>{role}</Badge>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty form
+// ─────────────────────────────────────────────────────────────────────────────
+const EMPTY = {
+  personId: "",
+  email: "",
+  password: "",
+  role: "STUDENT" as UserRole,
+  studentId: "",
+  newEmail: "",
+  newPassword: "",
+};
+type F = typeof EMPTY;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AccountManagementView
+// ─────────────────────────────────────────────────────────────────────────────
 export default function AccountManagementView() {
+  // ── Pagination / search / tabs ─────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [activeTab, setActiveTab] = useState<
     "all" | "student" | "teacher" | "admin"
   >("all");
-
-  const [showActivateModal, setShowActivateModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showChangeEmailModal, setShowChangeEmailModal] = useState(false);
-  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const [sort, setSort] = useState("createdAt,desc");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
+    const t = setTimeout(() => {
+      setDebounced(searchTerm);
       setPage(0);
-    }, 1000);
-    return () => clearTimeout(timer);
+    }, 600);
+    return () => clearTimeout(t);
   }, [searchTerm]);
 
-  const isSearching = debouncedSearch.trim().length >= 2;
+  const isSearching = debounced.trim().length >= 2;
 
-  const getPaginationParams = (): PaginationParams => {
-    const params: PaginationParams = { page, size: pageSize, sort };
-    if (activeTab === "student") params.role = "STUDENT";
-    else if (activeTab === "teacher") params.role = "TEACHER";
-    else if (activeTab === "admin") params.role = "ADMIN";
-    return params;
-  };
-
-  const getSearchPaginationParams = (): Omit<PaginationParams, "search"> => ({
+  const getParams = (): PaginationParams => ({
     page,
     size: pageSize,
     sort,
-    role:
-      activeTab === "all"
-        ? undefined
-        : activeTab === "student"
-        ? "STUDENT"
-        : activeTab === "teacher"
-        ? "TEACHER"
-        : "ADMIN",
+    role: activeTab === "all" ? undefined : activeTab.toUpperCase(),
   });
 
   const {
-    data: paginatedResponse,
-    isLoading: isRegularLoading,
-    error: regularError,
-    refetch: refetchRegular,
-  } = useUsersPaginated(getPaginationParams());
-
+    data: regData,
+    isLoading: regLoad,
+    error: regErr,
+    refetch: refetchReg,
+  } = useUsersPaginated(getParams());
   const {
-    data: searchPaginatedResponse,
-    isLoading: isSearchLoading,
-    error: searchError,
-    refetch: refetchSearch,
-  } = useSearchUsersPaginated(
-    debouncedSearch.trim(),
-    getSearchPaginationParams()
-  );
+    data: srcData,
+    isLoading: srcLoad,
+    error: srcErr,
+    refetch: refetchSrc,
+  } = useSearchUsersPaginated(debounced.trim(), {
+    page,
+    size: pageSize,
+    sort,
+    role: activeTab === "all" ? undefined : activeTab.toUpperCase(),
+  });
 
-  const currentResponse = isSearching
-    ? searchPaginatedResponse
-    : paginatedResponse;
-  const isLoading = isSearching ? isSearchLoading : isRegularLoading;
-  const error = isSearching ? searchError : regularError;
-  const refetch = isSearching ? refetchSearch : refetchRegular;
+  const data = isSearching ? srcData : regData;
+  const isLoading = isSearching ? srcLoad : regLoad;
+  const error = isSearching ? srcErr : regErr;
+  const refetch = isSearching ? refetchSrc : refetchReg;
+  const users = data?.content ?? [];
+  const totalEl = data?.totalElements ?? 0;
+  const totalPg = data?.totalPages ?? 0;
 
-  const users = currentResponse?.content || [];
-  const totalElements = currentResponse?.totalElements || 0;
-  const totalPages = currentResponse?.totalPages || 0;
-
+  const { data: personsSummary = [], isLoading: loadingPersons } =
+    usePersonsSummary();
   const { activateUser, deactivateUser, deleteUser } = useUserMutations();
 
-  // ── Handlers ──────────────────────────────
-  const handleChangeEmail = (user: User) => {
-    setSelectedUser(user);
-    setShowChangeEmailModal(true);
-  };
-  const handleResetPassword = (user: User) => {
-    setSelectedUser(user);
-    setShowResetPasswordModal(true);
-  };
-  const handleToggleActive = (user: User) => {
-    setSelectedUser(user);
-    setShowActivateModal(true);
-  };
-  const handleDelete = (user: User) => {
-    setSelectedUser(user);
-    setShowDeleteModal(true);
+  // ── Form state ─────────────────────────────────────────────────────────────
+  const [form, setForm] = useState<F>(EMPTY);
+  const [selected, setSelected] = useState<User | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSuccess, setFormSuccess] = useState<string | null>(null);
+
+  // ── Confirm dialogs ────────────────────────────────────────────────────────
+  const [showToggleActive, setShowToggleActive] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const set = (k: keyof F, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  const clearForm = useCallback(() => {
+    setForm(EMPTY);
+    setSelected(null);
+    setFormError(null);
+    setFormSuccess(null);
+  }, []);
+
+  /** Click row → fill form */
+  const selectRow = (u: User) => {
+    setSelected(u);
+    setFormError(null);
+    setFormSuccess(null);
+    setForm({
+      personId: u.person.id,
+      email: u.email,
+      password: "",
+      role: u.role,
+      studentId: u.studentId ?? "",
+      newEmail: u.email,
+      newPassword: "",
+    });
   };
 
-  const handleSort = (field: "firstName" | "email" | "createdAt") => {
-    const [currentField, currentDirection] = sort.split(",");
-    setSort(
-      currentField === field
-        ? `${field},${currentDirection === "asc" ? "desc" : "asc"}`
-        : `${field},desc`
-    );
+  // ── ALTAS (create) ─────────────────────────────────────────────────────────
+  const handleAltas = async () => {
+    setFormError(null);
+    setFormSuccess(null);
+    if (!form.personId) {
+      setFormError("Selecciona una persona.");
+      return;
+    }
+    if (!form.email) {
+      setFormError("El email es obligatorio.");
+      return;
+    }
+    if (!form.password) {
+      setFormError("La contraseña es obligatoria.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await registerUserForExistingPerson({
+        personId: form.personId,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+        studentId:
+          form.role === "STUDENT" && form.studentId
+            ? form.studentId
+            : undefined,
+      });
+      setFormSuccess("Cuenta creada exitosamente.");
+      clearForm();
+      refetch();
+    } catch (e: any) {
+      setFormError(e?.message ?? "Error al crear la cuenta.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── Cambiar Email ──────────────────────────────────────────────────────────
+  const handleChangeEmail = async () => {
+    if (!selected) return;
+    setFormError(null);
+    setFormSuccess(null);
+    if (!form.newEmail) {
+      setFormError("Ingresa el nuevo email.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await changeEmail({ userId: selected.id, newEmail: form.newEmail });
+      setFormSuccess("Email actualizado correctamente.");
+      refetch();
+    } catch (e: any) {
+      setFormError(e?.message ?? "Error al cambiar email.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── Reset Contraseña ───────────────────────────────────────────────────────
+  const handleResetPassword = async () => {
+    if (!selected) return;
+    setFormError(null);
+    setFormSuccess(null);
+    if (!form.newPassword || form.newPassword.length < 8) {
+      setFormError("La nueva contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await adminChangePassword({
+        userId: selected.id,
+        newPassword: form.newPassword,
+      });
+      setFormSuccess("Contraseña reseteada correctamente.");
+      set("newPassword", "");
+    } catch (e: any) {
+      setFormError(e?.message ?? "Error al resetear contraseña.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── Toggle Activo ──────────────────────────────────────────────────────────
+  const confirmToggle = () => {
+    if (!selected) return;
+    const mut = selected.active ? deactivateUser : activateUser;
+    mut.mutate(selected.id, {
+      onSuccess: () => {
+        setShowToggleActive(false);
+        clearForm();
+        refetch();
+      },
+    });
+  };
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
+  const confirmDelete = () => {
+    if (!selected) return;
+    deleteUser.mutate(selected.id, {
+      onSuccess: () => {
+        setShowDelete(false);
+        clearForm();
+        refetch();
+      },
+    });
+  };
+
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const toggleSort = (f: string) => {
+    const [cur, dir] = sort.split(",");
+    setSort(cur === f ? `${f},${dir === "asc" ? "desc" : "asc"}` : `${f},desc`);
     setPage(0);
   };
+  const arrow = (f: string) =>
+    sort.startsWith(f) ? (sort.endsWith("desc") ? " ↓" : " ↑") : "";
 
-  const confirmToggleActive = () => {
-    if (!selectedUser) return;
-    const mutation = selectedUser.active ? deactivateUser : activateUser;
-    mutation.mutate(selectedUser.id, {
-      onSuccess: () => {
-        setShowActivateModal(false);
-        setSelectedUser(null);
-        refetch();
-      },
-    });
-  };
+  const isEdit = !!selected;
 
-  const confirmDelete = () => {
-    if (!selectedUser) return;
-    deleteUser.mutate(selectedUser.id, {
-      onSuccess: () => {
-        setShowDeleteModal(false);
-        setSelectedUser(null);
-        refetch();
-      },
-    });
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // ── Helpers ───────────────────────────────
-  const getRoleBadge = (role: UserRole) => {
-    const colors: Record<UserRole, string> = {
-      ADMIN: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
-      TEACHER:
-        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
-      STUDENT:
-        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-    };
-    return <Badge className={colors[role]}>{role}</Badge>;
-  };
-
-  const getStatusBadge = (active: boolean) =>
-    active ? (
-      <Badge
-        variant="default"
-        className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-      >
-        <UserCheck className="h-3 w-3 mr-1" />
-        Activo
-      </Badge>
-    ) : (
-      <Badge variant="secondary">
-        <UserX className="h-3 w-3 mr-1" />
-        Inactivo
-      </Badge>
-    );
-
-  const sortIndicator = (field: string) =>
-    sort.startsWith(field) ? (
-      <span className="ml-1 text-xs">
-        {sort.endsWith("desc") ? "↓" : "↑"}
-      </span>
-    ) : null;
-
-  // ── Loading / Error ────────────────────────
-  if (isLoading && page === 0) {
-    return (
-      <div className="p-8 text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p className="text-muted-foreground">
-          {isSearching ? "Buscando usuarios..." : "Cargando usuarios..."}
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
+  if (error && page === 0)
     return (
       <div className="p-8 text-center text-destructive">
-        <div className="text-4xl mb-4">⚠️</div>
-        <p>Error al cargar usuarios. Por favor intenta de nuevo.</p>
-        <Button onClick={() => refetch()} className="mt-4">
+        <p>Error al cargar usuarios.</p>
+        <button
+          onClick={() => refetch()}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded text-sm"
+        >
           Reintentar
-        </Button>
+        </button>
       </div>
     );
-  }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-4">
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold">
-            Gestión de Cuentas
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Administra emails, contraseñas y estado de las cuentas
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          className="gap-2 w-full sm:w-auto"
-          onClick={() => refetch()}
-          disabled={isLoading}
-        >
-          <Loader2
-            className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-          />
-          Actualizar
-        </Button>
-        {/* ← NO "Nuevo Usuario" button here */}
-      </div>
-
-      {/* ── Role filter tabs ── */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(v: any) => {
-          setActiveTab(v);
-          setPage(0);
-        }}
-      >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" className="gap-2">
-            <Users className="h-4 w-4" />
-            Todos
-            {activeTab === "all" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="student" className="gap-2">
-            <Users className="h-4 w-4" />
-            Estudiantes
-            {activeTab === "student" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="teacher" className="gap-2">
-            <Shield className="h-4 w-4" />
-            Profesores
-            {activeTab === "teacher" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="admin" className="gap-2">
-            <Shield className="h-4 w-4" />
-            Admins
-            {activeTab === "admin" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {/* ── Search bar ── */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre o email..."
+    <div className="flex flex-col min-h-screen bg-gray-100 text-slate-800 text-sm font-sans">
+      {/* ══════════════════════════════════════════════════════════════════
+          TOP STRIP
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="bg-slate-800 text-white flex items-center gap-3 px-4 py-2 flex-wrap">
+        <span className="font-bold text-xs uppercase tracking-widest whitespace-nowrap">
+          Gestión de Cuentas
+        </span>
+        <p className="text-xs text-slate-400">
+          Una persona puede tener múltiples cuentas con distintos roles.
+        </p>
+        <div className="ml-auto relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            placeholder="Buscar por nombre o email…"
+            className="h-8 pl-7 pr-3 text-xs rounded border border-slate-600 bg-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400 w-52"
           />
         </div>
         {isSearching && (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Search className="h-3 w-3" />
-            Buscando: &quot;{debouncedSearch}&quot;
-          </Badge>
+          <span className="text-xs text-slate-300 border border-slate-500 rounded px-2 py-0.5">
+            "{debounced}"
+          </span>
         )}
       </div>
 
-      {/* ── Table ── */}
-      <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[160px]"
-                  onClick={() => handleSort("firstName")}
+      {/* ══════════════════════════════════════════════════════════════════
+          FORM AREA  +  ACTION BUTTONS
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="flex gap-3 p-3 flex-wrap xl:flex-nowrap">
+        {/* ── Form panels ─────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-3 flex-1 min-w-0">
+          {/* Panel: Datos de Cuenta */}
+          <div className="bg-white rounded border border-slate-200 shadow-sm">
+            <div className="px-3 py-1.5 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-700">
+                Datos de la Cuenta
+              </h3>
+            </div>
+            <div className="p-3 space-y-2">
+              {/* Row 1: Persona · Email · Rol · Matrícula */}
+              <div className="grid grid-cols-4 gap-2">
+                <Field label="Persona">
+                  {isEdit ? (
+                    <div className={roInp}>{getFullName(selected!)}</div>
+                  ) : (
+                    <select
+                      value={form.personId}
+                      onChange={(e) => set("personId", e.target.value)}
+                      disabled={isSaving || loadingPersons}
+                      className={inp()}
+                    >
+                      <option value="">
+                        {loadingPersons ? "Cargando…" : "Selecciona…"}
+                      </option>
+                      {personsSummary.map((p) => (
+                        <option key={p.personId} value={p.personId}>
+                          {p.nombreCompleto}
+                          {p.tieneUsuario ? " (ya tiene cuenta)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </Field>
+
+                <Field label="Email">
+                  <input
+                    type="email"
+                    value={isEdit ? form.newEmail : form.email}
+                    onChange={(e) =>
+                      isEdit
+                        ? set("newEmail", e.target.value)
+                        : set("email", e.target.value)
+                    }
+                    disabled={isSaving}
+                    placeholder="usuario@universidad.edu"
+                    className={inp()}
+                  />
+                </Field>
+
+                <Field label="Rol">
+                  {isEdit ? (
+                    <div className={roInp}>
+                      <RoleBadge role={selected!.role} />
+                    </div>
+                  ) : (
+                    <select
+                      value={form.role}
+                      onChange={(e) => set("role", e.target.value as UserRole)}
+                      disabled={isSaving}
+                      className={inp()}
+                    >
+                      <option value="ADMIN">Administrador</option>
+                      <option value="TEACHER">Profesor</option>
+                      <option value="STUDENT">Estudiante</option>
+                    </select>
+                  )}
+                </Field>
+
+                <Field
+                  label={
+                    form.role === "STUDENT" || selected?.role === "STUDENT"
+                      ? "Matrícula"
+                      : "Student ID"
+                  }
                 >
-                  Nombre {sortIndicator("firstName")}
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[200px]"
-                  onClick={() => handleSort("email")}
-                >
-                  Email {sortIndicator("email")}
-                </TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[110px]"
-                  onClick={() => handleSort("createdAt")}
-                >
-                  Creado {sortIndicator("createdAt")}
-                </TableHead>
-                <TableHead className="text-right">Acciones de Cuenta</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {isSearching ? (
-                      <>
-                        <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>
-                          No se encontraron usuarios para &quot;
-                          {debouncedSearch}&quot;
-                        </p>
-                      </>
-                    ) : (
-                      "No se encontraron usuarios"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                        {user.person.firstName[0]}
-                        {user.person.lastName[0]}
+                  {isEdit ? (
+                    <div className={roInp}>
+                      {selected!.studentId ?? (
+                        <span className="italic text-slate-300">—</span>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      value={form.studentId}
+                      onChange={(e) => set("studentId", e.target.value)}
+                      disabled={isSaving || form.role !== "STUDENT"}
+                      placeholder={
+                        form.role === "STUDENT" ? "Ej: 2024001" : "N/A"
+                      }
+                      className={inp()}
+                    />
+                  )}
+                </Field>
+              </div>
+
+              {/* Row 2: Contraseña (create) OR Nuevo Email hint + Nueva Contraseña (edit) */}
+              <div className="grid grid-cols-4 gap-2">
+                {!isEdit ? (
+                  <>
+                    <Field label="Contraseña">
+                      <input
+                        type="password"
+                        value={form.password}
+                        onChange={(e) => set("password", e.target.value)}
+                        disabled={isSaving}
+                        placeholder="Mín. 8 caracteres"
+                        minLength={8}
+                        className={inp()}
+                      />
+                    </Field>
+                    <div className="col-span-3" />
+                  </>
+                ) : (
+                  <>
+                    <Field label="Estado actual">
+                      <div className={roInp}>
+                        {selected!.active ? (
+                          <span className="text-green-600 font-semibold flex items-center gap-1">
+                            <UserCheck className="h-3 w-3" /> Activo
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 flex items-center gap-1">
+                            <UserX className="h-3 w-3" /> Inactivo
+                          </span>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {user.person.firstName} {user.person.lastName}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {user.email}
-                    </TableCell>
-                    <TableCell>{getRoleBadge(user.role)}</TableCell>
-                    <TableCell>{getStatusBadge(user.active)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString("es-MX")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleChangeEmail(user)}
-                          >
-                            <Mail className="h-4 w-4 mr-2" />
-                            Cambiar Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleResetPassword(user)}
-                          >
-                            <KeyRound className="h-4 w-4 mr-2" />
-                            Resetear Contraseña
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleToggleActive(user)}
-                          >
-                            {user.active ? (
-                              <>
-                                <UserX className="h-4 w-4 mr-2" />
-                                Desactivar
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Activar
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(user)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                    </Field>
+                    <Field label="Creado el">
+                      <div className={roInp}>
+                        {new Date(selected!.createdAt).toLocaleDateString(
+                          "es-MX",
+                        )}
+                      </div>
+                    </Field>
+                    <Field label="Nueva Contraseña (para resetear)">
+                      <input
+                        type="password"
+                        value={form.newPassword}
+                        onChange={(e) => set("newPassword", e.target.value)}
+                        disabled={isSaving}
+                        placeholder="Mín. 8 caracteres"
+                        className={inp()}
+                      />
+                    </Field>
+                    <div />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {users.length > 0 && (
-          <PaginationControls
-            currentPage={page}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalElements={totalElements}
-            onPageChange={handlePageChange}
-            onPageSizeChange={(s) => {
-              setPageSize(s);
-              setPage(0);
-            }}
+        {/* ── Action buttons ───────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2 w-36 shrink-0 pt-7">
+          <Btn
+            label="⊕ Nueva Cta."
+            icon={Plus}
+            bg="bg-green-600 hover:bg-green-700"
+            onClick={handleAltas}
+            disabled={isSaving || isEdit}
+            loading={isSaving && !isEdit}
           />
+          <Btn
+            label="@ Cambiar Email"
+            icon={Mail}
+            bg="bg-blue-600 hover:bg-blue-700"
+            onClick={handleChangeEmail}
+            disabled={isSaving || !isEdit}
+            loading={isSaving && isEdit}
+          />
+          <Btn
+            label="⚷ Reset Pwd"
+            icon={KeyRound}
+            bg="bg-amber-500 hover:bg-amber-600"
+            onClick={handleResetPassword}
+            disabled={isSaving || !isEdit || !form.newPassword}
+          />
+          <Btn
+            label={selected?.active ? "Desactivar" : "Activar"}
+            icon={Power}
+            bg={
+              selected?.active
+                ? "bg-orange-500 hover:bg-orange-600"
+                : "bg-teal-600 hover:bg-teal-700"
+            }
+            onClick={() => setShowToggleActive(true)}
+            disabled={isSaving || !isEdit}
+          />
+          <Btn
+            label="✕ Eliminar"
+            icon={Trash2}
+            bg="bg-red-600 hover:bg-red-700"
+            onClick={() => setShowDelete(true)}
+            disabled={isSaving || !isEdit}
+          />
+          <Btn
+            label="Cancelar"
+            icon={Ban}
+            bg="bg-slate-500 hover:bg-slate-600"
+            onClick={clearForm}
+            disabled={isSaving}
+          />
+          <Btn
+            label="Actualizar"
+            icon={RotateCcw}
+            bg="bg-zinc-700 hover:bg-zinc-800"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            loading={isLoading}
+          />
+
+          {/* selected indicator */}
+          {isEdit && (
+            <div className="mt-1 text-center bg-blue-50 border border-blue-200 rounded px-2 py-1">
+              <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wide">
+                Editando
+              </p>
+              <p className="text-[10px] text-blue-800 font-semibold truncate">
+                {getFullName(selected!)}
+              </p>
+              <RoleBadge role={selected!.role} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Error / success banners */}
+      {formError && (
+        <div className="mx-3 mb-2 bg-red-50 border border-red-200 text-red-700 text-xs p-2 rounded flex items-start gap-2">
+          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+          <span className="flex-1">{formError}</span>
+          <button
+            onClick={() => setFormError(null)}
+            className="text-red-400 hover:text-red-600 text-base leading-none"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      {formSuccess && (
+        <div className="mx-3 mb-2 bg-green-50 border border-green-200 text-green-700 text-xs p-2 rounded flex items-start gap-2">
+          <UserCheck className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+          <span className="flex-1">{formSuccess}</span>
+          <button
+            onClick={() => setFormSuccess(null)}
+            className="text-green-400 hover:text-green-600 text-base leading-none"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          ROLE TABS
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="mx-3 mb-2">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v: any) => {
+            setActiveTab(v);
+            setPage(0);
+          }}
+        >
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all" className="gap-2 text-xs">
+              <Users className="h-3.5 w-3.5" /> Todos
+              {activeTab === "all" && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {totalEl}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="student" className="text-xs">
+              Estudiantes
+              {activeTab === "student" && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {totalEl}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="teacher" className="gap-2 text-xs">
+              <Shield className="h-3.5 w-3.5" /> Profesores
+              {activeTab === "teacher" && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {totalEl}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="gap-2 text-xs">
+              <Shield className="h-3.5 w-3.5" /> Admins
+              {activeTab === "admin" && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {totalEl}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          TABLE
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="mx-3 mb-4 flex flex-col bg-white border border-slate-300 rounded shadow-sm overflow-hidden">
+        {/* Thead */}
+        <div
+          className="grid bg-slate-800 text-white text-[11px] font-bold uppercase tracking-wide select-none shrink-0"
+          style={{ gridTemplateColumns: "44px 1fr 1fr 90px 85px 95px" }}
+        >
+          {(
+            [
+              ["#", ""],
+              ["Nombre Completo", "primerNombre"],
+              ["Email", "email"],
+              ["Rol", ""],
+              ["Estado", ""],
+              ["Creado", "createdAt"],
+            ] as [string, string][]
+          ).map(([label, field]) => (
+            <div
+              key={label}
+              onClick={() => field && toggleSort(field)}
+              className={`px-2 py-2 border-r border-slate-700 last:border-0 truncate ${field ? "cursor-pointer hover:bg-slate-700" : ""}`}
+            >
+              {label}
+              {arrow(field)}
+            </div>
+          ))}
+        </div>
+
+        {/* Tbody */}
+        <div className="flex-1 overflow-y-auto min-h-[200px] max-h-[46vh]">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-slate-400">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span className="text-xs">Cargando…</span>
+            </div>
+          ) : users.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 text-slate-400">
+              <Users className="h-10 w-10 mb-2 opacity-30" />
+              <span className="text-xs">
+                {isSearching
+                  ? `Sin resultados para "${debounced}"`
+                  : "No se encontraron cuentas"}
+              </span>
+            </div>
+          ) : (
+            users.map((user, idx) => {
+              const isSel = selected?.id === user.id;
+              return (
+                <div
+                  key={user.id}
+                  onClick={() => selectRow(user)}
+                  title="Clic para cargar datos en el formulario"
+                  className={[
+                    "grid text-xs border-b border-slate-100 cursor-pointer transition-colors",
+                    isSel
+                      ? "bg-blue-50 border-l-[3px] border-l-blue-500 font-semibold"
+                      : idx % 2 === 0
+                        ? "bg-white hover:bg-slate-50"
+                        : "bg-slate-50/70 hover:bg-slate-100",
+                  ].join(" ")}
+                  style={{ gridTemplateColumns: "44px 1fr 1fr 90px 85px 95px" }}
+                >
+                  {/* Avatar */}
+                  <div className="px-2 py-2 flex items-center justify-center">
+                    <div
+                      className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0
+                      ${isSel ? "bg-blue-600" : "bg-blue-500"}`}
+                    >
+                      {getInitials(user)}
+                    </div>
+                  </div>
+
+                  {/* Nombre + matrícula */}
+                  <div className="px-2 py-2 flex flex-col justify-center truncate text-slate-700">
+                    <span className="truncate">{getFullName(user)}</span>
+                    {user.studentId && (
+                      <span className="text-[10px] text-slate-400 truncate">
+                        Mat: {user.studentId}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div className="px-2 py-2 flex items-center truncate text-slate-500">
+                    {user.email}
+                  </div>
+
+                  {/* Rol */}
+                  <div className="px-2 py-2 flex items-center">
+                    <RoleBadge role={user.role} />
+                  </div>
+
+                  {/* Estado */}
+                  <div className="px-2 py-2 flex items-center">
+                    {user.active ? (
+                      <span className="bg-green-100 text-green-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 whitespace-nowrap">
+                        <UserCheck className="h-2.5 w-2.5" /> Activo
+                      </span>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 whitespace-nowrap">
+                        <UserX className="h-2.5 w-2.5" /> Inactivo
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Creado */}
+                  <div className="px-2 py-2 flex items-center text-slate-500">
+                    {new Date(user.createdAt).toLocaleDateString("es-MX")}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Pagination */}
+        {users.length > 0 && (
+          <div className="flex items-center justify-between px-3 py-1.5 bg-slate-800 text-white text-xs border-t border-slate-600 shrink-0">
+            <span className="text-slate-300">
+              {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalEl)}{" "}
+              de {totalEl}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Filas:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(0);
+                }}
+                className="bg-slate-700 border border-slate-500 text-white text-xs rounded px-1 py-0.5"
+              >
+                {[10, 20, 50, 100].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setPage(0)}
+                disabled={page === 0}
+                className="disabled:opacity-30 hover:text-blue-300"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0}
+                className="disabled:opacity-30 hover:text-blue-300"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="px-1">
+                Pág. {page + 1}/{totalPg}
+              </span>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPg - 1}
+                className="disabled:opacity-30 hover:text-blue-300"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setPage(totalPg - 1)}
+                disabled={page >= totalPg - 1}
+                className="disabled:opacity-30 hover:text-blue-300"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
         )}
-      </Card>
+      </div>
 
-      {/* ── Modals ── */}
-      <ChangeEmailModal
-        user={selectedUser}
-        open={showChangeEmailModal}
-        onClose={() => {
-          setShowChangeEmailModal(false);
-          setSelectedUser(null);
-          refetch();
-        }}
-      />
+      {/* ══════════════════════════════════════════════════════════════════
+          DIALOGS  (confirmations only — no form modals)
+      ══════════════════════════════════════════════════════════════════ */}
 
-      <AdminResetPasswordModal
-        user={selectedUser}
-        open={showResetPasswordModal}
-        onClose={() => {
-          setShowResetPasswordModal(false);
-          setSelectedUser(null);
-          refetch();
-        }}
-      />
-
-      {/* Activate / Deactivate dialog */}
-      <AlertDialog
-        open={showActivateModal}
-        onOpenChange={setShowActivateModal}
-      >
+      {/* Toggle Active */}
+      <AlertDialog open={showToggleActive} onOpenChange={setShowToggleActive}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {selectedUser?.active
-                ? "Desactivar Usuario"
-                : "Activar Usuario"}
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Power className="h-5 w-5 text-orange-500" />
+              {selected?.active ? "Desactivar" : "Activar"} Cuenta
             </AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro que deseas{" "}
-              {selectedUser?.active ? "desactivar" : "activar"} a{" "}
-              <strong>
-                {selectedUser?.person.firstName}{" "}
-                {selectedUser?.person.lastName}
-              </strong>
-              ?
+              ¿{selected?.active ? "Desactivar" : "Activar"} la cuenta de{" "}
+              <strong>{selected ? getFullName(selected) : ""}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -633,7 +914,7 @@ export default function AccountManagementView() {
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmToggleActive}
+              onClick={confirmToggle}
               disabled={activateUser.isPending || deactivateUser.isPending}
             >
               {(activateUser.isPending || deactivateUser.isPending) && (
@@ -645,29 +926,29 @@ export default function AccountManagementView() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete dialog */}
-      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      {/* Delete */}
+      <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" />
-              Eliminar Usuario
+              <Trash2 className="h-5 w-5 text-red-600" /> Eliminar Cuenta
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro que deseas eliminar permanentemente a{" "}
-              <strong>
-                {selectedUser?.person.firstName}{" "}
-                {selectedUser?.person.lastName}
-              </strong>
-              ?
-              <br />
-              <span className="text-destructive mt-2 inline-block font-semibold">
-                ⚠️ Esta acción NO se puede deshacer.
-              </span>
-              <br />
-              <span className="text-muted-foreground text-sm mt-2 inline-block">
-                Se eliminarán todos los datos asociados al usuario.
-              </span>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  ¿Eliminar la cuenta de{" "}
+                  <strong>{selected ? getFullName(selected) : ""}</strong>?
+                </p>
+                <p className="text-muted-foreground">
+                  La persona asociada{" "}
+                  <strong className="text-foreground">NO se eliminará</strong>,
+                  solo la cuenta con rol{" "}
+                  <strong className="text-foreground">{selected?.role}</strong>.
+                </p>
+                <p className="text-red-600 font-semibold">
+                  ⚠️ Esta acción no se puede deshacer.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -676,7 +957,7 @@ export default function AccountManagementView() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-700"
               disabled={deleteUser.isPending}
             >
               {deleteUser.isPending ? (
@@ -684,7 +965,7 @@ export default function AccountManagementView() {
               ) : (
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
-              Eliminar Permanentemente
+              Eliminar Cuenta
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

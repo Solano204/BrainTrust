@@ -4,7 +4,6 @@ import { apiClient } from "@/app/shared/api/http";
 import { handleApiError } from "@/app/shared/utils/api-error";
 
 import {
-  UserDTO,
   CompleteUserResponseDTO,
   UserStatsDTO,
   SuccessResponseDTO,
@@ -30,9 +29,28 @@ import {
   mapPaginatedUserResponseFromBackend,
 } from "@/app/shared/mappers/user.mappers";
 
-import { User, UserId, UserStats, UserFilters } from "@/app/shared/models/user.model";
+import {  UserId, UserStats, UserFilters } from "@/app/shared/models/user.model";
+import { RegisterUserForExistingPersonCommand, User, UserDTO } from "../dtos/user-dto";
 
 
+/**
+ * Creates a new user account for an EXISTING person.
+ * A person can have multiple accounts with DIFFERENT roles.
+ * (e.g. same person as TEACHER and as STUDENT)
+ */
+export async function registerUserForExistingPerson(
+  command: RegisterUserForExistingPersonCommand
+): Promise<string> {
+  try {
+    const { data } = await apiClient.post<SuccessResponseDTO>(
+      "/api/users/register/existing-person",
+      command
+    );
+    return data.data as string; // userId
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
 
 export async function getAllUsersPaginated(
     params: PaginationParams = {}

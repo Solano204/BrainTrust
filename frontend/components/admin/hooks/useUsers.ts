@@ -24,7 +24,6 @@ import {
 } from "@/components/admin/api/usersApi";
 
 import type {
-  User,
   UserId,
   UserStats,
 } from "@/app/shared/models/user.model";
@@ -37,6 +36,7 @@ import type {
 } from "@/app/shared/types/pagination";
 
 import { usersKeys } from "./users-keys";
+import { User } from "../dtos/user-dto";
 
 
 export function useUsersPaginated(params: PaginationParams = {}) {

@@ -182,6 +182,8 @@ export async function searchStudentsForEnrollment(
         params: { query: searchTerm.trim() }
       }
     );
+
+    console.log("response.data:", response.data);
     
     const availableStudents = response.data
       .filter(dto => !dto.isAlreadyEnrolled)

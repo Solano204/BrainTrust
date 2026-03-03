@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Shield } from "lucide-react";
 import { useAdminResetPassword } from "./hooks/useUsers";
-import { User } from "@/app/shared/models/user.model";
+import { User } from "./dtos/user-dto";
 
 interface AdminResetPasswordModalProps {
   user: User | null;
@@ -81,7 +81,7 @@ export function AdminResetPasswordModal({ user, open, onClose }: AdminResetPassw
             Admin: Reset Password
           </DialogTitle>
           <DialogDescription>
-            Reset password for {user.person.firstName} {user.person.lastName}
+            Reset password for {user.person.primerNombre}  {user.person.segundoNombre} {user.person.apellidoPaterno} {user.person.apellidoMaterno}
           </DialogDescription>
         </DialogHeader>
         

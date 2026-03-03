@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail } from "lucide-react";
 import { useUserMutations } from "./hooks/useUsers";
-import { User } from "./api/usersApi";
+import { User } from "./dtos/user-dto";
 
 interface ChangeEmailModalProps {
   user: User | null;
@@ -83,7 +83,7 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
             Change Email Address
           </DialogTitle>
           <DialogDescription>
-            Change email for {user.person.firstName} {user.person.lastName}
+            Change email for {user.person.primerNombre}  {user.person.segundoNombre} {user.person.apellidoPaterno} {user.person.apellidoMaterno}
           </DialogDescription>
         </DialogHeader>
         

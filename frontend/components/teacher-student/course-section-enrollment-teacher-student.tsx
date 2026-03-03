@@ -55,6 +55,8 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
     isLoading: isSearching 
   } = useAvailableUsersSearch(courseId, enrollSearchTerm);
 
+  
+
   const filteredEnrollments = useMemo(() => {
     return enrollments.filter((enrollment) => {
       const searchLower = searchTerm.toLowerCase();
