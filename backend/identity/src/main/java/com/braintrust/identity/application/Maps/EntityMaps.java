@@ -15,12 +15,12 @@ public final class EntityMaps {
 
     private EntityMaps() {}
 
-    // ✅ Full version: with Person + activities
+    // ── UserDTO builders ──────────────────────────────────────────────────────
+
+    // Full: con Person + activities
     public static UserDTO toUserDTO(User user, Person person, List<RoleActivityDTO> activities) {
         if (user == null) return null;
-
         PersonDTO personDTO = person != null ? toPersonDTO(person) : null;
-
         return new UserDTO(
                 user.getId().getValue(),
                 user.getEmail().getValue(),
@@ -33,17 +33,34 @@ public final class EntityMaps {
         );
     }
 
-    // ✅ With Person, no activities (empty list)
+    // Con Person, sin activities
     public static UserDTO toUserDTO(User user, Person person) {
         return toUserDTO(user, person, List.of());
     }
 
-    // ✅ No Person, no activities
+    // Sin Person ni activities
     public static UserDTO toUserDTO(User user) {
         return toUserDTO(user, null, List.of());
     }
 
+    // ── PersonDTO builder ─────────────────────────────────────────────────────
+
+    /**
+     * Convierte Person (dominio) → PersonDTO.
+     * Usa los nuevos campos: primerNombre, segundoNombre, apellidoPaterno,
+     * apellidoMaterno, curp, rfc, birthDate, age.
+     *
+     * tieneUsuario = false por defecto (sin acceso al UserRepository aquí).
+     * Si necesitas ese flag, usa el overload toPersonDTO(Person, boolean).
+     */
     public static PersonDTO toPersonDTO(Person person) {
+        return toPersonDTO(person, false);
+    }
+
+    /**
+     * Convierte Person (dominio) → PersonDTO con flag tieneUsuario explícito.
+     */
+    public static PersonDTO toPersonDTO(Person person, boolean tieneUsuario) {
         if (person == null) return null;
 
         AddressDTO addressDTO = person.getAddress() != null
@@ -52,20 +69,28 @@ public final class EntityMaps {
 
         return new PersonDTO(
                 person.getId().getValue(),
-                person.getFirstName(),
-                person.getLastName(),
+                person.getCurp(),
+                person.getRfc(),
+                person.getPrimerNombre(),
+                person.getSegundoNombre(),
+                person.getApellidoPaterno(),
+                person.getApellidoMaterno(),
                 person.getFullName(),
                 person.getGender(),
                 person.getPhone(),
-                person.getRegistrationDate().toString(),
+                person.getBirthDate() != null ? person.getBirthDate().toString() : null,
+                person.getAge(),
+                person.getRegistrationDate() != null ? person.getRegistrationDate().toString() : null,
                 person.getPathImage(),
-                addressDTO
+                addressDTO,
+                tieneUsuario
         );
     }
 
+    // ── AddressDTO builder ────────────────────────────────────────────────────
+
     public static AddressDTO toAddressDTO(Address address) {
         if (address == null) return null;
-
         return new AddressDTO(
                 address.getStreet(),
                 address.getColony(),
@@ -75,9 +100,10 @@ public final class EntityMaps {
         );
     }
 
+    // ── List helpers ──────────────────────────────────────────────────────────
+
     public static List<UserDTO> toUserDTOList(List<User> users) {
         if (users == null) return List.of();
-
         return users.stream()
                 .map(EntityMaps::toUserDTO)
                 .collect(Collectors.toList());

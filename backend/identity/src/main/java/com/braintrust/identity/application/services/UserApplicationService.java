@@ -39,6 +39,12 @@ public class UserApplicationService implements UserService {
 
         log.info("✅ UserApplicationService initialized with specialized helpers");
     }
+    @Override
+    public UserId registerUserForExistingPerson(
+            PersonId personId, String email, String password, Role role, String studentId) {
+        return registrationHelper.registerUserForExistingPerson(  // ← minúscula
+                personId, email, password, role, studentId);
+    }
 
     @Override
     public UserId registerTeacher(RegisterTeacherCommand command) {

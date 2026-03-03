@@ -80,6 +80,50 @@ public class UserController {
 
 
     @Operation(
+            summary = "Eliminar usuario por ID",
+            description = "Elimina un usuario. La persona vinculada NO se elimina. " +
+                    "Requiere confirmación explícita via query param ?confirm=true"
+    )
+    @ApiResponse(responseCode = "200", description = "Usuario eliminado exitosamente")
+    @ApiResponse(responseCode = "400", description = "Falta confirmación (confirm=true)")
+    @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<SuccessResponseDTO> deleteUser(
+            @PathVariable String userId) {
+
+
+        log.warn("🗑️ Delete request for User ID: {}", userId);
+        userService.deleteUser(UserId.fromString(userId));
+        log.info("✅ User {} deleted.", userId);
+        return ResponseEntity.ok(new SuccessResponseDTO(true, "Usuario eliminado exitosamente", null));
+    }
+    @Operation(
+            summary = "Register a new user account for an existing person",
+            description = "Creates a new user account linked to an existing person. The person must exist and must not already have an account with the specified role."
+    )
+    @ApiResponse(responseCode = "201", description = "User account created successfully")
+    @ApiResponse(responseCode = "400", description = "Person not found or role already assigned")
+    @PostMapping("/register/existing-person")
+    public ResponseEntity<SuccessResponseDTO> registerUserForExistingPerson(
+            @RequestBody @Valid RegisterUserForExistingPersonCommand command) {
+
+        log.info("🔗 Registering new {} account for existing Person ID: {}",
+                command.role(), command.personId());
+
+        UserId userId = userService.registerUserForExistingPerson(
+                PersonId.fromString(command.personId()),
+                command.email(),
+                command.password(),
+                Role.valueOf(command.role().toUpperCase()),
+                command.studentId()
+        );
+
+        log.info("✅ New account created. User ID: {}", userId.getValue());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new SuccessResponseDTO(true, "User account created successfully", userId.getValue()));
+    }
+
+    @Operation(
             summary = "Get all users with pagination",
             description = "Retrieves a paginated list of all users. Supports sorting and filtering by page/size."
     )
@@ -324,28 +368,7 @@ public class UserController {
     }
 
 
-    @Operation(
-            summary = "Delete user by ID",
-            description = "Permanently deletes a user from the system. This action cannot be undone."
-    )
-    @ApiResponse(responseCode = "200", description = "User deleted successfully")
-    @ApiResponse(responseCode = "404", description = "User not found")
-    @ApiResponse(responseCode = "400", description = "Invalid user ID or constraint violation")
-    @Parameter(name = "userId", description = "The ID of the user to delete", required = true)
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<SuccessResponseDTO> deleteUser(@PathVariable String userId) {
-        log.warn("🗑️ Delete request received for User ID: {}", userId);
 
-            userService.deleteUser(UserId.fromString(userId));
-
-            log.info("✅ User ID {} deleted successfully.", userId);
-
-            return ResponseEntity.ok(
-                    new SuccessResponseDTO(true, "User deleted successfully", null)
-            );
-
-
-    }
 
 
 

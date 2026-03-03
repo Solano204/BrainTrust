@@ -11,11 +11,14 @@ import com.braintrust.identity.domain.model.Role;
 import com.braintrust.identity.domain.model.User;
 import com.braintrust.identity.domain.valueobjects.*;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.CatRoleActivityJpaEntity;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.UserJpaEntity;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories.CatRoleActivityJpaRepository;
+import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories.UserJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,16 +37,19 @@ public class UserQueryHelper {
 
     private static final Logger log = LoggerFactory.getLogger(UserQueryHelper.class);
 
-    private final UserRepository userRepository;
-    private final PersonRepository personRepository;
+    private final UserRepository               userRepository;
+    private final PersonRepository             personRepository;
     private final CatRoleActivityJpaRepository roleActivityRepository;
+    private final UserJpaRepository            userJpaRepository;
 
     public UserQueryHelper(UserRepository userRepository,
                            PersonRepository personRepository,
-                           CatRoleActivityJpaRepository roleActivityRepository) {
-        this.userRepository = userRepository;
-        this.personRepository = personRepository;
+                           CatRoleActivityJpaRepository roleActivityRepository,
+                           UserJpaRepository userJpaRepository) {
+        this.userRepository         = userRepository;
+        this.personRepository       = personRepository;
         this.roleActivityRepository = roleActivityRepository;
+        this.userJpaRepository      = userJpaRepository;
     }
 
     // ─── Private helpers ──────────────────────────────────────────────────────
@@ -75,7 +81,6 @@ public class UserQueryHelper {
         };
     }
 
-    // Builds a UserDTO with person + activities in one place
     private UserDTO buildUserDTO(User user, Map<Integer, List<RoleActivityDTO>> activitiesMap) {
         Person person = personRepository.findById(user.getPersonId()).orElse(null);
         List<RoleActivityDTO> activities = activitiesMap
@@ -87,265 +92,214 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(UserId userId) {
-        log.debug("📊 Fetching User DTO by ID: {}", userId.getValue());
-
         User user = findUserByIdOrThrow(userId, userRepository);
         Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
         List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(user.getRole()));
-
         return toUserDTO(user, person, activities);
     }
 
     @Transactional(readOnly = true)
     public UserDTO getUserByEmail(Email email) {
-        log.debug("📊 Fetching User DTO by Email: {}", email.getValue());
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(
                         "User not found with email: " + email.getValue()));
         Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
         List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(user.getRole()));
-
         return toUserDTO(user, person, activities);
     }
 
     @Transactional(readOnly = true)
     public UserDTO getUserByPersonId(PersonId personId) {
-        log.debug("📊 Fetching User DTO by Person ID: {}", personId.getValue());
-
         User user = userRepository.findByPersonId(personId)
                 .orElseThrow(() -> new UserNotFoundException(
                         "User not found for person: " + personId.getValue()));
         Person person = findPersonByIdOrThrow(personId, personRepository);
         List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(user.getRole()));
-
         return toUserDTO(user, person, activities);
     }
 
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllUsers(Pageable pageable) {
-        log.debug("📊 Fetching all users. Page: {}, Size: {}",
-                pageable.getPageNumber(), pageable.getPageSize());
-        long startTime = System.currentTimeMillis();
-
         try {
             Page<User> userPage = userRepository.findAll(pageable);
             Map<Integer, List<RoleActivityDTO>> activitiesMap = loadActivitiesMap();
-
             List<UserDTO> dtos = userPage.getContent().stream()
-                    .map(user -> buildUserDTO(user, activitiesMap))
+                    .map(u -> buildUserDTO(u, activitiesMap))
                     .collect(Collectors.toList());
-
-            log.info("✅ Retrieved page {} of {} users (total: {}) in {}ms",
-                    pageable.getPageNumber(), dtos.size(),
-                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
-
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
-
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated users: {}", e.getMessage(), e);
+            log.error("❌ getAllUsers failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated users", e);
         }
     }
 
     @Transactional(readOnly = true)
     public Page<UserDTO> getUsersByRole(Role role, Pageable pageable) {
-        log.debug("📊 Fetching users by Role: {}. Page: {}, Size: {}",
-                role.name(), pageable.getPageNumber(), pageable.getPageSize());
-        long startTime = System.currentTimeMillis();
-
         try {
             com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
                     com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
-
             Page<User> userPage = userRepository.findByRole(roleJpa, pageable);
-
-            // Only load activities for this specific role — more efficient
             List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(role));
-
             List<UserDTO> dtos = userPage.getContent().stream()
-                    .map(user -> {
-                        Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person, activities);
+                    .map(u -> {
+                        Person p = personRepository.findById(u.getPersonId()).orElse(null);
+                        return toUserDTO(u, p, activities);
                     })
                     .collect(Collectors.toList());
-
-            log.info("✅ Retrieved {} users with role {} (total: {}) in {}ms",
-                    dtos.size(), role.name(),
-                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
-
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
-
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated users by role {}: {}", role.name(), e.getMessage(), e);
+            log.error("❌ getUsersByRole(page) failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated users by role", e);
         }
     }
 
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByRole(Role role) {
-        log.debug("📊 Fetching all users by Role: {}", role.name());
-        long startTime = System.currentTimeMillis();
-
         try {
-            List<User> users = userRepository.findByRole(
-                    com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name())
-            );
-
+            com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
+                    com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
+            List<User> users = userRepository.findByRole(roleJpa);
             List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(role));
-
-            List<UserDTO> dtos = users.stream()
-                    .map(user -> {
-                        Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person, activities);
+            return users.stream()
+                    .map(u -> {
+                        Person p = personRepository.findById(u.getPersonId()).orElse(null);
+                        return toUserDTO(u, p, activities);
                     })
                     .collect(Collectors.toList());
-
-            log.info("✅ Retrieved {} users with role {} in {}ms",
-                    dtos.size(), role.name(), System.currentTimeMillis() - startTime);
-            return dtos;
-
         } catch (Exception e) {
-            log.error("❌ Failed to fetch users by role {}: {}", role.name(), e.getMessage(), e);
+            log.error("❌ getUsersByRole(list) failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch users by role", e);
         }
     }
 
     @Transactional(readOnly = true)
     public Page<UserDTO> searchUsersByName(String name, Pageable pageable) {
-        log.debug("🔍 Searching users by name: '{}'", name);
-        long startTime = System.currentTimeMillis();
-
         try {
             Page<User> userPage = userRepository.findByNameContaining(name, pageable);
             Map<Integer, List<RoleActivityDTO>> activitiesMap = loadActivitiesMap();
-
             List<UserDTO> dtos = userPage.getContent().stream()
-                    .map(user -> buildUserDTO(user, activitiesMap))
+                    .map(u -> buildUserDTO(u, activitiesMap))
                     .collect(Collectors.toList());
-
-            log.info("✅ Found {} users matching '{}' (total: {}) in {}ms",
-                    dtos.size(), name,
-                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
-
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
-
         } catch (Exception e) {
-            log.error("❌ Failed to search users by name '{}': {}", name, e.getMessage(), e);
+            log.error("❌ searchUsersByName failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to search users by name", e);
         }
     }
 
     @Transactional(readOnly = true)
     public Page<UserDTO> searchUsersByNameAndRole(String name, Role role, Pageable pageable) {
-        log.debug("🔍 Searching users by name: '{}' and role: {}", name, role.name());
-        long startTime = System.currentTimeMillis();
-
         try {
             com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role roleJpa =
                     com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name());
-
             Page<User> userPage = userRepository.findByNameContainingAndRole(name, roleJpa, pageable);
             List<RoleActivityDTO> activities = getActivitiesForRoleId(toRoleId(role));
-
             List<UserDTO> dtos = userPage.getContent().stream()
-                    .map(user -> {
-                        Person person = personRepository.findById(user.getPersonId()).orElse(null);
-                        return toUserDTO(user, person, activities);
+                    .map(u -> {
+                        Person p = personRepository.findById(u.getPersonId()).orElse(null);
+                        return toUserDTO(u, p, activities);
                     })
                     .collect(Collectors.toList());
-
-            log.info("✅ Found {} users matching '{}' with role {} (total: {}) in {}ms",
-                    dtos.size(), name, role.name(),
-                    userPage.getTotalElements(), System.currentTimeMillis() - startTime);
-
             return new PageImpl<>(dtos, pageable, userPage.getTotalElements());
-
         } catch (Exception e) {
-            log.error("❌ Failed to search users by name '{}' and role {}: {}",
-                    name, role.name(), e.getMessage(), e);
+            log.error("❌ searchUsersByNameAndRole failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to search users by name and role", e);
         }
     }
 
+    /**
+     * ✅ ROOT CAUSE FIX — used by CourseEnrollmentHelper.searchStudentsForEnrollment()
+     *
+     * OLD (broken) approach:
+     *   1. Load ALL users for a role from DB
+     *   2. Filter in-memory calling person.getFullName()
+     *   → ALWAYS returned empty because @Transient fields on PersonJpaEntity
+     *     (primerNombre, apellidoPaterno, etc.) are NULL when loaded via findById.
+     *     They only get populated by native JOIN queries, never by simple entity loads.
+     *
+     * NEW (fixed) approach:
+     *   → Delegates entirely to findByNameAndRoleNative() which does the JOIN
+     *     in the database with the correct catalog table column names.
+     *     No in-memory filtering whatsoever.
+     */
     @Transactional(readOnly = true)
     public List<MinimalUserInfoDTO> searchUsersByName(String searchQuery, Role role) {
-        log.info("🔍 Searching users by name: '{}' with role: {}", searchQuery, role);
-
+        log.info("🔍 [SQL search] name='{}' role={}", searchQuery, role);
         try {
-            List<User> users = userRepository.findByRole(
-                    com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.Role.valueOf(role.name())
-            );
+            Integer roleId = toRoleId(role);
+            // Use a large page — enrollment search doesn't paginate
+            Pageable unpaged = PageRequest.of(0, 500);
 
-            return users.stream()
-                    .filter(user -> matchesSearchQuery(user, searchQuery))
-                    .map(this::toMinimalUserInfo)
+            Page<UserJpaEntity> page = userJpaRepository
+                    .findByNameAndRoleNative(searchQuery, roleId, unpaged);
+
+            List<MinimalUserInfoDTO> results = page.getContent().stream()
+                    .map(entity -> {
+                        try {
+                            Person person = personRepository
+                                    .findById(new PersonId(entity.getPersonId().toString()))
+                                    .orElse(null);
+                            if (person == null) {
+                                log.warn("⚠️ Person not found for user {}", entity.getId());
+                                return null;
+                            }
+                            return new MinimalUserInfoDTO(
+                                    entity.getId(),
+                                    person.getId().getValue(),
+                                    person.getPrimerNombre(),
+                                    person.getApellidoPaterno(),
+                                    person.getFullName()
+                            );
+                        } catch (Exception e) {
+                            log.warn("⚠️ Failed to map user {}: {}", entity.getId(), e.getMessage());
+                            return null;
+                        }
+                    })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
+            log.info("✅ Found {} results for name='{}' role={}", results.size(), searchQuery, role);
+            return results;
+
         } catch (Exception e) {
-            log.error("❌ Failed to search users by name '{}': {}", searchQuery, e.getMessage(), e);
+            log.error("❌ searchUsersByName(role) failed for '{}': {}", searchQuery, e.getMessage(), e);
             throw new RuntimeException("Failed to search users", e);
         }
     }
 
     @Transactional(readOnly = true)
     public List<UserDTO> getActiveUsers() {
-        log.debug("📊 Fetching all active users");
-        long startTime = System.currentTimeMillis();
-
         try {
             List<User> users = userRepository.findActiveUsers();
             Map<Integer, List<RoleActivityDTO>> activitiesMap = loadActivitiesMap();
-
-            List<UserDTO> dtos = users.stream()
-                    .map(user -> buildUserDTO(user, activitiesMap))
+            return users.stream()
+                    .map(u -> buildUserDTO(u, activitiesMap))
                     .collect(Collectors.toList());
-
-            log.info("✅ Retrieved {} active users in {}ms",
-                    dtos.size(), System.currentTimeMillis() - startTime);
-            return dtos;
-
         } catch (Exception e) {
-            log.error("❌ Failed to fetch active users: {}", e.getMessage(), e);
+            log.error("❌ getActiveUsers failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch active users", e);
         }
     }
 
     @Transactional(readOnly = true)
     public MinimalUserInfoDTO getMinimalUserInfo(UserId userId) {
-        log.debug("📊 Fetching minimal user info for User ID: {}", userId.getValue());
-
         try {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException(
-                            "User not found: " + userId.getValue()));
-
+                    .orElseThrow(() -> new UserNotFoundException("User not found: " + userId.getValue()));
             Person person = personRepository.findById(user.getPersonId())
                     .orElseThrow(() -> new UserNotFoundException(
                             "Person not found for user: " + userId.getValue()));
-
-            return new MinimalUserInfoDTO(
-                    user.getId().getValue(),
-                    person.getId().getValue(),
-                    person.getFirstName(),
-                    person.getLastName(),
-                    person.getFullName()
-            );
-
+            return buildMinimalDTO(userId.getValue(), person);
         } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to fetch minimal user info for User {}: {}",
-                    userId.getValue(), e.getMessage(), e);
+            log.error("❌ getMinimalUserInfo failed for {}: {}", userId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to fetch minimal user info", e);
         }
     }
 
     @Transactional(readOnly = true)
     public List<MinimalUserInfoDTO> getMinimalUserInfoByIds(List<String> userIds) {
-        log.debug("📊 Fetching minimal user info for {} IDs", userIds.size());
-
         return userIds.stream()
                 .map(this::getMinimalUserInfoSafe)
                 .collect(Collectors.toList());
@@ -353,8 +307,6 @@ public class UserQueryHelper {
 
     @Transactional(readOnly = true)
     public List<UserDTO> getUsersByIds(List<String> userIds) {
-        log.debug("📊 Fetching {} users by IDs", userIds.size());
-
         return userIds.stream()
                 .map(userId -> {
                     try {
@@ -370,52 +322,23 @@ public class UserQueryHelper {
 
     // ─── Private helpers ──────────────────────────────────────────────────────
 
-    private boolean matchesSearchQuery(User user, String searchQuery) {
-        try {
-            Person person = personRepository.findById(user.getPersonId()).orElse(null);
-            if (person == null) return false;
-            String q = searchQuery.toLowerCase();
-            return person.getFullName().toLowerCase().contains(q)
-                    || person.getFirstName().toLowerCase().contains(q)
-                    || person.getLastName().toLowerCase().contains(q);
-        } catch (Exception e) {
-            log.warn("⚠️ Error filtering user {}: {}", user.getId().getValue(), e.getMessage());
-            return false;
-        }
-    }
-
-    private MinimalUserInfoDTO toMinimalUserInfo(User user) {
-        try {
-            Person person = personRepository.findById(user.getPersonId())
-                    .orElseThrow(() -> new UserNotFoundException("Person not found"));
-            return new MinimalUserInfoDTO(
-                    user.getId().getValue(),
-                    person.getId().getValue(),
-                    person.getFirstName(),
-                    person.getLastName(),
-                    person.getFullName()
-            );
-        } catch (Exception e) {
-            log.warn("⚠️ Failed to map user {}: {}", user.getId().getValue(), e.getMessage());
-            return null;
-        }
+    private MinimalUserInfoDTO buildMinimalDTO(String userId, Person person) {
+        return new MinimalUserInfoDTO(
+                userId,
+                person.getId().getValue(),
+                person.getPrimerNombre(),
+                person.getApellidoPaterno(),
+                person.getFullName()
+        );
     }
 
     private MinimalUserInfoDTO getMinimalUserInfoSafe(String userId) {
         try {
             User user = userRepository.findById(UserId.fromString(userId)).orElse(null);
             if (user == null) return fallbackMinimal(userId);
-
             Person person = personRepository.findById(user.getPersonId()).orElse(null);
             if (person == null) return fallbackMinimal(userId);
-
-            return new MinimalUserInfoDTO(
-                    userId,
-                    person.getId().getValue(),
-                    person.getFirstName(),
-                    person.getLastName(),
-                    person.getFullName()
-            );
+            return buildMinimalDTO(userId, person);
         } catch (Exception e) {
             log.warn("⚠️ Failed to fetch minimal info for user {}: {}", userId, e.getMessage());
             return fallbackMinimal(userId);

@@ -11,43 +11,48 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PersonJpaRepository extends JpaRepository<PersonJpaEntity, String> {
 
+    // Columnas reales según el schema:
+    //   cat_first_names        → first_name
+    //   cat_second_names       → second_name
+    //   cat_paternal_lastnames → paternal_lastname   ← NO es "last_name"
+    //   cat_maternal_lastnames → maternal_lastname   ← NO es "last_name"
+    //   FK en persons          → primer_nombre_id, segundo_nombre_id,
+    //                            apellido_paterno_id, apellido_materno_id
 
-    // Native query to search persons by joining with catalogs
     @Query(value = """
-        SELECT p.*, fn.first_name, ln.last_name,
-               s.street_name AS address_street,
-               col.colony_name AS address_colony,
-               m.municipality_name AS address_municipality,
-               st.state_name AS address_state,
-               pc.postal_code AS address_postal_code
-        FROM persons p
-        JOIN cat_first_names fn ON p.first_name_id = fn.id
-        JOIN cat_last_names ln ON p.last_name_id = ln.id
-        LEFT JOIN cat_streets s ON p.street_id = s.id
-        LEFT JOIN cat_colonies col ON p.colony_id = col.id
-        LEFT JOIN cat_municipalities m ON p.municipality_id = m.id
-        LEFT JOIN cat_states st ON p.state_id = st.id
-        LEFT JOIN cat_postal_codes pc ON p.postal_code_id = pc.id
-        WHERE LOWER(CONCAT(fn.first_name, ' ', ln.last_name)) LIKE LOWER(CONCAT('%', :name, '%'))
-           OR LOWER(fn.first_name) LIKE LOWER(CONCAT('%', :name, '%'))
-           OR LOWER(ln.last_name) LIKE LOWER(CONCAT('%', :name, '%'))
-        """,
+            SELECT p.* FROM persons p
+            JOIN cat_first_names        fn  ON fn.id  = p.primer_nombre_id
+            JOIN cat_paternal_lastnames pln ON pln.id = p.apellido_paterno_id
+            LEFT JOIN cat_second_names       sn  ON sn.id  = p.segundo_nombre_id
+            LEFT JOIN cat_maternal_lastnames mln ON mln.id = p.apellido_materno_id
+            WHERE LOWER(fn.first_name)                                   LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(pln.paternal_lastname)                            LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(COALESCE(sn.second_name, ''))                     LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(COALESCE(mln.maternal_lastname, ''))              LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(CONCAT(fn.first_name, ' ', pln.paternal_lastname)) LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(CONCAT_WS(' ', fn.first_name, sn.second_name, pln.paternal_lastname, mln.maternal_lastname))
+                    LIKE LOWER(CONCAT('%', :name, '%'))
+            """,
             countQuery = """
-        SELECT COUNT(p.id) FROM persons p
-        JOIN cat_first_names fn ON p.first_name_id = fn.id
-        JOIN cat_last_names ln ON p.last_name_id = ln.id
-        WHERE LOWER(CONCAT(fn.first_name, ' ', ln.last_name)) LIKE LOWER(CONCAT('%', :name, '%'))
-           OR LOWER(fn.first_name) LIKE LOWER(CONCAT('%', :name, '%'))
-           OR LOWER(ln.last_name) LIKE LOWER(CONCAT('%', :name, '%'))
-        """,
+            SELECT COUNT(p.id) FROM persons p
+            JOIN cat_first_names        fn  ON fn.id  = p.primer_nombre_id
+            JOIN cat_paternal_lastnames pln ON pln.id = p.apellido_paterno_id
+            LEFT JOIN cat_second_names       sn  ON sn.id  = p.segundo_nombre_id
+            LEFT JOIN cat_maternal_lastnames mln ON mln.id = p.apellido_materno_id
+            WHERE LOWER(fn.first_name)                                   LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(pln.paternal_lastname)                            LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(COALESCE(sn.second_name, ''))                     LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(COALESCE(mln.maternal_lastname, ''))              LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(CONCAT(fn.first_name, ' ', pln.paternal_lastname)) LIKE LOWER(CONCAT('%', :name, '%'))
+               OR LOWER(CONCAT_WS(' ', fn.first_name, sn.second_name, pln.paternal_lastname, mln.maternal_lastname))
+                    LIKE LOWER(CONCAT('%', :name, '%'))
+            """,
             nativeQuery = true)
-    Page<PersonJpaEntity> findByFullNameContainingIgnoreCase(@Param("name") String name, Pageable pageable);
+    Page<PersonJpaEntity> findByFullNameContainingIgnoreCase(
+            @Param("name") String name, Pageable pageable);
 
     Page<PersonJpaEntity> findByPhoneContaining(String phone, Pageable pageable);
-
     // jasj
-
-
 
 //    @Query("SELECT p FROM PersonJpaEntity p WHERE " +
 //            "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :name, '%')) OR " +

@@ -1,4 +1,7 @@
 package com.braintrust.identity.application.dtos.dtos;
 
-public class PersonSummaryDTO {
-}
+public record PersonSummaryDTO(
+        String personId,
+        String nombreCompleto,
+        boolean tieneUsuario
+) {}

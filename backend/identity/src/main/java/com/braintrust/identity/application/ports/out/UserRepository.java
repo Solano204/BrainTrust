@@ -24,18 +24,22 @@ import java.util.Optional;
 public interface UserRepository {
     void deleteById(UserId userId);
 
-
     User save(User user);
     void delete(User user);
-
 
     Optional<User> findById(UserId userId);
     Optional<User> findByEmail(Email email);
     Optional<User> findByPersonId(PersonId personId);
+
+    /** NUEVO: buscar TODOS los usuarios de una persona (puede tener varios con distintos roles) */
+    List<User> findAllByPersonId(PersonId personId);
+
     List<User> findByRole(Role role);
     List<User> findActiveUsers();
     boolean existsByEmail(Email email);
 
+    /** NUEVO: verificar si existe al menos un usuario para esta persona */
+    boolean existsByPersonId(PersonId personId);
 
     Page<User> findAll(Pageable pageable);
     Page<User> findByRole(Role role, Pageable pageable);

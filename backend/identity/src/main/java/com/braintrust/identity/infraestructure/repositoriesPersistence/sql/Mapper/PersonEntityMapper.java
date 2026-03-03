@@ -10,68 +10,90 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+/**
+ * Mapper entre Person (dominio) y PersonJpaEntity.
+ *
+ * Cambios:
+ * - Ahora mapea primerNombre, segundoNombre, apellidoPaterno, apellidoMaterno
+ * - Mapea curp, rfc, birthDate, age (age es de solo lectura desde DB)
+ */
 @Component
 public class PersonEntityMapper {
 
     private static final Logger log = LoggerFactory.getLogger(PersonEntityMapper.class);
 
     private final CatalogService catalogService;
-    private final CatFirstNameJpaRepository firstNameRepo;
-    private final CatLastNameJpaRepository lastNameRepo;
-    private final CatStateJpaRepository stateRepo;
-    private final CatMunicipalityJpaRepository municipalityRepo;
-    private final CatColonyJpaRepository colonyRepo;
-    private final CatStreetJpaRepository streetRepo;
-    private final CatPostalCodeJpaRepository postalCodeRepo;
+    private final CatFirstNameJpaRepository        firstNameRepo;
+    private final CatSecondNameJpaRepository       secondNameRepo;
+    private final CatPaternalLastnameJpaRepository paternalLastnameRepo;
+    private final CatMaternalLastnameJpaRepository maternalLastnameRepo;
+    private final CatStateJpaRepository            stateRepo;
+    private final CatMunicipalityJpaRepository     municipalityRepo;
+    private final CatColonyJpaRepository           colonyRepo;
+    private final CatStreetJpaRepository           streetRepo;
+    private final CatPostalCodeJpaRepository       postalCodeRepo;
 
     public PersonEntityMapper(
             CatalogService catalogService,
             CatFirstNameJpaRepository firstNameRepo,
-            CatLastNameJpaRepository lastNameRepo,
+            CatSecondNameJpaRepository secondNameRepo,
+            CatPaternalLastnameJpaRepository paternalLastnameRepo,
+            CatMaternalLastnameJpaRepository maternalLastnameRepo,
             CatStateJpaRepository stateRepo,
             CatMunicipalityJpaRepository municipalityRepo,
             CatColonyJpaRepository colonyRepo,
             CatStreetJpaRepository streetRepo,
             CatPostalCodeJpaRepository postalCodeRepo) {
-        this.catalogService = catalogService;
-        this.firstNameRepo = firstNameRepo;
-        this.lastNameRepo = lastNameRepo;
-        this.stateRepo = stateRepo;
-        this.municipalityRepo = municipalityRepo;
-        this.colonyRepo = colonyRepo;
-        this.streetRepo = streetRepo;
-        this.postalCodeRepo = postalCodeRepo;
+        this.catalogService        = catalogService;
+        this.firstNameRepo         = firstNameRepo;
+        this.secondNameRepo        = secondNameRepo;
+        this.paternalLastnameRepo  = paternalLastnameRepo;
+        this.maternalLastnameRepo  = maternalLastnameRepo;
+        this.stateRepo             = stateRepo;
+        this.municipalityRepo      = municipalityRepo;
+        this.colonyRepo            = colonyRepo;
+        this.streetRepo            = streetRepo;
+        this.postalCodeRepo        = postalCodeRepo;
     }
 
-    /**
-     * Domain -> JPA Entity
-     * Automatically finds or creates catalog entries for names and address fields.
-     */
+    // ── Domain → JPA Entity ──────────────────────────────────────────────────
+
     public PersonJpaEntity toEntity(Person person) {
         log.debug("Mapping Person Domain ID {} to JPA Entity.", person.getId().getValue());
 
-        // Find or create catalog IDs for name
-        Integer firstNameId = catalogService.findOrCreateFirstName(person.getFirstName());
-        Integer lastNameId = catalogService.findOrCreateLastName(person.getLastName());
+        Integer primerNombreId    = catalogService.findOrCreateFirstName(person.getPrimerNombre());
+        Integer segundoNombreId   = catalogService.findOrCreateSecondName(person.getSegundoNombre());
+        Integer apellidoPaternoId = catalogService.findOrCreatePaternalLastname(person.getApellidoPaterno());
+        Integer apellidoMaternoId = catalogService.findOrCreateMaternalLastname(person.getApellidoMaterno());
 
         PersonJpaEntity entity = new PersonJpaEntity();
         entity.setId(person.getId().getValue());
-        entity.setFirstNameId(firstNameId);
-        entity.setLastNameId(lastNameId);
+        entity.setPrimerNombreId(primerNombreId);
+        entity.setSegundoNombreId(segundoNombreId);
+        entity.setApellidoPaternoId(apellidoPaternoId);
+        entity.setApellidoMaternoId(apellidoMaternoId);
+
+        // CURP y RFC — solo se asignan en INSERT (la DB previene cambios vía trigger)
+        entity.setCurp(person.getCurp());
+        entity.setRfc(person.getRfc());
+
+        // birthDate: se asigna directamente si la DB no usa trigger,
+        // pero el trigger de PostgreSQL lo calculará del CURP automáticamente.
+        entity.setBirthDate(person.getBirthDate());
+        // age es GENERATED ALWAYS → no se setea, la DB lo calcula
+
         entity.setGender(person.getGender());
         entity.setPhone(person.getPhone());
         entity.setRegistrationDate(person.getRegistrationDate());
         entity.setImagePath(person.getPathImage());
 
-        // Handle address catalog IDs
         if (person.getAddress() != null) {
             Address addr = person.getAddress();
-
-            Integer stateId = catalogService.findOrCreateState(addr.getState());
+            Integer stateId        = catalogService.findOrCreateState(addr.getState());
             Integer municipalityId = catalogService.findOrCreateMunicipality(stateId, addr.getMunicipality());
-            Integer colonyId = catalogService.findOrCreateColony(municipalityId, addr.getColony());
-            Integer streetId = catalogService.findOrCreateStreet(colonyId, addr.getStreet());
-            Integer postalCodeId = catalogService.findOrCreatePostalCode(colonyId, addr.getPostalCode());
+            Integer colonyId       = catalogService.findOrCreateColony(municipalityId, addr.getColony());
+            Integer streetId       = catalogService.findOrCreateStreet(colonyId, addr.getStreet());
+            Integer postalCodeId   = catalogService.findOrCreatePostalCode(colonyId, addr.getPostalCode());
 
             entity.setStateId(stateId);
             entity.setMunicipalityId(municipalityId);
@@ -83,71 +105,92 @@ public class PersonEntityMapper {
         return entity;
     }
 
-    /**
-     * JPA Entity -> Domain
-     * Resolves catalog IDs back to string values.
-     */
+    // ── JPA Entity → Domain ──────────────────────────────────────────────────
+
     public Person toDomain(PersonJpaEntity entity) {
         log.debug("Mapping Person JPA Entity {} back to Domain Model.", entity.getId());
 
         PersonId id = PersonId.fromString(entity.getId());
 
-        // Resolve first/last name from catalogs
-        String firstName = entity.getFirstName(); // populated via transient or join
-        String lastName = entity.getLastName();
-
-        // Fallback: query catalog if transient not set
-        if (firstName == null && entity.getFirstNameId() != null) {
-            firstName = firstNameRepo.findById(entity.getFirstNameId())
-                    .map(e -> e.getFirstName()).orElse("Unknown");
-        }
-        if (lastName == null && entity.getLastNameId() != null) {
-            lastName = lastNameRepo.findById(entity.getLastNameId())
-                    .map(e -> e.getLastName()).orElse("Unknown");
+        // Resolver primer nombre
+        String primerNombre = entity.getPrimerNombre();
+        if (primerNombre == null && entity.getPrimerNombreId() != null) {
+            primerNombre = firstNameRepo.findById(entity.getPrimerNombreId())
+                    .map(e -> e.getFirstName()).orElse("Desconocido");
         }
 
-        // Resolve address
-        Address address = null;
-        if (entity.getStreetId() != null) {
-            String street = entity.getAddressStreet();
-            String colony = entity.getAddressColony();
-            String municipality = entity.getAddressMunicipality();
-            String state = entity.getAddressState();
-            String postalCode = entity.getAddressPostalCode();
-
-            // Fallback: query catalogs
-            if (street == null && entity.getStreetId() != null) {
-                street = streetRepo.findById(entity.getStreetId()).map(e -> e.getStreetName()).orElse(null);
-            }
-            if (colony == null && entity.getColonyId() != null) {
-                colony = colonyRepo.findById(entity.getColonyId()).map(e -> e.getColonyName()).orElse(null);
-            }
-            if (municipality == null && entity.getMunicipalityId() != null) {
-                municipality = municipalityRepo.findById(entity.getMunicipalityId())
-                        .map(e -> e.getMunicipalityName()).orElse(null);
-            }
-            if (state == null && entity.getStateId() != null) {
-                state = stateRepo.findById(entity.getStateId()).map(e -> e.getStateName()).orElse(null);
-            }
-            if (postalCode == null && entity.getPostalCodeId() != null) {
-                postalCode = postalCodeRepo.findById(entity.getPostalCodeId())
-                        .map(e -> e.getPostalCode()).orElse(null);
-            }
-
-            if (street != null && postalCode != null) {
-                address = new Address(street, colony, municipality, state, postalCode);
-            }
+        // Resolver segundo nombre (opcional)
+        String segundoNombre = entity.getSegundoNombre();
+        if (segundoNombre == null && entity.getSegundoNombreId() != null) {
+            segundoNombre = secondNameRepo.findById(entity.getSegundoNombreId())
+                    .map(e -> e.getSecondName()).orElse(null);
         }
+
+        // Resolver apellido paterno
+        String apellidoPaterno = entity.getApellidoPaterno();
+        if (apellidoPaterno == null && entity.getApellidoPaternoId() != null) {
+            apellidoPaterno = paternalLastnameRepo.findById(entity.getApellidoPaternoId())
+                    .map(e -> e.getPaternalLastname()).orElse("Desconocido");
+        }
+
+        // Resolver apellido materno (opcional)
+        String apellidoMaterno = entity.getApellidoMaterno();
+        if (apellidoMaterno == null && entity.getApellidoMaternoId() != null) {
+            apellidoMaterno = maternalLastnameRepo.findById(entity.getApellidoMaternoId())
+                    .map(e -> e.getMaternalLastname()).orElse(null);
+        }
+
+        // Dirección
+        Address address = resolveAddress(entity);
 
         return Person.reconstitute(
                 id,
-                firstName,
-                lastName,
+                primerNombre   != null ? primerNombre   : "Desconocido",
+                segundoNombre,
+                apellidoPaterno != null ? apellidoPaterno : "Desconocido",
+                apellidoMaterno,
+                entity.getCurp(),
+                entity.getRfc(),
+                entity.getBirthDate(),
+                entity.getAge(),
                 entity.getGender(),
                 entity.getPhone(),
                 entity.getRegistrationDate(),
                 entity.getImagePath(),
                 address
         );
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private Address resolveAddress(PersonJpaEntity entity) {
+        if (entity.getStreetId() == null) return null;
+
+        String street       = entity.getAddressStreet();
+        String colony       = entity.getAddressColony();
+        String municipality = entity.getAddressMunicipality();
+        String state        = entity.getAddressState();
+        String postalCode   = entity.getAddressPostalCode();
+
+        if (street == null && entity.getStreetId() != null)
+            street = streetRepo.findById(entity.getStreetId())
+                    .map(e -> e.getStreetName()).orElse(null);
+        if (colony == null && entity.getColonyId() != null)
+            colony = colonyRepo.findById(entity.getColonyId())
+                    .map(e -> e.getColonyName()).orElse(null);
+        if (municipality == null && entity.getMunicipalityId() != null)
+            municipality = municipalityRepo.findById(entity.getMunicipalityId())
+                    .map(e -> e.getMunicipalityName()).orElse(null);
+        if (state == null && entity.getStateId() != null)
+            state = stateRepo.findById(entity.getStateId())
+                    .map(e -> e.getStateName()).orElse(null);
+        if (postalCode == null && entity.getPostalCodeId() != null)
+            postalCode = postalCodeRepo.findById(entity.getPostalCodeId())
+                    .map(e -> e.getPostalCode()).orElse(null);
+
+        if (street != null && postalCode != null) {
+            return new Address(street, colony, municipality, state, postalCode);
+        }
+        return null;
     }
 }

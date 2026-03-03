@@ -25,15 +25,15 @@ public class UserDtoMapper {
 
     private static final Logger log = LoggerFactory.getLogger(UserDtoMapper.class);
 
-    private final UserRepository userRepository;
-    private final PersonRepository personRepository;
-    private final CatRoleActivityJpaRepository roleActivityRepository; // ✅ NEW
+    private final UserRepository               userRepository;
+    private final PersonRepository             personRepository;
+    private final CatRoleActivityJpaRepository roleActivityRepository;
 
     public UserDtoMapper(UserRepository userRepository,
                          PersonRepository personRepository,
                          CatRoleActivityJpaRepository roleActivityRepository) {
-        this.userRepository = userRepository;
-        this.personRepository = personRepository;
+        this.userRepository        = userRepository;
+        this.personRepository      = personRepository;
         this.roleActivityRepository = roleActivityRepository;
     }
 
@@ -93,8 +93,8 @@ public class UserDtoMapper {
         return new MinimalUserInfoDTO(
                 user.getId().getValue(),
                 person.getId().getValue(),
-                person.getFirstName(),
-                person.getLastName(),
+                person.getPrimerNombre(),          // ✅ nuevo campo
+                person.getApellidoPaterno(),        // ✅ nuevo campo
                 person.getFullName()
         );
     }
@@ -142,8 +142,7 @@ public class UserDtoMapper {
                 person.getAddress().getColony(),
                 person.getAddress().getMunicipality(),
                 person.getAddress().getState(),
-                person.getAddress().getPostalCode()
-        )
+                person.getAddress().getPostalCode())
                 : null;
 
         return new CompleteUserDTO(
@@ -153,8 +152,8 @@ public class UserDtoMapper {
                 user.getRole().name(),
                 user.isActive(),
                 user.getStudentId(),
-                person.getFirstName(),
-                person.getLastName(),
+                person.getPrimerNombre(),           // ✅ primer nombre
+                person.getApellidoPaterno(),         // ✅ apellido paterno
                 person.getGender(),
                 person.getPhone(),
                 person.getFullName(),
@@ -179,16 +178,24 @@ public class UserDtoMapper {
     // ─── Fallbacks ────────────────────────────────────────────────────────────
 
     private UserDTO toUserDTOFallback(User user) {
+        // ✅ PersonDTO ahora tiene 16 parámetros — todos null/false para el fallback
         PersonDTO fallbackPersonDTO = new PersonDTO(
-                "unknown",
-                "Unknown",
-                "User",
-                "Unknown User",
-                null,
-                null,
-                null,
-                null,
-                null
+                "unknown",   // id
+                null,        // curp
+                null,        // rfc
+                "Unknown",   // primerNombre
+                null,        // segundoNombre
+                "User",      // apellidoPaterno
+                null,        // apellidoMaterno
+                "Unknown User", // nombreCompleto
+                null,        // gender
+                null,        // phone
+                null,        // birthDate
+                null,        // age
+                null,        // registrationDate
+                null,        // imagePath
+                null,        // address
+                false        // tieneUsuario
         );
 
         return new UserDTO(
@@ -199,7 +206,7 @@ public class UserDtoMapper {
                 user.getCreatedAt(),
                 fallbackPersonDTO,
                 user.getStudentId(),
-                List.of()  // ✅ empty activities on fallback
+                List.of()
         );
     }
 

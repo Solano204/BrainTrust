@@ -1,4 +1,12 @@
 package com.braintrust.identity.domain.exceptions;
 
-public class PersonHasLinkedUserException {
+/**
+ * Se lanza cuando se intenta eliminar una persona que tiene al menos
+ * un usuario (cuenta) vinculado.
+ */
+public class PersonHasLinkedUserException extends RuntimeException {
+    public PersonHasLinkedUserException(String message) {
+        super(message);
+    }
 }
+

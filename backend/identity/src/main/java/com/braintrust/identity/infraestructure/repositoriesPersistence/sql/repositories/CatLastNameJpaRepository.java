@@ -18,7 +18,7 @@ public interface CatLastNameJpaRepository extends JpaRepository<CatLastNameJpaEn
     Page<CatLastNameJpaEntity> findAll(Pageable pageable);
 
     Page<CatLastNameJpaEntity> findByLastNameContainingIgnoreCase(String search, Pageable pageable);
+    @Query("SELECT COUNT(p) FROM PersonJpaEntity p WHERE p.apellidoPaternoId = :id")
 
-    @Query("SELECT COUNT(p) FROM PersonJpaEntity p WHERE p.lastNameId = :id")
     long countPersonsByLastNameId(@Param("id") Integer id);
 }

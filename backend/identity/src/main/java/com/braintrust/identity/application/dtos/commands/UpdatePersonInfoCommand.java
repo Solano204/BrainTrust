@@ -4,23 +4,33 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Comando para actualizar datos personales.
+ * CURP y RFC NO son modificables una vez registrados → no se incluyen.
+ */
 public record UpdatePersonInfoCommand(
-        @NotBlank(message = "Person ID is required")
+
+        @NotBlank(message = "El ID de la persona es obligatorio")
         String personId,
 
-        @NotBlank(message = "First name is required")
-        @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
-        String firstName,
+        @NotBlank(message = "El primer nombre es obligatorio")
+        String primerNombre,
 
-        @NotBlank(message = "Last name is required")
-        @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
-        String lastName,
+        String segundoNombre,
 
-        @NotBlank(message = "Gender is required")
-        @Pattern(regexp = "MALE|FEMALE|OTHER", message = "Gender must be MALE, FEMALE, or OTHER")
+        @NotBlank(message = "El apellido paterno es obligatorio")
+        String apellidoPaterno,
+
+        String apellidoMaterno,
+
         String gender,
-
-        @NotBlank(message = "Phone is required")
-        @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Phone must be valid")
         String phone
-) {}
+) {
+    // ── Compatibilidad legacy ────────────────────────────────────────────────
+    /** @deprecated usar {@link #primerNombre()} */
+    @Deprecated
+    public String firstName() { return primerNombre; }
+    /** @deprecated usar {@link #apellidoPaterno()} */
+    @Deprecated
+    public String lastName()  { return apellidoPaterno; }
+}

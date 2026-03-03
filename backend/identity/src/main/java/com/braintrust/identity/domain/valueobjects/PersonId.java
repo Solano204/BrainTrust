@@ -8,7 +8,7 @@ import java.util.UUID;
 public class PersonId extends ValueObject {
     private final String value;
 
-    private PersonId(String value) {
+    public PersonId(String value) {
         this.value = Objects.requireNonNull(value, "Person ID cannot be null");
     }
 

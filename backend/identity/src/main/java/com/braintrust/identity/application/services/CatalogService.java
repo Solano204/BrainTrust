@@ -22,16 +22,19 @@ public class CatalogService {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogService.class);
 
-    private final CatFirstNameJpaRepository firstNameRepo;
-    private final CatLastNameJpaRepository lastNameRepo;
-    private final CatStateJpaRepository stateRepo;
-    private final CatMunicipalityJpaRepository municipalityRepo;
-    private final CatColonyJpaRepository colonyRepo;
-    private final CatStreetJpaRepository streetRepo;
-    private final CatPostalCodeJpaRepository postalCodeRepo;
+    private final CatFirstNameJpaRepository       firstNameRepo;
+    private final CatSecondNameJpaRepository      secondNameRepo;
+    private final CatPaternalLastnameJpaRepository paternalLastnameRepo;
+    private final CatMaternalLastnameJpaRepository maternalLastnameRepo;
+    private final CatLastNameJpaRepository         lastNameRepo;      // legacy
+    private final CatStateJpaRepository            stateRepo;
+    private final CatMunicipalityJpaRepository     municipalityRepo;
+    private final CatColonyJpaRepository           colonyRepo;
+    private final CatStreetJpaRepository           streetRepo;
+    private final CatPostalCodeJpaRepository       postalCodeRepo;
 
     public CatalogService(
-            CatFirstNameJpaRepository firstNameRepo,
+            CatFirstNameJpaRepository firstNameRepo, CatSecondNameJpaRepository secondNameRepo, CatPaternalLastnameJpaRepository paternalLastnameRepo, CatMaternalLastnameJpaRepository maternalLastnameRepo,
             CatLastNameJpaRepository lastNameRepo,
             CatStateJpaRepository stateRepo,
             CatMunicipalityJpaRepository municipalityRepo,
@@ -39,6 +42,9 @@ public class CatalogService {
             CatStreetJpaRepository streetRepo,
             CatPostalCodeJpaRepository postalCodeRepo) {
         this.firstNameRepo = firstNameRepo;
+        this.secondNameRepo = secondNameRepo;
+        this.paternalLastnameRepo = paternalLastnameRepo;
+        this.maternalLastnameRepo = maternalLastnameRepo;
         this.lastNameRepo = lastNameRepo;
         this.stateRepo = stateRepo;
         this.municipalityRepo = municipalityRepo;
@@ -62,15 +68,6 @@ public class CatalogService {
                 page, size, result.getTotalElements());
     }
 
-    /** Finds or creates a first name. Returns the id. */
-    public Integer findOrCreateFirstName(String firstName) {
-        return firstNameRepo.findByFirstNameIgnoreCase(firstName.trim())
-                .map(CatFirstNameJpaEntity::getId)
-                .orElseGet(() -> {
-                    CatFirstNameJpaEntity entity = new CatFirstNameJpaEntity(capitalize(firstName));
-                    return firstNameRepo.save(entity).getId();
-                });
-    }
 
     public CatalogItemDTO addFirstName(String firstName) {
         String trimmed = capitalize(firstName.trim());
@@ -120,14 +117,7 @@ public class CatalogService {
                 page, size, result.getTotalElements());
     }
 
-    public Integer findOrCreateLastName(String lastName) {
-        return lastNameRepo.findByLastNameIgnoreCase(lastName.trim())
-                .map(CatLastNameJpaEntity::getId)
-                .orElseGet(() -> {
-                    CatLastNameJpaEntity entity = new CatLastNameJpaEntity(capitalize(lastName));
-                    return lastNameRepo.save(entity).getId();
-                });
-    }
+
 
     public CatalogItemDTO addLastName(String lastName) {
         String trimmed = capitalize(lastName.trim());
@@ -177,11 +167,7 @@ public class CatalogService {
                 page, size, result.getTotalElements());
     }
 
-    public Integer findOrCreateState(String stateName) {
-        return stateRepo.findByStateNameIgnoreCase(stateName.trim())
-                .map(CatStateJpaEntity::getId)
-                .orElseGet(() -> stateRepo.save(new CatStateJpaEntity(stateName.trim())).getId());
-    }
+
 
     public CatalogItemDTO addState(String stateName) {
         String trimmed = stateName.trim();
@@ -242,17 +228,6 @@ public class CatalogService {
                         .map(e -> new CatalogMunicipalityDTO(e.getId(), e.getMunicipalityName(), e.getStateId()))
                         .collect(Collectors.toList()),
                 page, size, result.getTotalElements());
-    }
-
-    public Integer findOrCreateMunicipality(Integer stateId, String municipalityName) {
-        return municipalityRepo.findByStateIdAndMunicipalityNameIgnoreCase(stateId, municipalityName.trim())
-                .map(CatMunicipalityJpaEntity::getId)
-                .orElseGet(() -> {
-                    CatMunicipalityJpaEntity entity = new CatMunicipalityJpaEntity();
-                    entity.setStateId(stateId);
-                    entity.setMunicipalityName(municipalityName.trim());
-                    return municipalityRepo.save(entity).getId();
-                });
     }
 
     public CatalogMunicipalityDTO addMunicipality(Integer stateId, String municipalityName) {
@@ -323,16 +298,7 @@ public class CatalogService {
                 page, size, result.getTotalElements());
     }
 
-    public Integer findOrCreateColony(Integer municipalityId, String colonyName) {
-        return colonyRepo.findByMunicipalityIdAndColonyNameIgnoreCase(municipalityId, colonyName.trim())
-                .map(CatColonyJpaEntity::getId)
-                .orElseGet(() -> {
-                    CatColonyJpaEntity entity = new CatColonyJpaEntity();
-                    entity.setMunicipalityId(municipalityId);
-                    entity.setColonyName(colonyName.trim());
-                    return colonyRepo.save(entity).getId();
-                });
-    }
+
 
     public CatalogColonyDTO addColony(Integer municipalityId, String colonyName) {
         String trimmed = colonyName.trim();
@@ -402,16 +368,6 @@ public class CatalogService {
                 page, size, result.getTotalElements());
     }
 
-    public Integer findOrCreateStreet(Integer colonyId, String streetName) {
-        return streetRepo.findByColonyIdAndStreetNameIgnoreCase(colonyId, streetName.trim())
-                .map(CatStreetJpaEntity::getId)
-                .orElseGet(() -> {
-                    CatStreetJpaEntity entity = new CatStreetJpaEntity();
-                    entity.setColonyId(colonyId);
-                    entity.setStreetName(streetName.trim());
-                    return streetRepo.save(entity).getId();
-                });
-    }
 
     public CatalogStreetDTO addStreet(Integer colonyId, String streetName) {
         String trimmed = streetName.trim();
@@ -479,16 +435,7 @@ public class CatalogService {
                 page, size, result.getTotalElements());
     }
 
-    public Integer findOrCreatePostalCode(Integer colonyId, String postalCode) {
-        return postalCodeRepo.findByColonyIdAndPostalCode(colonyId, postalCode.trim())
-                .map(CatPostalCodeJpaEntity::getId)
-                .orElseGet(() -> {
-                    CatPostalCodeJpaEntity entity = new CatPostalCodeJpaEntity();
-                    entity.setColonyId(colonyId);
-                    entity.setPostalCode(postalCode.trim());
-                    return postalCodeRepo.save(entity).getId();
-                });
-    }
+
 
     public CatalogPostalCodeDTO addPostalCode(Integer colonyId, String postalCode) {
         String trimmed = postalCode.trim();
@@ -534,5 +481,151 @@ public class CatalogService {
     private String capitalize(String s) {
         if (s == null || s.isEmpty()) return s;
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
+    }
+
+
+
+
+
+
+
+
+
+
+
+    /// /
+
+    // ── Nombres ───────────────────────────────────────────────────────────────
+
+    /** Busca o crea el primer nombre en cat_first_names. */
+    public Integer findOrCreateFirstName(String name) {
+        if (name == null || name.isBlank()) return null;
+        String trimmed = name.trim();
+        return firstNameRepo.findByFirstNameIgnoreCase(trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    CatFirstNameJpaEntity entity = new CatFirstNameJpaEntity();
+                    entity.setFirstName(trimmed);
+                    return firstNameRepo.save(entity).getId();
+                });
+    }
+
+    /** Busca o crea el segundo nombre en cat_second_names. Retorna null si name es nulo/vacío. */
+    public Integer findOrCreateSecondName(String name) {
+        if (name == null || name.isBlank()) return null;
+        String trimmed = name.trim();
+        return secondNameRepo.findBySecondNameIgnoreCase(trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    CatSecondNameJpaEntity entity = new CatSecondNameJpaEntity();
+                    entity.setSecondName(trimmed);
+                    return secondNameRepo.save(entity).getId();
+                });
+    }
+
+    /** Busca o crea el apellido paterno en cat_paternal_lastnames. */
+    public Integer findOrCreatePaternalLastname(String name) {
+        if (name == null || name.isBlank()) return null;
+        String trimmed = name.trim();
+        return paternalLastnameRepo.findByPaternalLastnameIgnoreCase(trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    CatPaternalLastnameJpaEntity entity = new CatPaternalLastnameJpaEntity();
+                    entity.setPaternalLastname(trimmed);
+                    return paternalLastnameRepo.save(entity).getId();
+                });
+    }
+
+    /** Busca o crea el apellido materno en cat_maternal_lastnames. Retorna null si vacío. */
+    public Integer findOrCreateMaternalLastname(String name) {
+        if (name == null || name.isBlank()) return null;
+        String trimmed = name.trim();
+        return maternalLastnameRepo.findByMaternalLastnameIgnoreCase(trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    CatMaternalLastnameJpaEntity entity = new CatMaternalLastnameJpaEntity();
+                    entity.setMaternalLastname(trimmed);
+                    return maternalLastnameRepo.save(entity).getId();
+                });
+    }
+
+    /**
+     * @deprecated Usar {@link #findOrCreateFirstName(String)}
+     * Mantenido para compatibilidad legacy.
+     */
+    @Deprecated
+    public Integer findOrCreateLastName(String name) {
+        return findOrCreatePaternalLastname(name);
+    }
+
+    // ── Dirección ─────────────────────────────────────────────────────────────
+
+    public Integer findOrCreateState(String stateName) {
+        if (stateName == null || stateName.isBlank()) return null;
+        String trimmed = stateName.trim();
+        return stateRepo.findByStateNameIgnoreCase(trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    var entity = new com.braintrust.identity.infraestructure
+                            .repositoriesPersistence.sql.entities.CatStateJpaEntity();
+                    entity.setStateName(trimmed);
+                    return stateRepo.save(entity).getId();
+                });
+    }
+
+    public Integer findOrCreateMunicipality(Integer stateId, String municipalityName) {
+        if (municipalityName == null || municipalityName.isBlank()) return null;
+        String trimmed = municipalityName.trim();
+        return municipalityRepo.findByStateIdAndMunicipalityNameIgnoreCase(stateId, trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    var entity = new com.braintrust.identity.infraestructure
+                            .repositoriesPersistence.sql.entities.CatMunicipalityJpaEntity();
+                    entity.setStateId(stateId);
+                    entity.setMunicipalityName(trimmed);
+                    return municipalityRepo.save(entity).getId();
+                });
+    }
+
+    public Integer findOrCreateColony(Integer municipalityId, String colonyName) {
+        if (colonyName == null || colonyName.isBlank()) return null;
+        String trimmed = colonyName.trim();
+        return colonyRepo.findByMunicipalityIdAndColonyNameIgnoreCase(municipalityId, trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    var entity = new com.braintrust.identity.infraestructure
+                            .repositoriesPersistence.sql.entities.CatColonyJpaEntity();
+                    entity.setMunicipalityId(municipalityId);
+                    entity.setColonyName(trimmed);
+                    return colonyRepo.save(entity).getId();
+                });
+    }
+
+    public Integer findOrCreateStreet(Integer colonyId, String streetName) {
+        if (streetName == null || streetName.isBlank()) return null;
+        String trimmed = streetName.trim();
+        return streetRepo.findByColonyIdAndStreetNameIgnoreCase(colonyId, trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    var entity = new com.braintrust.identity.infraestructure
+                            .repositoriesPersistence.sql.entities.CatStreetJpaEntity();
+                    entity.setColonyId(colonyId);
+                    entity.setStreetName(trimmed);
+                    return streetRepo.save(entity).getId();
+                });
+    }
+
+    public Integer findOrCreatePostalCode(Integer colonyId, String postalCode) {
+        if (postalCode == null || postalCode.isBlank()) return null;
+        String trimmed = postalCode.trim();
+        return postalCodeRepo.findByColonyIdAndPostalCode(colonyId, trimmed)
+                .map(e -> e.getId())
+                .orElseGet(() -> {
+                    var entity = new com.braintrust.identity.infraestructure
+                            .repositoriesPersistence.sql.entities.CatPostalCodeJpaEntity();
+                    entity.setColonyId(colonyId);
+                    entity.setPostalCode(trimmed);
+                    return postalCodeRepo.save(entity).getId();
+                });
     }
 }
