@@ -22,8 +22,9 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        {/* border-primary picks up Navy in light mode, Gold in dark mode */}
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -33,44 +34,41 @@ export default function DashboardPage() {
   }
 
   return (
-      <div className="flex min-h-screen bg-background">
-        <DashboardSidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          activeView={activeView}
-          onNavigate={setActiveView}
-          userRole={user?.role}
-        />
+    <div className="flex min-h-screen bg-background">
+      <DashboardSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeView={activeView}
+        onNavigate={setActiveView}
+        userRole={user?.role}
+      />
 
-        <div className="flex-1 flex flex-col lg:ml-64">
-          <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex-1 flex flex-col lg:ml-64">
+        <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
 
-        
-          <main className="flex-1 p-4 md:p-6 lg:p-8 lg:pt-20 space-y-6">
-            {activeView === "Dashboard" && (
-              <>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <TimelineSection 
-                      userId={user?.id || "user-001"} 
-                      userType={user?.role === 'teacher' ? 'teacher' : 'student'} 
-                    />
-                    {user?.id}
-                  </div>
-                  <div className="lg:col-span-1">
-                    {user?.role === 'teacher' ? (
-                      <CoursesSectionTeacher teacherId={user.id} key={user.id} />
-                    ) : (
-                      <CoursesSectionStudent studentId={user?.id || "user-001"}  />
-                    )}
-                  </div>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 lg:pt-20 space-y-6">
+          {activeView === "Dashboard" && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <TimelineSection
+                    userId={user?.id || "user-001"}
+                    userType={user?.role === 'teacher' ? 'teacher' : 'student'}
+                  />
+                  {user?.id}
                 </div>
-              </>
-            )}
-
-
-          </main>
-        </div>
+                <div className="lg:col-span-1">
+                  {user?.role === 'teacher' ? (
+                    <CoursesSectionTeacher teacherId={user.id} key={user.id} />
+                  ) : (
+                    <CoursesSectionStudent studentId={user?.id || "user-001"} />
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </main>
       </div>
+    </div>
   )
 }

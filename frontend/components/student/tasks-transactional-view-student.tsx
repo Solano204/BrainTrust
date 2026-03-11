@@ -1,3 +1,4 @@
+//DARK
 import React, { useState } from "react";
 import { TaskSubmissionView } from "@/components/student/quiz-view-tasks-student";
 import { useStudentTaskSubmission } from "@/components/teacher-student/hooks/submission-hooks";
@@ -72,8 +73,9 @@ export function StudentTaskView({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        {/* ✅ was: border-blue-600 → border-primary */}
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -82,13 +84,17 @@ export function StudentTaskView({
     <>
       <div className="space-y-4">
         {isNotebookSubmission ? (
-          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
-            <BookOpen className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          // ✅ was: border-amber-500 bg-amber-50 dark:bg-amber-950/20 → accent (gold)
+          <Alert className="border-accent/50 bg-accent/5">
+            {/* ✅ was: text-amber-600 dark:text-amber-400 → text-accent-foreground */}
+            <BookOpen className="h-5 w-5 text-accent-foreground" />
             <AlertDescription className="ml-2">
-              <div className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+              {/* ✅ was: text-amber-900 dark:text-amber-100 → text-foreground */}
+              <div className="font-semibold text-foreground mb-1">
                 📓 Notebook Submission Required
               </div>
-              <p className="text-sm text-amber-800 dark:text-amber-200">
+              {/* ✅ was: text-amber-800 dark:text-amber-200 → text-foreground/80 */}
+              <p className="text-sm text-foreground/80">
                 This assignment requires you to submit your work in a physical
                 notebook. Please ensure you have completed your work in your
                 notebook before marking this assignment as submitted. Your
@@ -97,13 +103,17 @@ export function StudentTaskView({
             </AlertDescription>
           </Alert>
         ) : (
-          <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950/20">
-            <Monitor className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          // ✅ was: border-blue-500 bg-blue-50 dark:bg-blue-950/20 → primary (navy)
+          <Alert className="border-primary/40 bg-primary/5">
+            {/* ✅ was: text-blue-600 dark:text-blue-400 → text-primary */}
+            <Monitor className="h-5 w-5 text-primary" />
             <AlertDescription className="ml-2">
-              <div className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+              {/* ✅ was: text-blue-900 dark:text-blue-100 → text-foreground */}
+              <div className="font-semibold text-foreground mb-1">
                 💻 Digital Submission
               </div>
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+              {/* ✅ was: text-blue-800 dark:text-blue-200 → text-foreground/80 */}
+              <p className="text-sm text-foreground/80">
                 Submit your work digitally by uploading files or entering your
                 response below.
               </p>
@@ -129,41 +139,46 @@ export function StudentTaskView({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              {/* ✅ was: text-amber-500 → text-accent-foreground */}
+              <AlertTriangle className="h-5 w-5 text-accent-foreground" />
               Confirm Notebook Submission
             </DialogTitle>
             <div className="pt-4 space-y-3 text-sm text-muted-foreground">
-  <div className="p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-    <div className="flex items-start gap-3">
-      <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" />
-      <div className="space-y-2">
-        <p className="font-medium text-amber-900 dark:text-amber-100">
-          This is a notebook-based assignment
-        </p>
-        <p className="text-sm text-amber-800 dark:text-amber-200">
-          Please confirm that you have:
-        </p>
-        <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 ml-4">
-          <li className="flex items-start gap-2">
-            <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>Completed all work in your physical notebook</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>Your notebook is ready for teacher review</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>You have double-checked your work</span>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <p className="text-sm text-muted-foreground">
-    Once submitted, your teacher will be notified to review your notebook during class time.
-  </p>
-</div>
+              {/* ✅ was: bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800 → accent */}
+              <div className="p-4 bg-accent/5 rounded-lg border border-accent/30">
+                <div className="flex items-start gap-3">
+                  {/* ✅ was: text-amber-600 dark:text-amber-400 → text-accent-foreground */}
+                  <BookOpen className="h-6 w-6 text-accent-foreground flex-shrink-0 mt-1" />
+                  <div className="space-y-2">
+                    {/* ✅ was: text-amber-900 dark:text-amber-100 → text-foreground */}
+                    <p className="font-medium text-foreground">
+                      This is a notebook-based assignment
+                    </p>
+                    {/* ✅ was: text-amber-800 dark:text-amber-200 → text-foreground/80 */}
+                    <p className="text-sm text-foreground/80">
+                      Please confirm that you have:
+                    </p>
+                    <ul className="text-sm text-foreground/80 space-y-1 ml-4">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                        <span>Completed all work in your physical notebook</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                        <span>Your notebook is ready for teacher review</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                        <span>You have double-checked your work</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Once submitted, your teacher will be notified to review your notebook during class time.
+              </p>
+            </div>
           </DialogHeader>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -183,7 +198,8 @@ export function StudentTaskView({
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  {/* ✅ was: border-white → border-primary-foreground */}
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
                   Submitting...
                 </>
               ) : (
