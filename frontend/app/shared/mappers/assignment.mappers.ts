@@ -147,17 +147,19 @@ async function processFile(
     file: File,
     folder: string = "assignments"
 ): Promise<FrontendDocumentDTO> {
-    const isPdf = file.type === 'application/pdf';
+    const isPdf = true
     let extractedText: string | undefined;
 
     if (isPdf) {
         try {
             extractedText = await getPdfContent(file);
             console.log(`Extracted ${extractedText.length} characters from ${file.name}`);
+            console.log(`EXTRACTED TEXT $ ${extractedText}`);
         } catch (error) {
             console.error(`Failed to extract text from ${file.name}:`, error);
         }
     }
+    
 
     const uploadResult = await uploadDocumentFile(file, folder);
 

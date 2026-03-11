@@ -1,3 +1,4 @@
+//DARK
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -14,7 +15,7 @@ import {
   ArrowLeft, CheckCircle, Award, Eye, EyeOff, Check, X, Edit,
   Save, XCircle, Plus, Trash2, GripVertical, Info,
 } from "lucide-react";
-import type {  Question } from "@/app/domain/entities/CourseEntities";
+import type { Question } from "@/app/domain/entities/CourseEntities";
 import { useAuth } from "@/app/context/AuthContext";
 import { useQuizDetail, useQuizMutations } from "../teacher-student/hooks/quiz-hooks";
 import { Quiz } from "@/app/shared/models/quiz.model";
@@ -66,7 +67,6 @@ function computeRedistributedPoints(
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-
 export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
   const { user } = useAuth();
   const userType = user?.role === "teacher" ? "teacher" : "student";
@@ -90,9 +90,7 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     deleteQuestionsBulk,
   } = useQuizMutations();
 
-
-  console.log("quiz", quiz)
-  // Use live data if loaded, fall back to prop
+  console.log("quiz", quiz);
   const quizData: Quiz = quiz ?? initialQuiz;
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(userType === "teacher");
@@ -113,7 +111,6 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
   const [isEditingQuestions, setIsEditingQuestions] = useState(false);
   const [showRedistributionPreview, setShowRedistributionPreview] = useState(false);
 
-  // Sync form when live data arrives
   useEffect(() => {
     if (quizData) {
       setEditData({
@@ -130,14 +127,11 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     }
   }, [quizData]);
 
- 
-
   // ── Computed values ──────────────────────────────────────────────────────
   const totalPoints = editQuestions.reduce((sum, q) => sum + (q.points ?? 0), 0);
   const multipleChoiceCount = editQuestions.filter((q) => q.type === "multiple-choice").length;
   const openEndedCount = editQuestions.filter((q) => q.type === "open-ended").length;
 
-  // Redistribution preview (only for existing, non-temp questions)
   const redistributionPreview = useMemo(() => {
     const existing = editQuestions.filter((q) => !q.id.startsWith("temp_"));
     if (existing.length === 0) return [];
@@ -183,69 +177,68 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
       console.error("Failed to update quiz:", error);
     }
   };
-const handleSaveQuestions = async () => {
-  try {
-    // First update quiz totalScore/maxGrade to match the new points sum
-    await updateQuiz.mutateAsync({
-      quizId: quizData.id,
-      quizData: {
-        title: quizData.title,
-        description: quizData.description,
-        timeLimit: quizData.timeLimit,
-        maxGrade: totalPoints,         // ← sync with new sum
-        dueDate: quizData.dueDate || undefined,
-        acceptLateSubmissions: quizData.acceptLateSubmissions,
-        allowSeeResults: quizData.allowSeeResults,
-        totalScore: totalPoints,       // ← sync with new sum
-      },
-    });
 
-    if (deletedQuestionIds.length > 0) {
-      await deleteQuestionsBulk.mutateAsync({ quizId: quizData.id, questionIds: deletedQuestionIds });
-    }
-
-    const newQuestions = editQuestions.filter((q) => q.id.startsWith("temp_"));
-    const existingQuestions = editQuestions.filter((q) => !q.id.startsWith("temp_"));
-
-    if (newQuestions.length > 0) {
-      await addQuestionsBulk.mutateAsync({
+  const handleSaveQuestions = async () => {
+    try {
+      await updateQuiz.mutateAsync({
         quizId: quizData.id,
-        questions: newQuestions.map((q) => ({
-          question: q.question,
-          type: q.type,
-          points: q.points,
-          options: q.type === "multiple-choice" ? q.options : undefined,
-          correctAnswer: q.type === "multiple-choice" ? q.correctAnswer : undefined,
-          expectedAnswer: q.type === "open-ended" ? q.expectedAnswer : undefined,
-        })) as Omit<Question, "id" | "text" | "maxPoints">[],
+        quizData: {
+          title: quizData.title,
+          description: quizData.description,
+          timeLimit: quizData.timeLimit,
+          maxGrade: totalPoints,
+          dueDate: quizData.dueDate || undefined,
+          acceptLateSubmissions: quizData.acceptLateSubmissions,
+          allowSeeResults: quizData.allowSeeResults,
+          totalScore: totalPoints,
+        },
       });
+
+      if (deletedQuestionIds.length > 0) {
+        await deleteQuestionsBulk.mutateAsync({ quizId: quizData.id, questionIds: deletedQuestionIds });
+      }
+
+      const newQuestions = editQuestions.filter((q) => q.id.startsWith("temp_"));
+      const existingQuestions = editQuestions.filter((q) => !q.id.startsWith("temp_"));
+
+      if (newQuestions.length > 0) {
+        await addQuestionsBulk.mutateAsync({
+          quizId: quizData.id,
+          questions: newQuestions.map((q) => ({
+            question: q.question,
+            type: q.type,
+            points: q.points,
+            options: q.type === "multiple-choice" ? q.options : undefined,
+            correctAnswer: q.type === "multiple-choice" ? q.correctAnswer : undefined,
+            expectedAnswer: q.type === "open-ended" ? q.expectedAnswer : undefined,
+          })) as Omit<Question, "id" | "text" | "maxPoints">[],
+        });
+      }
+
+      if (existingQuestions.length > 0) {
+        await updateQuestionsBulk.mutateAsync({
+          quizId: quizData.id,
+          updates: existingQuestions.map((q) => ({
+            questionId: q.id,
+            questionText: q.question,
+            type: q.type,
+            points: q.points,
+            options: q.type === "multiple-choice" ? q.options : undefined,
+            correctAnswer: q.type === "multiple-choice" ? q.correctAnswer : undefined,
+            expectedAnswer: q.type === "open-ended" ? q.expectedAnswer : undefined,
+            action: "UPDATE_ALL" as const,
+          })),
+        });
+      }
+
+      setIsEditingQuestions(false);
+      setDeletedQuestionIds([]);
+      await refetch();
+    } catch (error) {
+      console.error("Failed to update questions:", error);
+      alert("Error saving questions. Please try again.");
     }
-
-    if (existingQuestions.length > 0) {
-      await updateQuestionsBulk.mutateAsync({
-        quizId: quizData.id,
-        updates: existingQuestions.map((q) => ({
-          questionId: q.id,
-          questionText: q.question,
-          type: q.type,
-          points: q.points,
-          options: q.type === "multiple-choice" ? q.options : undefined,
-          correctAnswer: q.type === "multiple-choice" ? q.correctAnswer : undefined,
-          expectedAnswer: q.type === "open-ended" ? q.expectedAnswer : undefined,
-          action: "UPDATE_ALL" as const,
-        })),
-      });
-    }
-
-    setIsEditingQuestions(false);
-    setDeletedQuestionIds([]);
-    await refetch();
-  } catch (error) {
-    console.error("Failed to update questions:", error);
-    alert("Error saving questions. Please try again.");
-  }
-};
-
+  };
 
   const handleCancelSettings = () => {
     setEditData({
@@ -268,26 +261,24 @@ const handleSaveQuestions = async () => {
     setIsEditingQuestions(false);
   };
 
-const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
-  const questionCount = editQuestions.length;
-  // Default: split total evenly, rounded
-  const defaultPoints = questionCount > 0
-    ? Math.round(totalPoints / questionCount)
-    : 10;
+  const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
+    const questionCount = editQuestions.length;
+    const defaultPoints = questionCount > 0
+      ? Math.round(totalPoints / questionCount)
+      : 10;
 
-  const newQ: Question = {
-    id: "temp_" + Date.now(),
-    type,
-    question: "",
-    points: defaultPoints,
-    text: "",
-    maxPoints: defaultPoints,
-    ...(type === "multiple-choice" && { options: ["", "", "", ""], correctAnswer: 0 }),
-    ...(type === "open-ended" && { expectedAnswer: "" }),
+    const newQ: Question = {
+      id: "temp_" + Date.now(),
+      type,
+      question: "",
+      points: defaultPoints,
+      text: "",
+      maxPoints: defaultPoints,
+      ...(type === "multiple-choice" && { options: ["", "", "", ""], correctAnswer: 0 }),
+      ...(type === "open-ended" && { expectedAnswer: "" }),
+    };
+    setEditQuestions([...editQuestions, newQ]);
   };
-  setEditQuestions([...editQuestions, newQ]);
-  // totalScore will auto-update via the useEffect above
-};
 
   const updateEditQuestion = (id: string, updates: Partial<Question>) =>
     setEditQuestions(editQuestions.map((q) => (q.id === id ? { ...q, ...updates } : q)));
@@ -382,14 +373,18 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
     return (
       <div className="min-h-screen bg-background p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
-          <Card className="p-6 border-red-200 bg-red-50 dark:bg-red-950/20">
+          {/* ✅ was: border-red-200 bg-red-50 dark:bg-red-950/20 → destructive tokens */}
+          <Card className="p-6 border-destructive/30 bg-destructive/5">
             <div className="flex items-start gap-3">
-              <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+              {/* ✅ was: text-red-600 → text-destructive */}
+              <AlertCircle className="h-6 w-6 text-destructive flex-shrink-0 mt-0.5" />
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">
+                {/* ✅ was: text-red-800 dark:text-red-300 → text-destructive */}
+                <h3 className="text-lg font-semibold text-destructive">
                   Failed to Load Quiz Details
                 </h3>
-                <p className="text-red-700 dark:text-red-400">
+                {/* ✅ was: text-red-700 dark:text-red-400 → text-destructive/80 */}
+                <p className="text-destructive/80">
                   {quizError instanceof Error ? quizError.message : "Unable to load quiz information."}
                 </p>
                 <div className="flex gap-2 pt-2">
@@ -408,7 +403,8 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
   // Main render
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 p-4 md:p-6">
+    // ✅ was: bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 → bg-background
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
@@ -421,7 +417,8 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
           <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">QUIZ</Badge>
+                {/* ✅ was: bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 → primary tokens */}
+                <Badge className="bg-primary/10 text-primary border-primary/20">QUIZ</Badge>
                 {quizData.active === false && (
                   <Badge variant="secondary" className="gap-1">
                     <EyeOff className="h-3 w-3" /> Inactive
@@ -552,15 +549,17 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                 <div className="space-y-8">
 
                   {isEditingQuestions && (
-  <div className={`flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full ${
-    totalPoints === editData.totalScore
-      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-      : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
-  }`}>
-    <Calculator className="h-4 w-4" />
-    {totalPoints} pts total
-  </div>
-)}
+                    // ✅ was: bg-green-100/text-green-700 (match) or bg-orange-100/text-orange-700 (mismatch)
+                    // → primary (match) or accent/gold (mismatch)
+                    <div className={`flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full ${
+                      totalPoints === editData.totalScore
+                        ? "bg-primary/10 text-primary"
+                        : "bg-accent/10 text-accent-foreground"
+                    }`}>
+                      <Calculator className="h-4 w-4" />
+                      {totalPoints} pts total
+                    </div>
+                  )}
 
                   {editQuestions.map((question, index) => (
                     <div key={question.id} className="border-l-4 border-primary pl-4">
@@ -624,12 +623,13 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                                 </div>
                                 {question.options.map((option, optIndex) => (
                                   <div key={optIndex} className="flex items-center gap-3">
+                                    {/* ✅ was: text-blue-600 → accent-foreground via CSS accent-color */}
                                     <input
                                       type="radio"
                                       name={`correct-${question.id}`}
                                       checked={question.correctAnswer === optIndex}
                                       onChange={() => updateEditQuestion(question.id, { correctAnswer: optIndex })}
-                                      className="h-4 w-4 text-blue-600 flex-shrink-0"
+                                      className="h-4 w-4 flex-shrink-0 accent-primary"
                                     />
                                     <span className="font-semibold text-sm w-6 flex-shrink-0">
                                       {String.fromCharCode(65 + optIndex)})
@@ -659,12 +659,13 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                                 <Label className="text-sm font-semibold text-primary/80 mb-2 block">
                                   Model Answer / Expected Response
                                 </Label>
+                                {/* ✅ was: bg-gray-50 dark:bg-gray-900/50 → bg-muted/40 */}
                                 <Textarea
                                   value={question.expectedAnswer ?? ""}
                                   onChange={(e) => updateEditQuestion(question.id, { expectedAnswer: e.target.value })}
                                   placeholder="Enter the expected answer…"
                                   rows={3}
-                                  className="bg-gray-50 dark:bg-gray-900/50"
+                                  className="bg-muted/40"
                                 />
                               </div>
                             )}
@@ -699,19 +700,27 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                                     key={optIndex}
                                     className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                                       highlight
-                                        ? "border-green-500 bg-green-50 dark:bg-green-950/30"
+                                        // ✅ was: border-green-500 bg-green-50 dark:bg-green-950/30 → primary tokens
+                                        ? "border-primary/50 bg-primary/8"
                                         : "border-border hover:bg-muted/50"
                                     }`}
                                   >
                                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold ${
-                                      highlight ? "border-green-500 bg-green-500 text-white" : "border-border"
+                                      highlight
+                                        // ✅ was: border-green-500 bg-green-500 text-white → primary tokens
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border"
                                     }`}>
                                       {String.fromCharCode(65 + optIndex)}
                                     </div>
-                                    <span className={`text-lg flex-1 ${highlight ? "font-semibold text-green-700 dark:text-green-300" : ""}`}>
+                                    <span className={`text-lg flex-1 ${
+                                      // ✅ was: text-green-700 dark:text-green-300 → text-primary
+                                      highlight ? "font-semibold text-primary" : ""
+                                    }`}>
                                       {option}
                                     </span>
-                                    {highlight && <CheckCircle className="h-5 w-5 text-green-500" />}
+                                    {/* ✅ was: text-green-500 → text-primary */}
+                                    {highlight && <CheckCircle className="h-5 w-5 text-primary" />}
                                   </div>
                                 );
                               })}
@@ -725,7 +734,8 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                                 <p className="text-muted-foreground italic mt-2">Students will write their response here</p>
                               </div>
                               {userType === "teacher" && question.expectedAnswer && (
-                                <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                // ✅ was: bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 → primary tokens
+                                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
                                   <Badge variant="outline" className="mb-2">Expected Answer</Badge>
                                   <p className="text-foreground whitespace-pre-wrap">{question.expectedAnswer}</p>
                                 </div>
@@ -860,7 +870,6 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                         min="1"
                         className="mt-1"
                       />
-                      {/* Redistribution preview toggle */}
                       {editQuestions.filter((q) => !q.id.startsWith("temp_")).length > 0 && (
                         <Button
                           variant="ghost"
@@ -893,9 +902,7 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                           </span>
                           <span className="text-muted-foreground text-xs">{row.weight}%</span>
                           <span className="text-muted-foreground text-xs">=</span>
-                          <span className="font-semibold tabular-nums">
-                            {row.newPoints} pts
-                          </span>
+                          <span className="font-semibold tabular-nums">{row.newPoints} pts</span>
                         </div>
                       ))}
                       <div className="px-3 py-2 flex justify-between text-sm font-bold bg-muted/30">
@@ -903,7 +910,8 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                         <span>{redistributionPreview.reduce((s, r) => +(s + r.newPoints).toFixed(2), 0)} pts</span>
                       </div>
                     </div>
-                    <p className="px-3 py-2 text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950/20">
+                    {/* ✅ was: bg-blue-50 dark:bg-blue-950/20 → bg-primary/5 */}
+                    <p className="px-3 py-2 text-xs text-muted-foreground bg-primary/5">
                       Points will be proportionally redistributed when you save.
                     </p>
                   </div>
@@ -971,7 +979,6 @@ const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
                         {quizData.courseName}
                       </div>
                     )}
-                    {/* unitName is not on Quiz type but keep it safe */}
                     {(quizData as any).unitName && (
                       <div className="text-sm">
                         <span className="text-muted-foreground">Unit: </span>

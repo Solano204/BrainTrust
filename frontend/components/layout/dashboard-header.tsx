@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, MessageSquare, Search, Menu, LogOut, User, Settings } from "lucide-react"
+import { Bell, MessageSquare, Menu, LogOut, User, Settings, Sun, Moon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useTheme } from "next-themes"
 import { useAuth } from "@/app/context/AuthContext"
 import { ProfileModal } from "../auth/profile-modal"
 
@@ -25,19 +26,19 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const { theme, setTheme } = useTheme()
 
-
-const handleLogout = async () => {
-  try {
-    await logout();
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
-    window.location.href = '/auth/login';
-  } catch (error) {
-    console.error('Logout failed:', error);
-    window.location.href = '/auth/login';
+  const handleLogout = async () => {
+    try {
+      await logout()
+      await new Promise(resolve => setTimeout(resolve, 100))
+      window.location.href = '/auth/login'
+    } catch (error) {
+      console.error('Logout failed:', error)
+      window.location.href = '/auth/login'
+    }
   }
-};
+
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -51,14 +52,27 @@ const handleLogout = async () => {
               Welcome back, <span className="text-primary">{user?.name || 'User'}</span>
             </h1>
             <p className="text-sm text-muted-foreground hidden md:block">
-              {user?.role === 'teacher' 
-                ? "Here's what's happening with your courses today" 
+              {user?.role === 'teacher'
+                ? "Here's what's happening with your courses today"
                 : "Here's your learning progress for today"
               }
             </p>
           </div>
 
           <div className="flex items-center gap-2">
+
+            {/* Dark / Light toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title="Toggle theme"
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
@@ -77,7 +91,7 @@ const handleLogout = async () => {
 
             {/* Settings */}
             <Button
-              variant="ghost" 
+              variant="ghost"
               size="icon"
               onClick={() => setShowProfileModal(true)}
               title="Profile Settings"
@@ -115,7 +129,7 @@ const handleLogout = async () => {
                   Profile Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={handleLogout}
                   className="text-destructive focus:text-destructive"
                 >
@@ -128,9 +142,8 @@ const handleLogout = async () => {
         </div>
       </header>
 
-      {/* Profile Modal */}
       {showProfileModal && (
-        <ProfileModal 
+        <ProfileModal
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
         />

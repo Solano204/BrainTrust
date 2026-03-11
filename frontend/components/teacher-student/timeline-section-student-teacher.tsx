@@ -1,3 +1,5 @@
+
+//DARK
 "use client";
 
 import * as React from "react";
@@ -130,7 +132,7 @@ const getDaysUntilDue = (dueDate: string | null): number => {
 
 const getTimelineUrgency = (dueDate: string | null): "urgent" | "warning" | "normal" => {
   const daysUntilDue = getDaysUntilDue(dueDate);
-  
+
   if (daysUntilDue < 0) return "urgent";
   if (daysUntilDue <= 2) return "warning";
   return "normal";
@@ -139,7 +141,7 @@ const getTimelineUrgency = (dueDate: string | null): "urgent" | "warning" | "nor
 const getStartOfWeek = (date: Date = new Date()): Date => {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
@@ -164,7 +166,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
   >(null);
   const { user } = useAuth();
 
-  // Calculate current week start (Monday)
   const weekStart = React.useMemo(() => {
     const startOfWeek = getStartOfWeek();
     return formatForAPI(startOfWeek);
@@ -196,7 +197,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
   }, [tasks, quizzes]);
 
   const handleDismiss = (id: string) => {
-    // Implement dismiss logic if needed
     setDismissingId(null);
   };
 
@@ -241,7 +241,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
       };
 
       await submitTaskMutation.mutate(submissionParams);
-
       handleCloseModal();
     } catch (error) {
       console.error("Failed to submit task:", error);
@@ -257,7 +256,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
         studentId: user.id,
         answers: answers,
       });
-
       handleCloseModal();
     } catch (error) {
       console.error("Failed to submit quiz:", error);
@@ -332,7 +330,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     } else {
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
+          {/* ✅ was: dark:bg-gray-900 → now uses bg-card from theme */}
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl bg-card">
             <div className="min-h-full bg-background p-4 md:p-6">
               <div className="max-w-4xl mx-auto">
                 {resourceType === "ASSIGNMENT" && (
@@ -463,7 +462,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                     itemUrgency === "urgent"
                       ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
                       : itemUrgency === "warning"
-                      ? "border-warning/30 bg-warning/5 hover:border-warning/50"
+                      // ✅ was: border-warning/* bg-warning/* → accent = gold, perfect for warnings
+                      ? "border-accent/40 bg-accent/5 hover:border-accent/60"
                       : "border-border bg-card hover:border-primary/30"
                   )}
                   onClick={() => handleViewDetails(item)}
@@ -476,9 +476,11 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                         itemUrgency === "urgent"
                           ? "bg-destructive/10 text-destructive"
                           : itemUrgency === "warning"
-                          ? "bg-warning/10 text-warning"
+                          // ✅ was: bg-warning/10 text-warning → accent (gold)
+                          ? "bg-accent/10 text-accent-foreground"
                           : isGroupAssignment
-                          ? "bg-blue-100 text-blue-600"
+                          // ✅ was: bg-blue-100 text-blue-600 → secondary (pale navy tint)
+                          ? "bg-secondary text-secondary-foreground"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
@@ -549,7 +551,6 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={() => handleDismiss(item.id)}
-                            disabled={false} // Remove if you implement actual mutation
                           >
                             <Check className="h-4 w-4" />
                           </Button>

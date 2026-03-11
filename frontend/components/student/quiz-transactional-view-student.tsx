@@ -1,3 +1,4 @@
+//DARK
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -14,36 +15,37 @@ interface StudentQuizViewProps {
   onExit: () => void;
   isSubmitting: boolean;
 }
-export function StudentQuizView({ 
-  quizData ,
-  studentId, 
-  onSubmit, 
-  onExit, 
-  isSubmitting 
+
+export function StudentQuizView({
+  quizData,
+  studentId,
+  onSubmit,
+  onExit,
+  isSubmitting
 }: StudentQuizViewProps) {
   const { user } = useAuth();
   const userType = user?.role === 'student' ? 'student' : 'teacher';
-  
+
   const {
-    data: quiz, 
+    data: quiz,
     isLoading: isQuizLoading,
-    error: quizError 
+    error: quizError
   } = useQuizDetail(quizData.id, userType);
-  
+
   const {
-    data: existingSubmission, 
+    data: existingSubmission,
     isLoading: isSubmissionLoading,
-    error: submissionError 
+    error: submissionError
   } = useStudentQuizSubmission(quizData.id, studentId);
 
   const isLoading = isQuizLoading || isSubmissionLoading;
 
-  
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          {/* ✅ was: border-blue-600 → border-primary */}
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading quiz details...</p>
         </div>
       </div>
@@ -52,15 +54,19 @@ export function StudentQuizView({
 
   if (quizError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg max-w-md">
-          <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Error Loading Quiz</h3>
-          <p className="text-sm text-red-500 dark:text-red-300 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        {/* ✅ was: bg-red-50 dark:bg-red-900/20 → bg-destructive/5 */}
+        <div className="text-center p-6 bg-destructive/5 rounded-lg border border-destructive/20 max-w-md">
+          {/* ✅ was: text-red-600 dark:text-red-400 → text-destructive */}
+          <h3 className="text-lg font-semibold text-destructive mb-2">Error Loading Quiz</h3>
+          {/* ✅ was: text-red-500 dark:text-red-300 → text-destructive/80 */}
+          <p className="text-sm text-destructive/80 mb-4">
             {quizError.message || "Failed to load quiz details"}
           </p>
+          {/* ✅ was: bg-red-600 hover:bg-red-700 text-white → bg-destructive text-destructive-foreground */}
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-opacity"
           >
             Retry
           </button>
@@ -71,9 +77,10 @@ export function StudentQuizView({
 
   if (!quiz) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Quiz Not Found</h3>
+          {/* ✅ was: text-gray-600 dark:text-gray-300 → text-foreground */}
+          <h3 className="text-lg font-semibold text-foreground mb-2">Quiz Not Found</h3>
           <p className="text-sm text-muted-foreground">The requested quiz could not be found.</p>
         </div>
       </div>
@@ -81,6 +88,7 @@ export function StudentQuizView({
   }
 
   console.log("Quiz data:", quiz);
+
   return (
     <QuizView
       quiz={quiz}
