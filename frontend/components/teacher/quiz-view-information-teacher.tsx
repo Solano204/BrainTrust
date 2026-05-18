@@ -18,7 +18,7 @@ import {
 import type { Question } from "@/app/domain/entities/CourseEntities";
 import { useAuth } from "@/app/context/AuthContext";
 import { useQuizDetail, useQuizMutations } from "../teacher-student/hooks/quiz-hooks";
-import { Quiz } from "@/app/shared/models/quiz.model";
+import { Quiz } from "@/app/domain/entities/CourseEntities";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tipos
@@ -92,7 +92,11 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   } = useQuizMutations();
 
   console.log("quiz", quiz);
-  const datosQuiz: Quiz = quiz ?? quizInicial;
+  const rawQuiz = quiz ?? quizInicial;
+  const datosQuiz: Quiz = {
+    ...(rawQuiz as any),
+    dueDate: (rawQuiz as any).dueDate ?? null,
+  } as Quiz;
 
   const [mostrarRespuestasCorrectas, setMostrarRespuestasCorrectas] = useState(tipoUsuario === "teacher");
   const [modoEdicion, setModoEdicion] = useState(false);
@@ -104,7 +108,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
     dueDate: datosQuiz.dueDate ?? "",
     acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
     allowSeeResults: datosQuiz.allowSeeResults,
-    totalScore: datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100,
+    totalScore: datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100,
   });
 
   const [preguntasEdicion, setPreguntasEdicion] = useState<Question[]>([]);
@@ -122,7 +126,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
         dueDate: datosQuiz.dueDate ?? "",
         acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
         allowSeeResults: datosQuiz.allowSeeResults,
-        totalScore: datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100,
+        totalScore: datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100,
       });
       setPreguntasEdicion(datosQuiz.questions ?? []);
     }
@@ -140,7 +144,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   }, [preguntasEdicion, datosEdicion.totalScore]);
 
   const puntuacionTotalCambio =
-    datosEdicion.totalScore !== (datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100);
+    datosEdicion.totalScore !== (datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100);
 
   // ── Indicador de carga ─────────────────────────────────────────────────────────
   const cargando =
@@ -250,7 +254,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
       dueDate: datosQuiz.dueDate ?? "",
       acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
       allowSeeResults: datosQuiz.allowSeeResults,
-      totalScore: datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100,
+      totalScore: datosQuiz.maxGrade ?? 100,
     });
     setModoEdicion(false);
     setMostrarPrevisualizacionRedistribucion(false);
@@ -924,7 +928,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
                   </div>
                 ) : (
                   <p className="text-sm font-semibold text-foreground">
-                    {datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100}
+                    {datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100}
                   </p>
                 )}
               </div>

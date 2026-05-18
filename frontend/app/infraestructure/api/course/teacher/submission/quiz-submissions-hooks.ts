@@ -6,7 +6,6 @@ import { SubmissionQuiz } from "@/app/domain/entities/CourseEntities";
 import { quizKeys } from "./quiz-keys";
 import { fetchSubmissionQuizByStudentAndQuiz, fetchSubmissionQuizzesByCourse } from "./quiz-api";
 import { QuizId } from "@/app/domain/valueObjects/CourseValues";
-import { fetchQuizSubmissionDetail } from "@/components/student/api/student-submission";
 
 export function useSubmissionQuizzesByCourse(courseId: CourseId | null) {
   return useQuery<SubmissionQuiz[]>({
@@ -31,4 +30,8 @@ export function useSubmissionQuizByStudentAndQuiz(
     staleTime: 300000, // 5 minutes
     refetchOnWindowFocus: false,
   });
+}
+
+function fetchQuizSubmissionDetail(arg0: string, arg1: string): SubmissionQuiz | Promise<SubmissionQuiz | null> | null {
+  throw new Error("Function not implemented.");
 }

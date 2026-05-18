@@ -498,15 +498,15 @@ return (
 
     <CatalogTable
       pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-      search={search} onSearch={v => { setSearch(v); setPage(0); }}
-      onAdd={async v => {
+      search={search} onSearch={v => { setSearch(v); setPage(0); } }
+      onAdd={async (v) => {
         const mid = newMuniId ? Number(newMuniId) : filterMuni;
         if (!mid) return push('error', 'Selecciona un municipio primero');
         handleMutation(() => add.mutateAsync({ municipalityId: mid, colonyName: v }), push, '¡Colonia agregada!');
         setNewMuniId('');
-      }}
+      } }
       onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
-      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      onDelete={async (id) => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
       addLabel="Agregar Colonia"
       addPlaceholder="ej. Centro"
       addExtra={!filterMuni ? (
@@ -518,8 +518,7 @@ return (
           <option value="">Selecciona municipio *</option>
           {allMunis.map(m => <option key={m.id} value={m.id}>{m.municipalityName}</option>)}
         </select>
-      ) : null}
-    />
+      ) : null} accentColor={''}    />
 
   </div>
 );
@@ -564,15 +563,15 @@ return (
 
     <CatalogTable
       pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-      search={search} onSearch={v => { setSearch(v); setPage(0); }}
-      onAdd={async v => {
+      search={search} onSearch={v => { setSearch(v); setPage(0); } }
+      onAdd={async (v) => {
         const cid = newColonyId ? Number(newColonyId) : filterColony;
         if (!cid) return push('error', 'Selecciona una colonia primero');
         handleMutation(() => add.mutateAsync({ colonyId: cid, streetName: v }), push, '¡Calle agregada!');
         setNewColonyId('');
-      }}
+      } }
       onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
-      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      onDelete={async (id) => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
       addLabel="Agregar Calle"
       addPlaceholder="ej. Av. Central"
       addExtra={!filterColony ? (
@@ -584,8 +583,7 @@ return (
           <option value="">Selecciona colonia *</option>
           {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
         </select>
-      ) : null}
-    />
+      ) : null} accentColor={''}    />
 
   </div>
 );}
@@ -629,15 +627,15 @@ return (
 
     <CatalogTable
       pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-      search={search} onSearch={v => { setSearch(v); setPage(0); }}
-      onAdd={async v => {
+      search={search} onSearch={v => { setSearch(v); setPage(0); } }
+      onAdd={async (v) => {
         const cid = newColonyId ? Number(newColonyId) : filterColony;
         if (!cid) return push('error', 'Selecciona una colonia primero');
         handleMutation(() => add.mutateAsync({ colonyId: cid, postalCode: v }), push, '¡Código postal agregado!');
         setNewColonyId('');
-      }}
+      } }
       onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
-      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      onDelete={async (id) => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
       addLabel="Agregar Código"
       addPlaceholder="ej. 29000"
       addExtra={!filterColony ? (
@@ -649,8 +647,7 @@ return (
           <option value="">Selecciona colonia *</option>
           {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
         </select>
-      ) : null}
-    />
+      ) : null} accentColor={''}    />
 
   </div>
 );}
@@ -1004,7 +1001,7 @@ return (
         <div className="sm:hidden w-full mb-2">
           <select
             value={activeSection}
-            onChange={e => setActiveSection(e.target.value)}
+            onChange={e => setActiveSection( e.target.value as CatalogSectionKeyLocal )}
             className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
           >
             {CATALOG_SECTIONS.map(s => (

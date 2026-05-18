@@ -1,11 +1,6 @@
 "use client";
 import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+
 import { 
   Paperclip, 
   Upload, 
@@ -35,7 +30,7 @@ import {
   List,
   Loader2
 } from "lucide-react";
-import { Assignment, Submission} from '@/app/domain/entities';
+import { Assignment} from '@/app/domain/entities';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Document } from '@/app/domain/valueObjects';
+import { Submission } from '@/app/shared/models/assignment.model';
 
 interface TaskSubmissionViewProps {
   assignment: Assignment;
@@ -80,7 +76,7 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
   const isLate = existingSubmission?.status === 'LATE_SUBMITTED';
   const isSubmitted = existingSubmission?.status === 'SUBMITTED' || existingSubmission?.status === 'LATE_SUBMITTED' || existingSubmission?.status === 'GRADED';
   const isGraded = existingSubmission?.status === 'GRADED';
-  const hasAIResult = existingSubmission?.iaResult !== undefined;
+  const hasAIResult = existingSubmission?.aiAnalysis !== undefined;
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
@@ -173,9 +169,9 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
   };
 
   const renderAIDetectionResult = () => {
-    if (!hasAIResult || !existingSubmission?.iaResult) return null;
+    if (!hasAIResult || !existingSubmission?.aiAnalysis) return null;
 
-    const aiResult = existingSubmission.iaResult;
+    const aiResult = existingSubmission.aiAnalysis;
     const probability = parseFloat(aiResult.probability);
     const percentage = parseFloat(aiResult.percentage);
     const isLikelyAI = aiResult.isLikelyAI;
@@ -650,7 +646,7 @@ return (
                             </div>
                           </div>
                           <button
-                            onClick={() => onDownloadAttachment(attachment)}
+                            onClick={() => onDownloadAttachment(attachment as Document)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all flex-shrink-0"
                           >
                             <Download className="w-3.5 h-3.5" />
@@ -786,11 +782,11 @@ return (
                     label: 'Análisis de IA',
                     value: (
                       <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
-                        existingSubmission?.iaResult?.isLikelyAI
+                        existingSubmission?.aiAnalysis?.isLikelyAI
                           ? 'bg-destructive/10 text-destructive'
                           : 'bg-primary/10 text-primary'
                       }`}>
-                        {existingSubmission?.iaResult?.isLikelyAI ? 'Detectado' : 'Limpio'}
+                        {existingSubmission?.aiAnalysis?.isLikelyAI ? 'Detectado' : 'Limpio'}
                       </span>
                     )
                   }] : []),

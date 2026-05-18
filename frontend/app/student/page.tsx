@@ -6,6 +6,8 @@ import { TaskSubmissionView } from '@/components/student/quiz-view-tasks-student
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Assignment, Submission} from '@/app/domain/entities';
+import { Quiz, QuizAnswer, SubmissionQuiz } from "@/app/domain/entities/CourseEntities";
 
 export default function StudentAssignmentPage({ params }: { params: { id: string } }) {
   const { user } = useAuth();
@@ -40,46 +42,45 @@ Topics to cover:
         storagePath: 'guidelines.pdf'
       }
     ]
-  };
-
-  const mockQuiz = {
-    id: '1',
-    title: 'Machine Learning Fundamentals Quiz',
-    description: 'Test your knowledge of basic machine learning concepts',
-    courseUnitId: 'unit1',
-    courseId: 'course1',
-    maxGrade: 100,
-    timeLimit: 30,
-    passingScore: 70,
-    dueDate: '2024-12-31T23:59:59',
-    acceptLateSubmissions: true,
-    questions: [
-      {
-        id: 'q1',
-        type: 'multiple-choice' as const,
-        text: 'What is machine learning?',
-        question: 'What is machine learning?',
-        options: [
-          'A type of computer programming',
-          'A subset of artificial intelligence',
-          'A database management system',
-          'A networking protocol'
-        ],
-        correctAnswer: 1,
-        points: 10,
-        maxPoints: 10
-      },
-      {
-        id: 'q2',
-        type: 'open-ended' as const,
-        text: 'Explain the difference between supervised and unsupervised learning.',
-        question: 'Explain the difference between supervised and unsupervised learning.',
-        points: 20,
-        maxPoints: 20,
-        expectedAnswer: 'Supervised learning uses labeled data while unsupervised learning finds patterns in unlabeled data.'
-      }
-    ]
-  };
+  } as Assignment;
+const mockQuiz: Quiz = {
+  id: '1',
+  title: 'Machine Learning Fundamentals Quiz',
+  description: 'Test your knowledge of basic machine learning concepts',
+  courseUnitId: 'unit1',
+  courseId: 'course1',
+  maxGrade: 100,
+  timeLimit: 30,
+  dueDate: '2024-12-31T23:59:59',
+  acceptLateSubmissions: true,
+  allowSeeResults: true,
+  questions: [
+    {
+      id: 'q1',
+      type: 'multiple-choice' as const,
+      text: 'What is machine learning?',
+      question: 'What is machine learning?',
+      options: [
+        'A type of computer programming',
+        'A subset of artificial intelligence',
+        'A database management system',
+        'A networking protocol'
+      ],
+      correctAnswer: 1,
+      points: 10,
+      maxPoints: 10
+    },
+    {
+      id: 'q2',
+      type: 'open-ended' as const,
+      text: 'Explain the difference between supervised and unsupervised learning.',
+      question: 'Explain the difference between supervised and unsupervised learning.',
+      points: 20,
+      maxPoints: 20,
+      expectedAnswer: 'Supervised learning uses labeled data while unsupervised learning finds patterns in unlabeled data.'
+    }
+  ]
+};
 
   const handleTaskSubmit = async (submission: { content: string; attachments: File[] }) => {
     console.log('Submitting task:', submission);

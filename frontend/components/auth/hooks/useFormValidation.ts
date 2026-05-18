@@ -40,32 +40,35 @@ export function useFormValidation<T extends Record<string, any>>(
       [field]: true
     }))
   }, [])
-
-  const validateField = useCallback(async (field: keyof T): Promise<boolean> => {
-    try {
-      const fieldSchema = schema.shape[field as string]
-      if (fieldSchema) {
-        await fieldSchema.parseAsync(values[field])
-        setErrors(prev => {
-          const newErrors = { ...prev }
-          delete newErrors[field as string]
-          return newErrors
-        })
-        return true
-      }
-      return true
-    } catch (error) {
-      if (error instanceof ZodError) {
+const validateField = useCallback(async (field: keyof T): Promise<boolean> => {
+  try {
+    await schema.parseAsync(values)
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[field as string]
+      return newErrors
+    })
+    return true
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const fieldError = error.errors.find(e => e.path[0] === field)
+      if (fieldError) {
         setErrors(prev => ({
           ...prev,
-          [field as string]: error.errors[0]?.message || 'Invalid value'
+          [field as string]: fieldError.message
         }))
         return false
       }
-      return false
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field as string]
+        return newErrors
+      })
+      return true
     }
-  }, [schema, values])
-
+    return false
+  }
+}, [schema, values])
   const validateForm = useCallback(async (): Promise<boolean> => {
     try {
       await schema.parseAsync(values)

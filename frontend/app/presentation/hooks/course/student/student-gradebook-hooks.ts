@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { gradebookKeys } from "@/app/infraestructure/api/gradebook/gradebook-keys";
-import { exportStudentGrades, fetchStudentGradebook } from "@/components/student/api/student-gradebook-api";
+import { exportStudentGrades, fetchStudentGradebook } from "@/components/student/api/student-gradebooks";
 
 interface StudentGradebookStats {
     totalTasks: number;

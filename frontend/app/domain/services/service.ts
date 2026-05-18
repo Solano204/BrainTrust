@@ -1,7 +1,7 @@
 import { CourseId, UnitId } from "../valueObjects";
 import { Assignment, Page, CourseUnit, Question, Quiz, Submission, UnitResource, calificationStudent} from "../entities/CourseEntities";
 import { AssignmentId, Document, Score, UserId} from "../valueObjects/CourseValues";
-import { DeliveryMode } from "@/components/teacher/task-view-information-teacher";
+import { DeliveryMode } from "@/app/shared/models/assignment.model";
 
 
 const MOCK_COURSE_ID = "COURSE-DES-401";
@@ -65,54 +65,7 @@ export const mockUnitsDatabase: CourseUnit[] = [
                 allowLateSubmissions: true,
             } as Assignment,
 
-            {
-                id: "ASSIGN-G2",
-                title: "Group: Problem Statement Definition",
-                courseId: MOCK_COURSE_ID,
-                unitId: MOCK_UNIT_ID,
-                description: "Collaboratively define a clear and actionable problem statement for your chosen project area.",
-                createdAt: "2025-10-10T10:00:00Z",
-                attachments: [] as Document[],
-                urls: [],
-                deliveryMode: "GROUP" as DeliveryMode,
-                dueDate: "2025-11-25T23:59:00Z",
-                maxScore: { value: 50, maxPoints: 50 } as Score,
-                instructions: "One team member submits the final 'How Might We' statement and supporting arguments.",
-                submissions: [] as Submission[],
-                allowLateSubmissions: false,
-                links: ["https://example.com/problem-statement-guidelines", "https://example.com/problem-statement-template"],
-            } as Assignment,
-
-            {
-                id: "QUIZ-C1",
-                description: "Quick quiz covering the core concepts of Empathy and Define phases.",
-                courseUnitId: MOCK_UNIT_ID,
-                title: "Concept Check 1",
-                maxGrade: 10,
-                timeLimit: 20, // 20 minutes
-                passingScore: 70,
-                dueDate: "2025-11-16T23:59:00Z",
-                acceptLateSubmissions: false,
-                questions: [
-                    { id: 'Q1', type: 'multiple-choice', text: 'Which phase comes after Empathy in Design Thinking?', maxPoints: 2, question: 'Q1 text', points: 2, options: ['Define', 'Ideate', 'Test'], correctAnswer: 0 }
-                ] as Question[],
-            } as Quiz,
-
-            {
-                id: "QUIZ-A2",
-                description: "Application-based quiz where you analyze a short scenario.",
-                courseUnitId: MOCK_UNIT_ID,
-                title: "Application Scenario Test",
-                maxGrade: 25,
-                timeLimit: 45, // 45 minutes
-                passingScore: 60,
-                dueDate: "2025-11-30T23:59:00Z",
-                acceptLateSubmissions: true,
-                questions: [
-                    { id: 'Q2', type: 'open-ended', text: 'Explain the difference between a user goal and a user need in 50 words.', maxPoints: 15, question: 'Q2 text', points: 15, expectedAnswer: 'A good answer should mention goals are what the user wants to achieve, needs are the required actions to achieve the goal.' }
-                ] as Question[],
-            } as Quiz,
-        ],
+        ]
     },
 ];
 
@@ -167,23 +120,6 @@ export interface GradebookData {
     students: StudentRow[];
 }
 
-
-const MOCK_RAW_CALIFICATIONS: calificationStudent[] = [
-    // Alice Smith (USER-101)
-    { id: "S1-A1", student: { studentId: "USER-101", nameStudent: "Alice Smith", taskId: "SUB-001", calification: 45 }, task: { id: "UX-P1", nameTask: "Research Plan", maxPoints: 50, unitId: "U-1", unitName: "Research", CourseId: "C-UX" }, total: null },
-    { id: "S1-Q1", student: { studentId: "USER-101", nameStudent: "Alice Smith", taskId: "SUB-002", calification: 18 }, task: { id: "UX-Q1", nameTask: "Midterm Quiz", maxPoints: 20, unitId: "U-3", unitName: "Testing", CourseId: "C-UX" }, total: null },
-    { id: "S1-F1", student: { studentId: "USER-101", nameStudent: "Alice Smith", taskId: "SUB-003", calification: 2 }, task: { id: "UX-F", nameTask: "Final Project", maxPoints: 30, unitId: "U-5", unitName: "Final", CourseId: "C-UX" }, total: null },
-    
-    // Bob Johnson (USER-102)
-    { id: "S2-A1", student: { studentId: "USER-102", nameStudent: "Bob Johnson", taskId: "SUB-004", calification: 48 }, task: { id: "UX-P1", nameTask: "Research Plan", maxPoints: 50, unitId: "U-1", unitName: "Research", CourseId: "C-UX",  }, total: null },
-    { id: "S2-Q1", student: { studentId: "USER-102", nameStudent: "Bob Johnson", taskId: "SUB-005", calification: 15 }, task: { id: "UX-Q1", nameTask: "Midterm Quiz", maxPoints: 20, unitId: "U-3", unitName: "Testing", CourseId: "C-UX",  }, total: null },
-    { id: "S2-F1", student: { studentId: "USER-102", nameStudent: "Bob Johnson", taskId: "SUB-006", calification: 28 }, task: { id: "UX-F", nameTask: "Final Project", maxPoints: 30, unitId: "U-5", unitName: "Final", CourseId: "C-UX",  }, total: null },
-
-    // Carlos Diaz (USER-103)
-    { id: "S3-A1", student: { studentId: "USER-103", nameStudent: "Carlos Diaz", taskId: "SUB-007", calification: 40 }, task: { id: "UX-P1", nameTask: "Research Plan", maxPoints: 50, unitId: "U-1", unitName: "Research", CourseId: "C-UX",  }, total: null },
-    { id: "S3-Q1", student: { studentId: "USER-103", nameStudent: "Carlos Diaz", taskId: "SUB-008", calification: 22 }, task: { id: "UX-Q1", nameTask: "Midterm Quiz", maxPoints: 20, unitId: "U-3", unitName: "Testing", CourseId: "C-UX",  }, total: null },
-    { id: "S3-F1", student: { studentId: "USER-103", nameStudent: "Carlos Diaz", taskId: "SUB-009", calification: 25 }, task: { id: "UX-F", nameTask: "Final Project", maxPoints: 30, unitId: "U-5", unitName: "Final", CourseId: "C-UX",  }, total: null },
-];
 
 
 export const transformCalifications = (rawCalifications: calificationStudent[]): GradebookData => {
@@ -259,172 +195,6 @@ export const transformCalifications = (rawCalifications: calificationStudent[]):
 
 
 export const generateMockCalifications = (): calificationStudent[] => {
-  return [
-    { 
-      id: "S1-A1", 
-      student: { 
-        studentId: "USER-101", 
-        nameStudent: "Alice Smith", 
-        taskId: "SUB-001", 
-        calification: 45 
-      }, 
-      task: { 
-        id: "UX-P1", 
-        nameTask: "Research Plan", 
-        maxPoints: 50, 
-        unitId: "U-1", 
-        unitName: "Research", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    { 
-      id: "S1-Q1", 
-      student: { 
-        studentId: "USER-101", 
-        nameStudent: "Alice Smith", 
-        taskId: "SUB-002", 
-        calification: 18 
-      }, 
-      task: { 
-        id: "UX-Q1", 
-        nameTask: "Midterm Quiz", 
-        maxPoints: 20, 
-        unitId: "U-3", 
-        unitName: "Testing", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    { 
-      id: "S1-F1", 
-      student: { 
-        studentId: "USER-101", 
-        nameStudent: "Alice Smith", 
-        taskId: "SUB-003", 
-        calification: 2 
-      }, 
-      task: { 
-        id: "UX-F", 
-        nameTask: "Final Project", 
-        maxPoints: 30, 
-        unitId: "U-5", 
-        unitName: "Final", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    
-
-    { 
-      id: "S2-A1", 
-      student: { 
-        studentId: "USER-102", 
-        nameStudent: "Bob Johnson", 
-        taskId: "SUB-004", 
-        calification: 48 
-      }, 
-      task: { 
-        id: "UX-P1", 
-        nameTask: "Research Plan", 
-        maxPoints: 50, 
-        unitId: "U-1", 
-        unitName: "Research", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    { 
-      id: "S2-Q1", 
-      student: { 
-        studentId: "USER-102", 
-        nameStudent: "Bob Johnson", 
-        taskId: "SUB-005", 
-        calification: 15 
-      }, 
-      task: { 
-        id: "UX-Q1", 
-        nameTask: "Midterm Quiz", 
-        maxPoints: 20, 
-        unitId: "U-3", 
-        unitName: "Testing", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    { 
-      id: "S2-F1", 
-      student: { 
-        studentId: "USER-102", 
-        nameStudent: "Bob Johnson", 
-        taskId: "SUB-006", 
-        calification: 28 
-      }, 
-      task: { 
-        id: "UX-F", 
-        nameTask: "Final Project", 
-        maxPoints: 30, 
-        unitId: "U-5", 
-        unitName: "Final", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-
-    // Carlos Diaz (USER-103)
-    { 
-      id: "S3-A1", 
-      student: { 
-        studentId: "USER-103", 
-        nameStudent: "Carlos Diaz", 
-        taskId: "SUB-007", 
-        calification: 40 
-      }, 
-      task: { 
-        id: "UX-P1", 
-        nameTask: "Research Plan", 
-        maxPoints: 50, 
-        unitId: "U-1", 
-        unitName: "Research", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    { 
-      id: "S3-Q1", 
-      student: { 
-        studentId: "USER-103", 
-        nameStudent: "Carlos Diaz", 
-        taskId: "SUB-008", 
-        calification: 22 
-      }, 
-      task: { 
-        id: "UX-Q1", 
-        nameTask: "Midterm Quiz", 
-        maxPoints: 20, 
-        unitId: "U-3", 
-        unitName: "Testing", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
-    { 
-      id: "S3-F1", 
-      student: { 
-        studentId: "USER-103", 
-        nameStudent: "Carlos Diaz", 
-        taskId: "SUB-009", 
-        calification: 25 
-      }, 
-      task: { 
-        id: "UX-F", 
-        nameTask: "Final Project", 
-        maxPoints: 30, 
-        unitId: "U-5", 
-        unitName: "Final", 
-        CourseId: "C-UX" 
-      }, 
-      total: null 
-    },
+    return [
   ];
 };

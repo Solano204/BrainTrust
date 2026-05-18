@@ -35,7 +35,6 @@ import {
   useTaskSubmission,
 } from "@/components/teacher-student/hooks/submission-hooks";
 import { useUserTeam } from "./hooks/team-hooks";
-
 export type RecursoCalendario = Assignment | Quiz;
 
 const funcionesFecha = {
@@ -252,7 +251,6 @@ export function CalendarView({ userId, userType }: PropsVistaCalendario) {
     
     let idGrupo: string | undefined;
     if (tipoEnvio === "TEAM" && equipoUsuario) {
-      idGrupo = equipoUsuario.teamId;
     }
     
     const parametrosEnvio = {

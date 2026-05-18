@@ -119,7 +119,7 @@ const handleApiError = async (error: unknown): Promise<never> => {
 const mapStudentGroupDTOToTeam = (dto: StudentGroupDTO): Team => {
 
   return {
-    teamId: dto.id,
+    teamId: { id: dto.id },
     courseId: dto.courseId,
     name: dto.name,
     description: dto.description || "",

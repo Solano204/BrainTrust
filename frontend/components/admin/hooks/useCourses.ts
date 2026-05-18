@@ -35,13 +35,13 @@ import { uploadImageFile } from '@/app/utils/cloudinary/cloudinary';
 
 // Importar tipos desde sus ubicaciones correctas
 import type { AdminCourse } from '@/app/shared/models/admin-course.model';
-import type { Teacher } from '@/app/shared/models/user.model';
 import type {
   CreateCourseCommand,
   UpdateCourseCommand,
   UpdateStudentGradeCommand
 } from '@/app/shared/dtos/commands/course.commands';
 import type { PaginatedResponse, PaginationParams } from '@/app/shared/types/pagination';
+import { Teacher, Student } from "@/app/shared/models/user.model";
 
 export const adminCoursesKeys = {
   all: ['admin-courses'] as const,
@@ -155,13 +155,30 @@ export function useAdminTeachersPaginated(params: PaginationParams = {}) {
   });
 }
 
+
 export function useAdminSearchTeachersPaginated(
     search: string,
     params: Omit<PaginationParams, 'search'> = {}
 ) {
   return useQuery<PaginatedResponse<Teacher>, Error>({
     queryKey: adminCoursesKeys.searchTeachersPaginated(search, params),
-    queryFn: () => searchTeachers(search), // Usa searchTeachers como fallback
+    queryFn: async () => {
+      const teachers = await searchTeachers(search);
+      const { page = 0, size = 20 } = params;
+      const startIndex = page * size;
+      const endIndex = startIndex + size;
+      const paginatedTeachers = teachers.slice(startIndex, endIndex);
+
+      return {
+        content: paginatedTeachers,
+        pageNumber: page,
+        pageSize: size,
+        totalElements: teachers.length,
+        totalPages: Math.ceil(teachers.length / size),
+        first: page === 0,
+        last: endIndex >= teachers.length,
+      };
+    },
     enabled: true,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,

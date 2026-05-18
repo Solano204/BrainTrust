@@ -527,6 +527,9 @@ export async function fetchAllTeachersPaginated(
   }
 }
 
+
+
+
 export async function searchTeachers(searchTerm: string): Promise<Teacher[]> {
   try {
     if (!searchTerm || searchTerm.trim().length === 0) {

@@ -97,8 +97,6 @@ export function mapQuizSubmissionDetailFromBackendNew(
     submittedAt: dto.submittedAt,
     status: dto.status,
     grade: dto.grade,
-    finalGrade: dto.finalGrade ?? null,       // ✅ NEW
-    canViewResults: dto.canViewResults ?? false, // ✅ NEW
     autoGraded: dto.autoGraded,
     timeExpired: dto.timeExpired,
     unitId: dto.unitId ?? "",
@@ -346,6 +344,7 @@ export function mapQuizSubmissionFromBackend(
     const maxScore = answers.reduce((sum, ans) => sum + ans.maxPoints, 0);
 
     return {
+        canViewResults: dto.canViewResults ?? false,
         id: dto.id,
         quizId: dto.quizId,
         studentId: dto.studentId,

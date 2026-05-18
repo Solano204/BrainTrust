@@ -230,7 +230,8 @@ const handleApiError = async (error: unknown): Promise<never> => {
 
 async function mapQuizFromBackend(dto: QuizDTO): Promise<Quiz> {
   return {
-    id: dto.id,
+    
+    id: dto.id,       
     title: dto.title,
     description: dto.description,
     courseId: dto.courseId,
@@ -238,8 +239,7 @@ async function mapQuizFromBackend(dto: QuizDTO): Promise<Quiz> {
     maxGrade: dto.totalPoints,
     timeLimit: dto.timeLimitMinutes,
     dueDate: dto.availableUntil,
-    acceptLateSubmissions: true,
-    questions: [],
+    acceptLateSubmissions: true,    allowSeeResults: dto.showCorrectAnswers,    questions: [],
   };
 }
 
@@ -357,7 +357,7 @@ async function mapQuizInventoryFromBackend(dto: QuizDTO): Promise<QuizInventoryI
   return {
     id: dto.id,
     quizId: dto.id,
-    title: dto.title,
+    
     unit: "",
     type: "QUIZ",
     courseId: dto.courseId,

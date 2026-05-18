@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail } from "lucide-react";
 import { useUserMutations } from "./hooks/useUsers";
-import { User } from "../student/api/enrollment";
+import { User } from "@/app/shared/models/user.model";
 
 interface ChangeEmailModalProps {
   user: User | null;

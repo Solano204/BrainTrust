@@ -64,9 +64,9 @@ import {
 } from "@/components/ui/select";
 import { ChangeEmailModal } from "@/components/admin/ChangeEmailModal";
 import { AdminResetPasswordModal } from "@/components/admin/AdminResetPasswordModal";
-import { User } from "@/app/shared/models/user.model";
 import { UserRole } from "@/app/shared/dtos/user.dto";
 import { PaginationParams } from "@/app/shared/types/pagination";
+import { User } from "@/app/shared/models/user.model";
 
 // ─────────────────────────────────────────────
 // PaginationControls
@@ -587,7 +587,7 @@ return (
 
     {/* ── Modals ── */}
     <ChangeEmailModal
-      user={selectedUser}
+      user={selectedUser }
       open={showChangeEmailModal}
       onClose={() => { setShowChangeEmailModal(false); setSelectedUser(null); refetch(); }}
     />

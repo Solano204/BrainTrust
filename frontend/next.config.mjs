@@ -1,9 +1,9 @@
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   images: {
     unoptimized: true,
@@ -13,9 +13,5 @@ const nextConfig = {
       bodySizeLimit: '50mb',
     },
     missingSuspenseWithCSRBailout: false,
-  },
-  // Force all pages to be dynamic (no prerendering)
-  async headers() {
-    return [];
   },
 }

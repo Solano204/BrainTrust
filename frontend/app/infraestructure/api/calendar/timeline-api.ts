@@ -167,36 +167,6 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
     ]
   },
 
-  {
-    id: "task-102",
-    title: "User Research Report",
-    courseId: "COURSE-DES-401",
-    unitId: "UNIT-2",
-    description: "Conduct user research and compile findings into a comprehensive report",
-    createdAt: "2025-11-05T09:30:00Z",
-    urls: [
-      "https://miro.com/board/user-research-template"
-    ],
-    attachments: [
-      {
-        name: "research-methods.docx",
-        storagePath: "/attachments/research-methods.docx",
-        createdAt: "2025-11-05T09:30:00Z"
-      }
-    ],
-    links: [
-      "https://www.interaction-design.org/literature/topics/user-research"
-    ],
-    deliveryMode: "GROUP",
-    // Original: 2024-03-12 -> Updated: 2025-11-09 (Recent Past Date - Sunday)
-    dueDate: "2025-11-09T23:59:00Z", 
-    maxScore: { value: 100, maxPoints: 100 },
-    instructions: "Form groups of 3-4 students. Conduct interviews with at least 5 users.",
-    submissions: [],
-    allowLateSubmissions: false,
-    idUser: "user-001"
-
-  },
 
   {
     id: "quiz-102",

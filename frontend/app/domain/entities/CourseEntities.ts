@@ -133,6 +133,10 @@ export interface Course {
   units: CourseUnit[] | [];
 }
 
+export interface TeamId{
+  id: string;
+}
+
 export interface Team {
   courseId: CourseId;
   teamId: TeamId;

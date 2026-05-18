@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { UserId, CourseId } from "@/app/domain/valueObjects/CourseValues"
 import { 
   Team,
+  TeamId,
   TeamWithIds,
 } from "@/app/domain/entities/CourseEntities"
 import { 
@@ -79,7 +80,7 @@ export function CourseGroups({ courseId }: PropsGruposCurso) {
 const nuevosDatosEquipo: TeamWithIds = {
   courseId,
   createdAt: new Date(),
-  teamId: "",
+  teamId: "" as unknown as TeamId,
   name: nombreNuevoEquipo,
   description: descripcionNuevoEquipo,
   members: new Set(miembrosSeleccionados),
@@ -101,7 +102,7 @@ const nuevosDatosEquipo: TeamWithIds = {
     
     actualizarInfoEquipo.mutate({
       courseId,
-      teamId: equipoSeleccionado.teamId,
+      teamId :   String(equipoSeleccionado.teamId),
       updates: {
         name: nombreNuevoEquipo,
         description: descripcionNuevoEquipo
@@ -132,7 +133,7 @@ const nuevosDatosEquipo: TeamWithIds = {
     if (miembrosSeleccionados.length > 0) {
       agregarMiembros.mutate({ 
         courseId, 
-        teamId: equipoSeleccionado.teamId, 
+        teamId : String(equipoSeleccionado.teamId), 
         memberIds: miembrosSeleccionados 
       }, {
         onSuccess: () => {
@@ -188,7 +189,7 @@ if (!esProfesor) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {equipos.map((equipo) => (
               <TarjetaEquipoSoloLectura
-                key={equipo.teamId}
+                key={String(equipo.teamId)}
                 equipo={equipo}
                 usuariosDisponibles={usuariosDisponibles}
                 obtenerUsuarioPorId={obtenerUsuarioPorId}
@@ -269,7 +270,7 @@ if (!esProfesor) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {equipos.map((equipo) => (
           <TarjetaEquipo
-            key={equipo.teamId}
+            key={String(equipo.teamId)}
             equipo={equipo}
             usuariosDisponibles={usuariosDisponibles}
             obtenerUsuarioPorId={obtenerUsuarioPorId}
@@ -540,7 +541,7 @@ const TarjetaEquipo: React.FC<PropsTarjetaEquipo> = ({
   isUpdating,
   isTeacher
 }) => {
-  const pendienteEliminacion = deleteConfirmTeam === equipo.teamId;
+  const pendienteEliminacion = deleteConfirmTeam === String(equipo.teamId);
 return (
     <Card className="hover:shadow-xl transition-all duration-300">
       <div className="p-6 space-y-4">
@@ -580,7 +581,7 @@ return (
                   Agregar Miembros
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setDeleteConfirmTeam(equipo.teamId)}
+                  onClick={() => setDeleteConfirmTeam(String(equipo.teamId))}
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -626,7 +627,7 @@ return (
                     </div>
                     {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(equipo.teamId, miembro.userId)}
+                        onClick={() => onRemoveMember(String(equipo.teamId), miembro.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                         title="Eliminar Miembro"
                         disabled={isUpdating}
@@ -645,7 +646,7 @@ return (
                     </div>
                     {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(equipo.teamId, miembro.userId)}
+                        onClick={() => onRemoveMember(String(equipo.teamId), miembro.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                         title="Eliminar Miembro"
                         disabled={isUpdating}
@@ -666,7 +667,7 @@ return (
               variant="destructive"
               size="sm"
               className="flex-1 gap-2"
-              onClick={() => onDeleteTeam(equipo.teamId)}
+              onClick={() => onDeleteTeam(String(equipo.teamId))}
               disabled={isDeleting}
             >
               {isDeleting ? (

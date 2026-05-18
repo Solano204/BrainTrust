@@ -1,7 +1,9 @@
 'use client';
 
+import { UserRole } from "@/app/shared/dtos/user.dto";
+import { PaginationParams } from "@/app/shared/types/pagination";
 
-import { PaginationParams, UserRole } from "../api/usersApi";
+
 
 export const usersKeys = {
   all: ['admin', 'users'] as const,
