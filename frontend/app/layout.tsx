@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { QueryProvider } from "./api/providers/ReactQueryProvider";
-import { AuthProvider } from "@/app/context/AuthContext";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "./api/providers/Providers";
 
 export const metadata: Metadata = {
   title: "v0 App",
@@ -18,16 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <QueryProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AuthProvider>{children}</AuthProvider>
-          </ThemeProvider>
-        </QueryProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
