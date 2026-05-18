@@ -9,11 +9,11 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  serverExternalPackages: ['pdfreader', 'pdf2json'],
   experimental: {
     serverActions: {
       bodySizeLimit: '50mb',
     },
-    serverComponentsExternalPackages: ['pdfreader', 'pdf2json'],
   },
 }
 
