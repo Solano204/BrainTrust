@@ -1,1 +1,4 @@
 backend/.env
+braintrust-terraform.zip
+backend/**/target/
+braintrust-terraform/
