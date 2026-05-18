@@ -1,6 +1,7 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-
   images: {
+    domains: ['res.cloudinary.com'],
     unoptimized: true,
   },
   experimental: {
@@ -10,3 +11,5 @@ const nextConfig = {
     missingSuspenseWithCSRBailout: false,
   },
 }
+
+export default nextConfig

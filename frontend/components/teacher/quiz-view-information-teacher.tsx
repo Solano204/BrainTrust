@@ -117,20 +117,20 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   const [mostrarPrevisualizacionRedistribucion, setMostrarPrevisualizacionRedistribucion] = useState(false);
 
   useEffect(() => {
-    if (datosQuiz) {
-      setDatosEdicion({
-        title: datosQuiz.title,
-        description: datosQuiz.description,
-        timeLimit: datosQuiz.timeLimit.toString(),
-        maxGrade: datosQuiz.maxGrade,
-        dueDate: datosQuiz.dueDate ?? "",
-        acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
-        allowSeeResults: datosQuiz.allowSeeResults,
-        totalScore: datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100,
-      });
-      setPreguntasEdicion(datosQuiz.questions ?? []);
-    }
-  }, [datosQuiz]);
+  if (quiz) {
+    setDatosEdicion({
+      title: quiz.title,
+      description: quiz.description,
+      timeLimit: quiz.timeLimit.toString(),
+      maxGrade: quiz.maxGrade,
+      dueDate: quiz.dueDate ?? "",
+      acceptLateSubmissions: quiz.acceptLateSubmissions,
+      allowSeeResults: quiz.allowSeeResults,
+      totalScore: quiz.maxGrade ?? quiz.maxGrade ?? 100,
+    });
+    setPreguntasEdicion(quiz.questions ?? []);
+  }
+}, [quiz]);
 
   // ── Valores calculados ──────────────────────────────────────────────────────
   const puntosTotales = preguntasEdicion.reduce((sum, q) => sum + (q.points ?? 0), 0);
