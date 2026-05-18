@@ -1,0 +1,272 @@
+# 🏦 Bancomer Neobank — Project README
+
+> A full-featured digital banking platform built for mobile users, powered by a modern AWS cloud-native architecture.
+
+---
+
+## 📖 What Is This Application?
+
+**Bancomer Neobank** is a mobile banking application (React Native) that allows users to open a digital bank account, verify their identity, send and receive money, and manage their finances — all from their phone. Think of it as a lightweight, modern digital bank targeted at Mexican users, with accounts identified by CLABE numbers and balances in MXN.
+
+The system is built on **AWS**, with a hybrid backend approach: a long-running **Spring Boot** service on EC2 for stateful operations (auth, profiles, accounts), and **AWS Lambda functions** (Quarkus Native) for high-throughput, event-driven operations like transfers, fraud detection, and notifications.
+
+---
+
+## 🗂️ Table of Contents
+
+1. [Core Features](#-core-features)
+2. [Tech Stack](#-tech-stack)
+3. [Architecture Overview](#-architecture-overview)
+4. [Services Breakdown](#-services-breakdown)
+5. [API Reference Summary](#-api-reference-summary)
+6. [Data Storage Strategy](#-data-storage-strategy)
+7. [Security Model](#-security-model)
+8. [KYC & Identity Verification](#-kyc--identity-verification)
+9. [Transaction Engine](#-transaction-engine)
+10. [Notifications & Messaging](#-notifications--messaging)
+11. [Build Phases & Roadmap](#-build-phases--roadmap)
+
+---
+
+## ✨ Core Features
+
+- **User Registration & Login** — Secure sign-up with email verification, JWT-based sessions stored in iOS Keychain / Android KeyStore.
+- **KYC Identity Verification** — AI-powered selfie verification using Amazon Rekognition to approve users automatically.
+- **Money Transfers** — ACID-compliant transfers between CLABE accounts, with race-condition protection via PostgreSQL row-level locking.
+- **Transaction History** — Paginated ledger queries from DynamoDB, enriched with recipient names from PostgreSQL.
+- **Real-Time Notifications** — Push, email, and optional SMS alerts for all account activity via Amazon SNS and SES.
+- **Fraud Detection** — Automated fraud scoring on every transaction, with the ability to freeze accounts and file fraud reports.
+- **Multi-Factor Authentication (MFA)** — Support for SMS, TOTP, and Email-based second factors.
+- **AI Chatbot Support** — Amazon Lex-powered conversational support for FAQs and ticket creation.
+- **Spending Analytics** — Breakdown of user spending by category over time.
+- **Saved Contacts** — Store and favorite frequent transfer recipients.
+- **Scheduled Transfers** — Set up recurring payments for a future date.
+- **Account Freeze** — Instantly freeze an account if a phone is lost or suspicious activity is detected.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Web Client** | React 19 and Next js 15 (iOS & Android) |
+| **API Gateway** | AWS API Gateway (rate limiting, CORS, JWT validation) |
+| **Primary Backend** | Spring Boot 3 / Java 17 on EC2 t3.micro |
+| **Serverless Backend** | AWS Lambda — Quarkus Native (Java 17) |
+| **Authentication** | Amazon Cognito (User Pools, JWT tokens) |
+| **Primary Database** | PostgreSQL 15 on RDS db.t3.micro |
+| **NoSQL / Ledger** | Amazon DynamoDB (On-Demand) |
+| **Message Queue** | Amazon MQ (RabbitMQ 3.11) |
+| **File Storage** | Amazon S3 (KYC documents) |
+| **AI — Face Verify** | Amazon Rekognition |
+| **AI — Chatbot** | Amazon Lex |
+| **Email** | Amazon SES |
+| **Push / SMS** | Amazon SNS |
+| **Cache** | Redis (optional, for profile/balance reads) |
+
+
+After each completed transfer, the transaction engine publishes an event to **RabbitMQ**, which fans out to four independent consumers: Fraud Detection, Notification Service, Ledger Writer, and Analytics.
+
+---
+
+## ⚙️ Services Breakdown
+
+### 1. Auth Service (Spring Boot)
+Handles user registration, email verification, login, token refresh, password management, and logout. Uses **Amazon Cognito** for credential management and token issuance. On successful signup, creates a `users` record and a linked `accounts` record with an auto-generated CLABE number atomically in PostgreSQL.
+
+### 2. User Profile Service (Spring Boot)
+Manages reading and updating personal data (name, phone, address, date of birth). All profile reads are indexed queries on PostgreSQL (`~5ms`). Optional Redis caching for high-frequency profile access.
+
+### 3. Account Service (Spring Boot)
+Provides account balance reads, account statements (PDF generation), and account freezing. Balances are stored in PostgreSQL alongside `available_balance` to account for pending transactions.
+
+### 4. Transaction Service (Lambda — Quarkus)
+The most critical service. Handles CLABE-to-CLABE transfers with:
+- Row-level locking (`SELECT ... FOR UPDATE`) to prevent race conditions
+- Atomic debit + credit within a single PostgreSQL transaction
+- Automatic rollback on any failure
+- ~200–300ms end-to-end execution time
+
+After a successful transfer, publishes an event to RabbitMQ for downstream processing.
+
+### 5. KYC Service (Spring Boot + Lambda)
+A multi-step identity verification flow:
+1. Spring Boot generates a presigned S3 URL for the client to upload a selfie directly.
+2. S3 upload triggers a Lambda function.
+3. Lambda calls Amazon Rekognition for AI face analysis.
+4. If confidence > 90% and quality thresholds pass, the user's `kyc_status` is set to `VERIFIED` in PostgreSQL.
+5. An audit log entry is written to DynamoDB.
+6. User is notified via SNS (push + email).
+
+### 6. Notification Service (Lambda)
+Triggered by RabbitMQ events. Sends push notifications (Firebase/APNS), emails (SES), and optionally SMS (SNS) for transfers, KYC updates, fraud alerts, and more. Stores notification history in DynamoDB.
+
+### 7. Fraud Detection Service (Lambda)
+Consumes transaction events from RabbitMQ. Calculates a fraud score (`0.0–1.0`) and flags suspicious transactions. Supports user-initiated fraud reports that automatically freeze the account and generate a support ticket.
+
+### 8. Security Service (Lambda)
+Manages active sessions (view/revoke), MFA setup (SMS, TOTP, Email), and fraud alert workflows.
+
+### 9. Support / Chatbot Service (Lambda + Lex)
+Amazon Lex handles conversational FAQ support. Escalated issues create support tickets stored in DynamoDB, with email confirmation via SES.
+
+### 10. Analytics Service (Lambda)
+Aggregates DynamoDB transaction data into spending breakdowns by category, trend charts, and monthly summaries.
+
+### 11. Contacts Service (Spring Boot)
+CRUD management of saved/favourite transfer recipients, linked by account number.
+
+---
+
+## 📡 API Reference Summary
+
+All endpoints are prefixed `/api/` and protected with `Authorization: Bearer <JWT>` unless otherwise noted.
+
+| Category | Endpoint | Method | Backend | Priority |
+|---|---|---|---|---|
+| Auth | `/auth/signup` | POST | Spring Boot | 🔴 Critical |
+| Auth | `/auth/verify-email` | POST | Spring Boot | 🔴 Critical |
+| Auth | `/auth/login` | POST | Spring Boot | 🔴 Critical |
+| Auth | `/auth/refresh-token` | POST | Spring Boot | 🔴 Critical |
+| Auth | `/auth/logout` | POST | Spring Boot | 🟡 Important |
+| Auth | `/auth/forgot-password` | POST | Spring Boot | 🟡 Important |
+| Auth | `/auth/reset-password` | POST | Spring Boot | 🟡 Important |
+| Auth | `/auth/change-password` | POST | Spring Boot | 🟡 Important |
+| User | `/users/profile` | GET / PUT | Spring Boot | 🔴 Critical |
+| User | `/users/settings` | GET / PUT | Spring Boot | 🟢 Nice to Have |
+| Account | `/accounts` | GET | Spring Boot | 🔴 Critical |
+| Account | `/accounts/:id/balance` | GET | Spring Boot | 🔴 Critical |
+| Account | `/accounts/:id/freeze` | POST | Spring Boot | 🟡 Important |
+| Account | `/accounts/:id/statement` | GET | Spring Boot | 🟢 Nice to Have |
+| Transactions | `/transactions/transfer` | POST | Lambda | 🔴 Critical |
+| Transactions | `/transactions/history` | GET | Lambda | 🔴 Critical |
+| Transactions | `/transactions/validate-recipient` | POST | Lambda | 🟡 Important |
+| Transactions | `/transactions/:id` | GET | Lambda | 🟡 Important |
+| Transactions | `/transactions/scheduled` | GET / POST / DELETE | Lambda | 🟢 Nice to Have |
+| KYC | `/kyc/upload-url` | GET | Spring Boot | 🔴 Critical |
+| KYC | `/kyc/verify` | POST | Spring Boot | 🔴 Critical |
+| KYC | `/kyc/status` | GET | Spring Boot | 🔴 Critical |
+| Notifications | `/notifications` | GET | Lambda | 🟡 Important |
+| Notifications | `/notifications/:id/read` | PUT | Lambda | 🟡 Important |
+| Notifications | `/notifications/register-device` | POST | Lambda | 🟡 Important |
+| Security | `/security/sessions` | GET / DELETE | Lambda | 🟡 Important |
+| Security | `/security/mfa/enable` | POST | Lambda | 🟡 Important |
+| Security | `/security/mfa/verify` | POST | Lambda | 🟡 Important |
+| Security | `/security/mfa/disable` | DELETE | Lambda | 🟡 Important |
+| Security | `/security/alerts` | GET | Lambda | 🟡 Important |
+| Support | `/support/chat` | POST | Lambda + Lex | 🟡 Important |
+| Support | `/support/faq` | GET | Spring Boot | 🟢 Nice to Have |
+| Support | `/support/ticket` | POST / GET | Lambda | 🟢 Nice to Have |
+| Analytics | `/analytics/spending` | GET | Lambda | 🟢 Nice to Have |
+| Contacts | `/contacts` | GET / POST / DELETE | Spring Boot | 🟢 Nice to Have |
+
+---
+
+## 🗄️ Data Storage Strategy
+
+The application uses a **polyglot persistence** approach — each storage technology is used for what it does best.
+
+### PostgreSQL (RDS) — Source of Truth
+Holds all mutable, relational data that requires ACID guarantees.
+
+- `users` — Full user profile, KYC status, Cognito ID
+- `accounts` — CLABE number, balance, available_balance, status
+- `user_sessions` — Active login sessions per device
+- `contacts` — Saved recipients
+
+### DynamoDB — Immutable Ledger & Audit Logs
+Append-only records that must never be modified.
+
+- `transactions` — Every transfer, indexed by account and timestamp for fast paginated queries
+- `kyc_verifications` — Full AI audit log per KYC attempt
+- `notifications` — Notification history per user
+- `support_tickets` — Support case records
+
+### Amazon S3
+- KYC document storage (selfies, ID photos), accessed via presigned URLs
+
+### Amazon Cognito
+- User credentials, password hashing (bcrypt), JWT issuance, MFA configuration
+
+---
+
+## 🔒 Security Model
+
+- **JWT Tokens** — Issued by Cognito. Access tokens expire in 1 hour; refresh tokens are long-lived. Stored in iOS Keychain / Android KeyStore.
+- **API Gateway** validates every JWT before routing to backend services.
+- **Cognito** enforces password strength rules, caps failed login attempts at 5, and supports MFA.
+- **Row-Level Locking** in PostgreSQL prevents concurrent transfer race conditions.
+- **Account Freezing** — Users or fraud detection can immediately lock an account.
+- **Session Management** — Users can view all active sessions per device and revoke any remotely.
+- **Fraud Scoring** — Every transaction receives an automated fraud score. Scores above threshold trigger alerts and optionally freeze the account.
+
+---
+
+## 🪪 KYC & Identity Verification
+
+New users start with `kyc_status = PENDING` and cannot perform transfers until verified.
+
+The verification flow:
+
+1. App requests a presigned S3 URL from Spring Boot.
+2. App uploads the selfie photo directly to S3 (no backend relay).
+3. S3 `ObjectCreated` event triggers a Lambda function.
+4. Lambda sends the image to **Amazon Rekognition** for face analysis.
+5. Auto-approval logic:
+   - `confidence > 90%` AND `eyes_open = true` AND `sharpness > 80` AND `brightness > 70` → **VERIFIED**
+   - Low confidence or poor image quality → **REJECTED** with a human-readable reason
+   - Edge cases → **MANUAL_REVIEW**
+6. PostgreSQL is updated, DynamoDB audit log is written, and the user is notified.
+
+Total processing time: **~3–5 seconds**.
+
+---
+
+## 💸 Transaction Engine
+
+Transfers use a strict sequence to guarantee atomicity:
+
+```
+BEGIN TRANSACTION
+  SELECT ... FOR UPDATE   ← Lock sender's row
+  Validate balance, status, recipient existence
+  UPDATE sender balance   (deduct)
+  UPDATE receiver balance (credit)
+COMMIT
+  → Publish event to RabbitMQ
+```
+
+If any step fails, the entire transaction is rolled back — both accounts remain unchanged. After commit, four async consumers process the event in parallel:
+
+| Consumer | Action |
+|---|---|
+| Fraud Detection Lambda | Score the transaction, flag if suspicious |
+| Notification Lambda | Push/email/SMS confirmation to both parties |
+| Ledger Writer Lambda | Write immutable record to DynamoDB |
+| Analytics Lambda | Update spending aggregates |
+
+---
+
+## 📬 Notifications & Messaging
+
+Push notifications are delivered via **Amazon SNS → Firebase (Android) / APNS (iOS)**. Email is handled by **Amazon SES**. SMS is optional and configurable per user preference.
+
+Events that trigger notifications include transfers sent/received, KYC approval/rejection, fraud alerts, password changes, and MFA events.
+
+---
+
+## 🚀 Build Phases & Roadmap
+
+### Phase 1 — MVP (2 weeks)
+- Auth endpoints: signup, login, email verify
+- User profile: get, update
+- Account endpoints: list, balance
+- Transaction endpoints: transfer, history
+- KYC endpoints: upload, verify, status
+
+### Phase 2 — Core Features (1 week)
+- Notifications (push, read)
+- Security: sessions, MFA
+- Recipient validation before transfer# 🏦 Bancomer Neobank — Project README
+
+> A full-featured digital banking platform built for mobile users, powered by a modern AWS cloud-native architecture.

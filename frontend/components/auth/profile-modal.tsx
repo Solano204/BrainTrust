@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type ReactNode } from "react"
 import { 
   Dialog, 
   DialogContent, 
   DialogTitle,
 } from "@/components/ui/dialog"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -233,9 +232,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        <VisuallyHidden>
-          <DialogTitle>User Profile</DialogTitle>
-        </VisuallyHidden>
+            <DialogTitle>User Profile</DialogTitle>
 
         {isLoadingProfile ? (
           <div className="flex items-center justify-center py-24">

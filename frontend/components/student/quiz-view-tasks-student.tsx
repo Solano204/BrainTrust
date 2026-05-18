@@ -46,12 +46,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { SubmissionCompleteIa } from './api/student-submission';
 import { Document } from '@/app/domain/valueObjects';
 
 interface TaskSubmissionViewProps {
   assignment: Assignment;
-  existingSubmission?: SubmissionCompleteIa;
+  existingSubmission?: Submission;
   onSubmit: (submission: {
     content: string;
     attachments: File[];
