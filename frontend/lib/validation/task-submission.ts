@@ -42,9 +42,6 @@ export const validateFile = (file: File): string | null => {
     return `File "${file.name}" exceeds maximum size of ${VALIDATION_RULES.maxFileSize / 1024 / 1024}MB`;
   }
   
-  if (!VALIDATION_RULES.allowedFileTypes.includes(file.type)) {
-    return `File type "${file.type}" is not allowed for "${file.name}"`;
-  }
   
   return null;
 };
