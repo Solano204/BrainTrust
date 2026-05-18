@@ -1,4 +1,5 @@
 //DARK
+"use client";
 import React, { useState } from "react";
 import { TaskSubmissionView } from "@/components/student/quiz-view-tasks-student";
 import { useStudentTaskSubmission } from "@/components/teacher-student/hooks/submission-hooks";
