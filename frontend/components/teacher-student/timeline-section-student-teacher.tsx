@@ -229,7 +229,7 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
 
       let idGrupo: string | undefined;
       if (tipoEnvio === "TEAM" && equipoUsuario) {
-        idGrupo = equipoUsuario.teamId;
+        idGrupo = equipoUsuario.teamId.id;
       }
 
       const parametrosEnvio = {

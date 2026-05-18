@@ -205,75 +205,11 @@ export interface GradeQuizSubmissionCommand {
 }
 
 const MOCK_QUIZZES: Quiz[] = [
-  {
-    id: "quiz-2",
-    title: "UX Design Fundamentals Quiz",
-    description: "Test your knowledge of basic UX design principles and methodologies",
-    courseUnitId: "UNIT-1",
-    courseId: "crs-101",
-    maxGrade: 100,
-    timeLimit: 30,
-    passingScore: 70,
-    dueDate: "2024-03-25T23:59:00Z",
-    acceptLateSubmissions: true,
-    questions: [
-      {
-        id: "q-101-1",
-        type: "multiple-choice",
-        text: "What does UCD stand for in design?",
-        maxPoints: 10,
-        question: "What does UCD stand for in design?",
-        options: [
-          "User-Centered Design",
-          "User-Created Development",
-          "Universal Component Design",
-          "User Configuration Document",
-        ],
-        correctAnswer: 0,
-        points: 10,
-        expectedAnswer: "",
-      },
-      {
-        id: "q-101-2",
-        type: "multiple-choice",
-        text: "Which of the following is NOT a key principle of UX design?",
-        maxPoints: 10,
-        question: "Which of the following is NOT a key principle of UX design?",
-        options: [
-          "Consistency",
-          "User Control",
-          "Complex Navigation",
-          "Accessibility",
-        ],
-        correctAnswer: 2,
-        points: 10,
-        expectedAnswer: "",
-      },
-      {
-        id: "q-101-3",
-        type: "open-ended",
-        text: "Explain the importance of user research in the design process.",
-        maxPoints: 20,
-        question: "Explain the importance of user research in the design process.",
-        points: 20,
-        expectedAnswer: "User research helps designers understand user needs, behaviors, and pain points, ensuring the final product meets real user requirements rather than assumptions.",
-      },
-    ],
-  },
+  
 ];
 
 const MOCK_QUIZZES_INVENTORY: QuizInventoryItem[] = [
-  {
-    id: "quiz-2",
-    quizId: "quiz-2",
-    title: "UX Design Fundamentals Quiz",
-    unit: "UNIT-1",
-    type: "QUIZ",
-    courseId: "crs-101",
-    deadline: "2024-03-25T23:59:00Z",
-    isOverdue: false,
-    studentId: "student-001",
-  },
+ 
 ];
 
 const MOCK_SUBMISSION_QUIZZES: SubmissionQuiz[] = [
@@ -363,7 +299,6 @@ const handleApiError = async (error: unknown): Promise<never> => {
   }
   throw error;
 };
-
 async function mapQuizFromBackend(dto: QuizDTO): Promise<Quiz> {
   return {
     id: dto.id,
@@ -373,13 +308,12 @@ async function mapQuizFromBackend(dto: QuizDTO): Promise<Quiz> {
     courseUnitId: "",
     maxGrade: dto.totalPoints,
     timeLimit: dto.timeLimitMinutes,
-    passingScore: 70,
     dueDate: dto.availableUntil,
     acceptLateSubmissions: true,
+    allowSeeResults: false,
     questions: [],
   };
 }
-
 async function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Promise<Quiz> {
   return {
     id: dto.id,
@@ -389,12 +323,11 @@ async function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Promise<Quiz> {
     courseUnitId: dto.unitId,
     maxGrade: dto.totalPoints,
     timeLimit: dto.timeLimitMinutes,
-    passingScore: 70, // Default value
     dueDate: dto.availableUntil,
-    acceptLateSubmissions: true, // Default value
+    acceptLateSubmissions: true,
+    allowSeeResults: false,
     questions: dto.questions.map(q => ({
       id: q.id,
-
       type: q.questionType.toLowerCase() as QuestionType,
       text: q.questionText,
       maxPoints: q.points,
@@ -406,18 +339,16 @@ async function mapCompleteQuizFromBackend(dto: CompleteQuizDTO): Promise<Quiz> {
     })),
   };
 }
-
 async function mapQuizInventoryFromBackend(dto: QuizDTO): Promise<QuizInventoryItem> {
   return {
     id: dto.id,
     quizId: dto.id,
-    title: dto.title,
     unit: "",
     type: "QUIZ",
     courseId: dto.courseId,
+    studentId: "current-student-id",
     deadline: dto.availableUntil,
     isOverdue: new Date(dto.availableUntil) < new Date(),
-    studentId: "current-student-id",
   };
 }
 
@@ -828,13 +759,12 @@ export async function gradeQuizSubmission(
     if (!submission.quizData) {
       throw new Error(`Submission ${submissionId} has no quiz data`);
     }
-
-    grades.forEach((grade) => {
-      const answerIndex = submission.quizData.answers.findIndex((ans) => ans.questionId === grade.questionId);
-      if (answerIndex !== -1) {
-        submission.quizData.answers[answerIndex].points = grade.score;
-      }
-    });
+grades.forEach((grade) => {
+  const answerIndex = submission.quizData?.answers.findIndex((ans) => ans.questionId === grade.questionId) ?? -1;
+  if (answerIndex !== -1 && submission.quizData) {
+    submission.quizData.answers[answerIndex].points = grade.score;
+  }
+});
 
     const totalScore = submission.quizData.answers.reduce((sum, answer) => sum + answer.points, 0);
     submission.quizData.totalScore = totalScore;

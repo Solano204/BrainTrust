@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { quizKeys } from "@/app/infraestructure/api/course/units/resources/quiz-keys";
 
 import { Question } from "@/app/domain/entities/CourseEntities";
-import { Quiz } from "@/app/shared/models/quiz.model";
+import { Quiz as QuizEntity } from "@/app/domain/entities/CourseEntities";
 
+import { Quiz } from "@/app/shared/models/quiz.model";
 import { CourseId, UnitId } from "@/app/domain/valueObjects";
 import { fetchQuizzesByUnit, updateQuestionsAnswersBulk, updateQuestionsTextBulk, updateQuestionsTypesBulk } from "../api/quiz";
 import { 
@@ -23,7 +24,7 @@ import {
 } from "../api/quiz-teacher";
 
 export function useQuizzesByUnit(courseId: CourseId | null, unitId: UnitId | null) {
-  return useQuery<Quiz[]>({
+  return useQuery<QuizEntity []>({
     queryKey: quizKeys.list(courseId || "", unitId || ""),
     queryFn: () => fetchQuizzesByUnit(courseId!, unitId!),
     enabled: !!courseId && !!unitId,

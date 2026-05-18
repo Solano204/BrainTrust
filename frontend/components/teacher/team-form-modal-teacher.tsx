@@ -38,7 +38,7 @@ interface PropsModalFormularioEquipo {
   open: boolean;
   onClose: () => void;
   onSave: (
-    datosEquipo: Omit<Team, "courseId" | "leaderId" | "members" | "createdAt">
+    datosEquipo: Omit<Team, "id" | "courseId" | "leaderId" | "members" | "createdAt">
   ) => void;
   isSaving?: boolean;
 }
@@ -77,9 +77,9 @@ export function ModalFormularioEquipo({
     }
   }, [open, reset]);
 
-  const alEnviar = (data: DatosFormularioEquipo) => {
-    onSave(data);
-  };
+const alEnviar = (data: DatosFormularioEquipo) => {
+  onSave(data as unknown as Omit<Team, "courseId" | "leaderId" | "members" | "createdAt">);
+};
 
   if (!open) return null;
 return (

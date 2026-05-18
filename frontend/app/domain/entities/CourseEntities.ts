@@ -279,7 +279,6 @@ export interface TaskInventoryItem {
   deadline: string;
   isOverdue: boolean;
 }
-
 export interface QuizInventoryItem {
   id: SubmissionId;
   quizId: QuizId;
@@ -290,7 +289,6 @@ export interface QuizInventoryItem {
   deadline: string;
   isOverdue: boolean;
 }
-
 
 
 export interface SubmissionDetailData {

@@ -721,7 +721,7 @@ return (
                           render={({ field }) => (
                             <textarea
                               {...field}
-                              id={`expected-answer-${field.id}`}
+                              id={`expected-answer-${""}`}
                               placeholder="Ingrese la respuesta esperada o puntos clave aquí como referencia (los estudiantes no verán esto)."
                               rows={3}
                               className={`w-full px-4 py-2.5 rounded-xl border bg-muted/20 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all ${

@@ -30,7 +30,7 @@ import {
 import { CourseId, UnitId } from "@/app/domain/valueObjects/CourseValues";
 import { ResourceTypeSelector } from "../teacher/resource-type-selector-teacher";
 import { CreadorTarea } from "../teacher/task-form-creator-teacher";
-import { CreadorPagina, PageCreator } from "../teacher/page-form-creator-teacher";
+import { PageCreator } from "../teacher/page-form-creator-teacher";
 import { CreadorQuiz } from "../teacher/quiz-form-creator-teacher";
 import { VistaQuiz } from "../teacher/quiz-view-information-teacher";
 import { VistaPagina } from "./page-view-student-teacher";
@@ -269,7 +269,7 @@ export function UnitDetail({
 
       let idGrupo: string | undefined;
       if (tipoEnvio === "TEAM" && equipoUsuario) {
-        idGrupo = equipoUsuario.teamId;
+        idGrupo = equipoUsuario.teamId.id;
       }
 
       const parametrosEnvio = {

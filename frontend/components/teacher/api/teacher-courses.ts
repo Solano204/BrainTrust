@@ -133,15 +133,19 @@ async function mapCourseFromBackend(dto: CourseDTO): Promise<Course> {
     units: [],
   };
 }
-
 async function mapEnrollmentFromBackend(
-    dto: EnrollmentDTO
+  dto: EnrollmentDTO
 ): Promise<Enrollment> {
   return {
     id: dto.id,
     courseId: dto.courseId,
     studentId: dto.studentId,
     enrollmentDate: dto.enrollmentDate,
+    status: dto.status,           // ← faltaba
+    studentName: dto.studentName, // ← faltaba
+    studentEmail: "", // ← faltaba
+    studentRefId: "", // ← faltaba
+    finalGrade: null , // ← faltaba
   };
 }
 
