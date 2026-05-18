@@ -1,7 +1,6 @@
 'use client';
 
 //DARK
-"use client";
 
 import { useState, useEffect } from "react";
 import {

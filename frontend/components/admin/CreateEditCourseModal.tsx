@@ -1,8 +1,5 @@
 'use client';
 
-//DARK DUDOSO
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import {
   useCreateCourseAdmin,
