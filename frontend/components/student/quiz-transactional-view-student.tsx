@@ -16,7 +16,7 @@ interface StudentQuizViewProps {
   isSubmitting: boolean;
 }
 
-export function StudentQuizView({
+export function VistaQuizEstudiante({
   quizData,
   studentId,
   onSubmit,
@@ -46,7 +46,7 @@ export function StudentQuizView({
         <div className="text-center">
           {/* ✅ was: border-blue-600 → border-primary */}
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading quiz details...</p>
+          <p className="text-muted-foreground">Cargando detalles del cuestionario...</p>
         </div>
       </div>
     );
@@ -58,17 +58,17 @@ export function StudentQuizView({
         {/* ✅ was: bg-red-50 dark:bg-red-900/20 → bg-destructive/5 */}
         <div className="text-center p-6 bg-destructive/5 rounded-lg border border-destructive/20 max-w-md">
           {/* ✅ was: text-red-600 dark:text-red-400 → text-destructive */}
-          <h3 className="text-lg font-semibold text-destructive mb-2">Error Loading Quiz</h3>
+          <h3 className="text-lg font-semibold text-destructive mb-2">Error al Cargar el Cuestionario</h3>
           {/* ✅ was: text-red-500 dark:text-red-300 → text-destructive/80 */}
           <p className="text-sm text-destructive/80 mb-4">
-            {quizError.message || "Failed to load quiz details"}
+            {quizError.message || "No se pudieron cargar los detalles del cuestionario"}
           </p>
           {/* ✅ was: bg-red-600 hover:bg-red-700 text-white → bg-destructive text-destructive-foreground */}
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-opacity"
           >
-            Retry
+            Reintentar
           </button>
         </div>
       </div>
@@ -80,14 +80,14 @@ export function StudentQuizView({
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           {/* ✅ was: text-gray-600 dark:text-gray-300 → text-foreground */}
-          <h3 className="text-lg font-semibold text-foreground mb-2">Quiz Not Found</h3>
-          <p className="text-sm text-muted-foreground">The requested quiz could not be found.</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Cuestionario No Encontrado</h3>
+          <p className="text-sm text-muted-foreground">El cuestionario solicitado no pudo ser encontrado.</p>
         </div>
       </div>
     );
   }
 
-  console.log("Quiz data:", quiz);
+  console.log("Datos del cuestionario:", quiz);
 
   return (
     <QuizView

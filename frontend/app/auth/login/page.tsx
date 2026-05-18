@@ -88,14 +88,14 @@ export default function LoginPage() {
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold">EduLMS</CardTitle>
                     <CardDescription>
-                        Welcome to the Educational Learning Management System
-                    </CardDescription>
+                Bienvenidos a EduLMS, la plataforma de gestión de aprendizaje diseñada para transformar la experiencia educativa. Ya seas un estudiante, un profesor o un administrador, EduLMS te ofrece las herramientas necesarias para gestionar cursos, tareas y evaluaciones de manera eficiente. Inicia sesión o regístrate para descubrir cómo EduLMS puede ayudarte a alcanzar tus objetivos educativos.
+                      </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="login" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="login">Login</TabsTrigger>
-                            <TabsTrigger value="register">Register</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-1">
+                            <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                         
                         </TabsList>
                         
                         <TabsContent value="login">
@@ -120,7 +120,7 @@ export default function LoginPage() {
                                 </div>
                                 
                                 <div className="space-y-2">
-                                    <Label htmlFor="login-password">Password</Label>
+                                    <Label htmlFor="login-password">Contraseña</Label>
                                     <Input
                                         id="login-password"
                                         type="password"
@@ -140,19 +140,14 @@ export default function LoginPage() {
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Signing in...
+                                            Iniciando sesión...
                                         </>
                                     ) : (
-                                        'Sign In'
+                                        'Iniciar Sesión'
                                     )}
                                 </Button>
                                 
-                                <div className="text-center text-sm text-muted-foreground">
-                                    <p className="font-semibold mb-1">Demo Accounts:</p>
-                                    <p className="text-red-600">Admin: admin@school.com / admin123</p>
-                                    <p className="text-blue-600">Teacher: teacher@school.com / teacher123</p>
-                                    <p className="text-green-600">Student: student@school.com / student123</p>
-                                </div>
+                               
                             </form>
                         </TabsContent>
                         
@@ -165,7 +160,7 @@ export default function LoginPage() {
                                 )}
                                 
                                 <div className="space-y-2">
-                                    <Label htmlFor="register-name">Full Name</Label>
+                                    <Label htmlFor="register-name">Nombre Completo</Label>
                                     <Input
                                         id="register-name"
                                         type="text"
@@ -191,7 +186,7 @@ export default function LoginPage() {
                                 </div>
                                 
                                 <div className="space-y-2">
-                                    <Label htmlFor="register-password">Password</Label>
+                                    <Label htmlFor="register-password">Contraseña</Label>
                                     <Input
                                         id="register-password"
                                         type="password"
@@ -214,8 +209,8 @@ export default function LoginPage() {
                                         required
                                         disabled={isLoading}
                                     >
-                                        <option value="student">Student</option>
-                                        <option value="teacher">Teacher</option>
+                                        <option value="student">Estudiante</option>
+                                        <option value="teacher">Profesor</option>
                                     </select>
                                 </div>
                                 
@@ -227,7 +222,7 @@ export default function LoginPage() {
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Creating account...
+                                            Creando cuenta...
                                         </>
                                     ) : (
                                         'Create Account'

@@ -55,7 +55,7 @@ const getTaskDisplayProperties = (item: TaskItem) => {
   return {
     title: item.data.name,
     studentName: item.data.studentName || "—",
-    deadline: item.data.deadline || "No deadline",
+    deadline: item.data.deadline || "Sin fecha límite",
     isOverdue: item.data.isOverdue,
     submission: item.data.submission,
     maxPoints: item.data.maxPoints,
@@ -71,7 +71,7 @@ const getQuizDisplayProperties = (item: QuizItem) => {
   return {
     title: item.data.title,
     studentName: item.data.studentName || "—",
-    deadline: "No deadline",
+    deadline: "Sin fecha límite",
     isOverdue: item.data.isOverdue,
     submission: item.data.submission,
     maxGrade: item.data.maxGrade,
@@ -232,7 +232,7 @@ export function CourseTaskOverviewTeacher({
     if (isOverdue && !submission) {
       return (
         <Badge variant="destructive" className="text-xs">
-          Overdue
+          Vencido
         </Badge>
       );
     }
@@ -245,7 +245,7 @@ export function CourseTaskOverviewTeacher({
               variant="default"
               className="text-xs bg-green-100 text-green-800"
             >
-              Graded
+              Calificado
             </Badge>
           );
         case "SUBMITTED":
@@ -254,19 +254,19 @@ export function CourseTaskOverviewTeacher({
               variant="secondary"
               className="text-xs bg-blue-100 text-blue-800"
             >
-              Submitted
+              Enviado
             </Badge>
           );
         case "LATE_SUBMITTED":
           return (
             <Badge variant="destructive" className="text-xs">
-              Late
+              Tarde
             </Badge>
           );
         default:
           return (
             <Badge variant="outline" className="text-xs">
-              Submitted
+              Enviado
             </Badge>
           );
       }
@@ -274,7 +274,7 @@ export function CourseTaskOverviewTeacher({
 
     return (
       <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
-        Active
+        Activo
       </Badge>
     );
   };
@@ -285,7 +285,7 @@ export function CourseTaskOverviewTeacher({
     const gradeValue = submission.grade.value;
     const maxScore = maxPoints || submission.grade.maxScore || 1;
     
-    // Handle both string and number grade values
+    // Manejar valores de calificación tanto en string como en número
     const numericValue = typeof gradeValue === 'string' ? parseFloat(gradeValue) : gradeValue;
     const percentage = (numericValue / maxScore) * 100;
     
@@ -312,10 +312,10 @@ export function CourseTaskOverviewTeacher({
           variant="ghost"
           size="sm"
           className="text-primary hover:bg-primary/10 transition-colors"
-          title="View Submission Details"
+          title="Ver Detalles del Envío"
         >
           <Eye className="h-5 w-5" />
-          <span className="sr-only">View Assignment</span>
+          <span className="sr-only">Ver Tarea</span>
         </Button>
       );
     } else {
@@ -325,10 +325,10 @@ export function CourseTaskOverviewTeacher({
           variant="ghost"
           size="sm"
           className="text-green-600 hover:bg-green-100 transition-colors"
-          title="View Quiz Details"
+          title="Ver Detalles del Cuestionario"
         >
           <Eye className="h-5 w-5" />
-          <span className="sr-only">View Quiz</span>
+          <span className="sr-only">Ver Cuestionario</span>
         </Button>
       );
     }
@@ -343,7 +343,7 @@ export function CourseTaskOverviewTeacher({
           className="flex-1 gap-2"
         >
           <Eye className="h-4 w-4" />
-          View Assignment
+          Ver Tarea
         </Button>
       );
     } else {
@@ -354,7 +354,7 @@ export function CourseTaskOverviewTeacher({
           className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
         >
           <Eye className="h-4 w-4" />
-          View Quiz
+          Ver Cuestionario
         </Button>
       );
     }
@@ -365,30 +365,30 @@ export function CourseTaskOverviewTeacher({
   if (!selectedUnitId) {
     return (
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
-        {/* Header */}
+        {/* Encabezado */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Course Units
+              Unidades del Curso
             </h1>
             <p className="text-muted-foreground mt-2">
-              Select a unit to view tasks and quizzes
+              Selecciona una unidad para ver tareas y cuestionarios
             </p>
           </div>
         </div>
 
-        {/* Units Grid */}
+        {/* Cuadrícula de Unidades */}
         {isLoadingUnits ? (
           <Card className="p-8 text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading units...</p>
+            <p className="text-muted-foreground">Cargando unidades...</p>
           </Card>
         ) : unitsError ? (
           <Card className="p-6 bg-destructive/10 border-destructive">
             <div className="flex items-center gap-3 text-destructive">
               <AlertCircle className="h-5 w-5" />
               <div>
-                <h3 className="font-semibold">Error loading units</h3>
+                <h3 className="font-semibold">Error al cargar unidades</h3>
                 <p className="text-sm">{unitsError.message}</p>
               </div>
             </div>
@@ -396,8 +396,8 @@ export function CourseTaskOverviewTeacher({
         ) : courseUnits.length === 0 ? (
           <Card className="p-8 text-center text-muted-foreground">
             <BookOpen className="h-12 w-12 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Units Available</h3>
-            <p>There are no units in this course yet.</p>
+            <h3 className="text-lg font-semibold mb-2">No Hay Unidades Disponibles</h3>
+            <p>Todavía no hay unidades en este curso.</p>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -408,17 +408,17 @@ export function CourseTaskOverviewTeacher({
                 onClick={() => handleSelectUnit(unit.id)}
               >
                 <div className="space-y-4">
-                  {/* Unit Number */}
+                  {/* Número de Unidad */}
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-sm">
-                      Unit {unit.numUnity}
+                      Unidad {unit.numUnity}
                     </Badge>
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                       <BookOpen className="h-4 w-4 text-primary" />
                     </div>
                   </div>
 
-                  {/* Unit Name and Description */}
+                  {/* Nombre y Descripción de la Unidad */}
                   <div>
                     <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
                       {unit.name}
@@ -428,10 +428,10 @@ export function CourseTaskOverviewTeacher({
                     </p>
                   </div>
 
-                  {/* Action Button */}
+                  {/* Botón de Acción */}
                   <Button className="w-full gap-2" variant="default">
                     <Eye className="h-4 w-4" />
-                    View Tasks & Quizzes
+                    Ver Tareas y Cuestionarios
                   </Button>
                 </div>
               </Card>
@@ -471,335 +471,275 @@ export function CourseTaskOverviewTeacher({
 
   const selectedUnit = courseUnits.find((unit) => unit.id === selectedUnitId);
 
-  return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBackToUnits}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Units
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {selectedUnit?.name || "Unit Tasks & Quizzes"}
-            </h1>
-            {stats && (
-              <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <BarChart3 className="h-4 w-4" />
-                  Total: {stats.totalTasks} items
+ return (
+  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+
+    {/* ── Encabezado de página ── */}
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex items-start gap-3">
+        <button
+          onClick={handleBackToUnits}
+          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors mt-1 flex-shrink-0"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Volver a Unidades
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            {selectedUnit?.name || "Tareas y Cuestionarios de la Unidad"}
+          </h1>
+          {stats && (
+            <div className="flex flex-wrap gap-3 mt-2">
+              {[
+                { icon: BarChart3,   label: `Total: ${stats.totalTasks} elementos`         },
+                { icon: FileText,    label: `Tareas: ${stats.totalAssignments}`    },
+                { icon: HelpCircle,  label: `Cuestionarios: ${stats.totalQuizzes}`            },
+                { icon: Calendar,    label: `Vencidos: ${stats.overdueTasks}`            },
+                { icon: Clock,       label: `Completado: ${stats.completionRate}%`      },
+              ].map(({ icon: Icon, label }) => (
+                <span key={label} className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Icon className="w-3.5 h-3.5" />{label}
                 </span>
-                <span className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  Assignments: {stats.totalAssignments}
-                </span>
-                <span className="flex items-center gap-1">
-                  <HelpCircle className="h-4 w-4" />
-                  Quizzes: {stats.totalQuizzes}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  Overdue: {stats.overdueTasks}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  Completion: {stats.completionRate}%
-                </span>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+    </div>
 
-      {/* Search and Filter */}
-      <Card className="p-6 shadow-md">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by task name or student..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+    {/* ── Búsqueda ── */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <input
+        placeholder="Buscar por nombre de tarea o estudiante..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      />
+    </div>
+
+    {/* ── Error ── */}
+    {tasksError && (
+      <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
+        <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-destructive">Error al cargar tareas</p>
+          <p className="text-xs text-destructive/80">{tasksError.message}</p>
         </div>
-      </Card>
+      </div>
+    )}
 
-      {/* Error Display */}
-      {tasksError && (
-        <Card className="p-6 bg-destructive/10 border-destructive">
-          <div className="flex items-center gap-3 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            <div>
-              <h3 className="font-semibold">Error loading tasks</h3>
-              <p className="text-sm">{tasksError.message}</p>
-            </div>
+    {/* ── Pestañas ── */}
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+      <TabsList className="w-full grid grid-cols-3 rounded-2xl bg-muted/50 p-1 h-auto">
+        {[
+          { value: 'all',        icon: BarChart3,  label: `Todos (${combinedItems.length})`            },
+          { value: 'assignment', icon: FileText,   label: `Tareas (${stats.totalAssignments})`  },
+          { value: 'quiz',       icon: HelpCircle, label: `Cuestionarios (${stats.totalQuizzes})`          },
+        ].map(({ value, icon: Icon, label }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            className="flex items-center gap-1.5 rounded-xl py-2.5 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all"
+          >
+            <Icon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{label.split(' ')[0]}</span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      <TabsContent value={activeTab} className="space-y-4">
+
+        {/* Cargando */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="text-sm">Cargando tareas y cuestionarios...</span>
           </div>
-        </Card>
-      )}
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-6"
-      >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            All ({combinedItems.length})
-          </TabsTrigger>
-          <TabsTrigger value="assignment" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Assignments ({stats.totalAssignments})
-          </TabsTrigger>
-          <TabsTrigger value="quiz" className="flex items-center gap-2">
-            <HelpCircle className="h-4 w-4" />
-            Quizzes ({stats.totalQuizzes})
-          </TabsTrigger>
-        </TabsList>
+        ) : tasksError ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-16 text-destructive">
+            <span className="text-2xl">⚠️</span>
+            <p className="text-sm font-semibold">Error al cargar datos. Por favor, intenta de nuevo.</p>
+          </div>
 
-        {/* All Content */}
-        <TabsContent value={activeTab} className="space-y-4">
-          {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-              Loading tasks and quizzes...
-            </div>
-          ) : tasksError ? (
-            <div className="p-8 text-center text-destructive">
-              <div className="h-8 w-8 mx-auto mb-4">⚠️</div>
-              Error loading data. Please try again.
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <Card className="p-8 text-center text-muted-foreground">
-              <div className="flex flex-col items-center gap-3">
-                <HelpCircle className="h-12 w-12" />
-                <h3 className="text-lg font-semibold">No items found</h3>
-                <p>Try adjusting your search or filter criteria</p>
-              </div>
-            </Card>
-          ) : (
-            <>
-              {/* Desktop Table View */}
-              <Card className="overflow-hidden hidden lg:block shadow-lg">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted/50 border-b border-border">
-                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Title
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Student Name
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Type
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Deadline
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Status
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">
-                          Grade
-                        </th>
-                        <th className="px-6 py-4 text-center text-sm font-bold uppercase text-muted-foreground">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredItems.map((item) => {
-                        const displayProps = getDisplayProperties(item);
-                        return (
-                          <tr
-                            key={item.uniqueKey}
-                            className="border-b border-border hover:bg-muted/30 transition-colors"
-                          >
-                            <td className="px-6 py-4 font-medium">
-                              {displayProps.title}
-                            </td>
-                            <td className="px-6 py-4">
-                              {displayProps.studentName}
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge
-                                variant="secondary"
-                                className={`${getTaskColor(item.type)} gap-1`}
-                              >
-                                {getTaskIcon(item.type)}
-                                {item.type}
-                                {item.type === "ASSIGNMENT" && " #" + item.data.deliveryMode }
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span
-                                className={
-                                  displayProps.isOverdue
-                                    ? "text-destructive font-semibold"
-                                    : ""
-                                }
-                              >
-                                {displayProps.deadline}
-                                {displayProps.isOverdue && (
-                                  <span className="ml-1 text-xs">(OVERDUE)</span>
-                                )}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              {getStatusBadge(
-                                displayProps.isOverdue,
-                                displayProps.submission
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              {displayProps.submission?.grade ? (
-                                item.type === "ASSIGNMENT" ? (
-                                  getGradeDisplay(
-                                    displayProps.submission,
-                                    displayProps.submission.grade.maxScore || 0
-                                  )
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-semibold">
-                                      {displayProps.submission.grade.value}/{displayProps.submission.grade.maxScore || 0}
-                                    </span>
-                                    <Badge
-                                      variant={
-                                        (Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) >= 0.7 
-                                          ? "default" 
-                                          : "destructive"
-                                      }
-                                      className="text-xs"
-                                    >
-                                      {((Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) * 100).toFixed(1)}%
-                                    </Badge>
-                                  </div>
-                                )
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center justify-center">
-                                {getActionButton(item)}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground bg-card rounded-2xl border border-border">
+            <HelpCircle className="w-10 h-10 text-muted-foreground/30" />
+            <p className="text-base font-semibold text-foreground">No se encontraron elementos</p>
+            <p className="text-sm">Ajusta tus criterios de búsqueda o filtro</p>
+          </div>
 
-              <div className="space-y-4 lg:hidden">
-                {filteredItems.map((item) => {
-                  const displayProps = getDisplayProperties(item);
-                  return (
-                    <Card
-                      key={item.uniqueKey}
-                      className="p-4 shadow-md hover:shadow-lg transition-shadow"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg mb-1">
-                              {displayProps.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Student: {displayProps.studentName}
-                            </p>
-                          </div>
-                          <Badge
-                            variant="secondary"
-                            className={`${getTaskColor(item.type)} gap-1`}
-                          >
-                            {getTaskIcon(item.type)}
-                            {item.type}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">
-                              Deadline
-                            </div>
-                            <div
-                              className={`text-sm font-medium ${
-                                displayProps.isOverdue ? "text-destructive" : ""
-                              }`}
-                            >
+        ) : (
+          <>
+            {/* ── Tabla de escritorio ── */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/40">
+                    <tr>
+                      {[
+                        { label: 'Título',        align: 'left'   },
+                        { label: 'Estudiante', align: 'left'   },
+                        { label: 'Tipo',         align: 'left'   },
+                        { label: 'Fecha Límite',     align: 'left'   },
+                        { label: 'Estado',       align: 'left'   },
+                        { label: 'Calificación',        align: 'left'   },
+                        { label: 'Acciones',      align: 'center' },
+                      ].map(({ label, align }) => (
+                        <th
+                          key={label}
+                          className={`px-6 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground text-${align}`}
+                        >
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {filteredItems.map((item) => {
+                      const displayProps = getDisplayProperties(item);
+                      return (
+                        <tr
+                          key={item.uniqueKey}
+                          className="hover:bg-muted/30 transition-colors group"
+                        >
+                          <td className="px-6 py-4 font-semibold text-sm text-foreground">
+                            {displayProps.title}
+                           </td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">
+                            {displayProps.studentName}
+                           </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold ${getTaskColor(item.type)}`}>
+                              {getTaskIcon(item.type)}
+                              {item.type === "ASSIGNMENT" ? "TAREA" : "CUESTIONARIO"}
+                              {item.type === "ASSIGNMENT" && " #" + item.data.deliveryMode}
+                            </span>
+                           </td>
+                          <td className="px-6 py-4">
+                            <span className={`text-sm ${displayProps.isOverdue ? 'text-destructive font-semibold' : 'text-foreground'}`}>
                               {displayProps.deadline}
                               {displayProps.isOverdue && (
-                                <div className="text-xs">(OVERDUE)</div>
+                                <span className="ml-1 text-xs">(VENCIDO)</span>
                               )}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">
-                              Status
-                            </div>
-                            <div className="text-sm">
-                              {getStatusBadge(
-                                displayProps.isOverdue,
-                                displayProps.submission
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        {displayProps.submission?.grade && (
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-1">
-                              Grade
-                            </div>
-                            <div>
-                              {item.type === "ASSIGNMENT" ? (
-                                getGradeDisplay(
-                                  displayProps.submission,
-                                  displayProps.submission.grade.maxScore || 0
-                                )
+                            </span>
+                           </td>
+                          <td className="px-6 py-4">
+                            {getStatusBadge(displayProps.isOverdue, displayProps.submission)}
+                           </td>
+                          <td className="px-6 py-4">
+                            {displayProps.submission?.grade ? (
+                              item.type === "ASSIGNMENT" ? (
+                                getGradeDisplay(displayProps.submission, displayProps.submission.grade.maxScore || 0)
                               ) : (
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold">
+                                  <span className="font-semibold text-sm text-foreground">
                                     {displayProps.submission.grade.value}/{displayProps.submission.grade.maxScore || 0}
                                   </span>
-                                  <Badge
-                                    variant={
-                                      (Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) >= 0.7 
-                                        ? "default" 
-                                        : "destructive"
-                                    }
-                                    className="text-xs"
-                                  >
+                                  <span className={`px-1.5 py-0.5 rounded-md text-xs font-semibold ${
+                                    (Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) >= 0.7
+                                      ? 'bg-primary/10 text-primary'
+                                      : 'bg-destructive/10 text-destructive'
+                                  }`}>
                                     {((Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) * 100).toFixed(1)}%
-                                  </Badge>
+                                  </span>
                                 </div>
-                              )}
+                              )
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                           </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                              {getActionButton(item)}
                             </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* ── Tarjetas móviles ── */}
+            <div className="space-y-3 lg:hidden">
+              {filteredItems.map((item) => {
+                const displayProps = getDisplayProperties(item);
+                return (
+                  <div
+                    key={item.uniqueKey}
+                    className="bg-card rounded-2xl border border-border p-4 space-y-3 hover:bg-muted/10 transition-colors"
+                  >
+                    {/* Título + tipo */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-sm text-foreground truncate mb-0.5">
+                          {displayProps.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          Estudiante: {displayProps.studentName}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold flex-shrink-0 ${getTaskColor(item.type)}`}>
+                        {getTaskIcon(item.type)}
+                        {item.type === "ASSIGNMENT" ? "TAREA" : "CUESTIONARIO"}
+                      </span>
+                    </div>
+
+                    {/* Fecha Límite + Estado */}
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Fecha Límite</p>
+                        <p className={`text-xs font-semibold ${displayProps.isOverdue ? 'text-destructive' : 'text-foreground'}`}>
+                          {displayProps.deadline}
+                          {displayProps.isOverdue && <span className="block">(VENCIDO)</span>}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Estado</p>
+                        {getStatusBadge(displayProps.isOverdue, displayProps.submission)}
+                      </div>
+                    </div>
+
+                    {/* Calificación */}
+                    {displayProps.submission?.grade && (
+                      <div className="pt-2 border-t border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Calificación</p>
+                        {item.type === "ASSIGNMENT" ? (
+                          getGradeDisplay(displayProps.submission, displayProps.submission.grade.maxScore || 0)
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-foreground">
+                              {displayProps.submission.grade.value}/{displayProps.submission.grade.maxScore || 0}
+                            </span>
+                            <span className={`px-1.5 py-0.5 rounded-md text-xs font-semibold ${
+                              (Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) >= 0.7
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-destructive/10 text-destructive'
+                            }`}>
+                              {((Number(displayProps.submission.grade.value) / (displayProps.submission.grade.maxScore || 1)) * 100).toFixed(1)}%
+                            </span>
                           </div>
                         )}
-
-                        <div className="flex gap-2 pt-3">
-                          {getActionButtonMobile(item)}
-                        </div>
                       </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+                    )}
+
+                    {/* Acciones */}
+                    <div className="flex gap-2 pt-2">
+                      {getActionButtonMobile(item)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </TabsContent>
+    </Tabs>
+
+  </div>
+);
 }

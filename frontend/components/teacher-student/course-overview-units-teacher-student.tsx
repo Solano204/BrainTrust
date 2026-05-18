@@ -24,14 +24,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { CourseId } from "@/app/domain/valueObjects/CourseValues";
-import { UnitFormModal } from "./unit-form-modal-student-teacher";
+import { ModalFormularioUnidad } from "./unit-form-modal-student-teacher";
 import { useCourseAllUnits } from "@/components/teacher/hooks/courses-hooks";
 import { useUnitMutations } from "@/app/presentation/hooks/course/unit-hooks";
 import { useAuth } from "@/app/context/AuthContext";
 import { CourseUnitDTO, fetchCourseById } from "../student/api/student-courses";
 import { useQuery } from "@tanstack/react-query";
 
-const ComponentTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
+const TituloComponente: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   className,
   children,
   ...props
@@ -41,15 +41,15 @@ const ComponentTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   </h2>
 );
 
-const ComponentNumber: React.FC<{ children: React.ReactNode }> = ({
+const NumeroComponente: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => <span className="text-3xl font-extrabold text-white">{children}</span>;
 
-const ComponentDescription: React.FC<{ children: React.ReactNode }> = ({
+const DescripcionComponente: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => <p className="text-sm text-muted-foreground">{children}</p>;
 
-interface CourseOverviewProps {
+interface PropsVistaGeneralCurso {
   courseId: CourseId;
   onSelectUnit: (unitId: string) => void;
 }
@@ -57,11 +57,11 @@ interface CourseOverviewProps {
 export function CourseOverview({
   courseId,
   onSelectUnit,
-}: CourseOverviewProps) {
+}: PropsVistaGeneralCurso) {
   const {
-    data: courseData,
-    isLoading: isLoadingCourse,
-    error: courseError,
+    data: datosCurso,
+    isLoading: cargandoCurso,
+    error: errorCurso,
   } = useQuery({
     queryKey: ["course", courseId],
     queryFn: () => fetchCourseById(courseId!),
@@ -69,261 +69,263 @@ export function CourseOverview({
   });
 
   const {
-    units,
-    isLoading: isLoadingUnits,
-    error: unitsError,
-    refetch: refetchUnits,
+    units: unidades,
+    isLoading: cargandoUnidades,
+    error: errorUnidades,
+    refetch: recargarUnidades,
   } = useCourseAllUnits(courseId);
 
   const { user } = useAuth();
-  const isStudent = user?.role === "student";
+  const esEstudiante = user?.role === "student";
 
-  const [isUnitModalOpen, setIsUnitModalOpen] = React.useState(false);
-  const [unitToEdit, setUnitToEdit] = React.useState<any>(undefined);
-  const [deleteConfirmId, setDeleteConfirmId] = React.useState<string | null>(null);
+  const [modalUnidadAbierto, setModalUnidadAbierto] = React.useState(false);
+  const [unidadAEditar, setUnidadAEditar] = React.useState<any>(undefined);
+  const [idConfirmacionEliminar, setIdConfirmacionEliminar] = React.useState<string | null>(null);
 
   const {
-    createUnit,
-    updateUnit,
-    deleteUnit,
+    createUnit: crearUnidad,
+    updateUnit: actualizarUnidad,
+    deleteUnit: eliminarUnidad,
   } = useUnitMutations();
 
-  const isLoading = isLoadingCourse || isLoadingUnits;
-  const error = courseError || unitsError;
+  const cargando = cargandoCurso || cargandoUnidades;
+  const error = errorCurso || errorUnidades;
 
-  const handleCreateUnit = () => {
-    if (isStudent) return;
-    setUnitToEdit(undefined);
-    setIsUnitModalOpen(true);
+  const handleCrearUnidad = () => {
+    if (esEstudiante) return;
+    setUnidadAEditar(undefined);
+    setModalUnidadAbierto(true);
   };
 
-  const handleEditUnit = (unit: any) => {
-    if (isStudent) return;
-    setUnitToEdit(unit);
-    setIsUnitModalOpen(true);
+  const handleEditarUnidad = (unidad: any) => {
+    if (esEstudiante) return;
+    setUnidadAEditar(unidad);
+    setModalUnidadAbierto(true);
   };
 
-  const handleCloseUnitModal = () => {
-    setIsUnitModalOpen(false);
-    setUnitToEdit(undefined);
+  const handleCerrarModalUnidad = () => {
+    setModalUnidadAbierto(false);
+    setUnidadAEditar(undefined);
   };
 
- const handleSaveUnit = async (
-  unitData: any,
-  unitId?: string,
-  imageFile?: File | null
+ const handleGuardarUnidad = async (
+  datosUnidad: any,
+  unidadId?: string,
+  archivoImagen?: File | null
 ) => {
-  if (isStudent) return;
+  if (esEstudiante) return;
 
   try {
-    if (unitId) {
-      console.log("Updating unit with ID:", unitId);
-      console.log("Has new image file:", !!imageFile);
+    if (unidadId) {
+      console.log("Actualizando unidad con ID:", unidadId);
+      console.log("Tiene nuevo archivo de imagen:", !!archivoImagen);
       
-      const currentUnit = units?.find(u => u.id === unitId);
-      const oldImageUrl = currentUnit?.urlImage;
+      const unidadActual = unidades?.find(u => u.id === unidadId);
+      const urlImagenAnterior = unidadActual?.urlImage;
       
-      await updateUnit.mutateAsync(
+      await actualizarUnidad.mutateAsync(
         {
-          unitId,
-          unitData,
-          imageFile: imageFile || undefined,
-          oldImageUrl: oldImageUrl || undefined,
+          unitId: unidadId,
+          unitData: datosUnidad,
+          imageFile: archivoImagen || undefined,
+          oldImageUrl: urlImagenAnterior || undefined,
         },
         {
           onSuccess: () => {
-            handleCloseUnitModal();
-            refetchUnits();
+            handleCerrarModalUnidad();
+            recargarUnidades();
           },
         }
       );
     } else {
-      console.log("Creating new unit");
-      console.log("Has image file:", !!imageFile);
+      console.log("Creando nueva unidad");
+      console.log("Tiene archivo de imagen:", !!archivoImagen);
       
-      await createUnit.mutateAsync(
+      await crearUnidad.mutateAsync(
         {
           courseId,
           unitData: {
-            ...unitData,
-            numUnity: (units?.length || 0) + 1,
+            ...datosUnidad,
+            numUnity: (unidades?.length || 0) + 1,
           },
-          imageFile: imageFile || undefined
+          imageFile: archivoImagen || undefined
         },
         {
           onSuccess: () => {
-            handleCloseUnitModal();
-            refetchUnits();
+            handleCerrarModalUnidad();
+            recargarUnidades();
           },
         }
       );
     }
   } catch (error) {
-    console.error("Failed to save unit:", error);
+    console.error("Error al guardar la unidad:", error);
   }
 };
 
-  const handleDeleteUnit = (unitId: string) => {
-    if (isStudent) return;
-    deleteUnit.mutate(unitId, {
+  const handleEliminarUnidad = (unidadId: string) => {
+    if (esEstudiante) return;
+    eliminarUnidad.mutate(unidadId, {
       onSuccess: () => {
-        setDeleteConfirmId(null);
-        refetchUnits();
+        setIdConfirmacionEliminar(null);
+        recargarUnidades();
       },
     });
   };
 
-  if (isLoading) {
+  if (cargando) {
     return (
       <Card className="p-8 h-80 flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-lg font-medium text-muted-foreground">
-          Loading Course...
+          Cargando Curso...
         </p>
       </Card>
     );
   }
 
-  if (error || !courseData) {
+  if (error || !datosCurso) {
     return (
       <Card className="p-8 h-80 flex flex-col items-center justify-center space-y-4 bg-red-50 dark:bg-red-900/10 border-red-500">
         <AlertTriangle className="h-8 w-8 text-destructive" />
         <h3 className="text-xl font-bold text-destructive">
-          Error Loading Course
+          Error al Cargar el Curso
         </h3>
         <p className="text-muted-foreground">
-          {error?.message || "Course data unavailable."}
+          {error?.message || "Datos del curso no disponibles."}
         </p>
         <Button onClick={() => window.location.reload()} variant="outline">
-          Try Again
+          Reintentar
         </Button>
       </Card>
     );
   }
 
-  const studentCount = courseData.enrollments?.length || 0;
-  const courseDuration = "12 weeks";
-  const unitCount = units?.length || 0;
-
-  return (
+  const cantidadEstudiantes = datosCurso.enrollments?.length || 0;
+  const duracionCurso = "12 semanas";
+  const cantidadUnidades = unidades?.length || 0;
+return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6 sm:space-y-8">
       <div className="relative">
         <Card className="overflow-hidden">
-          <div className="relative h-48 sm:h-64 md:h-80 bg-gradient-to-br from-blue-500 to-blue-700">
+          {/* Banner Hero */}
+          <div className="relative h-48 sm:h-64 md:h-80 bg-gradient-to-br from-primary to-primary/70">
             <Image
               src={
-                courseData.urlImage ||
-                "https://placehold.co/800x300/4F46E5/FFFFFF?text=Course+Image"
+                datosCurso.urlImage ||
+                "https://placehold.co/800x300/4F46E5/FFFFFF?text=Imagen+del+Curso"
               }
-              alt={courseData.name}
+              alt={datosCurso.name}
               fill
               className="object-cover opacity-20"
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white p-4 sm:p-6">
                 <Badge className="mb-3 sm:mb-4 bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs sm:text-sm">
-                  {courseData.code}
+                  {datosCurso.code}
                 </Badge>
-                <ComponentTitle className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 text-balance px-2">
-                  {courseData.name}
-                </ComponentTitle>
+                <TituloComponente className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 text-balance px-2">
+                  {datosCurso.name}
+                </TituloComponente>
                 <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto text-balance px-2">
-                  {courseData.description}
+                  {datosCurso.description}
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Barra de Estadísticas */}
           <div className="bg-card border-t border-border p-4 sm:p-6">
             <div className="flex flex-wrap gap-4 sm:gap-6 justify-center text-sm sm:text-base">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="font-medium">{studentCount} Students</span>
+                <span className="font-medium">{cantidadEstudiantes} Estudiantes</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="font-medium">{courseDuration}</span>
+                <span className="font-medium">{duracionCurso}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <ComponentDescription>{unitCount} Units</ComponentDescription>
+                <DescripcionComponente>{cantidadUnidades} Unidades</DescripcionComponente>
               </div>
             </div>
           </div>
         </Card>
       </div>
 
+      {/* Sección de Unidades */}
       <Card className="p-6 sm:p-8 lg:p-10">
         <div className="flex justify-between items-center mb-6">
-          <ComponentTitle className="text-2xl font-bold">
-            Course Units
-          </ComponentTitle>
+          <TituloComponente className="text-2xl font-bold text-foreground">
+            Unidades del Curso
+          </TituloComponente>
 
-          {!isStudent && (
+          {!esEstudiante && (
             <Button
-              onClick={handleCreateUnit}
-              className="gap-2 bg-green-600 hover:bg-green-700"
-              disabled={createUnit.isPending}
+              onClick={handleCrearUnidad}
+              className="gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+              disabled={crearUnidad.isPending}
             >
               <Plus className="h-4 w-4" />
-              {createUnit.isPending ? "Creating..." : "Add Unit"}
+              {crearUnidad.isPending ? "Creando..." : "Agregar Unidad"}
             </Button>
           )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {units?.map((unit) => (
-            <UnitCard
-              key={unit.id}
-              unit={unit}
+          {unidades?.map((unidad) => (
+            <TarjetaUnidad
+              key={unidad.id}
+              unidad={unidad}
               onSelect={onSelectUnit}
-              onEdit={handleEditUnit}
-              onDelete={handleDeleteUnit}
-              deleteConfirmId={deleteConfirmId}
-              setDeleteConfirmId={setDeleteConfirmId}
-              isDeleting={deleteUnit.isPending}
-              isStudent={isStudent}
+              onEdit={handleEditarUnidad}
+              onDelete={handleEliminarUnidad}
+              deleteConfirmId={idConfirmacionEliminar}
+              setDeleteConfirmId={setIdConfirmacionEliminar}
+              isDeleting={eliminarUnidad.isPending}
+              isStudent={esEstudiante}
             />
           ))}
         </div>
 
-        {(!units || units.length === 0) && (
+        {(!unidades || unidades.length === 0) && (
           <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
             <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-              {isStudent ? "No units available" : "No units yet"}
+              {esEstudiante ? "No hay unidades disponibles" : "Aún no hay unidades"}
             </h3>
             <p className="text-muted-foreground mb-4">
-              {isStudent
-                ? "Check back later for course content"
-                : "Start by creating your first unit"}
+              {esEstudiante
+                ? "Vuelve más tarde para ver el contenido del curso"
+                : "Comienza creando tu primera unidad"}
             </p>
-            {!isStudent && (
-              <Button onClick={handleCreateUnit} className="gap-2">
-                <Plus className="h-4 w-4" /> Create First Unit
+            {!esEstudiante && (
+              <Button onClick={handleCrearUnidad} className="gap-2">
+                <Plus className="h-4 w-4" /> Crear Primera Unidad
               </Button>
             )}
           </div>
         )}
       </Card>
 
-      {!isStudent && (
-        <UnitFormModal
-          open={isUnitModalOpen}
-          onClose={handleCloseUnitModal}
-          initialData={unitToEdit}
-          onSave={handleSaveUnit}
-          isSaving={createUnit.isPending || updateUnit.isPending}
+      {!esEstudiante && (
+        <ModalFormularioUnidad
+          open={modalUnidadAbierto}
+          onClose={handleCerrarModalUnidad}
+          initialData={unidadAEditar}
+          onSave={handleGuardarUnidad}
+          isSaving={crearUnidad.isPending || actualizarUnidad.isPending}
         />
       )}
     </div>
   );
 }
 
-interface UnitCardProps {
-  unit: CourseUnitDTO;
+interface PropsTarjetaUnidad {
+  unidad: CourseUnitDTO;
   onSelect: (unitId: string) => void;
-  onEdit: (unit: CourseUnitDTO) => void;
+  onEdit: (unidad: CourseUnitDTO) => void;
   onDelete: (unitId: string) => void;
   deleteConfirmId: string | null;
   setDeleteConfirmId: (id: string | null) => void;
@@ -331,8 +333,8 @@ interface UnitCardProps {
   isStudent: boolean;
 }
 
-const UnitCard: React.FC<UnitCardProps> = ({
-  unit,
+const TarjetaUnidad: React.FC<PropsTarjetaUnidad> = ({
+  unidad,
   onSelect,
   onEdit,
   onDelete,
@@ -341,19 +343,19 @@ const UnitCard: React.FC<UnitCardProps> = ({
   isDeleting,
   isStudent,
 }) => {
-  const isPendingDelete = deleteConfirmId === unit.id;
+  const pendienteEliminacion = deleteConfirmId === unidad.id;
 
   return (
     <Card className="group cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden relative">
       <div className="relative h-32 bg-gradient-to-br from-blue-50 to-gray-50 dark:from-blue-950/20 dark:to-gray-950/20 flex items-center justify-center">
         <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-          <ComponentNumber>{unit.numUnity}</ComponentNumber>
+          <NumeroComponente>{unidad.numUnity}</NumeroComponente>
         </div>
 
-        {unit.urlImage && (
+        {unidad.urlImage && (
           <Image
-            src={unit.urlImage}
-            alt={unit.name}
+            src={unidad.urlImage}
+            alt={unidad.name}
             fill
             className="object-cover opacity-10"
           />
@@ -372,16 +374,16 @@ const UnitCard: React.FC<UnitCardProps> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(unit)}>
+                <DropdownMenuItem onClick={() => onEdit(unidad)}>
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                  Editar
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setDeleteConfirmId(unit.id)}
+                  onClick={() => setDeleteConfirmId(unidad.id)}
                   className="text-red-600"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  Eliminar
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -391,22 +393,22 @@ const UnitCard: React.FC<UnitCardProps> = ({
 
       <div className="p-6 space-y-4">
         <div>
-          <ComponentTitle
+          <TituloComponente
             className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors cursor-pointer"
-            onClick={() => onSelect(unit.id)}
+            onClick={() => onSelect(unidad.id)}
           >
-            {unit.name}
-          </ComponentTitle>
-          <ComponentDescription>{unit.description}</ComponentDescription>
+            {unidad.name}
+          </TituloComponente>
+          <DescripcionComponente>{unidad.description}</DescripcionComponente>
         </div>
 
-        {!isStudent && isPendingDelete ? (
+        {!isStudent && pendienteEliminacion ? (
           <div className="flex gap-2 pt-2">
             <Button
               variant="destructive"
               size="sm"
               className="flex-1 gap-2"
-              onClick={() => onDelete(unit.id)}
+              onClick={() => onDelete(unidad.id)}
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -414,7 +416,7 @@ const UnitCard: React.FC<UnitCardProps> = ({
               ) : (
                 <Trash2 className="h-3 w-3" />
               )}
-              {isDeleting ? "Deleting..." : "Confirm"}
+              {isDeleting ? "Eliminando..." : "Confirmar"}
             </Button>
             <Button
               variant="outline"
@@ -422,23 +424,23 @@ const UnitCard: React.FC<UnitCardProps> = ({
               onClick={() => setDeleteConfirmId(null)}
               disabled={isDeleting}
             >
-              Cancel
+              Cancelar
             </Button>
           </div>
         ) : (
           <Button
             variant="default"
             className="w-full gap-2"
-            onClick={() => onSelect(unit.id)}
+            onClick={() => onSelect(unidad.id)}
           >
             {isStudent ? (
               <>
                 <Eye className="h-4 w-4" />
-                View Unit
+                Ver Unidad
               </>
             ) : (
               <>
-                Enter Unit
+                Entrar a Unidad
                 <BookOpen className="h-4 w-4" />
               </>
             )}

@@ -114,7 +114,7 @@ const {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            By Units
+            Por Unidades
           </button>
           <button
             onClick={() => handleGradebookViewChange("course")}
@@ -124,7 +124,7 @@ const {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Course Overview
+            Vista General del Curso
           </button>
         </div>
 
@@ -132,16 +132,16 @@ const {
         {gradebookLoading ? (
           <div className="flex justify-center items-center min-h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span className="ml-2">Loading gradebook...</span>
+            <span className="ml-2">Cargando...</span>
           </div>
         ) : gradebookError ? (
           <div className="text-center text-destructive p-6">
-            <p>Error loading gradebook: {gradebookError}</p>
+            <p>Error: {gradebookError}</p>
             <button 
               onClick={refreshGradebook} 
               className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
             >
-              Retry
+              Reintentar
             </button>
           </div>
         ) : (
@@ -202,7 +202,7 @@ const {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Overview
+                Visión General
               </button>
 
               <button
@@ -213,7 +213,7 @@ const {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Gradebook
+                Calificaciones
               </button>
               <button
                 onClick={() => handleViewChange("tasks")}
@@ -223,7 +223,7 @@ const {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Tasks
+                Tareas
               </button>
               <button
                 onClick={() => handleViewChange("students")}
@@ -233,7 +233,7 @@ const {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Students
+                Estudiantes
               </button>
               <button
                 onClick={() => handleViewChange("groups")}
@@ -243,7 +243,7 @@ const {
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Groups
+                Grupos
               </button>
             </div>
           </div>

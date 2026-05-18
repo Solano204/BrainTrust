@@ -98,76 +98,84 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
 
     console.log("submissions", assignments)
     if (!selectedUnitId) {
-        return (
-            <div className="p-4 md:p-6 lg:p-8 space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Course Units</h1>
-                        <p className="text-muted-foreground mt-2">
-                            Select a unit to view your tasks and quizzes
-                        </p>
-                    </div>
-                </div>
+       return (
+  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
 
-                {isLoadingUnits ? (
-                    <Card className="p-8 text-center">
-                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                        <p className="text-muted-foreground">Loading units...</p>
-                    </Card>
-                ) : unitsError ? (
-                    <Card className="p-6 bg-destructive/10 border-destructive">
-                        <div className="flex items-center gap-3 text-destructive">
-                            <AlertCircle className="h-5 w-5" />
-                            <div>
-                                <h3 className="font-semibold">Error loading units</h3>
-                                <p className="text-sm">{unitsError.message}</p>
-                            </div>
-                        </div>
-                    </Card>
-                ) : courseUnits.length === 0 ? (
-                    <Card className="p-8 text-center text-muted-foreground">
-                        <BookOpen className="h-12 w-12 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No Units Available</h3>
-                        <p>There are no units in this course yet.</p>
-                    </Card>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {courseUnits.map((unit) => (
-                            <Card 
-                                key={unit.id} 
-                                className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group"
-                                onClick={() => handleSelectUnit(unit.id)}
-                            >
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <Badge variant="secondary" className="text-sm">
-                                            Unit {unit.numUnity}
-                                        </Badge>
-                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                            <BookOpen className="h-4 w-4 text-primary" />
-                                        </div>
-                                    </div>
+    {/* ── Encabezado de página ── */}
+    <div>
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+        Unidades del Curso
+      </h1>
+      <p className="text-sm text-muted-foreground mt-1">
+        Selecciona una unidad para ver tus tareas y cuestionarios
+      </p>
+    </div>
 
-                                    <div>
-                                        <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
-                                            {unit.name}
-                                        </h3>
-                                        <p className="text-sm text-muted-foreground line-clamp-2">
-                                            {unit.description}
-                                        </p>
-                                    </div>
+    {/* ── Estados ── */}
+    {isLoadingUnits ? (
+      <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
+        <Loader2 className="w-7 h-7 animate-spin text-primary" />
+        <p className="text-sm">Cargando unidades...</p>
+      </div>
 
-                                    <Button className="w-full gap-2" variant="default">
-                                        <Eye className="h-4 w-4" />
-                                        View Tasks & Quizzes
-                                    </Button>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                )}
+    ) : unitsError ? (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-5 flex items-center gap-3 text-destructive">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div>
+          <h3 className="font-semibold text-sm">Error al cargar las unidades</h3>
+          <p className="text-xs mt-0.5 text-destructive/80">{unitsError.message}</p>
+        </div>
+      </div>
+
+    ) : courseUnits.length === 0 ? (
+      <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center text-center text-muted-foreground">
+        <span className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <BookOpen className="w-7 h-7 text-primary" />
+        </span>
+        <h3 className="text-base font-bold text-foreground mb-1">No hay Unidades Disponibles</h3>
+        <p className="text-sm">Todavía no hay unidades en este curso.</p>
+      </div>
+
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {courseUnits.map((unit) => (
+          <div
+            key={unit.id}
+            onClick={() => handleSelectUnit(unit.id)}
+            className="bg-card rounded-2xl border border-border p-5 cursor-pointer hover:border-primary/30 hover:shadow-md hover:scale-[1.02] transition-all duration-300 group flex flex-col gap-4"
+          >
+            {/* Etiqueta + icono */}
+            <div className="flex items-center justify-between">
+              <span className="px-2.5 py-1 rounded-xl bg-primary/10 text-primary text-xs font-bold">
+                Unidad {unit.numUnity}
+              </span>
+              <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <BookOpen className="w-4 h-4 text-primary" />
+              </span>
             </div>
-        )
+
+            {/* Nombre + descripción */}
+            <div className="flex-1">
+              <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors mb-1">
+                {unit.name}
+              </h3>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {unit.description}
+              </p>
+            </div>
+
+            {/* Botón de acción */}
+            <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all">
+              <Eye className="w-4 h-4" />
+              Ver Tareas y Cuestionarios
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+
+  </div>
+);
     }
 
     const selectedUnit = courseUnits.find(unit => unit.id === selectedUnitId)
@@ -183,18 +191,18 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
 
     const getStatusBadge = (status: string, isOverdue: boolean) => {
         if (isOverdue && !status) {
-            return <Badge variant="destructive" className="gap-1 text-xs">Overdue</Badge>
+            return <Badge variant="destructive" className="gap-1 text-xs">Retrasada</Badge>
         }
         
         switch (status) {
             case 'SUBMITTED':
-                return <Badge variant="secondary" className="gap-1 text-xs bg-blue-100 text-blue-800">Submitted</Badge>
+                return <Badge variant="secondary" className="gap-1 text-xs bg-blue-100 text-blue-800">Entregada</Badge>
             case 'GRADED':
-                return <Badge variant="default" className="gap-1 text-xs bg-green-100 text-green-800">Graded</Badge>
+                return <Badge variant="default" className="gap-1 text-xs bg-green-100 text-green-800">Calificada</Badge>
             case 'LATE_SUBMITTED':
-                return <Badge variant="destructive" className="gap-1 text-xs">Late</Badge>
+                return <Badge variant="destructive" className="gap-1 text-xs">Tarde</Badge>
             default:
-                return <Badge variant="outline" className="gap-1 text-xs">Not Started</Badge>
+                return <Badge variant="outline" className="gap-1 text-xs">No Iniciada</Badge>
         }
     }
 
@@ -226,346 +234,338 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
         )
     }
 
-    return (
-        <div className="p-4 md:p-6 lg:p-8 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleBackToUnits}
-                        className="gap-2"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Units
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                            {selectedUnit?.name || "Unit Tasks & Quizzes"}
-                        </h1>
-                        {stats && (
-                            <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                    <BarChart3 className="h-4 w-4" />
-                                    Total: {stats.totalTasks} tasks
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <CheckCircle className="h-4 w-4" />
-                                    Completed: {stats.completedTasks}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <Calendar className="h-4 w-4" />
-                                    Pending: {stats.pendingTasks}
-                                </span>
-                                {stats.overdueTasks > 0 && (
-                                    <span className="flex items-center gap-1 text-destructive font-medium">
-                                        <AlertCircle className="h-4 w-4" />
-                                        Overdue: {stats.overdueTasks}
-                                    </span>
-                                )}
-                                {stats.averageGrade > 0 && (
-                                    <span className="flex items-center gap-1">
-                                        <BarChart3 className="h-4 w-4" />
-                                        Average: {stats.averageGrade}%
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
+   return (
+  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+
+    {/* ── Encabezado de página ── */}
+    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+      <div className="flex items-start gap-3">
+        <button
+          onClick={handleBackToUnits}
+          className="flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all flex-shrink-0"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Regresar
+        </button>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            {selectedUnit?.name || "Tareas y Cuestionarios de la Unidad"}
+          </h1>
+          {stats && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {[
+                { icon: BarChart3,    label: `${stats.totalTasks} tareas`,        always: true  },
+                { icon: CheckCircle,  label: `${stats.completedTasks} completadas`, always: true  },
+                { icon: Calendar,     label: `${stats.pendingTasks} pendientes`,     always: true  },
+              ].map(({ icon: Icon, label }) => (
+                <span key={label} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground">
+                  <Icon className="w-3 h-3" />
+                  {label}
+                </span>
+              ))}
+              {stats.overdueTasks > 0 && (
+                <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive font-semibold">
+                  <AlertCircle className="w-3 h-3" />
+                  {stats.overdueTasks} retrasadas
+                </span>
+              )}
+              {stats.averageGrade > 0 && (
+                <span className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 border border-primary/20 text-xs text-primary font-semibold">
+                  <BarChart3 className="w-3 h-3" />
+                  Prom: {stats.averageGrade}%
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* ── Búsqueda ── */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <input
+        placeholder="Buscar tareas o cuestionarios..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      />
+    </div>
+
+    {/* ── Banner de error ── */}
+    {tasksError && (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-5 flex items-center gap-3 text-destructive">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div>
+          <h3 className="font-semibold text-sm">Error al cargar las tareas</h3>
+          <p className="text-xs mt-0.5 text-destructive/80">{tasksError}</p>
+        </div>
+      </div>
+    )}
+
+    {/* ── Pestañas ── */}
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+      <TabsList className="w-full grid grid-cols-2 rounded-2xl bg-muted/50 p-1 h-auto">
+        <TabsTrigger
+          value="assignments"
+          className="flex items-center gap-2 rounded-xl py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all"
+        >
+          <FileText className="w-4 h-4" />
+          Tareas
+          <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">
+            {assignments.length}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="quizzes"
+          className="flex items-center gap-2 rounded-xl py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all"
+        >
+          <HelpCircle className="w-4 h-4" />
+          Cuestionarios
+          <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">
+            {quizzes.length}
+          </span>
+        </TabsTrigger>
+      </TabsList>
+
+      {/* ══ Pestaña de Tareas ══ */}
+      <TabsContent value="assignments" className="space-y-4">
+        {isLoadingTasks ? (
+          <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm">Cargando tus tareas...</p>
+          </div>
+        ) : filteredAssignments.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center text-center text-muted-foreground">
+            <span className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <FileText className="w-7 h-7 text-primary" />
+            </span>
+            <h3 className="text-base font-bold text-foreground mb-1">No hay Tareas</h3>
+            <p className="text-sm">
+              {searchTerm ? "No hay tareas que coincidan con tu búsqueda." : "Todavía no tienes tareas en esta unidad."}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Tabla de escritorio */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+              <table className="w-full">
+                <thead className="bg-muted/40">
+                  <tr>
+                    {['Tarea', 'Estado', 'Fecha Límite', 'Calificación', 'Acciones'].map((h, i) => (
+                      <th key={h} className={`px-6 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground ${i === 4 ? 'text-center' : 'text-left'}`}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredAssignments.map((assignment) => (
+                    <tr key={assignment.id} className="hover:bg-muted/30 transition-colors group">
+                      <td className="px-6 py-4 font-semibold text-sm text-foreground">{assignment.name}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(assignment.submission?.status || '', assignment.isOverdue)}
+                          {getStatusBadge(assignment.submission?.status || '', assignment.isOverdue)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className={assignment.isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"}>
+                          {assignment.deadline}
+                          {assignment.isOverdue && <span className="ml-1 text-xs">(RETRASADA)</span>}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {assignment.submission?.grade
+                          ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
+                          : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => handleViewTask(assignment.id)}
+                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all"
+                            title={assignment.submission ? "Ver Entrega" : "Comenzar Tarea"}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <Card className="p-6 shadow-md">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search tasks or quizzes..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                    />
-                </div>
-            </Card>
-
-            {tasksError && (
-                <Card className="p-6 bg-destructive/10 border-destructive">
-                    <div className="flex items-center gap-3 text-destructive">
-                        <AlertCircle className="h-5 w-5" />
-                        <div>
-                            <h3 className="font-semibold">Error loading tasks</h3>
-                            <p className="text-sm">{tasksError}</p>
-                        </div>
+            {/* Tarjetas móviles */}
+            <div className="space-y-3 lg:hidden">
+              {filteredAssignments.map((assignment) => (
+                <div key={assignment.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-sm text-foreground truncate">{assignment.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{assignment.unit}</p>
                     </div>
-                </Card>
-            )}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {getStatusIcon(assignment.submission?.status || '', assignment.isOverdue)}
+                      {getStatusBadge(assignment.submission?.status || '', assignment.isOverdue)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border/50">
+                    <div className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                      <p className="text-xs text-muted-foreground mb-0.5">Fecha Límite</p>
+                      <p className={`text-sm font-semibold ${assignment.isOverdue ? "text-destructive" : "text-foreground"}`}>
+                        {assignment.deadline}
+                        {assignment.isOverdue && <span className="block text-xs">(RETRASADA)</span>}
+                      </p>
+                    </div>
+                    <div className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                      <p className="text-xs text-muted-foreground mb-0.5">Calificación</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {assignment.submission?.grade
+                          ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleViewTask(assignment.id)}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      assignment.submission
+                        ? "border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "bg-primary text-primary-foreground hover:opacity-90"
+                    }`}
+                  >
+                    <Eye className="w-4 h-4" />
+                    {assignment.submission ? "Ver Entrega" : "Comenzar Tarea"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </TabsContent>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="assignments" className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        My Assignments ({assignments.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="quizzes" className="flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4" />
-                        My Quizzes ({quizzes.length})
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="assignments" className="space-y-4">
-                    {isLoadingTasks ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                            Loading your assignments...
+      {/* ══ Pestaña de Cuestionarios ══ */}
+      <TabsContent value="quizzes" className="space-y-4">
+        {isLoadingTasks ? (
+          <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm">Cargando tus cuestionarios...</p>
+          </div>
+        ) : filteredQuizzes.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center text-center text-muted-foreground">
+            <span className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <HelpCircle className="w-7 h-7 text-primary" />
+            </span>
+            <h3 className="text-base font-bold text-foreground mb-1">No hay Cuestionarios</h3>
+            <p className="text-sm">
+              {searchTerm ? "No hay cuestionarios que coincidan con tu búsqueda." : "Todavía no tienes cuestionarios en esta unidad."}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Tabla de escritorio */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+              <table className="w-full">
+                <thead className="bg-muted/40">
+                  <tr>
+                    {['Título del Cuestionario', 'Estado', 'Calificación', 'Acciones'].map((h, i) => (
+                      <th key={h} className={`px-6 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground ${i === 3 ? 'text-center' : 'text-left'}`}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredQuizzes.map((quiz) => (
+                    <tr key={quiz.id} className="hover:bg-muted/30 transition-colors group">
+                      <td className="px-6 py-4 font-semibold text-sm text-foreground">{quiz.title}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(quiz.submission?.status || '', quiz.isOverdue)}
+                          {getStatusBadge(quiz.submission?.status || '', quiz.isOverdue)}
                         </div>
-                    ) : filteredAssignments.length === 0 ? (
-                        <Card className="p-8 text-center text-muted-foreground">
-                            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                            <h3 className="text-lg font-semibold mb-2">No Assignments</h3>
-                            <p>
-                                {searchTerm 
-                                    ? "No assignments match your search."
-                                    : "You don't have any assignments in this unit yet."
-                                }
-                            </p>
-                        </Card>
-                    ) : (
-                        <>
-                            <Card className="overflow-hidden hidden lg:block shadow-lg">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="bg-muted/50 border-b border-border">
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Assignment</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Status</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Due Date</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Grade</th>
-                                                <th className="px-6 py-4 text-center text-sm font-bold uppercase text-muted-foreground">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredAssignments.map((assignment) => (
-                                                <tr key={assignment.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                                                    <td className="px-6 py-4 font-medium">{assignment.name}</td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2">
-                                                            {getStatusIcon(assignment.submission?.status || '', assignment.isOverdue)}
-                                                            {getStatusBadge(assignment.submission?.status || '', assignment.isOverdue)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={assignment.isOverdue ? "text-destructive font-semibold" : ""}>
-                                                            {assignment.deadline}
-                                                            {assignment.isOverdue && <span className="ml-1 text-xs">(OVERDUE)</span>}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {assignment.submission?.grade 
-                                                            ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
-                                                            : <span className="text-muted-foreground">—</span>
-                                                        }
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center justify-center gap-3">
-                                                            <Button
-                                                                onClick={() => handleViewTask(assignment.id)}
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="text-primary hover:bg-primary/10 transition-colors"
-                                                                title={assignment.submission ? "View Submission" : "Start Assignment"}
-                                                            >
-                                                                <Eye className="h-5 w-5" />
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </Card>
-
-                            <div className="space-y-4 lg:hidden">
-                                {filteredAssignments.map((assignment) => (
-                                    <Card key={assignment.id} className="p-4 shadow-md">
-                                        <div className="space-y-3">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex-1">
-                                                    <h3 className="font-bold text-lg mb-1">{assignment.name}</h3>
-                                                    <p className="text-sm text-muted-foreground">{assignment.unit}</p>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {getStatusIcon(assignment.submission?.status || '', assignment.isOverdue)}
-                                                    {getStatusBadge(assignment.submission?.status || '', assignment.isOverdue)}
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
-                                                <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Due Date</div>
-                                                    <div className={`text-sm font-medium ${assignment.isOverdue ? "text-destructive" : ""}`}>
-                                                        {assignment.deadline}
-                                                        {assignment.isOverdue && <div className="text-xs">(OVERDUE)</div>}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Grade</div>
-                                                    <div className="text-sm font-medium">
-                                                        {assignment.submission?.grade 
-                                                            ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
-                                                            : "—"
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-2 pt-2">
-                                                <Button 
-                                                    onClick={() => handleViewTask(assignment.id)} 
-                                                    size="sm" 
-                                                    className="flex-1 gap-2"
-                                                    variant={assignment.submission ? "outline" : "default"}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    {assignment.submission ? "View Submission" : "Start Assignment"}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                </TabsContent>
-
-                <TabsContent value="quizzes" className="space-y-4">
-                    {isLoadingTasks ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                            Loading your quizzes...
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        {quiz.submission?.grade ? (
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-foreground">
+                              {quiz.submission.grade.value}/{quiz.submission.grade.maxScore}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
+                              quiz.submission.grade.value >= (quiz.submission.grade.maxScore * 0.7)
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-destructive/10 text-destructive'
+                            }`}>
+                              {((quiz.submission.grade.value / quiz.submission.grade.maxScore) * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => handleViewQuiz(quiz.id)}
+                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all"
+                            title={quiz.submission ? "Ver Resultados" : "Realizar Cuestionario"}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                         </div>
-                    ) : filteredQuizzes.length === 0 ? (
-                        <Card className="p-8 text-center text-muted-foreground">
-                            <HelpCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                            <h3 className="text-lg font-semibold mb-2">No Quizzes</h3>
-                            <p>
-                                {searchTerm 
-                                    ? "No quizzes match your search."
-                                    : "You don't have any quizzes in this unit yet."
-                                }
-                            </p>
-                        </Card>
-                    ) : (
-                        <>
-                            <Card className="overflow-hidden hidden lg:block shadow-lg">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="bg-muted/50 border-b border-border">
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Quiz Title</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Status</th>
-                                                <th className="px-6 py-4 text-left text-sm font-bold uppercase text-muted-foreground">Grade</th>
-                                                <th className="px-6 py-4 text-center text-sm font-bold uppercase text-muted-foreground">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredQuizzes.map((quiz) => (
-                                                <tr key={quiz.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                                                    <td className="px-6 py-4 font-medium">{quiz.title}</td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2">
-                                                            {getStatusIcon(quiz.submission?.status || '', quiz.isOverdue)}
-                                                            {getStatusBadge(quiz.submission?.status || '', quiz.isOverdue)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {quiz.submission?.grade 
-                                                            ? (
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="font-semibold">
-                                                                        {quiz.submission.grade.value}/{quiz.submission.grade.maxScore}
-                                                                    </span>
-                                                                    <Badge 
-                                                                        variant={quiz.submission.grade.value >= (quiz.submission.grade.maxScore * 0.7) ? "default" : "destructive"} 
-                                                                        className="text-xs"
-                                                                    >
-                                                                        {((quiz.submission.grade.value / quiz.submission.grade.maxScore) * 100).toFixed(1)}%
-                                                                    </Badge>
-                                                                </div>
-                                                            )
-                                                            : <span className="text-muted-foreground">—</span>
-                                                        }
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center justify-center gap-3">
-                                                            <Button
-                                                                onClick={() => handleViewQuiz(quiz.id)}
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="text-primary hover:bg-primary/10 transition-colors"
-                                                                title={quiz.submission ? "View Results" : "Take Quiz"}
-                                                            >
-                                                                <Eye className="h-5 w-5" />
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </Card>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                            <div className="space-y-4 lg:hidden">
-                                {filteredQuizzes.map((quiz) => (
-                                    <Card key={quiz.id} className="p-4 shadow-md">
-                                        <div className="space-y-3">
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex-1">
-                                                    <h3 className="font-bold text-lg mb-1">{quiz.title}</h3>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {getStatusIcon(quiz.submission?.status || '', quiz.isOverdue)}
-                                                    {getStatusBadge(quiz.submission?.status || '', quiz.isOverdue)}
-                                                </div>
-                                            </div>
+            {/* Tarjetas móviles */}
+            <div className="space-y-3 lg:hidden">
+              {filteredQuizzes.map((quiz) => (
+                <div key={quiz.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-bold text-sm text-foreground flex-1 min-w-0 truncate">{quiz.title}</h3>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {getStatusIcon(quiz.submission?.status || '', quiz.isOverdue)}
+                      {getStatusBadge(quiz.submission?.status || '', quiz.isOverdue)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-border/50">
+                    <div className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                      <p className="text-xs text-muted-foreground mb-0.5">Calif. Máxima</p>
+                      <p className="text-sm font-semibold text-foreground">{quiz.maxGrade}</p>
+                    </div>
+                    <div className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                      <p className="text-xs text-muted-foreground mb-0.5">Calificación</p>
+                      <p className="text-sm font-semibold text-foreground">
+                        {quiz.submission?.grade
+                          ? `${quiz.submission.grade.value}/${quiz.submission.grade.maxScore}`
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleViewQuiz(quiz.id)}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      quiz.submission
+                        ? "border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "bg-primary text-primary-foreground hover:opacity-90"
+                    }`}
+                  >
+                    <Eye className="w-4 h-4" />
+                    {quiz.submission ? "Ver Resultados" : "Realizar Cuestionario"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </TabsContent>
+    </Tabs>
 
-                                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
-                                                <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Max Grade</div>
-                                                    <div className="text-sm font-medium">
-                                                        {quiz.maxGrade}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs text-muted-foreground mb-1">Grade</div>
-                                                    <div className="text-sm font-medium">
-                                                        {quiz.submission?.grade 
-                                                            ? `${quiz.submission.grade.value}/${quiz.submission.grade.maxScore}`
-                                                            : "—"
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-2 pt-2">
-                                                <Button 
-                                                    onClick={() => handleViewQuiz(quiz.id)} 
-                                                    size="sm" 
-                                                    className="flex-1 gap-2"
-                                                    variant={quiz.submission ? "outline" : "default"}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    {quiz.submission ? "View Results" : "Take Quiz"}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
-        </div>
-    )
+  </div>
+);
 }

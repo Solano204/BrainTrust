@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue 
 } from "@/components/ui/select";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, MapPin, UserPlus } from "lucide-react";
 import { useUserMutations } from "./hooks/useUsers";
 
 interface CreateCompleteUserModalProps {
@@ -55,17 +55,17 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
+      alert("Las contraseñas no coinciden");
       return;
     }
     
     if (formData.password.length < 8) {
-      alert("Password must be at least 8 characters");
+      alert("La contraseña debe tener al menos 8 caracteres");
       return;
     }
     
     if (!isValidEmail(formData.email)) {
-      alert("Please enter a valid email");
+      alert("Por favor ingresa un correo válido");
       return;
     }
     
@@ -114,225 +114,257 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
   };
   
   if (!open) return null;
-  
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Create Complete User
-          </DialogTitle>
-          <DialogDescription>
-            Create a new user with all personal information
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Personal Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="firstName">First Name *</Label>
-              <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => handleChange("firstName", e.target.value)}
-                required
-                placeholder="John"
-              />
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent className="rounded-3xl border-border bg-card p-0 overflow-hidden max-w-2xl max-h-[90vh]">
+
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-border sticky top-0 bg-card z-10 rounded-t-3xl">
+        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <UserPlus className="h-4 w-4 text-primary" />
+        </span>
+        <div>
+          <h2 className="text-base font-bold text-foreground tracking-tight">
+            Crear Usuario Completo
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Crea un nuevo usuario con toda la información personal
+          </p>
+        </div>
+      </div>
+
+      {/* ── Form ── */}
+      <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 overflow-y-auto max-h-[calc(90vh-80px)]">
+
+        {/* Personal info */}
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+            Información Personal
+          </h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="firstName" className="text-xs font-semibold text-foreground">Nombre *</Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleChange("firstName", e.target.value)}
+                  required
+                  placeholder="Juan"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="lastName" className="text-xs font-semibold text-foreground">Apellido *</Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleChange("lastName", e.target.value)}
+                  required
+                  placeholder="Pérez"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="lastName">Last Name *</Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) => handleChange("lastName", e.target.value)}
-                required
-                placeholder="Doe"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="gender">Gender</Label>
-              <Select
-                value={formData.gender}
-                onValueChange={(value) => handleChange("gender", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MALE">Male</SelectItem>
-                  <SelectItem value="FEMALE">Female</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                placeholder="+1234567890"
-              />
-            </div>
-          </div>
-          
-          {/* Account Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                required
-                placeholder="user@example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="role">Role *</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value: "STUDENT" | "TEACHER" | "ADMIN") => 
-                  handleChange("role", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="TEACHER">Teacher</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="gender" className="text-xs font-semibold text-foreground">Género</Label>
+                <Select value={formData.gender} onValueChange={(v) => handleChange("gender", v)}>
+                  <SelectTrigger className="rounded-xl border-border bg-background focus:ring-ring/50">
+                    <SelectValue placeholder="Seleccionar género" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-border bg-card">
+                    <SelectItem value="MALE">Masculino</SelectItem>
+                    <SelectItem value="FEMALE">Femenino</SelectItem>
+                    <SelectItem value="OTHER">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone" className="text-xs font-semibold text-foreground">Teléfono</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  placeholder="+1234567890"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
             </div>
           </div>
-          
-          {formData.role === 'STUDENT' && (
-            <div>
-              <Label htmlFor="studentId">Student ID (Optional)</Label>
-              <Input
-                id="studentId"
-                value={formData.studentId}
-                onChange={(e) => handleChange("studentId", e.target.value)}
-                placeholder="e.g., S123456"
-              />
+        </div>
+
+        {/* Account info */}
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+            Información de la Cuenta
+          </h3>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-semibold text-foreground">Correo *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  required
+                  placeholder="usuario@ejemplo.com"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="role" className="text-xs font-semibold text-foreground">Rol *</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(v: "STUDENT" | "TEACHER" | "ADMIN") => handleChange("role", v)}
+                >
+                  <SelectTrigger className="rounded-xl border-border bg-background focus:ring-ring/50">
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-border bg-card">
+                    <SelectItem value="STUDENT">Estudiante</SelectItem>
+                    <SelectItem value="TEACHER">Profesor</SelectItem>
+                    <SelectItem value="ADMIN">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                required
-                minLength={8}
-                placeholder="Minimum 8 characters"
-              />
-            </div>
-            <div>
-              <Label htmlFor="confirmPassword">Confirm Password *</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                required
-                placeholder="Confirm password"
-              />
+
+            {formData.role === 'STUDENT' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="studentId" className="text-xs font-semibold text-foreground">ID de Estudiante (Opcional)</Label>
+                <Input
+                  id="studentId"
+                  value={formData.studentId}
+                  onChange={(e) => handleChange("studentId", e.target.value)}
+                  placeholder="ej. E123456"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-xs font-semibold text-foreground">Contraseña *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleChange("password", e.target.value)}
+                  required
+                  minLength={8}
+                  placeholder="Mínimo 8 caracteres"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground">Confirmar Contraseña *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                  required
+                  placeholder="Confirmar contraseña"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
+                />
+              </div>
             </div>
           </div>
-          
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="font-semibold">Address Information (Optional)</h3>
-            
-            <div>
-              <Label htmlFor="addressStreet">Street</Label>
+        </div>
+
+        {/* Address */}
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+            <MapPin className="h-3.5 w-3.5" />
+            Información de Dirección
+            <span className="normal-case font-normal text-muted-foreground/60">(Opcional)</span>
+          </h3>
+          <div className="p-4 rounded-2xl border border-border bg-muted/20 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="addressStreet" className="text-xs font-semibold text-foreground">Calle</Label>
               <Input
                 id="addressStreet"
                 value={formData.addressStreet}
                 onChange={(e) => handleChange("addressStreet", e.target.value)}
-                placeholder="123 Main St"
+                placeholder="Av. Principal 123"
+                className="rounded-xl border-border bg-background focus:ring-ring/50"
               />
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="addressColony">Colony/Neighborhood</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="addressColony" className="text-xs font-semibold text-foreground">Colonia / Barrio</Label>
                 <Input
                   id="addressColony"
                   value={formData.addressColony}
                   onChange={(e) => handleChange("addressColony", e.target.value)}
-                  placeholder="Downtown"
+                  placeholder="Centro"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
                 />
               </div>
-              <div>
-                <Label htmlFor="addressMunicipality">Municipality</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="addressMunicipality" className="text-xs font-semibold text-foreground">Municipio</Label>
                 <Input
                   id="addressMunicipality"
                   value={formData.addressMunicipality}
                   onChange={(e) => handleChange("addressMunicipality", e.target.value)}
-                  placeholder="Cityville"
+                  placeholder="Ciudad"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
                 />
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="addressState">State/Province</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="addressState" className="text-xs font-semibold text-foreground">Estado / Provincia</Label>
                 <Input
                   id="addressState"
                   value={formData.addressState}
                   onChange={(e) => handleChange("addressState", e.target.value)}
-                  placeholder="California"
+                  placeholder="Estado"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
                 />
               </div>
-              <div>
-                <Label htmlFor="addressPostalCode">Postal Code</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="addressPostalCode" className="text-xs font-semibold text-foreground">Código Postal</Label>
                 <Input
                   id="addressPostalCode"
                   value={formData.addressPostalCode}
                   onChange={(e) => handleChange("addressPostalCode", e.target.value)}
                   placeholder="12345"
+                  className="rounded-xl border-border bg-background focus:ring-ring/50"
                 />
               </div>
             </div>
           </div>
-          
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={createCompleteUser.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createCompleteUser.isPending}
-            >
-              {createCompleteUser.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Creating...
-                </>
-              ) : (
-                "Create User"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={createCompleteUser.isPending}
+            className="px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={createCompleteUser.isPending}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            {createCompleteUser.isPending ? (
+              <><Loader2 className="h-4 w-4 animate-spin" />Creando...</>
+            ) : (
+              "Crear Usuario"
+            )}
+          </button>
+        </div>
+
+      </form>
+    </DialogContent>
+  </Dialog>
+);
 }

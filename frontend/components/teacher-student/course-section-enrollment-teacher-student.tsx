@@ -19,130 +19,129 @@ import {
 import { Enrollment } from "@/app/domain/entities/CourseEntities";
 import { User } from "@/app/domain/entities/IdentityEntities";
 
-interface CourseStudentsProps {
+interface PropsEstudiantesCurso {
   courseId: CourseId;
 }
 
-export function CourseStudents({ courseId }: CourseStudentsProps) {
-  const { user: currentUser } = useAuth();
-  const isTeacher = currentUser?.role === 'teacher';
+export function CourseStudents({ courseId }: PropsEstudiantesCurso) {
+  const { user: usuarioActual } = useAuth();
+  const esProfesor = usuarioActual?.role === 'teacher';
   
   const {
-    data: enrollments = [], 
-    isLoading: isLoadingEnrollments,
-    error: enrollmentsError,
-    refetch: refetchEnrollments 
+    data: inscripciones = [], 
+    isLoading: cargandoInscripciones,
+    error: errorInscripciones,
+    refetch: recargarInscripciones 
   } = useEnrollmentsByCourse(courseId);
   
-  const { data: stats } = useEnrollmentStats(courseId);
+  const { data: estadisticas } = useEnrollmentStats(courseId);
 
   const {
-    createEnrollment, 
-    bulkEnroll, 
-    deleteEnrollment 
+    createEnrollment: crearInscripcion, 
+    bulkEnroll: inscripcionMasiva, 
+    deleteEnrollment: eliminarInscripcion 
   } = useStudentMutations();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showStudentDetail, setShowStudentDetail] = useState(false);
-  const [selectedEnrollment, setSelectedEnrollment] = useState<Enrollment | null>(null);
-  const [enrollSearchTerm, setEnrollSearchTerm] = useState("");
-  const [selectedUserIds, setSelectedUserIds] = useState<UserId[]>([]);
+  const [terminoBusqueda, setTerminoBusqueda] = useState("");
+  const [mostrarModalInscripcion, setMostrarModalInscripcion] = useState(false);
+  const [mostrarModalEliminar, setMostrarModalEliminar] = useState(false);
+  const [mostrarDetalleEstudiante, setMostrarDetalleEstudiante] = useState(false);
+  const [inscripcionSeleccionada, setInscripcionSeleccionada] = useState<Enrollment | null>(null);
+  const [terminoBusquedaInscripcion, setTerminoBusquedaInscripcion] = useState("");
+  const [idsUsuarioSeleccionados, setIdsUsuarioSeleccionados] = useState<UserId[]>([]);
 
   const {
-    data: searchResults = [], 
-    isLoading: isSearching 
-  } = useAvailableUsersSearch(courseId, enrollSearchTerm);
+    data: resultadosBusqueda = [], 
+    isLoading: buscando 
+  } = useAvailableUsersSearch(courseId, terminoBusquedaInscripcion);
 
-  const filteredEnrollments = useMemo(() => {
-    return enrollments.filter((enrollment) => {
-      const searchLower = searchTerm.toLowerCase();
+  const inscripcionesFiltradas = useMemo(() => {
+    return inscripciones.filter((inscripcion) => {
+      const busquedaLower = terminoBusqueda.toLowerCase();
       return (
-        enrollment.studentName.toLowerCase().includes(searchLower) ||
-        enrollment.studentEmail.toLowerCase().includes(searchLower)
+        inscripcion.studentName.toLowerCase().includes(busquedaLower) ||
+        inscripcion.studentEmail.toLowerCase().includes(busquedaLower)
       );
     });
-  }, [enrollments, searchTerm]);
+  }, [inscripciones, terminoBusqueda]);
 
-  const handleEnrollUser = (userId: UserId) => {
-    if (!isTeacher) return;
+  const handleInscribirUsuario = (usuarioId: UserId) => {
+    if (!esProfesor) return;
     
-    createEnrollment.mutate({
+    crearInscripcion.mutate({
       courseId,
-      studentId: userId
+      studentId: usuarioId
     }, {
       onSuccess: () => {
-        setEnrollSearchTerm('');
-        setSelectedUserIds([]);
-        setShowEnrollModal(false);
+        setTerminoBusquedaInscripcion('');
+        setIdsUsuarioSeleccionados([]);
+        setMostrarModalInscripcion(false);
       }
     });
   };
 
-  const handleBulkEnroll = () => {
-    if (!isTeacher || selectedUserIds.length === 0) return;
+  const handleInscripcionMasiva = () => {
+    if (!esProfesor || idsUsuarioSeleccionados.length === 0) return;
     
-    bulkEnroll.mutate({
+    inscripcionMasiva.mutate({
       courseId,
-      studentIds: selectedUserIds
+      studentIds: idsUsuarioSeleccionados
     }, {
       onSuccess: () => {
-        setSelectedUserIds([]);
-        setEnrollSearchTerm('');
-        setShowEnrollModal(false);
+        setIdsUsuarioSeleccionados([]);
+        setTerminoBusquedaInscripcion('');
+        setMostrarModalInscripcion(false);
       }
     });
   };
 
-  const handleDeleteStudent = () => {
-    if (!isTeacher || !selectedEnrollment) return;
+  const handleEliminarEstudiante = () => {
+    if (!esProfesor || !inscripcionSeleccionada) return;
     
-    deleteEnrollment.mutate({
+    eliminarInscripcion.mutate({
       courseId,
-      studentId: selectedEnrollment.studentId
+      studentId: inscripcionSeleccionada.studentId
     }, {
       onSuccess: () => {
-        setShowDeleteModal(false);
-        setSelectedEnrollment(null);
+        setMostrarModalEliminar(false);
+        setInscripcionSeleccionada(null);
       }
     });
   };
 
-  const handleToggleUserSelection = (userId: UserId) => {
-    if (!isTeacher) return;
-    setSelectedUserIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+  const handleAlternarSeleccionUsuario = (usuarioId: UserId) => {
+    if (!esProfesor) return;
+    setIdsUsuarioSeleccionados(prev => 
+      prev.includes(usuarioId) 
+        ? prev.filter(id => id !== usuarioId)
+        : [...prev, usuarioId]
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatearFecha = (fechaString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      return new Date(fechaString).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
     } catch {
-      return 'Invalid date';
+      return 'Fecha inválida';
     }
   };
-
-  if (!isTeacher) {
+if (!esProfesor) {
     return (
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Classmates</h1>
-            {stats && (
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Compañeros de Clase</h1>
+            {estadisticas && (
               <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
-                  {stats.total} students
+                  {estadisticas.total} estudiantes
                 </span>
-                <span>Active: {stats.active}</span>
+                <span>Activos: {estadisticas.active}</span>
               </div>
             )}
           </div>
@@ -152,62 +151,62 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search classmates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar compañeros..."
+              value={terminoBusqueda}
+              onChange={(e) => setTerminoBusqueda(e.target.value)}
               className="pl-10"
             />
           </div>
         </Card>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {filteredEnrollments.map((enrollment) => (
-            <StudentCardReadOnly
-              key={enrollment.id}
-              enrollment={enrollment}
+          {inscripcionesFiltradas.map((inscripcion) => (
+            <TarjetaEstudianteSoloLectura
+              key={inscripcion.id}
+              inscripcion={inscripcion}
               onViewDetails={(e) => {
-                setSelectedEnrollment(e);
-                setShowStudentDetail(true);
+                setInscripcionSeleccionada(e);
+                setMostrarDetalleEstudiante(true);
               }}
             />
           ))}
         </div>
 
-        {!isLoadingEnrollments && filteredEnrollments.length === 0 && (
-          <Card className="text-center p-12 border-2 border-dashed">
+        {!cargandoInscripciones && inscripcionesFiltradas.length === 0 && (
+          <Card className="text-center p-12 border-2 border-dashed border-border">
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">No classmates found</h3>
-            <p className="text-muted-foreground">No students match your search criteria.</p>
+            <h3 className="text-lg font-semibold text-muted-foreground mb-2">No se encontraron compañeros</h3>
+            <p className="text-muted-foreground">No hay estudiantes que coincidan con tu criterio de búsqueda.</p>
           </Card>
         )}
 
-        <StudentDetailDialog
-          isOpen={showStudentDetail}
-          onClose={() => setShowStudentDetail(false)}
-          enrollment={selectedEnrollment}
-          formatDate={formatDate}
+        <DialogoDetalleEstudiante
+          isOpen={mostrarDetalleEstudiante}
+          onClose={() => setMostrarDetalleEstudiante(false)}
+          inscripcion={inscripcionSeleccionada}
+          formatDate={formatearFecha}
           isTeacher={false}
         />
       </div>
     );
   }
 
-  if (isLoadingEnrollments) {
+  if (cargandoInscripciones) {
     return (
       <div className="p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p className="text-muted-foreground">Loading students...</p>
+        <p className="text-muted-foreground">Cargando estudiantes...</p>
       </div>
     );
   }
 
-  if (enrollmentsError) {
+  if (errorInscripciones) {
     return (
       <div className="p-8 text-center text-destructive">
         <div className="text-4xl mb-4">⚠️</div>
-        <p>Error loading students. Please try again.</p>
-        <Button onClick={() => refetchEnrollments()} className="mt-4">
-          Retry
+        <p>Error al cargar los estudiantes. Por favor, intente de nuevo.</p>
+        <Button onClick={() => recargarInscripciones()} className="mt-4">
+          Reintentar
         </Button>
       </div>
     );
@@ -217,21 +216,21 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Student Management</h1>
-          {stats && (
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestión de Estudiantes</h1>
+          {estadisticas && (
             <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-              <span>Total: {stats.total}</span>
-              <span>Active: {stats.active}</span>
-              {stats.averageGrade > 0 && <span>Avg Grade: {stats.averageGrade}%</span>}
+              <span>Total: {estadisticas.total}</span>
+              <span>Activos: {estadisticas.active}</span>
+              {estadisticas.averageGrade > 0 && <span>Promedio: {estadisticas.averageGrade}%</span>}
             </div>
           )}
         </div>
-        <Button 
-          onClick={() => setShowEnrollModal(true)} 
+        <Button
+          onClick={() => setMostrarModalInscripcion(true)}
           className="gap-2 w-full sm:w-auto"
         >
           <UserPlus className="h-4 w-4" />
-          Enroll Students
+          Inscribir Estudiantes
         </Button>
       </div>
 
@@ -239,211 +238,214 @@ export function CourseStudents({ courseId }: CourseStudentsProps) {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por nombre o correo..."
+            value={terminoBusqueda}
+            onChange={(e) => setTerminoBusqueda(e.target.value)}
             className="pl-10"
           />
         </div>
       </Card>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {filteredEnrollments.map((enrollment) => (
-          <StudentCard
-            key={enrollment.id}
-            enrollment={enrollment}
+        {inscripcionesFiltradas.map((inscripcion) => (
+          <TarjetaEstudiante
+            key={inscripcion.id}
+            inscripcion={inscripcion}
             onViewDetails={(e) => {
-              setSelectedEnrollment(e);
-              setShowStudentDetail(true);
+              setInscripcionSeleccionada(e);
+              setMostrarDetalleEstudiante(true);
             }}
             onDelete={(e) => {
-              setSelectedEnrollment(e);
-              setShowDeleteModal(true);
+              setInscripcionSeleccionada(e);
+              setMostrarModalEliminar(true);
             }}
-            isDeleting={deleteEnrollment.isPending}
+            isDeleting={eliminarInscripcion.isPending}
           />
         ))}
       </div>
 
-      {filteredEnrollments.length === 0 && (
-        <Card className="text-center p-12 border-2 border-dashed">
+      {inscripcionesFiltradas.length === 0 && (
+        <Card className="text-center p-12 border-2 border-dashed border-border">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No students enrolled</h3>
-          <p className="text-muted-foreground mb-4">Start by enrolling students in this course</p>
-          <Button onClick={() => setShowEnrollModal(true)} className="gap-2">
-            <UserPlus className="h-4 w-4" /> Enroll Students
+          <h3 className="text-lg font-semibold text-foreground mb-2">No hay estudiantes inscritos</h3>
+          <p className="text-muted-foreground mb-4">Comience inscribiendo estudiantes en este curso</p>
+          <Button onClick={() => setMostrarModalInscripcion(true)} className="gap-2">
+            <UserPlus className="h-4 w-4" /> Inscribir Estudiantes
           </Button>
         </Card>
       )}
 
-      <Dialog open={showEnrollModal} onOpenChange={setShowEnrollModal}>
+      {/* Modal de Inscripción */}
+      <Dialog open={mostrarModalInscripcion} onOpenChange={setMostrarModalInscripcion}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Enroll Students</DialogTitle>
+            <DialogTitle className="text-foreground">Inscribir Estudiantes</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="font-semibold mb-2 block">Search Students</label>
+              <label className="font-semibold mb-2 block text-foreground">Buscar Estudiantes</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search by name or email..." 
-                  value={enrollSearchTerm}
-                  onChange={(e) => setEnrollSearchTerm(e.target.value)}
+                <Input
+                  placeholder="Buscar por nombre o correo..."
+                  value={terminoBusquedaInscripcion}
+                  onChange={(e) => setTerminoBusquedaInscripcion(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            
-            {selectedUserIds.length > 0 && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  {selectedUserIds.length} student(s) selected
+
+            {idsUsuarioSeleccionados.length > 0 && (
+              <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg">
+                <p className="text-sm text-primary font-medium">
+                  {idsUsuarioSeleccionados.length} estudiante(s) seleccionado(s)
                 </p>
               </div>
             )}
-            
-            <div className="border rounded-md max-h-96 overflow-y-auto">
-              {isSearching && (
-                <div className="p-4 text-center flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Searching...
+
+            <div className="border border-border rounded-md max-h-96 overflow-y-auto">
+              {buscando && (
+                <div className="p-4 text-center flex items-center justify-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
                 </div>
               )}
-              
-              {!isSearching && searchResults.length === 0 && enrollSearchTerm && (
+
+              {!buscando && resultadosBusqueda.length === 0 && terminoBusquedaInscripcion && (
                 <div className="p-4 text-center text-muted-foreground">
-                  No available students found matching "{enrollSearchTerm}"
+                  No se encontraron estudiantes disponibles que coincidan con "{terminoBusquedaInscripcion}"
                 </div>
               )}
-              
-              {searchResults.map((user) => (
-                <div 
-                  key={user.id} 
-                  className="flex items-center justify-between p-3 hover:bg-muted border-b last:border-b-0"
+
+              {resultadosBusqueda.map((usuario) => (
+                <div
+                  key={usuario.id}
+                  className="flex items-center justify-between p-3 hover:bg-muted/50 border-b border-border last:border-b-0 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
-                      checked={selectedUserIds.includes(user.id)}
-                      onChange={() => handleToggleUserSelection(user.id)}
-                      className="rounded"
+                      checked={idsUsuarioSeleccionados.includes(usuario.id)}
+                      onChange={() => handleAlternarSeleccionUsuario(usuario.id)}
+                      className="rounded accent-primary"
                     />
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
-                      {user.person.firstName[0]}{user.person.lastName[0]}
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                      {usuario.person.firstName[0]}{usuario.person.lastName[0]}
                     </div>
                     <div>
-                      <div className="font-medium">
-                        {user.person.lastName}, {user.person.firstName}
+                      <div className="font-medium text-foreground">
+                        {usuario.person.lastName}, {usuario.person.firstName}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {user.email}
+                        {usuario.email}
                       </div>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleEnrollUser(user.id)}
-                    disabled={createEnrollment.isPending}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleInscribirUsuario(usuario.id)}
+                    disabled={crearInscripcion.isPending}
                   >
-                    {createEnrollment.isPending ? (
+                    {crearInscripcion.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <UserPlus className="h-3 w-3" />
                     )}
-                    Enroll
+                    Inscribir
                   </Button>
                 </div>
               ))}
 
-              {!enrollSearchTerm && (
+              {!terminoBusquedaInscripcion && (
                 <div className="p-4 text-center text-muted-foreground italic">
-                  Start typing to search for students
+                  Comience a escribir para buscar estudiantes
                 </div>
               )}
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
-                setShowEnrollModal(false);
-                setSelectedUserIds([]);
-                setEnrollSearchTerm('');
+                setMostrarModalInscripcion(false);
+                setIdsUsuarioSeleccionados([]);
+                setTerminoBusquedaInscripcion('');
               }}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button 
-              onClick={handleBulkEnroll}
-              disabled={selectedUserIds.length === 0 || bulkEnroll.isPending}
+            <Button
+              onClick={handleInscripcionMasiva}
+              disabled={idsUsuarioSeleccionados.length === 0 || inscripcionMasiva.isPending}
               className="gap-2"
             >
-              {bulkEnroll.isPending ? (
+              {inscripcionMasiva.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <UserPlus className="h-4 w-4" />
               )}
-              Enroll {selectedUserIds.length} Selected
+              Inscribir {idsUsuarioSeleccionados.length} Seleccionado(s)
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      {/* Modal de Eliminación */}
+      <Dialog open={mostrarModalEliminar} onOpenChange={setMostrarModalEliminar}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Removal</DialogTitle>
+            <DialogTitle className="text-foreground">Confirmar Eliminación</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p className="text-muted-foreground">
-              Are you sure you want to remove {selectedEnrollment?.studentName} from this course?
+              ¿Está seguro de que desea eliminar a {inscripcionSeleccionada?.studentName} de este curso?
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => setMostrarModalEliminar(false)}>
+              Cancelar
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteStudent}
-              disabled={deleteEnrollment.isPending}
+            <Button
+              variant="destructive"
+              onClick={handleEliminarEstudiante}
+              disabled={eliminarInscripcion.isPending}
             >
-              {deleteEnrollment.isPending && (
+              {eliminarInscripcion.isPending && (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
-              Remove
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <StudentDetailDialog
-        isOpen={showStudentDetail}
-        onClose={() => setShowStudentDetail(false)}
-        enrollment={selectedEnrollment}
-        formatDate={formatDate}
+      <DialogoDetalleEstudiante
+        isOpen={mostrarDetalleEstudiante}
+        onClose={() => setMostrarDetalleEstudiante(false)}
+        inscripcion={inscripcionSeleccionada}
+        formatDate={formatearFecha}
         isTeacher={true}
       />
     </div>
   );
-}
+};
 
-interface StudentCardProps {
-  enrollment: Enrollment;
-  onViewDetails: (enrollment: Enrollment) => void;
-  onDelete: (enrollment: Enrollment) => void;
+
+interface PropsTarjetaEstudiante {
+  inscripcion: Enrollment;
+  onViewDetails: (inscripcion: Enrollment) => void;
+  onDelete: (inscripcion: Enrollment) => void;
   isDeleting: boolean;
 }
 
-const StudentCard: React.FC<StudentCardProps> = ({
-  enrollment,
+const TarjetaEstudiante: React.FC<PropsTarjetaEstudiante> = ({
+  inscripcion,
   onViewDetails,
   onDelete,
   isDeleting
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const obtenerColorEstado = (estado: string) => {
+    switch (estado) {
       case 'ACTIVE': return 'bg-green-500';
       case 'COMPLETED': return 'bg-blue-500';
       case 'CANCELLED': return 'bg-red-500';
@@ -451,65 +453,64 @@ const StudentCard: React.FC<StudentCardProps> = ({
     }
   };
 
-  const initials = enrollment.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
-
-  return (
+  const iniciales = inscripcion.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
+return (
     <Card className="group hover:shadow-xl transition-all duration-300">
       <div className="relative">
         <div className="absolute top-4 right-4 z-10">
-          <Badge className={getStatusColor(enrollment.status)}>
-            {enrollment.status}
+          <Badge className={obtenerColorEstado(inscripcion.status)}>
+            {inscripcion.status === 'ACTIVE' ? 'ACTIVO' : inscripcion.status === 'COMPLETED' ? 'COMPLETADO' : 'CANCELADO'}
           </Badge>
         </div>
 
-        <div className="h-40 bg-gradient-to-br from-blue-100 to-gray-100 dark:from-blue-950/30 dark:to-gray-950/30 flex items-center justify-center">
-          <div 
-            className="h-28 w-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold cursor-pointer group-hover:scale-110 transition-transform"
-            onClick={() => onViewDetails(enrollment)}
+        <div className="h-40 bg-gradient-to-br from-primary/10 to-secondary flex items-center justify-center">
+          <div
+            className="h-28 w-28 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-2xl font-bold cursor-pointer group-hover:scale-110 transition-transform"
+            onClick={() => onViewDetails(inscripcion)}
           >
-            {initials}
+            {iniciales}
           </div>
         </div>
       </div>
 
       <div className="p-4 space-y-3">
-        <div 
-          className="text-center cursor-pointer" 
-          onClick={() => onViewDetails(enrollment)}
+        <div
+          className="text-center cursor-pointer"
+          onClick={() => onViewDetails(inscripcion)}
         >
-          <h3 className="font-bold text-lg hover:text-primary transition-colors">
-            {enrollment.studentName}
+          <h3 className="font-bold text-lg text-foreground hover:text-primary transition-colors">
+            {inscripcion.studentName}
           </h3>
-          <p className="text-sm text-muted-foreground">{enrollment.studentEmail}</p>
+          <p className="text-sm text-muted-foreground">{inscripcion.studentEmail}</p>
         </div>
 
-        {enrollment.finalGrade && (
+        {inscripcion.finalGrade && (
           <div className="text-center">
             <Badge variant="secondary">
-              Grade: {enrollment.finalGrade.grade}%
+              Calificación: {inscripcion.finalGrade.grade}%
             </Badge>
           </div>
         )}
 
-        <div className="flex justify-center gap-2 pt-2 border-t">
-          <button 
-            className="p-2 hover:bg-muted rounded-md transition-colors" 
-            onClick={() => onViewDetails(enrollment)}
+        <div className="flex justify-center gap-2 pt-2 border-t border-border">
+          <button
+            className="p-2 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+            onClick={() => onViewDetails(inscripcion)}
           >
             <Settings className="h-4 w-4" />
           </button>
-          <button className="p-2 hover:bg-muted rounded-md transition-colors">
+          <button className="p-2 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground">
             <Mail className="h-4 w-4" />
           </button>
           <button
-            onClick={() => onDelete(enrollment)}
-            className="p-2 hover:bg-muted rounded-md transition-colors"
+            onClick={() => onDelete(inscripcion)}
+            className="p-2 hover:bg-destructive/10 rounded-md transition-colors text-muted-foreground hover:text-destructive"
             disabled={isDeleting}
           >
             {isDeleting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Trash2 className="h-4 w-4 hover:text-destructive" />
+              <Trash2 className="h-4 w-4" />
             )}
           </button>
         </div>
@@ -517,42 +518,40 @@ const StudentCard: React.FC<StudentCardProps> = ({
     </Card>
   );
 };
-
-const StudentCardReadOnly: React.FC<{
-  enrollment: Enrollment;
-  onViewDetails: (enrollment: Enrollment) => void;
-}> = ({ enrollment, onViewDetails }) => {
-  const initials = enrollment.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
-
-  return (
+const TarjetaEstudianteSoloLectura: React.FC<{
+  inscripcion: Enrollment;
+  onViewDetails: (inscripcion: Enrollment) => void;
+}> = ({ inscripcion, onViewDetails }) => {
+  const iniciales = inscripcion.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
+return (
     <Card className="group hover:shadow-xl transition-all duration-300">
-      <div className="h-40 bg-gradient-to-br from-blue-100 to-gray-100 dark:from-blue-950/30 dark:to-gray-950/30 flex items-center justify-center">
-        <div 
-          className="h-28 w-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold cursor-pointer group-hover:scale-110 transition-transform"
-          onClick={() => onViewDetails(enrollment)}
+      <div className="h-40 bg-gradient-to-br from-primary/10 to-secondary flex items-center justify-center">
+        <div
+          className="h-28 w-28 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-2xl font-bold cursor-pointer group-hover:scale-110 transition-transform"
+          onClick={() => onViewDetails(inscripcion)}
         >
-          {initials}
+          {iniciales}
         </div>
       </div>
 
       <div className="p-4 space-y-3">
-        <div 
-          className="text-center cursor-pointer" 
-          onClick={() => onViewDetails(enrollment)}
+        <div
+          className="text-center cursor-pointer"
+          onClick={() => onViewDetails(inscripcion)}
         >
-          <h3 className="font-bold text-lg hover:text-primary transition-colors">
-            {enrollment.studentName}
+          <h3 className="font-bold text-lg text-foreground hover:text-primary transition-colors">
+            {inscripcion.studentName}
           </h3>
-          <p className="text-sm text-muted-foreground">{enrollment.studentEmail}</p>
+          <p className="text-sm text-muted-foreground">{inscripcion.studentEmail}</p>
         </div>
 
-        <div className="flex justify-center pt-2 border-t">
-          <button 
-            className="p-2 hover:bg-muted rounded-md transition-colors flex items-center gap-2" 
-            onClick={() => onViewDetails(enrollment)}
+        <div className="flex justify-center pt-2 border-t border-border">
+          <button
+            className="p-2 hover:bg-muted rounded-md transition-colors flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            onClick={() => onViewDetails(inscripcion)}
           >
             <Eye className="h-4 w-4" />
-            <span className="text-sm">View Details</span>
+            <span className="text-sm">Ver Detalles</span>
           </button>
         </div>
       </div>
@@ -560,61 +559,62 @@ const StudentCardReadOnly: React.FC<{
   );
 };
 
-const StudentDetailDialog: React.FC<{
+const DialogoDetalleEstudiante: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  enrollment: Enrollment | null;
+  inscripcion: Enrollment | null;
   formatDate: (date: string) => string;
   isTeacher: boolean;
-}> = ({ isOpen, onClose, enrollment, formatDate, isTeacher }) => {
-  if (!enrollment) return null;
+}> = ({ isOpen, onClose, inscripcion, formatDate, isTeacher }) => {
+  if (!inscripcion) return null;
 
-  const initials = enrollment.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
-
-  return (
+  const iniciales = inscripcion.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
+return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isTeacher ? 'Student' : 'Classmate'} Details</DialogTitle>
+          <DialogTitle className="text-foreground">
+            {isTeacher ? 'Detalles del Estudiante' : 'Detalles del Compañero'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="flex items-center gap-4">
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold">
-              {initials}
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-2xl font-bold flex-shrink-0">
+              {iniciales}
             </div>
             <div>
-              <h2 className="text-2xl font-bold">{enrollment.studentName}</h2>
-              <p className="text-muted-foreground">{enrollment.studentEmail}</p>
-              <Badge className="mt-2">{enrollment.status}</Badge>
+              <h2 className="text-2xl font-bold text-foreground">{inscripcion.studentName}</h2>
+              <p className="text-muted-foreground">{inscripcion.studentEmail}</p>
+              <Badge className="mt-2">
+                {inscripcion.status === 'ACTIVE' ? 'ACTIVO' : inscripcion.status === 'COMPLETED' ? 'COMPLETADO' : 'CANCELADO'}
+              </Badge>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <h3 className="font-semibold">Enrollment Information</h3>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Enrollment Date:</span>
-                  <span>{formatDate(enrollment.enrollmentDate)}</span>
+              <h3 className="font-semibold text-foreground">Información de Inscripción</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between py-1 border-b border-border/40 last:border-0">
+                  <span className="text-muted-foreground">Fecha de Inscripción:</span>
+                  <span className="text-foreground">{formatDate(inscripcion.enrollmentDate)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Status:</span>
-                  <span>{enrollment.status}</span>
+                <div className="flex justify-between py-1 border-b border-border/40 last:border-0">
+                  <span className="text-muted-foreground">Estado:</span>
+                  <span className="text-foreground">
+                    {inscripcion.status === 'ACTIVE' ? 'ACTIVO' : inscripcion.status === 'COMPLETED' ? 'COMPLETADO' : 'CANCELADO'}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Student Ref:</span>
-                  <span className="font-mono text-xs">{enrollment.studentRefId}</span>
+                <div className="flex justify-between py-1 border-b border-border/40 last:border-0">
+                  <span className="text-muted-foreground">Ref. Estudiante:</span>
+                  <span className="font-mono text-xs text-foreground">{inscripcion.studentRefId}</span>
                 </div>
               </div>
             </div>
-
-       
           </div>
-
-        
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Close</Button>
+          <Button variant="outline" onClick={onClose}>Cerrar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

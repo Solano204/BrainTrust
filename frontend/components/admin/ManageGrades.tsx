@@ -7,12 +7,11 @@ import {
   useAssignFinalGradeAdmin,
   useBulkUpdateCourseGrades,
 } from "@/components/admin/hooks/useCourses";
-import {
-  AdminCourse,
-  UpdateStudentGradeCommand,
-} from "@/components/admin/api/coursesApi";
-import { X, Save, Edit2, Check, Loader2, BookOpen } from "lucide-react";
+
+import { X, Save, Edit2, Check, Loader2, BookOpen, BarChart3 } from "lucide-react";
 import { ManageUnitGrades } from "./ManageUnitGrades";
+import { UpdateStudentGradeCommand } from "@/app/shared/dtos/commands/course.commands";
+import { AdminCourse } from "@/app/shared/models/admin-course.model";
 
 interface ManageGradesProps {
   course: AdminCourse;
@@ -70,7 +69,7 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
       handleCancelEdit(studentId);
       refetch();
     } catch (error) {
-      console.error("Failed to save grade:", error);
+      console.error("Error al guardar la calificación:", error);
     }
   };
 
@@ -92,7 +91,7 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
       setEditingGrades({});
       refetch();
     } catch (error) {
-      console.error("Failed to bulk update grades:", error);
+      console.error("Error al actualizar calificaciones en lote:", error);
     }
   };
 
@@ -113,319 +112,300 @@ export function ManageGrades({ course, isOpen, onClose }: ManageGradesProps) {
       />
     );
   }
-
-  return (
+return (
+  <div
+    className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
+    onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+  >
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      className="bg-card rounded-3xl border border-border shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+      onClick={(e) => e.stopPropagation()}
     >
-      <div
-        className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Manage Grades</h2>
-            <p className="text-gray-500 text-sm mt-1">{course.name}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
 
-        <div className="px-6 pt-4 flex gap-2">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <BarChart3 className="w-4 h-4 text-primary" />
+          </span>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+              Gestionar Calificaciones
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{course.name}</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* ── View mode tabs ── */}
+      <div className="px-5 sm:px-7 pt-4 flex gap-2 flex-shrink-0">
+        <button
+          onClick={() => setViewMode("course")}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+            viewMode === "course"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          Calificaciones Finales del Curso
+        </button>
+        {units && units.length > 0 && (
           <button
-            onClick={() => setViewMode("course")}
-            className={`px-4 py-2 rounded-lg transition ${
-              viewMode === "course"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            onClick={() => setViewMode("unit")}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              viewMode === "unit"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
-            Course Final Grades
+            Calificaciones por Unidad
           </button>
-          {units && units.length > 0 && (
-            <button
-              onClick={() => setViewMode("unit")}
-              className={`px-4 py-2 rounded-lg transition ${
-                viewMode === "unit"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Unit Grades
-            </button>
-          )}
-        </div>
+        )}
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          {viewMode === "unit" ? (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900 mb-4">
-                Select a Unit
-              </h3>
-              {units?.map((unit) => (
-                <button
-                  key={unit.id}
-                  onClick={() => setSelectedUnit(unit.id)}
-                  className="w-full p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-blue-500 transition text-left flex items-center gap-3"
-                >
-                  <BookOpen className="w-5 h-5 text-blue-600" />
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{unit.name}</div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      {unit.description}
-                    </div>
-                  </div>
-                </button>
-              ))}
+      {/* ── Body ── */}
+      <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 space-y-5">
+
+        {viewMode === "unit" ? (
+
+          /* ── Unit picker ── */
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+              Seleccionar una Unidad
+            </h3>
+            {units?.map((unit) => (
+              <button
+                key={unit.id}
+                onClick={() => setSelectedUnit(unit.id)}
+                className="w-full p-4 bg-card rounded-2xl border-2 border-border hover:border-primary/50 hover:bg-muted/20 transition-all text-left flex items-center gap-3 group"
+              >
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 flex-shrink-0 group-hover:bg-primary/20 transition-all">
+                  <BookOpen className="w-4 h-4 text-primary" />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-foreground">{unit.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{unit.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+        ) : (
+
+          <>
+            {/* ── Stats ── */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Total Estudiantes</p>
+                <p className="text-2xl font-bold text-foreground">{grades?.length || 0}</p>
+              </div>
+              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Calificados</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {grades?.filter((g) => g.finalGrade !== null).length || 0}
+                </p>
+              </div>
+              <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4">
+                <p className="text-xs font-semibold text-accent-foreground uppercase tracking-wider mb-1">Pendientes</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {grades?.filter((g) => g.finalGrade === null).length || 0}
+                </p>
+              </div>
+              <div className="bg-muted/50 border border-border rounded-2xl p-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Promedio</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {grades && grades.length > 0
+                    ? (
+                        grades.filter((g) => g.finalGrade !== null)
+                          .reduce((sum, g) => sum + ((g.finalGrade?.value as unknown as number) || 0), 0) /
+                        grades.filter((g) => g.finalGrade !== null).length
+                      ).toFixed(1)
+                    : "N/A"}
+                </p>
+              </div>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-sm text-blue-600">Total Students</div>
-                  <div className="text-2xl font-bold text-blue-900">
-                    {grades?.length || 0}
-                  </div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-sm text-green-600">Graded</div>
-                  <div className="text-2xl font-bold text-green-900">
-                    {grades?.filter((g) => g.finalGrade !== null).length || 0}
-                  </div>
-                </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-sm text-yellow-600">Pending</div>
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {grades?.filter((g) => g.finalGrade === null).length || 0}
-                  </div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-sm text-purple-600">Average Grade</div>
-                  <div className="text-2xl font-bold text-purple-900">
-                    {grades && grades.length > 0
-                      ? (
-                          grades
-                            .filter((g) => g.finalGrade !== null)
-                            .reduce(
-                              (sum, g) =>
-                                sum +
-                                ((g.finalGrade?.value as unknown as number) ||
-                                  0),
-                              0
-                            ) /
-                          grades.filter((g) => g.finalGrade !== null).length
-                        ).toFixed(1)
-                      : "N/A"}
-                  </div>
+
+            {/* ── Bulk edit banner ── */}
+            {Object.keys(editingGrades).length > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+                <p className="text-sm font-semibold text-foreground">
+                  <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-bold mr-1.5">
+                    {Object.keys(editingGrades).length}
+                  </span>
+                  calificación(es) siendo editadas
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditingGrades({})}
+                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  >
+                    Cancelar Todo
+                  </button>
+                  <button
+                    onClick={handleBulkSave}
+                    disabled={bulkUpdateMutation.isPending}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-all"
+                  >
+                    {bulkUpdateMutation.isPending ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</>
+                    ) : (
+                      <><Save className="w-4 h-4" />Guardar Todo</>
+                    )}
+                  </button>
                 </div>
               </div>
+            )}
 
-              {Object.keys(editingGrades).length > 0 && (
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-                  <div className="text-blue-900 font-medium">
-                    {Object.keys(editingGrades).length} grade(s) being edited
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setEditingGrades({})}
-                      className="px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition"
+            {/* ── Grade rows ── */}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Cargando calificaciones...</span>
+              </div>
+            ) : grades && grades.length > 0 ? (
+              <div className="space-y-3">
+                {grades.map((enrollment) => {
+                  const isEditing = !!editingGrades[enrollment.studentId];
+                  const editData  = editingGrades[enrollment.studentId];
+
+                  return (
+                    <div
+                      key={enrollment.id}
+                      className="p-4 bg-card rounded-2xl border border-border hover:bg-muted/10 transition-colors"
                     >
-                      Cancel All
-                    </button>
-                    <button
-                      onClick={handleBulkSave}
-                      disabled={bulkUpdateMutation.isPending}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {bulkUpdateMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          Save All
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 min-w-0">
 
-              {isLoading ? (
-                <div className="text-center py-8 flex items-center justify-center gap-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                  <span className="text-gray-500">Loading grades...</span>
-                </div>
-              ) : grades && grades.length > 0 ? (
-                <div className="space-y-3">
-                  {grades.map((enrollment) => {
-                    const isEditing = !!editingGrades[enrollment.studentId];
-                    const editData = editingGrades[enrollment.studentId];
+                          {/* Student info */}
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className="font-semibold text-sm text-foreground">
+                              {enrollment.studentName}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {enrollment.studentEmail}
+                            </span>
+                            <span className={`px-2 py-0.5 text-xs rounded-md font-semibold ${
+                              enrollment.status === "ACTIVE"
+                                ? "bg-primary/10 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            }`}>
+                              {enrollment.status === "ACTIVE" ? "ACTIVO" : enrollment.status}
+                            </span>
+                          </div>
 
-                    return (
-                      <div
-                        key={enrollment.id}
-                        className="p-4 bg-white rounded-lg border border-gray-200"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-medium text-gray-900">
-                                {enrollment.studentName}
-                              </span>
-                              <span className="text-sm text-gray-500">
-                                {enrollment.studentEmail}
-                              </span>
-                              <span
-                                className={`px-2 py-0.5 text-xs rounded ${
-                                  enrollment.status === "ACTIVE"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-gray-100 text-gray-700"
-                                }`}
-                              >
-                                {enrollment.status}
-                              </span>
+                          {/* Edit mode */}
+                          {isEditing ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <label className="text-xs font-semibold text-muted-foreground w-20 flex-shrink-0">
+                                  Calificación:
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                  value={editData.gradeValue}
+                                  onChange={(e) => setEditingGrades({
+                                    ...editingGrades,
+                                    [enrollment.studentId]: { ...editData, gradeValue: parseFloat(e.target.value) || 0 },
+                                  })}
+                                  className="w-24 px-3 py-1.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                                />
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <label className="text-xs font-semibold text-muted-foreground w-20 flex-shrink-0 pt-2">
+                                  Retroalimentación:
+                                </label>
+                                <textarea
+                                  value={editData.feedback}
+                                  onChange={(e) => setEditingGrades({
+                                    ...editingGrades,
+                                    [enrollment.studentId]: { ...editData, feedback: e.target.value },
+                                  })}
+                                  className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all"
+                                  rows={2}
+                                  placeholder="Agregar retroalimentación..."
+                                />
+                              </div>
                             </div>
+                          ) : (
+                            <div className="text-sm">
+                              <span className="text-muted-foreground">Calificación: </span>
+                              {enrollment.finalGrade ? (
+                                <span className="font-semibold text-primary">
+                                  {enrollment.finalGrade.value}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/60 italic">Aún no calificado</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
-                            {isEditing ? (
-                              <div className="space-y-2">
-                                <div className="flex gap-2 items-center">
-                                  <label className="text-sm font-medium text-gray-700 w-20">
-                                    Grade:
-                                  </label>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.1"
-                                    value={editData.gradeValue}
-                                    onChange={(e) =>
-                                      setEditingGrades({
-                                        ...editingGrades,
-                                        [enrollment.studentId]: {
-                                          ...editData,
-                                          gradeValue:
-                                            parseFloat(e.target.value) || 0,
-                                        },
-                                      })
-                                    }
-                                    className="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 w-24"
-                                  />
-                                </div>
-                                <div className="flex gap-2 items-start">
-                                  <label className="text-sm font-medium text-gray-700 w-20 pt-1">
-                                    Feedback:
-                                  </label>
-                                  <textarea
-                                    value={editData.feedback}
-                                    onChange={(e) =>
-                                      setEditingGrades({
-                                        ...editingGrades,
-                                        [enrollment.studentId]: {
-                                          ...editData,
-                                          feedback: e.target.value,
-                                        },
-                                      })
-                                    }
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    rows={2}
-                                    placeholder="Add feedback..."
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <div className="text-sm text-gray-600">
-                                  <span className="font-medium">Grade:</span>{" "}
-                                  {enrollment.finalGrade ? (
-                                    <span className="text-blue-600 font-semibold">
-                                      {enrollment.finalGrade.value}
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400">
-                                      Not graded yet
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2">
-                            {isEditing ? (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    handleSaveGrade(enrollment.studentId)
-                                  }
-                                  disabled={assignGradeMutation.isPending}
-                                  className="px-3 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100 transition disabled:opacity-50"
-                                  title="Save grade"
-                                >
-                                  {assignGradeMutation.isPending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Check className="w-4 h-4" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleCancelEdit(enrollment.studentId)
-                                  }
-                                  className="px-3 py-2 bg-gray-50 text-gray-700 rounded hover:bg-gray-100 transition"
-                                  title="Cancel"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </>
-                            ) : (
+                        {/* Action buttons */}
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          {isEditing ? (
+                            <>
                               <button
-                                onClick={() =>
-                                  handleStartEdit(
-                                    enrollment.studentId,
-                                    Number(enrollment.finalGrade?.value) || 0 // Convert string to number
-                                  )
-                                }
-                                className="px-3 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition"
-                                title="Edit grade"
+                                onClick={() => handleSaveGrade(enrollment.studentId)}
+                                disabled={assignGradeMutation.isPending}
+                                className="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-40 transition-all"
+                                title="Guardar calificación"
                               >
-                                <Edit2 className="w-4 h-4" />
+                                {assignGradeMutation.isPending
+                                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                                  : <Check className="w-4 h-4" />}
                               </button>
-                            )}
-                          </div>
+                              <button
+                                onClick={() => handleCancelEdit(enrollment.studentId)}
+                                className="p-2 rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 transition-all"
+                                title="Cancelar"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleStartEdit(enrollment.studentId, Number(enrollment.finalGrade?.value) || 0)}
+                              className="p-2 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                              title="Editar calificación"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No students enrolled in this course
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="p-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-          >
-            Close
-          </button>
-        </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-center py-12 text-sm text-muted-foreground">
+                No hay estudiantes inscritos en este curso
+              </p>
+            )}
+          </>
+        )}
       </div>
+
+      {/* ── Footer ── */}
+      <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
+        <button
+          onClick={onClose}
+          className="w-full flex items-center justify-center px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+        >
+          Cerrar
+        </button>
+      </div>
+
     </div>
-  );
+  </div>
+);
 }

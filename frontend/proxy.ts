@@ -13,7 +13,8 @@ const roleBasedRoutes = {
     '/admin/analytics',
     '/admin/settings',
     '/admin/personal',
-    '/admin/activities'
+    '/admin/activities',  
+    '/admin/statistics'
   ],
   teacher: [
     "/",
@@ -81,6 +82,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  
   console.log(`User role: ${userRole}, User ID: ${userId}`);
   
   // Check if route requires specific role

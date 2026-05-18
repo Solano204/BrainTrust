@@ -16,7 +16,8 @@ import {
     Award,
     Clock,
     Target,
-    Activity
+    Activity,
+    Search
 } from "lucide-react"
 
 interface CourseReport {
@@ -164,56 +165,65 @@ function OverviewStats() {
             color: 'bg-pink-600'
         }
     ]
+return (
+  <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+    {stats.map((stat, index) => {
+      const Icon      = stat.icon
+      const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown
+      const trendColor = stat.trend === 'up'
+        ? 'text-primary bg-primary/10'
+        : 'text-destructive bg-destructive/10'
 
-    return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {stats.map((stat, index) => {
-                const Icon = stat.icon
-                const TrendIcon = stat.trend === 'up' ? TrendingUp : TrendingDown
-                const trendColor = stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-
-                return (
-                    <Card key={index} className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                            <div className={`h-10 w-10 rounded-lg ${stat.color} flex items-center justify-center`}>
-                                <Icon className="h-5 w-5 text-white" />
-                            </div>
-                            <div className={`flex items-center gap-1 text-xs font-medium ${trendColor}`}>
-                                <TrendIcon className="h-3 w-3" />
-                                {stat.change}
-                            </div>
-                        </div>
-                        <p className="text-2xl font-bold mb-1">{stat.value}</p>
-                        <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    </Card>
-                )
-            })}
+      return (
+        <div
+          key={index}
+          className="bg-card rounded-2xl border border-border p-4 shadow-sm flex flex-col gap-3"
+        >
+          <div className="flex items-start justify-between">
+            <span className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Icon className="w-4 h-4 text-primary" />
+            </span>
+            <span className={`flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-md ${trendColor}`}>
+              <TrendIcon className="w-3 h-3" />
+              {stat.change}
+            </span>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-foreground leading-none mb-1">
+              {stat.value}
+            </p>
+            <p className="text-xs text-muted-foreground">{stat.label}</p>
+          </div>
         </div>
-    )
+      )
+    })}
+  </div>
+);
 }
 
 
 function SimpleBarChart({ data, label }: { data: number[], label: string }) {
     const max = Math.max(...data)
-
-    return (
-        <div className="space-y-2">
-            <p className="text-sm font-semibold text-muted-foreground">{label}</p>
-            <div className="flex items-end gap-2 h-40">
-                {data.map((value, index) => (
-                    <div key={index} className="flex-1 flex flex-col items-center gap-1">
-                        <div className="w-full bg-muted rounded-t-lg relative" style={{ height: '100%' }}>
-                            <div
-                                className="absolute bottom-0 w-full bg-primary rounded-t-lg transition-all"
-                                style={{ height: `${(value / max) * 100}%` }}
-                            />
-                        </div>
-                        <span className="text-xs text-muted-foreground">{value}</span>
-                    </div>
-                ))}
-            </div>
+return (
+  <div className="space-y-2">
+    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+      {label}
+    </p>
+    <div className="flex items-end gap-1.5 h-40">
+      {data.map((value, index) => (
+        <div key={index} className="flex-1 flex flex-col items-center gap-1">
+          <div className="w-full bg-muted/50 rounded-t-lg relative" style={{ height: '100%' }}>
+            <div
+              className="absolute bottom-0 w-full bg-primary rounded-t-lg transition-all duration-500"
+              style={{ height: `${(value / max) * 100}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums">{value}</span>
         </div>
-    )
+      ))}
+    </div>
+  </div>
+);
 }
 
 
@@ -234,119 +244,156 @@ function CourseReportsTab() {
         if (grade >= 70) return 'text-yellow-600'
         return 'text-red-600'
     }
+return (
+  <div className="space-y-5">
 
-    return (
-        <div className="space-y-6">
-            {/* Search */}
-            <Card className="p-4">
-                <Input
-                    placeholder="Buscar curso..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </Card>
+    {/* ── Búsqueda ── */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <input
+        placeholder="Buscar curso..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      />
+    </div>
 
-            <Card className="hidden lg:block overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-muted/50">
-                        <tr>
-                            <th className="px-6 py-4 text-left font-semibold">Curso</th>
-                            <th className="px-6 py-4 text-center font-semibold">Estudiantes</th>
-                            <th className="px-6 py-4 text-center font-semibold">Promedio</th>
-                            <th className="px-6 py-4 text-center font-semibold">Finalización</th>
-                            <th className="px-6 py-4 text-center font-semibold">Tareas</th>
-                            <th className="px-6 py-4 text-center font-semibold">Activos</th>
-                            <th className="px-6 py-4 text-center font-semibold">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredReports.map((report) => (
-                            <tr key={report.id} className="border-b hover:bg-muted/30">
-                                <td className="px-6 py-4">
-                                    <div>
-                                        <p className="font-medium">{report.courseName}</p>
-                                        <p className="text-sm text-muted-foreground">{report.courseCode}</p>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <p className="font-medium">{report.enrolledStudents}</p>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <p className={`font-bold text-lg ${getGradeColor(report.averageGrade)}`}>
-                                        {report.averageGrade}%
-                                    </p>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <div className="flex flex-col items-center">
-                                        <p className="font-medium">{report.completionRate}%</p>
-                                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                            <div
-                                                className="bg-primary h-2 rounded-full"
-                                                style={{ width: `${report.completionRate}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <p className="text-sm">{report.submittedAssignments} / {report.totalAssignments}</p>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <Badge variant="secondary">
-                                        {report.activeStudents} / {report.enrolledStudents}
-                                    </Badge>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <Button variant="ghost" size="sm">
-                                        <Download className="h-4 w-4" />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </Card>
+    {/* ── Tabla de escritorio ── */}
+    <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-muted/40">
+          <tr>
+            {['Curso', 'Estudiantes', 'Promedio', 'Finalización', 'Tareas', 'Activos', 'Acciones'].map((h, i) => (
+              <th
+                key={h}
+                className={`px-6 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground ${i === 0 ? 'text-left' : 'text-center'}`}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/50">
+          {filteredReports.map((report) => (
+            <tr key={report.id} className="hover:bg-muted/30 transition-colors group">
 
-            <div className="lg:hidden space-y-4">
-                {filteredReports.map((report) => (
-                    <Card key={report.id} className="p-4">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 className="font-bold text-lg">{report.courseName}</h3>
-                                <p className="text-sm text-muted-foreground">{report.courseCode}</p>
-                            </div>
-                            <p className={`text-2xl font-bold ${getGradeColor(report.averageGrade)}`}>
-                                {report.averageGrade}%
-                            </p>
-                        </div>
+              {/* Curso */}
+              <td className="px-6 py-4">
+                <p className="font-semibold text-sm text-foreground">{report.courseName}</p>
+                <p className="text-xs text-muted-foreground">{report.courseCode}</p>
+              </td>
 
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <p className="text-xs text-muted-foreground">Estudiantes</p>
-                                <p className="text-lg font-semibold">{report.enrolledStudents}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-muted-foreground">Activos</p>
-                                <p className="text-lg font-semibold">{report.activeStudents}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-muted-foreground">Tareas</p>
-                                <p className="text-lg font-semibold">{report.submittedAssignments}/{report.totalAssignments}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs text-muted-foreground">Finalización</p>
-                                <p className="text-lg font-semibold">{report.completionRate}%</p>
-                            </div>
-                        </div>
+              {/* Estudiantes */}
+              <td className="px-6 py-4 text-center">
+                <p className="font-semibold text-sm text-foreground">{report.enrolledStudents}</p>
+              </td>
 
-                        <Button variant="outline" size="sm" className="w-full">
-                            <Download className="h-4 w-4 mr-2" />
-                            Descargar Reporte
-                        </Button>
-                    </Card>
-                ))}
+              {/* Calificación promedio */}
+              <td className="px-6 py-4 text-center">
+                <p className={`font-bold text-lg ${getGradeColor(report.averageGrade)}`}>
+                  {report.averageGrade}%
+                </p>
+              </td>
+
+              {/* Finalización */}
+              <td className="px-6 py-4 text-center">
+                <div className="flex flex-col items-center gap-1">
+                  <p className="font-semibold text-sm text-foreground">{report.completionRate}%</p>
+                  <div className="w-20 bg-muted/50 rounded-full h-1.5">
+                    <div
+                      className="bg-primary h-1.5 rounded-full transition-all"
+                      style={{ width: `${report.completionRate}%` }}
+                    />
+                  </div>
+                </div>
+              </td>
+
+              {/* Tareas */}
+              <td className="px-6 py-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-semibold text-foreground">{report.submittedAssignments}</span>
+                  {' / '}
+                  {report.totalAssignments}
+                </p>
+              </td>
+
+              {/* Estudiantes activos */}
+              <td className="px-6 py-4 text-center">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                  {report.activeStudents} / {report.enrolledStudents}
+                </span>
+              </td>
+
+              {/* Acciones */}
+              <td className="px-6 py-4 text-center">
+                <button className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
+                  <Download className="w-4 h-4" />
+                </button>
+              </td>
+
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* ── Tarjetas móviles ── */}
+    <div className="lg:hidden space-y-3">
+      {filteredReports.map((report) => (
+        <div key={report.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
+
+          {/* Nombre del curso + calificación */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-bold text-base text-foreground truncate">{report.courseName}</h3>
+              <p className="text-xs text-muted-foreground">{report.courseCode}</p>
             </div>
+            <p className={`text-2xl font-bold flex-shrink-0 ${getGradeColor(report.averageGrade)}`}>
+              {report.averageGrade}%
+            </p>
+          </div>
+
+          {/* Cuadrícula de estadísticas */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Estudiantes', value: report.enrolledStudents },
+              { label: 'Activos',     value: report.activeStudents },
+              { label: 'Tareas',      value: `${report.submittedAssignments}/${report.totalAssignments}` },
+              { label: 'Finalización',value: `${report.completionRate}%` },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                <p className="text-base font-bold text-foreground">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Barra de finalización */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Finalización</span>
+              <span className="font-semibold text-foreground">{report.completionRate}%</span>
+            </div>
+            <div className="w-full bg-muted/50 rounded-full h-1.5">
+              <div
+                className="bg-primary h-1.5 rounded-full transition-all"
+                style={{ width: `${report.completionRate}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Descargar */}
+          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+            <Download className="w-4 h-4" />
+            Descargar Reporte
+          </button>
+
         </div>
-    )
+      ))}
+    </div>
+
+  </div>
+);
 }
 
 
@@ -367,165 +414,228 @@ function StudentPerformanceTab() {
         if (grade >= 70) return 'text-yellow-600'
         return 'text-red-600'
     }
+return (
+  <div className="space-y-5">
 
-    return (
-        <div className="space-y-6">
-            <Card className="p-4">
-                <Input
-                    placeholder="Buscar estudiante..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </Card>
+    {/* ── Búsqueda ── */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <input
+        placeholder="Buscar estudiante..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      />
+    </div>
 
-            <Card className="hidden lg:block overflow-hidden">
-                <table className="w-full">
-                    <thead className="bg-muted/50">
-                        <tr>
-                            <th className="px-6 py-4 text-left font-semibold">Estudiante</th>
-                            <th className="px-6 py-4 text-center font-semibold">Cursos</th>
-                            <th className="px-6 py-4 text-center font-semibold">Promedio</th>
-                            <th className="px-6 py-4 text-center font-semibold">Tareas</th>
-                            <th className="px-6 py-4 text-center font-semibold">Completadas</th>
-                            <th className="px-6 py-4 text-left font-semibold">Última Actividad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.map((student) => (
-                            <tr key={student.id} className="border-b hover:bg-muted/30">
-                                <td className="px-6 py-4">
-                                    <div>
-                                        <p className="font-medium">{student.name}</p>
-                                        <p className="text-sm text-muted-foreground">{student.email}</p>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <Badge variant="secondary">{student.coursesEnrolled}</Badge>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <p className={`font-bold text-lg ${getGradeColor(student.averageGrade)}`}>
-                                        {student.averageGrade}%
-                                    </p>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <p className="text-sm">{student.totalAssignments}</p>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                    <div className="flex flex-col items-center">
-                                        <p className="font-medium">
-                                            {Math.round((student.assignmentsCompleted / student.totalAssignments) * 100)}%
-                                        </p>
-                                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                            <div
-                                                className="bg-primary h-2 rounded-full"
-                                                style={{ width: `${(student.assignmentsCompleted / student.totalAssignments) * 100}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <p className="text-sm">
-                                        {new Date(student.lastActivity).toLocaleString('es-MX', {
-                                            dateStyle: 'short',
-                                            timeStyle: 'short'
-                                        })}
-                                    </p>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </Card>
+    {/* ── Tabla de escritorio ── */}
+    <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-muted/40">
+          <tr>
+            {[
+              { label: 'Estudiante',       align: 'left'   },
+              { label: 'Cursos',           align: 'center' },
+              { label: 'Promedio',         align: 'center' },
+              { label: 'Tareas',           align: 'center' },
+              { label: 'Completadas',      align: 'center' },
+              { label: 'Última Actividad', align: 'left'   },
+            ].map(({ label, align }) => (
+              <th
+                key={label}
+                className={`px-6 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground text-${align}`}
+              >
+                {label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border/50">
+          {filteredStudents.map((student) => (
+            <tr key={student.id} className="hover:bg-muted/30 transition-colors group">
 
-            <div className="lg:hidden space-y-4">
-                {filteredStudents.map((student) => (
-                    <Card key={student.id} className="p-4">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 className="font-bold">{student.name}</h3>
-                                <p className="text-sm text-muted-foreground">{student.email}</p>
-                            </div>
-                            <p className={`text-2xl font-bold ${getGradeColor(student.averageGrade)}`}>
-                                {student.averageGrade}%
-                            </p>
-                        </div>
+              {/* Estudiante */}
+              <td className="px-6 py-4">
+                <p className="font-semibold text-sm text-foreground">{student.name}</p>
+                <p className="text-xs text-muted-foreground">{student.email}</p>
+              </td>
 
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <p className="text-muted-foreground">Cursos</p>
-                                <p className="font-medium">{student.coursesEnrolled}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Tareas</p>
-                                <p className="font-medium">{student.assignmentsCompleted}/{student.totalAssignments}</p>
-                            </div>
-                        </div>
-                    </Card>
-                ))}
+              {/* Cursos */}
+              <td className="px-6 py-4 text-center">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                  {student.coursesEnrolled}
+                </span>
+              </td>
+
+              {/* Calificación promedio */}
+              <td className="px-6 py-4 text-center">
+                <p className={`font-bold text-lg ${getGradeColor(student.averageGrade)}`}>
+                  {student.averageGrade}%
+                </p>
+              </td>
+
+              {/* Total de tareas */}
+              <td className="px-6 py-4 text-center">
+                <p className="text-sm text-muted-foreground">{student.totalAssignments}</p>
+              </td>
+
+              {/* Finalización */}
+              <td className="px-6 py-4 text-center">
+                <div className="flex flex-col items-center gap-1">
+                  <p className="font-semibold text-sm text-foreground">
+                    {Math.round((student.assignmentsCompleted / student.totalAssignments) * 100)}%
+                  </p>
+                  <div className="w-20 bg-muted/50 rounded-full h-1.5">
+                    <div
+                      className="bg-primary h-1.5 rounded-full transition-all"
+                      style={{ width: `${(student.assignmentsCompleted / student.totalAssignments) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </td>
+
+              {/* Última actividad */}
+              <td className="px-6 py-4">
+                <p className="text-xs text-muted-foreground">
+                  {new Date(student.lastActivity).toLocaleString('es-MX', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                  })}
+                </p>
+              </td>
+
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* ── Tarjetas móviles ── */}
+    <div className="lg:hidden space-y-3">
+      {filteredStudents.map((student) => (
+        <div key={student.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
+
+          {/* Nombre + calificación */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm text-foreground truncate">{student.name}</h3>
+              <p className="text-xs text-muted-foreground truncate">{student.email}</p>
             </div>
+            <p className={`text-2xl font-bold flex-shrink-0 ${getGradeColor(student.averageGrade)}`}>
+              {student.averageGrade}%
+            </p>
+          </div>
+
+          {/* Cuadrícula de estadísticas */}
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'Cursos',  value: student.coursesEnrolled },
+              { label: 'Tareas',  value: `${student.assignmentsCompleted}/${student.totalAssignments}` },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                <p className="text-base font-bold text-foreground">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Barra de completadas */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Completadas</span>
+              <span className="font-semibold text-foreground">
+                {Math.round((student.assignmentsCompleted / student.totalAssignments) * 100)}%
+              </span>
+            </div>
+            <div className="w-full bg-muted/50 rounded-full h-1.5">
+              <div
+                className="bg-primary h-1.5 rounded-full transition-all"
+                style={{ width: `${(student.assignmentsCompleted / student.totalAssignments) * 100}%` }}
+              />
+            </div>
+          </div>
+
         </div>
-    )
+      ))}
+    </div>
+
+  </div>
+);
 }
 
 export default function AdminReportsModule() {
-    return (
-        <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-background min-h-screen">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">Reportes y Analíticas</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Vista general del rendimiento del sistema
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button variant="outline" className="gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Período
-                    </Button>
-                    <Button className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Exportar Todo
-                    </Button>
-                </div>
-            </div>
+   return (
+  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
 
-            <OverviewStats />
+    {/* ── Encabezado de página ── */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Reportes y Analíticas
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Vista general del rendimiento del sistema
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+          <Calendar className="w-4 h-4" />
+          Período
+        </button>
+        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm">
+          <Download className="w-4 h-4" />
+          Exportar Todo
+        </button>
+      </div>
+    </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="p-6">
-                    <SimpleBarChart
-                        data={[85, 92, 88, 78, 95, 82, 90]}
-                        label="Promedio de Calificaciones por Semana"
-                    />
-                </Card>
-                <Card className="p-6">
-                    <SimpleBarChart
-                        data={[245, 278, 291, 265, 312, 289, 325]}
-                        label="Tareas Entregadas por Semana"
-                    />
-                </Card>
-            </div>
+    {/* ── Estadísticas generales ── */}
+    <OverviewStats />
 
-            <Tabs defaultValue="courses" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="courses" className="gap-2">
-                        <BarChart3 className="h-4 w-4" />
-                        Reporte de Cursos
-                    </TabsTrigger>
-                    <TabsTrigger value="students" className="gap-2">
-                        <Users className="h-4 w-4" />
-                        Rendimiento de Estudiantes
-                    </TabsTrigger>
-                </TabsList>
+    {/* ── Gráficos de barras ── */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
+        <SimpleBarChart
+          data={[85, 92, 88, 78, 95, 82, 90]}
+          label="Promedio de Calificaciones por Semana"
+        />
+      </div>
+      <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
+        <SimpleBarChart
+          data={[245, 278, 291, 265, 312, 289, 325]}
+          label="Tareas Entregadas por Semana"
+        />
+      </div>
+    </div>
 
-                <TabsContent value="courses">
-                    <CourseReportsTab />
-                </TabsContent>
+    {/* ── Pestañas ── */}
+    <Tabs defaultValue="courses" className="space-y-5">
+      <TabsList className="w-full grid grid-cols-2 rounded-2xl bg-muted/50 p-1 h-auto">
+        <TabsTrigger
+          value="courses"
+          className="flex items-center gap-2 rounded-xl py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all"
+        >
+          <BarChart3 className="w-4 h-4" />
+          Reporte de Cursos
+        </TabsTrigger>
+        <TabsTrigger
+          value="students"
+          className="flex items-center gap-2 rounded-xl py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all"
+        >
+          <Users className="w-4 h-4" />
+          Rendimiento de Estudiantes
+        </TabsTrigger>
+      </TabsList>
 
-                <TabsContent value="students">
-                    <StudentPerformanceTab />
-                </TabsContent>
-            </Tabs>
-        </div>
-    )
+      <TabsContent value="courses">
+        <CourseReportsTab />
+      </TabsContent>
+
+      <TabsContent value="students">
+        <StudentPerformanceTab />
+      </TabsContent>
+    </Tabs>
+
+  </div>
+);
 }

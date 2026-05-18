@@ -6,17 +6,12 @@ import * as z from "zod";
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription,
-  DialogFooter 
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail } from "lucide-react";
 import { useUserMutations } from "./hooks/useUsers";
-import { User } from "./api/usersApi";
+import { User } from "../student/api/enrollment";
 
 interface ChangeEmailModalProps {
   user: User | null;
@@ -27,16 +22,16 @@ interface ChangeEmailModalProps {
 const changeEmailSchema = z.object({
   newEmail: z
     .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address")
-    .max(255, "Email must be less than 255 characters")
+    .min(1, "El correo es requerido")
+    .email("Por favor ingresa una dirección de correo válida")
+    .max(255, "El correo debe tener menos de 255 caracteres")
     .toLowerCase()
     .trim(),
   confirmEmail: z
     .string()
-    .min(1, "Please confirm your email")
+    .min(1, "Por favor confirma tu correo")
 }).refine((data) => data.newEmail === data.confirmEmail, {
-  message: "Email addresses do not match",
+  message: "Las direcciones de correo no coinciden",
   path: ["confirmEmail"]
 });
 
@@ -74,87 +69,114 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
   
   if (!open || !user) return null;
   
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Change Email Address
-          </DialogTitle>
-          <DialogDescription>
-            Change email for {user.person.firstName} {user.person.lastName}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="currentEmail">Current Email</Label>
-            <Input
-              id="currentEmail"
-              value={user.email}
-              disabled
-              className="bg-muted"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="newEmail">New Email</Label>
-            <Input
-              id="newEmail"
-              type="email"
-              {...register("newEmail")}
-              placeholder="Enter new email"
-              className={errors.newEmail ? "border-red-500" : ""}
-            />
-            {errors.newEmail && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.newEmail.message}
-              </p>
+ return (
+  <Dialog open={open} onOpenChange={handleClose}>
+    <DialogContent className="rounded-3xl border-border bg-card p-0 overflow-hidden max-w-md">
+
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
+        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <Mail className="h-4 w-4 text-primary" />
+        </span>
+        <div>
+          <h2 className="text-base font-bold text-foreground tracking-tight">
+            Cambiar Dirección de Correo
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Cambiar correo para{" "}
+            <span className="font-medium text-foreground">
+              {user.person.firstName} {user.person.lastName}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {/* ── Form ── */}
+      <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
+
+        {/* Current email (read-only) */}
+        <div className="space-y-1.5">
+          <Label htmlFor="currentEmail" className="text-xs font-semibold text-foreground">
+            Correo Actual
+          </Label>
+          <Input
+            id="currentEmail"
+            value={user.email}
+            disabled
+            className="rounded-xl border-border bg-muted text-muted-foreground"
+          />
+        </div>
+
+        {/* New email */}
+        <div className="space-y-1.5">
+          <Label htmlFor="newEmail" className="text-xs font-semibold text-foreground">
+            Nuevo Correo
+          </Label>
+          <Input
+            id="newEmail"
+            type="email"
+            {...register("newEmail")}
+            placeholder="Ingrese nuevo correo"
+            className={`rounded-xl border-border bg-background focus:ring-ring/50 ${
+              errors.newEmail ? "border-destructive focus:ring-destructive/40" : ""
+            }`}
+          />
+          {errors.newEmail && (
+            <p className="text-xs text-destructive mt-1">
+              {errors.newEmail.message}
+            </p>
+          )}
+        </div>
+
+        {/* Confirm email */}
+        <div className="space-y-1.5">
+          <Label htmlFor="confirmEmail" className="text-xs font-semibold text-foreground">
+            Confirmar Nuevo Correo
+          </Label>
+          <Input
+            id="confirmEmail"
+            type="email"
+            {...register("confirmEmail")}
+            placeholder="Confirme nuevo correo"
+            className={`rounded-xl border-border bg-background focus:ring-ring/50 ${
+              errors.confirmEmail ? "border-destructive focus:ring-destructive/40" : ""
+            }`}
+          />
+          {errors.confirmEmail && (
+            <p className="text-xs text-destructive mt-1">
+              {errors.confirmEmail.message}
+            </p>
+          )}
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border mt-2">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={changeEmail.isPending}
+            className="px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40 transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={changeEmail.isPending || !isValid}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            {changeEmail.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cambiando...
+              </>
+            ) : (
+              "Cambiar Correo"
             )}
-          </div>
-          
-          <div>
-            <Label htmlFor="confirmEmail">Confirm New Email</Label>
-            <Input
-              id="confirmEmail"
-              type="email"
-              {...register("confirmEmail")}
-              placeholder="Confirm new email"
-              className={errors.confirmEmail ? "border-red-500" : ""}
-            />
-            {errors.confirmEmail && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.confirmEmail.message}
-              </p>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={changeEmail.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={changeEmail.isPending || !isValid}
-            >
-              {changeEmail.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Changing...
-                </>
-              ) : (
-                "Change Email"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+          </button>
+        </div>
+
+      </form>
+    </DialogContent>
+  </Dialog>
+);
 }

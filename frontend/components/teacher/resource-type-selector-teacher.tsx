@@ -5,77 +5,80 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { CourseResourceType, ResourceItem } from "@/app/domain/entities/CourseEntities"
 import { fetchResourceTypesMock } from "@/app/domain/services/serviceCourse"
 
-interface ResourceTypeSelectorProps {
+interface PropsSelectorTipoRecurso {
   open: boolean
   onClose: () => void
   onSelect: (type: CourseResourceType) => void
 }
 
 
-export function ResourceTypeSelector({ open, onClose, onSelect }: ResourceTypeSelectorProps) {
-  const [resourceItems, setResourceItems] = useState<ResourceItem[]>([]); // State for fetched data
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState("all");
+export function ResourceTypeSelector({ open, onClose, onSelect }: PropsSelectorTipoRecurso) {
+  const [itemsRecurso, setItemsRecurso] = useState<ResourceItem[]>([]); // Estado para los datos obtenidos
+  const [cargando, setCargando] = useState(true);
+  const [consultaBusqueda, setConsultaBusqueda] = useState("");
+  const [filtro, setFiltro] = useState("all");
 
   useEffect(() => {
-    const loadResourceTypes = async () => {
-      setIsLoading(true);
-      const data = await fetchResourceTypesMock(); 
-      setResourceItems(data);
-      setIsLoading(false);
+    const cargarTiposRecurso = async () => {
+      setCargando(true);
+      const datos = await fetchResourceTypesMock(); 
+      setItemsRecurso(datos);
+      setCargando(false);
     };
-    loadResourceTypes();
+    cargarTiposRecurso();
   }, []);
 
 
-  const filteredResources = resourceItems.filter((resource) => {
-    const matchesSearch = resource.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filter === "all" || resource.id === filter;
-    return matchesSearch && matchesFilter;
+  const recursosFiltrados = itemsRecurso.filter((recurso) => {
+    const coincideBusqueda = recurso.name.toLowerCase().includes(consultaBusqueda.toLowerCase());
+    const coincideFiltro = filtro === "all" || recurso.id === filtro;
+    return coincideBusqueda && coincideFiltro;
   });
+return (
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-4 sm:p-6">
+      <DialogHeader>
+        <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground">
+          Agregar una Actividad o Recurso
+        </DialogTitle>
+      </DialogHeader>
 
-  return (
-    <Dialog open={open} onOpenChange={onClose} >
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col ">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Add an Activity or Resource</DialogTitle>
-        </DialogHeader>
-
-     
-      
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-primary">
-            Loading resource options...
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto flex-1 pb-4">
-            {filteredResources.map((resource) => {
-              const Icon = resource.icon;
-              return (
-                <button
-                  key={resource.id}
-                  onClick={() => onSelect(resource.type)}
-                  className="border border-border rounded-lg p-6 text-center hover:shadow-lg hover:border-primary transition-all bg-card group"
-                >
-                  <div className="flex justify-center mb-4">
-                    <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                      <Icon />
-                    </div>
+      {cargando ? (
+        <div className="flex-1 flex items-center justify-center text-primary">
+          <p className="text-sm sm:text-base">Cargando opciones de recursos...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 overflow-y-auto flex-1 pb-4">
+          {recursosFiltrados.map((recurso) => {
+            const Icono = recurso.icon;
+            return (
+              <button
+                key={recurso.id}
+                onClick={() => onSelect(recurso.type)}
+                className="border border-border rounded-lg p-4 sm:p-6 text-center hover:shadow-lg hover:border-primary transition-all bg-card group"
+              >
+                <div className="flex justify-center mb-3 sm:mb-4">
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Icono />
                   </div>
-                  <h3 className="font-bold text-lg mb-2 text-foreground">{resource.name}</h3>
-                  <p className="text-sm text-muted-foreground">{resource.description}</p>
-                </button>
-              );
-            })}
-            {filteredResources.length === 0 && (
-                 <div className="sm:col-span-2 text-center text-muted-foreground pt-8">
-                    No resources match your criteria.
                 </div>
-            )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
+                <h3 className="font-bold text-base sm:text-lg text-foreground mb-2">
+                  {recurso.name}
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                  {recurso.description}
+                </p>
+              </button>
+            );
+          })}
+          {recursosFiltrados.length === 0 && (
+            <div className="sm:col-span-2 text-center text-muted-foreground pt-8">
+              <p className="text-sm">No hay recursos que coincidan con tus criterios.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </DialogContent>
+  </Dialog>
+);
 }
