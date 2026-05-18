@@ -3,7 +3,6 @@
 import { CourseUnit, UnitResource } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UnitId } from "@/app/domain/valueObjects/CourseValues";
 import { uploadImageFile } from "@/app/utils/cloudinary/cloudinary";
-import { AdminCourseUnit } from "@/components/admin/api/coursesApi";
 import axios from "axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -13,7 +12,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 interface CourseUnitDTO {
   id: string;
   courseId: string;
-  name: string;
+  name: string;cd ~/Music/BrainTrust/frontend
+find . -name "*global-error*" -not -path "./node_modules/*"
+
   urlImage: string;
   numUnity: number;
   description: string;
