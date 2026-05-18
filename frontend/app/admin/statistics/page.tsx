@@ -1,8 +1,16 @@
 "use client"
 
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { useAuth } from "@/app/context/AuthContext"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { PERMISSIONS } from "@/app/types/authentication"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { redirect } from "next/navigation"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import StatisticsPanel from "@/components/admin/StatisticsPanel"
 
 export default function AdminStatisticsPage() {

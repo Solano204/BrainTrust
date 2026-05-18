@@ -1,10 +1,20 @@
 
 "use client"
 
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { useAuth } from "@/app/context/AuthContext"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { PERMISSIONS } from "@/app/types/authentication"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { redirect } from "next/navigation"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import AdminUsersModule from "@/components/admin/AdminUsersModule"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import CatalogManager from "@/components/admin/CatalogManager"
 
 export default function AdminCatalogsPage() {

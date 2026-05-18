@@ -1,9 +1,17 @@
 
 "use client"
 
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { useAuth } from "@/app/context/AuthContext"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { PERMISSIONS } from "@/app/types/authentication"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import PersonalDataView from "@/components/admin/AdminPersonalData"
+export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 import { redirect } from "next/navigation"
 
 export default function AdminUsersPage() {
