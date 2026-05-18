@@ -1,0 +1,113 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import {
+  getProfile,
+  updatePersonalInfo,
+  updateAddress,
+  updateImage,
+  changePassword 
+} from '@/components/auth/api/profile-api';
+import { useAuth } from '@/app/context/AuthContext';
+import { uploadImageFile } from '@/app/utils/cloudinary/cloudinary';
+
+export const profileKeys = {
+  all: ['profile'] as const,
+  details: () => [...profileKeys.all, 'detail'] as const,
+  detail: (userId?: string) => [...profileKeys.details(), userId] as const,
+};
+
+export function useProfile() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: profileKeys.detail(user?.id),
+    queryFn: getProfile,
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+}
+
+function invalidateProfileQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: profileKeys.all });
+}
+
+export function useUpdatePersonalInfo() {
+  const queryClient = useQueryClient();
+  const { refreshTokens } = useAuth();
+  
+  return useMutation({
+    mutationFn: updatePersonalInfo,
+    onSuccess: async (response, variables) => {
+      invalidateProfileQueries(queryClient);
+      
+      await refreshTokens();
+      console.log("Personal information updated successfully");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to update personal information:", error.message);
+    },
+  });
+}
+
+export function useUpdateAddress() {
+  const queryClient = useQueryClient();
+  const { refreshTokens } = useAuth();
+  
+  return useMutation({
+    mutationFn: updateAddress,
+    onSuccess: async (response, variables) => {
+      invalidateProfileQueries(queryClient);
+      await refreshTokens();
+      
+      console.log("Address updated successfully");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to update address:", error.message);
+    },
+  });
+}
+
+export function useUpdateImage() {
+  const queryClient = useQueryClient();
+  const { refreshTokens } = useAuth();
+  
+  return useMutation({
+    mutationFn: async ({ personId, imageFile }: { personId: string; imageFile: File }) => {
+      const imagePath = await uploadImageFile(imageFile);
+      
+      return updateImage({ personId, imagePath });
+    },
+    onSuccess: async (response, variables) => {
+      invalidateProfileQueries(queryClient);
+      await refreshTokens();
+      
+      console.log("Profile image updated successfully");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to update profile image:", error.message);
+    },
+  });
+}
+
+export function useChangePassword() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  return useMutation({
+    mutationFn: (data: { currentPassword: string; newPassword: string }) => {
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
+      return changePassword({ ...data, userId: user.id });
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries();
+      
+      console.log("Password changed successfully");
+    },
+    onError: (error: Error) => {
+      console.error("Failed to change password:", error.message);
+    },
+  });
+}

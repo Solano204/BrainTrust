@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="shared" />
+        <module name="identity" />
+        <module name="container-app" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="aidetection" target="22" />
+      <module name="aidetectition" target="22" />
+      <module name="container-main" target="22" />
+      <module name="education" target="22" />
+      <module name="security" target="22" />
+      <module name="untitled" target="22" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="aidetection" options="-parameters" />
+      <module name="aidetectition" options="-parameters" />
+      <module name="container-app" options="-parameters" />
+      <module name="education" options="-parameters" />
+      <module name="identity" options="-parameters" />
+      <module name="security" options="-parameters" />
+      <module name="shared" options="-parameters" />
+      <module name="untitled" options="-parameters" />
+    </option>
+  </component>
+</project>

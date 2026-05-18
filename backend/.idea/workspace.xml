@@ -1,0 +1,591 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/RoleActivityDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/UnitGradeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/UnitGradeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/course/UnitGradeController.class" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/course/UnitGradeController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/UnitGradeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/UnitGradeService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/UnitGradeApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/UnitGradeApplicationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/ports/in/UnitGradeService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/ports/in/UnitGradeService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/UnitGradeApplicationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/UnitGradeApplicationService.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Gradebook.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Gradebook.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/Maps/EntityMaps.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/Maps/EntityMaps.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/UserDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserDtoMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserDtoMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/Maps/EntityMaps.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/Maps/EntityMaps.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/dtos/UserDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/dtos/UserDTO.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserDtoMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserDtoMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserQueryHelper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserQueryHelper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/app/admin/users/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/admin/users/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/app/auth/types/authentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/auth/types/authentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/app/types/authentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/types/authentication.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/AdminResetPasswordModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/AdminResetPasswordModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/AdminUsersModule.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/AdminUsersModule.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/CatalogManager.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/CatalogManager.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/layout/dashboard-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/layout/dashboard-sidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/components/student/api/student-gradebooks.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/api/student-gradebooks.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/proxy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/proxy.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;DaniDJ-Hub&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Solano204/BrainTrust.git&quot;,
+    &quot;accountId&quot;: &quot;62ea8eb5-8a2c-4977-aba3-8c60187324e8&quot;
+  }
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="jdkForImporter" value="#JAVA_HOME" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="MavenRunner">
+    <option name="jreName" value="25" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="34qBHQAtB1zsUO9CKKZd6dp6ms2" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.BrainTrustApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Docker.docker-compose.yml: Compose Deployment.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AIProbabilityTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AnalysisApplicationServiceTest,shouldAnalyzeSubmissionSuccessfullyWhenNoPendingAnalysisExists and 3 more.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AnalysisEntityMapperTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AnalysisRequestRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AssignmentApplicationServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AssignmentRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AssignmentTest.shouldCreateAssignmentWithValidData.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.AuthenticationIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.CourseApplicationServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.CourseApplicationServiceTest.shouldEnrollStudentSuccessfully.executor&quot;: &quot;Debug&quot;,
+    &quot;JUnit.CourseRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.DetectionResultTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EmailTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EmailTest.shouldThrowExceptionForInvalidEmailFormats.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EmailTest.shouldTrimWhitespace.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EnrollmentRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EnrollmentTest.shouldCreateEnrollmentWithValidData.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.IDValueObjectsTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.JwtServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.LocalFileStorageServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.ModelTypeTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PersonApplicationServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PersonRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.PythonAIDetectionProviderTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.RateLimitServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.SubmissionRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.SubmissionRepositoryIntegrationTest.shouldFindLatestSubmissionByAssignmentAndStudent.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UnitRepositoryIntegrationTest,shouldSaveUnitWithImageUrl and 1 more.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UnitRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserApplicationServiceTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserRepositoryIntegrationTest.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserTest,shouldThrowExceptionWhenCreatingStudentWithBlankStudentId and 6 more.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserTest.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.BrainTrustApplication.executor&quot;: &quot;Run&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/adding-new-catalogos&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/PROYECTO/BrainTrust/backend&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.runner&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src\test\java\com\braintrust\iadetectition" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src\test\java\com\braintrust\identity\integration" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src\test\java\com\braintrust\identity\unit" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\container-app\src" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\education\src\test\java\com\braintrust" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\education\src\test\java\com" />
+      <recent name="C:\Users\GAMER\Music\BrainTrust\backend\education\src\test\java" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.BrainTrustApplication">
+    <configuration name="BrainTrustApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="$PROJECT_DIR$/../../../../../Program Files/Java/jdk-25" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="envFilePaths">
+        <option value="$PROJECT_DIR$/container-app/.env" />
+      </option>
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.containerapp.BrainTrustApplication" />
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.containerapp.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <extension name="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </extension>
+      <extension name="software.aws.toolkits.jetbrains.core.execution.JavaAwsConnectionExtension">
+        <option name="credential" />
+        <option name="region" />
+        <option name="useCurrentConnection" value="false" />
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AnalysisRequestRepositoryIntegrationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.iadetectition.integration.repository.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.iadetectition.integration.repository" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.iadetectition.integration.repository.AnalysisRequestRepositoryIntegrationTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AssignmentApplicationServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.education.unit.application.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.education.unit.application.service" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.education.unit.application.service.AssignmentApplicationServiceTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AssignmentRepositoryIntegrationTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.education.integration.repository.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.education.integration.repository" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.education.integration.repository.AssignmentRepositoryIntegrationTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="IDValueObjectsTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="container-app" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.braintrust.iadetectition.unit.domain.valueobjects.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.braintrust.iadetectition.unit.domain.valueobjects" />
+      <option name="MAIN_CLASS_NAME" value="com.braintrust.iadetectition.unit.domain.valueobjects.IDValueObjectsTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="backend" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="backend" />
+      <option name="filePath" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="BrainTrustApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="container-app" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.braintrust.containerapp.BrainTrustApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Application.BrainTrustApplication" />
+      <item itemvalue="JUnit.AnalysisRequestRepositoryIntegrationTest" />
+      <item itemvalue="JUnit.AssignmentApplicationServiceTest" />
+      <item itemvalue="JUnit.AssignmentRepositoryIntegrationTest" />
+      <item itemvalue="JUnit.IDValueObjectsTest" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.AssignmentApplicationServiceTest" />
+        <item itemvalue="JUnit.AssignmentRepositoryIntegrationTest" />
+        <item itemvalue="JUnit.IDValueObjectsTest" />
+        <item itemvalue="JUnit.AnalysisRequestRepositoryIntegrationTest" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="" />
+      <created>1761931133603</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1761931133603</updated>
+      <workItem from="1763765628593" duration="338000" />
+      <workItem from="1763766006190" duration="29000" />
+      <workItem from="1766117000603" duration="2586000" />
+      <workItem from="1766190535165" duration="4807000" />
+      <workItem from="1766272757091" duration="7230000" />
+      <workItem from="1766343770204" duration="16091000" />
+      <workItem from="1766545972547" duration="1204000" />
+      <workItem from="1766806323238" duration="2761000" />
+      <workItem from="1766848990839" duration="7423000" />
+      <workItem from="1766947980334" duration="1871000" />
+      <workItem from="1767062478424" duration="639000" />
+      <workItem from="1767207676518" duration="2335000" />
+      <workItem from="1767577012547" duration="2221000" />
+      <workItem from="1767584590977" duration="2831000" />
+      <workItem from="1767668491387" duration="1662000" />
+      <workItem from="1767758660423" duration="634000" />
+      <workItem from="1768179309805" duration="5850000" />
+      <workItem from="1768249494053" duration="1997000" />
+      <workItem from="1768437978672" duration="1949000" />
+      <workItem from="1768624252736" duration="3412000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-field">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/PersonJpaEntity.java</url>
+          <line>20</line>
+          <properties field="gender" class="com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.PersonJpaEntity" />
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-field">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/entities/AssignmentJpaEntity.java</url>
+          <line>31</line>
+          <properties field="description" class="com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.AssignmentJpaEntity" />
+          <option name="timeStamp" value="47" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-field">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java</url>
+          <line>16</line>
+          <properties field="finalFeedback" class="com.braintrust.education.domain.model.Gradebook" />
+          <option name="timeStamp" value="84" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/SubmissionRepository.java</url>
+          <line>14</line>
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/VirtualThreadHealthIndicator.java</url>
+          <line>52</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/BrainTrustApplication.java</url>
+          <line>26</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/CourseRepository.java</url>
+          <line>13</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/QuizRepository.java</url>
+          <line>15</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/PageService.java</url>
+          <line>14</line>
+          <option name="timeStamp" value="54" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/application/ports/out/AnalysisRequestRepository.java</url>
+          <line>13</line>
+          <option name="timeStamp" value="64" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/in/PersonService.java</url>
+          <line>13</line>
+          <option name="timeStamp" value="68" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Assignment.java</url>
+          <line>214</line>
+          <option name="timeStamp" value="69" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/AssignmentController.java</url>
+          <line>97</line>
+          <option name="timeStamp" value="70" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/AssignmentController.java</url>
+          <line>99</line>
+          <option name="timeStamp" value="71" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/AssignmentController.java</url>
+          <line>79</line>
+          <option name="timeStamp" value="72" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/AssignmentController.java</url>
+          <line>82</line>
+          <option name="timeStamp" value="73" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/AssignmentController.java</url>
+          <line>293</line>
+          <option name="timeStamp" value="74" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/assignment/AssignmentLinkHelper.java</url>
+          <line>25</line>
+          <option name="timeStamp" value="76" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/application/ports/out/DocumentStorageService.java</url>
+          <line>9</line>
+          <option name="timeStamp" value="77" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/AssignmentEntityMapper.java</url>
+          <line>181</line>
+          <option name="timeStamp" value="78" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/Mapper/AssignmentEntityMapper.java</url>
+          <line>148</line>
+          <option name="timeStamp" value="79" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/QuizRepository.java</url>
+          <line>19</line>
+          <properties class="com.braintrust.education.application.ports.out.QuizRepository" method="findBasicQuizzesByCourseId">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/SubmissionRepository.java</url>
+          <line>18</line>
+          <properties class="com.braintrust.education.application.ports.out.SubmissionRepository">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/SubmissionService.java</url>
+          <line>25</line>
+          <properties class="com.braintrust.education.application.ports.in.SubmissionService">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/CourseService.java</url>
+          <line>45</line>
+          <properties class="com.braintrust.education.application.ports.in.CourseService">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="56" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/QuizSubmissionService.java</url>
+          <line>15</line>
+          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/out/PersonRepository.java</url>
+          <line>17</line>
+          <properties class="com.braintrust.identity.application.ports.out.PersonRepository">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="63" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/PageService.java</url>
+          <line>39</line>
+          <properties class="com.braintrust.education.application.ports.in.PageService" method="getPublishedPagesByCourse">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="66" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/AssignmentService.java</url>
+          <line>27</line>
+          <properties class="com.braintrust.education.application.ports.in.AssignmentService" method="createAssignmentForTeam">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="67" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/QuizSubmissionService.java</url>
+          <line>18</line>
+          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService" method="getSubmissionDetailById">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="80" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/StudentGroupService.java</url>
+          <line>13</line>
+          <properties class="com.braintrust.education.application.ports.in.StudentGroupService" method="createGroup">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="81" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/QuizSubmissionService.java</url>
+          <line>19</line>
+          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService" method="getSubmissionsByCourse">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="82" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/UnitGradeRepository.java</url>
+          <line>18</line>
+          <properties class="com.braintrust.education.application.ports.out.UnitGradeRepository" method="findByCourseAndStudent">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="83" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/in/UserService.java</url>
+          <line>26</line>
+          <properties class="com.braintrust.identity.application.ports.in.UserService" method="deleteUser">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="85" />
+        </line-breakpoint>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="org.springframework.data.mapping.PropertyReferenceException" package="org.springframework.data.mapping" />
+          <option name="timeStamp" value="62" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="com.braintrust.education.domain.model.Submission" memberName="teamId" />
+      </pinned-members>
+    </pin-to-top-manager>
+  </component>
+</project>

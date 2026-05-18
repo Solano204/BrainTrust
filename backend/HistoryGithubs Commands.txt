@@ -1,0 +1,58 @@
+# Navigate to the parent directory
+cd ~/Music/BrainTrust/
+
+# Clone your private repo (it will create a new folder)
+git clone https://github.com/yourusername/your-private-repo.git education-repo
+
+# Now move your Spring Boot files into the cloned repo
+cp -r education/* education-repo/
+cd education-repo
+
+
+# Stage all your Spring Boot project files
+git add .
+
+# Check what you're committing
+git status
+
+# Make the perfect initial commit
+git commit -m "feat: initial Spring Boot project setup
+
+- Spring Boot 3.x base project structure
+- Maven build configuration with wrapper
+- Basic application skeleton
+- Git commit best practices documentation
+- Ready for team development with Git Flow
+
+Project includes:
+- Main application class
+- Maven wrapper for consistent builds
+- Basic project documentation
+- Git workflow guidelines"
+
+,
+
+
+
+
+
+
+
+BEFORE TO START ONE FEAUTURE (AFTER COMMITED IN DEVELOP) 
+
+# Make sure you're on develop and have latest changes
+git checkout develop
+git pull origin develop
+
+
+TO START TO BUILD SOMETHIN' NEW 
+
+Start a new feature branch for entities
+git flow feature start entities-and-value-objects
+
+
+
+
+TO CHANGE THE NAME OF BRANCH IF I MISTOOK 
+
+git branch -m feature/entities-and-value-objects feature/multi-modules
