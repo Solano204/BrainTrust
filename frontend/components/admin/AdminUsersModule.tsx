@@ -88,72 +88,85 @@ function PaginationControls({
 }: PaginationControlsProps) {
   const startItem = currentPage * pageSize + 1;
   const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
+return (
+  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-4 pb-4">
 
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-4 pb-4">
-      <div className="text-sm text-muted-foreground">
-        Mostrando {startItem}-{endItem} de {totalElements} usuarios
+    {/* Count */}
+    <p className="text-xs text-muted-foreground">
+      Mostrando{" "}
+      <span className="font-medium text-foreground">{startItem}–{endItem}</span>
+      {" "}de{" "}
+      <span className="font-medium text-foreground">{totalElements}</span>
+      {" "}usuarios
+    </p>
+
+    <div className="flex items-center gap-4">
+
+      {/* Page size */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          Filas por página:
+        </span>
+        <Select
+          value={pageSize.toString()}
+          onValueChange={(value) => onPageSizeChange(Number(value))}
+        >
+          <SelectTrigger className="w-16 h-8 rounded-xl border-border bg-background text-xs focus:ring-ring/50">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl border-border bg-card">
+            <SelectItem value="10">10</SelectItem>
+            <SelectItem value="20">20</SelectItem>
+            <SelectItem value="50">50</SelectItem>
+            <SelectItem value="100">100</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Filas por página:
-          </span>
-          <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(0)}
-            disabled={currentPage === 0}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 0}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Página {currentPage + 1} de {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(totalPages - 1)}
-            disabled={currentPage >= totalPages - 1}
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </Button>
-        </div>
+
+      {/* Nav */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(0)}
+          disabled={currentPage === 0}
+          className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          title="Primera página"
+        >
+          <ChevronsLeft className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 0}
+          className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          title="Página anterior"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+
+        <span className="px-3 py-1 rounded-xl bg-muted/50 text-xs font-semibold text-foreground border border-border whitespace-nowrap">
+          {currentPage + 1} / {totalPages}
+        </span>
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages - 1}
+          className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          title="Página siguiente"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages - 1)}
+          disabled={currentPage >= totalPages - 1}
+          className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          title="Última página"
+        >
+          <ChevronsRight className="h-3.5 w-3.5" />
+        </button>
       </div>
+
     </div>
-  );
+  </div>
+);
 }
 
 // ─────────────────────────────────────────────
@@ -351,344 +364,319 @@ export default function AccountManagementView() {
       </div>
     );
   }
+return (
+  <div className="space-y-5">
 
-  return (
-    <div className="space-y-4">
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold">
-            Gestión de Cuentas
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Administra emails, contraseñas y estado de las cuentas
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          className="gap-2 w-full sm:w-auto"
-          onClick={() => refetch()}
-          disabled={isLoading}
-        >
-          <Loader2
-            className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-          />
-          Actualizar
-        </Button>
-        {/* ← NO "Nuevo Usuario" button here */}
+    {/* ── Header ── */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Gestión de Cuentas
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Administra emails, contraseñas y estado de las cuentas
+        </p>
       </div>
-
-      {/* ── Role filter tabs ── */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(v: any) => {
-          setActiveTab(v);
-          setPage(0);
-        }}
+      <button
+        onClick={() => refetch()}
+        disabled={isLoading}
+        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40 transition-all w-full md:w-auto"
       >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" className="gap-2">
-            <Users className="h-4 w-4" />
-            Todos
-            {activeTab === "all" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="student" className="gap-2">
-            <Users className="h-4 w-4" />
-            Estudiantes
-            {activeTab === "student" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="teacher" className="gap-2">
-            <Shield className="h-4 w-4" />
-            Profesores
-            {activeTab === "teacher" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="admin" className="gap-2">
-            <Shield className="h-4 w-4" />
-            Admins
-            {activeTab === "admin" && (
-              <Badge variant="secondary" className="ml-1">
-                {totalElements}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+        <Loader2 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+        Actualizar
+      </button>
+    </div>
 
-      {/* ── Search bar ── */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre o email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        {isSearching && (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Search className="h-3 w-3" />
-            Buscando: &quot;{debouncedSearch}&quot;
-          </Badge>
-        )}
+    {/* ── Role filter tabs ── */}
+    <Tabs
+      value={activeTab}
+      onValueChange={(v: any) => { setActiveTab(v); setPage(0); }}
+    >
+      <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-muted/50 p-1 h-auto">
+        {[
+          { value: "all",     icon: Users,  label: "Todos" },
+          { value: "student", icon: Users,  label: "Estudiantes" },
+          { value: "teacher", icon: Shield, label: "Profesores" },
+          { value: "admin",   icon: Shield, label: "Administradores" },
+        ].map(({ value, icon: Icon, label }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            className="flex items-center gap-1.5 rounded-xl text-xs font-semibold py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+          >
+            <Icon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{label.slice(0, 3)}</span>
+            {activeTab === value && (
+              <span className="ml-0.5 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold leading-none">
+                {totalElements}
+              </span>
+            )}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+
+    {/* ── Search bar ── */}
+    <div className="flex gap-2 items-center">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          placeholder="Buscar por nombre o email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+        />
+      </div>
+      {isSearching && (
+        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-muted/50 text-xs text-muted-foreground whitespace-nowrap">
+          <Search className="h-3 w-3" />
+          &ldquo;{debouncedSearch}&rdquo;
+        </span>
+      )}
+    </div>
+
+    {/* ── Table ── */}
+    <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+              <TableHead className="w-12 text-xs font-semibold text-muted-foreground uppercase tracking-wider">#</TableHead>
+              <TableHead
+                className="cursor-pointer hover:text-foreground min-w-[160px] text-xs font-semibold text-muted-foreground uppercase tracking-wider transition-colors"
+                onClick={() => handleSort("firstName")}
+              >
+                Nombre {sortIndicator("firstName")}
+              </TableHead>
+              <TableHead
+                className="cursor-pointer hover:text-foreground min-w-[200px] text-xs font-semibold text-muted-foreground uppercase tracking-wider transition-colors"
+                onClick={() => handleSort("email")}
+              >
+                Correo {sortIndicator("email")}
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rol</TableHead>
+              <TableHead className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estado</TableHead>
+              <TableHead
+                className="cursor-pointer hover:text-foreground min-w-[110px] text-xs font-semibold text-muted-foreground uppercase tracking-wider transition-colors"
+                onClick={() => handleSort("createdAt")}
+              >
+                Creado {sortIndicator("createdAt")}
+              </TableHead>
+              <TableHead className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Acciones de Cuenta
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-border/50">
+            {users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-16 text-muted-foreground">
+                  {isSearching ? (
+                    <>
+                      <Search className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">
+                        No se encontraron usuarios para &ldquo;{debouncedSearch}&rdquo;
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm">No se encontraron usuarios</p>
+                  )}
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => (
+                <TableRow key={user.id} className="hover:bg-muted/30 transition-colors group">
+
+                  {/* Avatar */}
+                  <TableCell>
+                    <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
+                      {user.person.firstName[0]}
+                      {user.person.lastName[0]}
+                    </div>
+                  </TableCell>
+
+                  {/* Name */}
+                  <TableCell className="font-semibold text-sm text-foreground">
+                    {user.person.firstName} {user.person.lastName}
+                  </TableCell>
+
+                  {/* Email */}
+                  <TableCell className="text-sm text-muted-foreground">
+                    {user.email}
+                  </TableCell>
+
+                  {/* Role */}
+                  <TableCell>{getRoleBadge(user.role)}</TableCell>
+
+                  {/* Status */}
+                  <TableCell>{getStatusBadge(user.active)}</TableCell>
+
+                  {/* Date */}
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(user.createdAt).toLocaleDateString("es-MX")}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all opacity-0 group-hover:opacity-100">
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-2xl border-border bg-card shadow-lg min-w-[190px]">
+                        <DropdownMenuItem
+                          onClick={() => handleChangeEmail(user)}
+                          className="rounded-xl gap-2 text-sm cursor-pointer"
+                        >
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          Cambiar Correo
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleResetPassword(user)}
+                          className="rounded-xl gap-2 text-sm cursor-pointer"
+                        >
+                          <KeyRound className="h-4 w-4 text-muted-foreground" />
+                          Restablecer Contraseña
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-border/50" />
+                        <DropdownMenuItem
+                          onClick={() => handleToggleActive(user)}
+                          className="rounded-xl gap-2 text-sm cursor-pointer"
+                        >
+                          {user.active ? (
+                            <><UserX className="h-4 w-4 text-muted-foreground" />Desactivar</>
+                          ) : (
+                            <><UserCheck className="h-4 w-4 text-muted-foreground" />Activar</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(user)}
+                          className="rounded-xl gap-2 text-sm cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
 
-      {/* ── Table ── */}
-      <Card>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[160px]"
-                  onClick={() => handleSort("firstName")}
-                >
-                  Nombre {sortIndicator("firstName")}
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[200px]"
-                  onClick={() => handleSort("email")}
-                >
-                  Email {sortIndicator("email")}
-                </TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead
-                  className="cursor-pointer hover:bg-muted/50 min-w-[110px]"
-                  onClick={() => handleSort("createdAt")}
-                >
-                  Creado {sortIndicator("createdAt")}
-                </TableHead>
-                <TableHead className="text-right">Acciones de Cuenta</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {isSearching ? (
-                      <>
-                        <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>
-                          No se encontraron usuarios para &quot;
-                          {debouncedSearch}&quot;
-                        </p>
-                      </>
-                    ) : (
-                      "No se encontraron usuarios"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50">
-                    <TableCell>
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                        {user.person.firstName[0]}
-                        {user.person.lastName[0]}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {user.person.firstName} {user.person.lastName}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {user.email}
-                    </TableCell>
-                    <TableCell>{getRoleBadge(user.role)}</TableCell>
-                    <TableCell>{getStatusBadge(user.active)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString("es-MX")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleChangeEmail(user)}
-                          >
-                            <Mail className="h-4 w-4 mr-2" />
-                            Cambiar Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleResetPassword(user)}
-                          >
-                            <KeyRound className="h-4 w-4 mr-2" />
-                            Resetear Contraseña
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleToggleActive(user)}
-                          >
-                            {user.active ? (
-                              <>
-                                <UserX className="h-4 w-4 mr-2" />
-                                Desactivar
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Activar
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(user)}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Eliminar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {users.length > 0 && (
+      {users.length > 0 && (
+        <div className="border-t border-border">
           <PaginationControls
             currentPage={page}
             totalPages={totalPages}
             pageSize={pageSize}
             totalElements={totalElements}
             onPageChange={handlePageChange}
-            onPageSizeChange={(s) => {
-              setPageSize(s);
-              setPage(0);
-            }}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
           />
-        )}
-      </Card>
-
-      {/* ── Modals ── */}
-      <ChangeEmailModal
-        user={selectedUser}
-        open={showChangeEmailModal}
-        onClose={() => {
-          setShowChangeEmailModal(false);
-          setSelectedUser(null);
-          refetch();
-        }}
-      />
-
-      <AdminResetPasswordModal
-        user={selectedUser}
-        open={showResetPasswordModal}
-        onClose={() => {
-          setShowResetPasswordModal(false);
-          setSelectedUser(null);
-          refetch();
-        }}
-      />
-
-      {/* Activate / Deactivate dialog */}
-      <AlertDialog
-        open={showActivateModal}
-        onOpenChange={setShowActivateModal}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {selectedUser?.active
-                ? "Desactivar Usuario"
-                : "Activar Usuario"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro que deseas{" "}
-              {selectedUser?.active ? "desactivar" : "activar"} a{" "}
-              <strong>
-                {selectedUser?.person.firstName}{" "}
-                {selectedUser?.person.lastName}
-              </strong>
-              ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={activateUser.isPending || deactivateUser.isPending}
-            >
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmToggleActive}
-              disabled={activateUser.isPending || deactivateUser.isPending}
-            >
-              {(activateUser.isPending || deactivateUser.isPending) && (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              )}
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete dialog */}
-      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" />
-              Eliminar Usuario
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro que deseas eliminar permanentemente a{" "}
-              <strong>
-                {selectedUser?.person.firstName}{" "}
-                {selectedUser?.person.lastName}
-              </strong>
-              ?
-              <br />
-              <span className="text-destructive mt-2 inline-block font-semibold">
-                ⚠️ Esta acción NO se puede deshacer.
-              </span>
-              <br />
-              <span className="text-muted-foreground text-sm mt-2 inline-block">
-                Se eliminarán todos los datos asociados al usuario.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteUser.isPending}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteUser.isPending}
-            >
-              {deleteUser.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Trash2 className="h-4 w-4 mr-2" />
-              )}
-              Eliminar Permanentemente
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        </div>
+      )}
     </div>
-  );
+
+    {/* ── Modals ── */}
+    <ChangeEmailModal
+      user={selectedUser}
+      open={showChangeEmailModal}
+      onClose={() => { setShowChangeEmailModal(false); setSelectedUser(null); refetch(); }}
+    />
+    <AdminResetPasswordModal
+      user={selectedUser}
+      open={showResetPasswordModal}
+      onClose={() => { setShowResetPasswordModal(false); setSelectedUser(null); refetch(); }}
+    />
+
+    {/* ── Activate / Deactivate dialog ── */}
+    <AlertDialog open={showActivateModal} onOpenChange={setShowActivateModal}>
+      <AlertDialogContent className="rounded-3xl border-border bg-card">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-foreground">
+            {selectedUser?.active ? "Desactivar Usuario" : "Activar Usuario"}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground">
+            ¿Estás seguro que deseas{" "}
+            {selectedUser?.active ? "desactivar" : "activar"} a{" "}
+            <strong className="text-foreground">
+              {selectedUser?.person.firstName} {selectedUser?.person.lastName}
+            </strong>?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            disabled={activateUser.isPending || deactivateUser.isPending}
+            className="rounded-xl border-border text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={confirmToggleActive}
+            disabled={activateUser.isPending || deactivateUser.isPending}
+            className="rounded-xl font-semibold"
+          >
+            {(activateUser.isPending || deactivateUser.isPending) && (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            )}
+            Confirmar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* ── Delete dialog ── */}
+    <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+      <AlertDialogContent className="rounded-3xl border-border bg-card">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+            <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-destructive/10 flex-shrink-0">
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </span>
+            Eliminar Usuario
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground">
+            ¿Estás seguro que deseas eliminar permanentemente a{" "}
+            <strong className="text-foreground">
+              {selectedUser?.person.firstName} {selectedUser?.person.lastName}
+            </strong>?
+            <span className="flex items-center gap-1.5 mt-3 text-destructive font-semibold text-xs bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-xl">
+              ⚠️ Esta acción NO se puede deshacer.
+            </span>
+            <span className="block mt-2 text-xs text-muted-foreground">
+              Se eliminarán todos los datos asociados al usuario.
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            disabled={deleteUser.isPending}
+            className="rounded-xl border-border text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={confirmDelete}
+            disabled={deleteUser.isPending}
+            className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+          >
+            {deleteUser.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            Eliminar Permanentemente
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+  </div>
+);
 }

@@ -133,82 +133,83 @@ function CourseStatsCards({ courses }: { courses: Course[] }) {
             ) / courses.filter(c => c.status === 'ACTIVE').length
         ) || 0
     }), [courses])
+return (
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
-    return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Total</p>
-                        <p className="text-xl font-bold">{stats.total}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-green-600 flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Activos</p>
-                        <p className="text-xl font-bold">{stats.active}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gray-600 flex items-center justify-center">
-                        <Archive className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Archivados</p>
-                        <p className="text-xl font-bold">{stats.archived}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-orange-600 flex items-center justify-center">
-                        <Clock className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Borradores</p>
-                        <p className="text-xl font-bold">{stats.draft}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-purple-600 flex items-center justify-center">
-                        <Users className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Estudiantes</p>
-                        <p className="text-xl font-bold">{stats.totalStudents}</p>
-                    </div>
-                </div>
-            </Card>
-
-            <Card className="p-4">
-                <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-indigo-600 flex items-center justify-center">
-                        <TrendingUp className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-muted-foreground">Ocupación</p>
-                        <p className="text-xl font-bold">{stats.avgEnrollment}%</p>
-                    </div>
-                </div>
-            </Card>
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+          <BookOpen className="h-5 w-5 text-primary-foreground" />
         </div>
-    )
+        <div>
+          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="text-xl font-bold text-foreground">{stats.total}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-primary/80 flex items-center justify-center flex-shrink-0">
+          <BookOpen className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Activos</p>
+          <p className="text-xl font-bold text-foreground">{stats.active}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+          <Archive className="h-5 w-5 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Archivados</p>
+          <p className="text-xl font-bold text-foreground">{stats.archived}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+          <Clock className="h-5 w-5 text-accent-foreground" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Borradores</p>
+          <p className="text-xl font-bold text-foreground">{stats.draft}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-primary/60 flex items-center justify-center flex-shrink-0">
+          <Users className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Estudiantes</p>
+          <p className="text-xl font-bold text-foreground">{stats.totalStudents}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-accent/80 flex items-center justify-center flex-shrink-0">
+          <TrendingUp className="h-5 w-5 text-accent-foreground" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Ocupación</p>
+          <p className="text-xl font-bold text-foreground">{stats.avgEnrollment}%</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+);
 }
 
 interface CourseFormModalProps {
@@ -248,179 +249,228 @@ function CourseFormModal({ open, onClose, initialData, onSave, isSaving }: Cours
     }
 
     if (!open) return null
+return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-card shadow-2xl flex flex-col">
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div>
-                    <div className="flex justify-between items-center p-6 border-b">
-                        <h2 className="text-2xl font-bold flex items-center gap-3">
-                            <BookOpen className="h-6 w-6" />
-                            {isEditMode ? 'Editar Curso' : 'Crear Curso'}
-                        </h2>
-                        <Button variant="ghost" size="icon" onClick={onClose} disabled={isSaving}>
-                            <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name" className="font-semibold">Nombre del Curso *</Label>
-                                <Input
-                                    id="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={isSaving}
-                                    placeholder="Ej: Matemáticas Avanzadas"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="code" className="font-semibold">Código *</Label>
-                                <Input
-                                    id="code"
-                                    value={formData.code}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={isSaving}
-                                    placeholder="Ej: MAT-401"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="description" className="font-semibold">Descripción</Label>
-                            <Textarea
-                                id="description"
-                                rows={3}
-                                value={formData.description}
-                                onChange={handleChange}
-                                disabled={isSaving}
-                                placeholder="Describe brevemente el contenido del curso..."
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="grade" className="font-semibold">Nivel / Grado</Label>
-                                <Input
-                                    id="grade"
-                                    value={formData.grade}
-                                    onChange={handleChange}
-                                    disabled={isSaving}
-                                    placeholder="Ej: Avanzado"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="group" className="font-semibold">Sección / Grupo</Label>
-                                <Input
-                                    id="group"
-                                    value={formData.group}
-                                    onChange={handleChange}
-                                    disabled={isSaving}
-                                    placeholder="Ej: Grupo A"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="maxStudents" className="font-semibold">Max. Estudiantes</Label>
-                                <Input
-                                    id="maxStudents"
-                                    type="number"
-                                    min="1"
-                                    max="100"
-                                    value={formData.maxStudents}
-                                    onChange={handleChange}
-                                    disabled={isSaving}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="startDate" className="font-semibold">Fecha de Inicio</Label>
-                                <Input
-                                    id="startDate"
-                                    type="date"
-                                    value={formData.startDate}
-                                    onChange={handleChange}
-                                    disabled={isSaving}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="endDate" className="font-semibold">Fecha de Fin</Label>
-                                <Input
-                                    id="endDate"
-                                    type="date"
-                                    value={formData.endDate}
-                                    onChange={handleChange}
-                                    disabled={isSaving}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="urlImage" className="font-semibold">URL de Imagen (Opcional)</Label>
-                            <Input
-                                id="urlImage"
-                                value={formData.urlImage}
-                                onChange={handleChange}
-                                disabled={isSaving}
-                                placeholder="https://ejemplo.com/imagen.jpg"
-                            />
-                            {formData.urlImage && (
-                                <div className="mt-2">
-                                    <img
-                                        src={formData.urlImage}
-                                        alt="Preview"
-                                        className="w-full h-32 object-cover rounded-lg"
-                                        onError={(e) => {
-                                            e.currentTarget.style.display = 'none'
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="status" className="font-semibold">Estado *</Label>
-                            <select
-                                id="status"
-                                value={formData.status}
-                                onChange={handleChange}
-                                className="w-full border rounded-md px-3 py-2"
-                                disabled={isSaving}
-                            >
-                                <option value="DRAFT">Borrador</option>
-                                <option value="ACTIVE">Activo</option>
-                                <option value="ARCHIVED">Archivado</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 p-6 border-t bg-gray-50 dark:bg-gray-800">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleSubmit} disabled={isSaving} className="gap-2">
-                            {isSaving ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Save className="h-4 w-4" />
-                            )}
-                            {isSaving ? 'Guardando...' : isEditMode ? 'Guardar Cambios' : 'Crear Curso'}
-                        </Button>
-                    </div>
-                </div>
-            </Card>
+      {/* ── Header ── */}
+      <div className="flex justify-between items-center px-5 py-4 sm:px-7 sm:py-5 border-b border-border sticky top-0 bg-card z-10 rounded-t-3xl">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <BookOpen className="h-4 w-4 text-primary" />
+          </span>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+            {isEditMode ? 'Editar Curso' : 'Crear Curso'}
+          </h2>
         </div>
-    )
-}
+        <button
+          onClick={onClose}
+          disabled={isSaving}
+          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-40"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
+      {/* ── Body ── */}
+      <div className="px-5 py-6 sm:px-7 space-y-6 flex-1 overflow-y-auto">
+
+        {/* Name + Code */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="text-xs font-semibold text-foreground">
+              Nombre del Curso *
+            </Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              disabled={isSaving}
+              placeholder="Ej: Matemáticas Avanzadas"
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="code" className="text-xs font-semibold text-foreground">
+              Código *
+            </Label>
+            <Input
+              id="code"
+              value={formData.code}
+              onChange={handleChange}
+              required
+              disabled={isSaving}
+              placeholder="Ej: MAT-401"
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="space-y-1.5">
+          <Label htmlFor="description" className="text-xs font-semibold text-foreground">
+            Descripción
+          </Label>
+          <Textarea
+            id="description"
+            rows={3}
+            value={formData.description}
+            onChange={handleChange}
+            disabled={isSaving}
+            placeholder="Describe brevemente el contenido del curso..."
+            className="rounded-xl border-border bg-background focus:ring-ring/50 resize-none"
+          />
+        </div>
+
+        {/* Grade + Group + Max students */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="grade" className="text-xs font-semibold text-foreground">
+              Nivel / Grado
+            </Label>
+            <Input
+              id="grade"
+              value={formData.grade}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="Ej: Avanzado"
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="group" className="text-xs font-semibold text-foreground">
+              Sección / Grupo
+            </Label>
+            <Input
+              id="group"
+              value={formData.group}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="Ej: Grupo A"
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="maxStudents" className="text-xs font-semibold text-foreground">
+              Máx. Estudiantes
+            </Label>
+            <Input
+              id="maxStudents"
+              type="number"
+              min="1"
+              max="100"
+              value={formData.maxStudents}
+              onChange={handleChange}
+              disabled={isSaving}
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="startDate" className="text-xs font-semibold text-foreground">
+              Fecha de Inicio
+            </Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={formData.startDate}
+              onChange={handleChange}
+              disabled={isSaving}
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="endDate" className="text-xs font-semibold text-foreground">
+              Fecha de Fin
+            </Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={formData.endDate}
+              onChange={handleChange}
+              disabled={isSaving}
+              className="rounded-xl border-border bg-background focus:ring-ring/50"
+            />
+          </div>
+        </div>
+
+        {/* Image URL */}
+        <div className="space-y-1.5">
+          <Label htmlFor="urlImage" className="text-xs font-semibold text-foreground">
+            URL de Imagen (Opcional)
+          </Label>
+          <Input
+            id="urlImage"
+            value={formData.urlImage}
+            onChange={handleChange}
+            disabled={isSaving}
+            placeholder="https://ejemplo.com/imagen.jpg"
+            className="rounded-xl border-border bg-background focus:ring-ring/50"
+          />
+          {formData.urlImage && (
+            <div className="mt-2 rounded-xl overflow-hidden border border-border">
+              <img
+                src={formData.urlImage}
+                alt="Vista previa"
+                className="w-full h-32 object-cover"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Status */}
+        <div className="space-y-1.5">
+          <Label htmlFor="status" className="text-xs font-semibold text-foreground">
+            Estado *
+          </Label>
+          <select
+            id="status"
+            value={formData.status}
+            onChange={handleChange}
+            disabled={isSaving}
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all disabled:opacity-50"
+          >
+            <option value="DRAFT">Borrador</option>
+            <option value="ACTIVE">Activo</option>
+            <option value="ARCHIVED">Archivado</option>
+          </select>
+        </div>
+
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 px-5 py-4 sm:px-7 border-t border-border bg-muted/30 sticky bottom-0 rounded-b-3xl">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={isSaving}
+          className="px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40 transition-all"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={isSaving}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        >
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {isSaving ? 'Guardando...' : isEditMode ? 'Guardar Cambios' : 'Crear Curso'}
+        </button>
+      </div>
+
+    </div>
+  </div>
+);
+}
 export default function AdminCoursesModule() {
     const [courses] = useState<Course[]>(mockCourses)
     const [isLoading] = useState(false)
@@ -475,223 +525,239 @@ export default function AdminCoursesModule() {
         if (percentage >= 70) return 'text-yellow-600'
         return 'text-green-600'
     }
+return (
+  <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-background min-h-screen">
 
-    return (
-        <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-background min-h-screen">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">Gestión de Cursos</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Administra todos los cursos del sistema
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Exportar
-                    </Button>
-                    <Button onClick={() => {
-                        setSelectedCourse(null)
-                        setShowFormModal(true)
-                    }} className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Nuevo Curso
-                    </Button>
-                </div>
+    {/* ── Header ── */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Gestión de Cursos
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Administra todos los cursos del sistema
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+          <Download className="h-4 w-4" />
+          Exportar
+        </button>
+        <button
+          onClick={() => { setSelectedCourse(null); setShowFormModal(true); }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:opacity-90 active:scale-95 transition-all"
+        >
+          <Plus className="h-4 w-4" />
+          Nuevo Curso
+        </button>
+      </div>
+    </div>
+
+    {/* ── Stats ── */}
+    <CourseStatsCards courses={courses} />
+
+    {/* ── Search ── */}
+    <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          placeholder="Buscar por nombre, código o profesor..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+        />
+      </div>
+    </div>
+
+    {/* ── Tabs ── */}
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-muted/50 p-1 h-auto">
+        {[
+          { value: "all",      label: "Todos",      count: courses.length },
+          { value: "active",   label: "Activos",    count: courses.filter(c => c.status === 'ACTIVE').length },
+          { value: "draft",    label: "Borradores", count: courses.filter(c => c.status === 'DRAFT').length },
+          { value: "archived", label: "Archivados", count: courses.filter(c => c.status === 'ARCHIVED').length },
+        ].map(({ value, label, count }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            className="rounded-xl text-xs font-semibold py-2 data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+          >
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{label.slice(0, 3)}</span>
+            <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold leading-none">
+              {count}
+            </span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      <TabsContent value={activeTab} className="space-y-4 mt-6">
+        {isLoading ? (
+          <div className="bg-card rounded-2xl border border-border p-12 text-center shadow-sm">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Cargando cursos...</p>
+          </div>
+        ) : filteredCourses.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-12 text-center text-muted-foreground text-sm shadow-sm">
+            No se encontraron cursos
+          </div>
+        ) : (
+          <>
+            {/* ── Desktop Table ── */}
+            <div className="hidden lg:block rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Curso</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Profesor</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estado</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Inscritos</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fechas</th>
+                    <th className="px-6 py-3.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredCourses.map((course) => (
+                    <tr key={course.id} className="hover:bg-muted/30 transition-colors group">
+
+                      {/* Course */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={course.urlImage}
+                            alt={course.name}
+                            className="w-11 h-11 rounded-xl object-cover border border-border flex-shrink-0"
+                          />
+                          <div>
+                            <p className="font-semibold text-sm text-foreground">{course.name}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{course.code}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Teacher */}
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-foreground">{course.teacherName}</p>
+                        <p className="text-xs text-muted-foreground">{course.unitsCount} unidades</p>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-6 py-4">
+                        <Badge className={getStatusBadge(course.status)}>
+                          {course.status === 'ACTIVE' ? 'ACTIVO' : course.status === 'DRAFT' ? 'BORRADOR' : 'ARCHIVADO'}
+                        </Badge>
+                      </td>
+
+                      {/* Enrollment */}
+                      <td className="px-6 py-4">
+                        <p className={`text-sm font-semibold ${getEnrollmentColor(course.enrolledStudents, course.maxStudents)}`}>
+                          {course.enrolledStudents} / {course.maxStudents}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {Math.round((course.enrolledStudents / course.maxStudents) * 100)}% ocupado
+                        </p>
+                      </td>
+
+                      {/* Dates */}
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-foreground">{new Date(course.startDate).toLocaleDateString('es-MX')}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(course.endDate).toLocaleDateString('es-MX')}</p>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all">
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(course)}
+                            className="p-1.5 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button className="p-1.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                       </td>
+
+                     </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Stats */}
-            <CourseStatsCards courses={courses} />
-
-            {/* Search */}
-            <Card className="p-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar por nombre, código o profesor..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
+            {/* ── Mobile Cards ── */}
+            <div className="lg:hidden space-y-3">
+              {filteredCourses.map((course) => (
+                <div key={course.id} className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+                  <div className="flex gap-3 mb-4">
+                    <img
+                      src={course.urlImage}
+                      alt={course.name}
+                      className="w-20 h-20 rounded-xl object-cover border border-border flex-shrink-0"
                     />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-base text-foreground truncate">{course.name}</h3>
+                          <p className="text-xs text-muted-foreground font-mono">{course.code}</p>
+                        </div>
+                        <Badge className={getStatusBadge(course.status)}>
+                          {course.status === 'ACTIVE' ? 'ACTIVO' : course.status === 'DRAFT' ? 'BORRADOR' : 'ARCHIVADO'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{course.teacherName}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border">
+                      <p className="text-xs text-muted-foreground mb-0.5">Inscritos</p>
+                      <p className={`text-sm font-semibold ${getEnrollmentColor(course.enrolledStudents, course.maxStudents)}`}>
+                        {course.enrolledStudents} / {course.maxStudents}
+                      </p>
+                    </div>
+                    <div className="bg-muted/40 rounded-xl px-3 py-2 border border-border">
+                      <p className="text-xs text-muted-foreground mb-0.5">Unidades</p>
+                      <p className="text-sm font-semibold text-foreground">{course.unitsCount}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver
+                    </button>
+                    <button
+                      onClick={() => handleEdit(course)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-all"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                      Editar
+                    </button>
+                    <button className="p-2 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-            </Card>
+              ))}
+            </div>
+          </>
+        )}
+      </TabsContent>
+    </Tabs>
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="all">
-                        Todos ({courses.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="active">
-                        Activos ({courses.filter(c => c.status === 'ACTIVE').length})
-                    </TabsTrigger>
-                    <TabsTrigger value="draft">
-                        Borradores ({courses.filter(c => c.status === 'DRAFT').length})
-                    </TabsTrigger>
-                    <TabsTrigger value="archived">
-                        Archivados ({courses.filter(c => c.status === 'ARCHIVED').length})
-                    </TabsTrigger>
-                </TabsList>
+    <CourseFormModal
+      open={showFormModal}
+      onClose={() => { setShowFormModal(false); setSelectedCourse(null); }}
+      initialData={selectedCourse || undefined}
+      onSave={handleSave}
+      isSaving={isSaving}
+    />
 
-                <TabsContent value={activeTab} className="space-y-4 mt-6">
-                    {isLoading ? (
-                        <Card className="p-8 text-center">
-                            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                            <p>Cargando cursos...</p>
-                        </Card>
-                    ) : filteredCourses.length === 0 ? (
-                        <Card className="p-8 text-center text-muted-foreground">
-                            No se encontraron cursos
-                        </Card>
-                    ) : (
-                        <>
-                            {/* Desktop Table */}
-                            <Card className="hidden lg:block overflow-hidden shadow-lg">
-                                <table className="w-full">
-                                    <thead className="bg-muted/50">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left font-semibold">Curso</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Profesor</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Estado</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Inscritos</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Fechas</th>
-                                            <th className="px-6 py-4 text-center font-semibold">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredCourses.map((course) => (
-                                            <tr key={course.id} className="border-b hover:bg-muted/30 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <img
-                                                            src={course.urlImage}
-                                                            alt={course.name}
-                                                            className="w-12 h-12 rounded-lg object-cover"
-                                                        />
-                                                        <div>
-                                                            <p className="font-medium">{course.name}</p>
-                                                            <p className="text-sm text-muted-foreground">{course.code}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-sm">{course.teacherName}</p>
-                                                    <p className="text-xs text-muted-foreground">{course.unitsCount} unidades</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge className={getStatusBadge(course.status)}>
-                                                        {course.status}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className={`font-medium ${getEnrollmentColor(course.enrolledStudents, course.maxStudents)}`}>
-                                                        {course.enrolledStudents} / {course.maxStudents}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {Math.round((course.enrolledStudents / course.maxStudents) * 100)}% ocupado
-                                                    </p>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm">
-                                                    <p>{new Date(course.startDate).toLocaleDateString('es-MX')}</p>
-                                                    <p className="text-muted-foreground">{new Date(course.endDate).toLocaleDateString('es-MX')}</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center gap-2">
-                                                        <Button variant="ghost" size="sm">
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleEdit(course)}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="sm" className="text-red-600">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </Card>
-
-                            {/* Mobile Cards */}
-                            <div className="lg:hidden space-y-4">
-                                {filteredCourses.map((course) => (
-                                    <Card key={course.id} className="p-4">
-                                        <div className="flex gap-3 mb-4">
-                                            <img
-                                                src={course.urlImage}
-                                                alt={course.name}
-                                                className="w-20 h-20 rounded-lg object-cover"
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between gap-2 mb-2">
-                                                    <div>
-                                                        <h3 className="font-bold text-lg truncate">{course.name}</h3>
-                                                        <p className="text-sm text-muted-foreground">{course.code}</p>
-                                                    </div>
-                                                    <Badge className={getStatusBadge(course.status)}>
-                                                        {course.status}
-                                                    </Badge>
-                                                </div>
-                                                <p className="text-sm text-muted-foreground">{course.teacherName}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                                            <div>
-                                                <p className="text-muted-foreground">Inscritos</p>
-                                                <p className={`font-medium ${getEnrollmentColor(course.enrolledStudents, course.maxStudents)}`}>
-                                                    {course.enrolledStudents} / {course.maxStudents}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-muted-foreground">Unidades</p>
-                                                <p className="font-medium">{course.unitsCount}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-2">
-                                            <Button variant="outline" size="sm" className="flex-1">
-                                                <Eye className="h-4 w-4 mr-2" />
-                                                Ver
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1"
-                                                onClick={() => handleEdit(course)}
-                                            >
-                                                <Edit className="h-4 w-4 mr-2" />
-                                                Editar
-                                            </Button>
-                                            <Button variant="outline" size="sm" className="text-red-600">
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
-
-            <CourseFormModal
-                open={showFormModal}
-                onClose={() => {
-                    setShowFormModal(false)
-                    setSelectedCourse(null)
-                }}
-                initialData={selectedCourse || undefined}
-                onSave={handleSave}
-                isSaving={isSaving}
-            />
-        </div>
-    )
+  </div>
+);
 }

@@ -112,6 +112,7 @@ export const PERMISSIONS = {
   CATALOG_MANAGEMENT: 'admin:catalogs',
   PERSONAL_DATA_MANAGEMENT: 'admin:personal',
   ACTIVITIES: 'admin:activities',
+  STADISTICS: 'admin:statistics',
 
   TEACHER_DASHBOARD: 'teacher:dashboard',
   MANAGE_CLASSES: 'teacher:classes',

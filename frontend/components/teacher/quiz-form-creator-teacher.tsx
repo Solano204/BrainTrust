@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Plus, Trash2, GripVertical, X, Eye, EyeOff, AlertCircle } from "lucide-react"
+import { Plus, Trash2, GripVertical, X, Eye, EyeOff, AlertCircle, HelpCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Question } from "@/app/domain/entities/CourseEntities"
@@ -16,39 +16,39 @@ import { z } from "zod"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-// ─── Schemas ────────────────────────────────────────────────────────────────
+// ─── Esquemas ────────────────────────────────────────────────────────────────
 
-const multipleChoiceQuestionSchema = z.object({
+const esquemaPreguntaOpcionMultiple = z.object({
   id: z.string(),
   type: z.literal("multiple-choice"),
   question: z.string()
-    .min(5, "Question must be at least 5 characters")
-    .max(500, "Question must not exceed 500 characters")
+    .min(5, "La pregunta debe tener al menos 5 caracteres")
+    .max(500, "La pregunta no debe exceder los 500 caracteres")
     .trim(),
-  options: z.array(z.string().min(1, "Option cannot be empty").trim())
-    .min(2, "Must have at least 2 options")
-    .max(10, "Cannot have more than 10 options"),
+  options: z.array(z.string().min(1, "La opción no puede estar vacía").trim())
+    .min(2, "Debe tener al menos 2 opciones")
+    .max(10, "No puede tener más de 10 opciones"),
   correctAnswer: z.number().min(0).int(),
-  /** Weight as a percentage (0-100). All questions must sum to 100. */
+  /** Peso como porcentaje (0-100). Todas las preguntas deben sumar 100. */
   percentage: z.number().min(0).max(100),
   points: z.number().optional(),
   text: z.string().optional(),
   maxPoints: z.number().optional()
 })
 
-const openEndedQuestionSchema = z.object({
+const esquemaPreguntaAbierta = z.object({
   id: z.string(),
   type: z.literal("open-ended"),
   question: z.string()
-    .min(5, "Question must be at least 5 characters")
-    .max(500, "Question must not exceed 500 characters")
+    .min(5, "La pregunta debe tener al menos 5 caracteres")
+    .max(500, "La pregunta no debe exceder los 500 caracteres")
     .trim(),
   expectedAnswer: z.string()
-    .min(1, "Expected answer is required for grading reference")
-    .max(2000, "Expected answer must not exceed 2000 characters")
+    .min(1, "Se requiere una respuesta esperada como referencia para calificar")
+    .max(2000, "La respuesta esperada no debe exceder los 2000 caracteres")
     .trim()
     .optional(),
-  /** Weight as a percentage (0-100). All questions must sum to 100. */
+  /** Peso como porcentaje (0-100). Todas las preguntas deben sumar 100. */
   percentage: z.number().min(0).max(100),
   points: z.number().optional(),
   text: z.string().optional(),
@@ -57,37 +57,37 @@ const openEndedQuestionSchema = z.object({
   correctAnswer: z.number().optional()
 })
 
-const questionSchema = z.discriminatedUnion("type", [
-  multipleChoiceQuestionSchema,
-  openEndedQuestionSchema
+const esquemaPregunta = z.discriminatedUnion("type", [
+  esquemaPreguntaOpcionMultiple,
+  esquemaPreguntaAbierta
 ])
 
-const quizFormSchema = z.object({
+const esquemaFormularioQuiz = z.object({
   title: z.string()
-    .min(3, "Title must be at least 3 characters")
-    .max(200, "Title must not exceed 200 characters")
+    .min(3, "El título debe tener al menos 3 caracteres")
+    .max(200, "El título no debe exceder los 200 caracteres")
     .trim(),
   description: z.string()
-    .max(1000, "Description must not exceed 1000 characters")
+    .max(1000, "La descripción no debe exceder los 1000 caracteres")
     .trim()
     .optional(),
   timeLimit: z.number()
-    .min(0, "Time limit cannot be negative")
-    .max(1440, "Time limit cannot exceed 24 hours (1440 minutes)")
+    .min(0, "El límite de tiempo no puede ser negativo")
+    .max(1440, "El límite de tiempo no puede exceder 24 horas (1440 minutos)")
     .int()
     .optional()
     .or(z.literal(0)),
   maxGrade: z.number()
-    .min(1, "Maximum grade must be at least 1")
-    .max(1000, "Maximum grade cannot exceed 1000")
+    .min(1, "La calificación máxima debe ser al menos 1")
+    .max(1000, "La calificación máxima no puede exceder 1000")
     .int(),
   dueDate: z.string().optional(),
   acceptLateSubmissions: z.boolean().default(true),
-  /** NEW: Whether students can see correct answers after submitting */
+  /** NUEVO: Si los estudiantes pueden ver las respuestas correctas después de enviar */
   allowSeeResults: z.boolean().default(false),
-  questions: z.array(questionSchema)
-    .min(1, "Quiz must have at least one question")
-    .max(100, "Quiz cannot have more than 100 questions")
+  questions: z.array(esquemaPregunta)
+    .min(1, "El quiz debe tener al menos una pregunta")
+    .max(100, "El quiz no puede tener más de 100 preguntas")
 }).refine((data) => {
   return data.questions.every(q => {
     if (q.type === "multiple-choice") {
@@ -96,7 +96,7 @@ const quizFormSchema = z.object({
     return true
   })
 }, {
-  message: "All multiple-choice options must be filled",
+  message: "Todas las opciones de opción múltiple deben estar llenas",
   path: ["questions"]
 }).refine((data) => {
   if (data.dueDate) {
@@ -104,21 +104,21 @@ const quizFormSchema = z.object({
   }
   return true
 }, {
-  message: "Due date must be in the future",
+  message: "La fecha de entrega debe ser en el futuro",
   path: ["dueDate"]
 }).refine((data) => {
   const total = data.questions.reduce((sum, q) => sum + (q.percentage || 0), 0)
   return Math.round(total) === 100
 }, {
-  message: "Question percentages must add up to exactly 100%",
+  message: "Los porcentajes de las preguntas deben sumar exactamente 100%",
   path: ["questions"]
 })
 
-type QuizFormData = z.infer<typeof quizFormSchema>
+type DatosFormularioQuiz = z.infer<typeof esquemaFormularioQuiz>
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 
-interface QuizCreatorProps {
+interface PropsCreadorQuiz {
   open: boolean
   onClose: () => void
   onSave: (quiz: any) => void
@@ -126,22 +126,22 @@ interface QuizCreatorProps {
   courseId: string
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Ayudantes ─────────────────────────────────────────────────────────────────
 
-function calcActualPoints(percentage: number, maxGrade: number): number {
-  return Math.round((percentage / 100) * maxGrade * 100) / 100
+function calcularPuntosReales(porcentaje: number, calificacionMaxima: number): number {
+  return Math.round((porcentaje / 100) * calificacionMaxima * 100) / 100
 }
 
-function defaultPercentages(count: number): number[] {
-  if (count === 0) return []
-  const base = Math.floor(100 / count)
-  const remainder = 100 - base * count
-  return Array.from({ length: count }, (_, i) => (i === 0 ? base + remainder : base))
+function porcentajesPorDefecto(cantidad: number): number[] {
+  if (cantidad === 0) return []
+  const base = Math.floor(100 / cantidad)
+  const resto = 100 - base * cantidad
+  return Array.from({ length: cantidad }, (_, i) => (i === 0 ? base + resto : base))
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Componente ───────────────────────────────────────────────────────────────
 
-export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCreatorProps) {
+export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCreadorQuiz) {
   const {
     control,
     handleSubmit,
@@ -150,8 +150,8 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
     setValue,
     watch,
     trigger
-  } = useForm<QuizFormData>({
-    resolver: zodResolver(quizFormSchema),
+  } = useForm<DatosFormularioQuiz>({
+    resolver: zodResolver(esquemaFormularioQuiz),
     mode: "onChange",
     defaultValues: {
       title: "",
@@ -176,92 +176,92 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
 
   const { fields, append, remove } = useFieldArray({ control, name: "questions" })
 
-  const watchedQuestions = watch("questions")
-  const maxGrade = watch("maxGrade")
-  const allowSeeResults = watch("allowSeeResults")
+  const preguntasObservadas = watch("questions")
+  const calificacionMaxima = watch("maxGrade")
+  const permitirVerResultados = watch("allowSeeResults")
 
-  const totalPercentage = watchedQuestions.reduce((sum, q) => sum + (q.percentage || 0), 0)
-  const percentageOk = Math.round(totalPercentage) === 100
-  const remaining = 100 - totalPercentage
+  const porcentajeTotal = preguntasObservadas.reduce((sum, q) => sum + (q.percentage || 0), 0)
+  const porcentajeOk = Math.round(porcentajeTotal) === 100
+  const restante = 100 - porcentajeTotal
 
-  // ── redistribute percentages evenly across all questions ──────────────────
-  const redistributeEvenly = () => {
-    const perqs = defaultPercentages(watchedQuestions.length)
-    watchedQuestions.forEach((_, i) => {
-      setValue(`questions.${i}.percentage`, perqs[i])
+  // ── redistribuir porcentajes equitativamente entre todas las preguntas ──────────────────
+  const redistribuirUniformemente = () => {
+    const porcentajesEq = porcentajesPorDefecto(preguntasObservadas.length)
+    preguntasObservadas.forEach((_, i) => {
+      setValue(`questions.${i}.percentage`, porcentajesEq[i])
     })
     trigger("questions")
   }
 
-  // ── add question ──────────────────────────────────────────────────────────
-  const addQuestion = (type: "multiple-choice" | "open-ended") => {
-    // When adding, set new question to 0% and let teacher decide
-    const newQuestion: any = {
+  // ── agregar pregunta ──────────────────────────────────────────────────────────
+  const agregarPregunta = (tipo: "multiple-choice" | "open-ended") => {
+    // Al agregar, establecer nueva pregunta en 0% y dejar que el profesor decida
+    const nuevaPregunta: any = {
       id: "" + new Date().getTime(),
-      type,
+      type: tipo,
       question: "",
       percentage: 0,
       text: "",
       maxPoints: 0,
-      ...(type === "multiple-choice" && { options: ["", "", "", ""], correctAnswer: 0 }),
-      ...(type === "open-ended" && { expectedAnswer: "" })
+      ...(tipo === "multiple-choice" && { options: ["", "", "", ""], correctAnswer: 0 }),
+      ...(tipo === "open-ended" && { expectedAnswer: "" })
     }
-    append(newQuestion)
+    append(nuevaPregunta)
     trigger("questions")
   }
 
-  const deleteQuestion = (index: number) => {
-    remove(index)
+  const eliminarPregunta = (indice: number) => {
+    remove(indice)
     trigger("questions")
   }
 
-  // ── option helpers ────────────────────────────────────────────────────────
-  const addOption = (questionIndex: number) => {
-    const q = watchedQuestions[questionIndex]
+  // ── ayudantes de opciones ────────────────────────────────────────────────────────
+  const agregarOpcion = (indicePregunta: number) => {
+    const q = preguntasObservadas[indicePregunta]
     if (q.type === "multiple-choice" && q.options) {
-      setValue(`questions.${questionIndex}.options`, [...q.options, ""])
+      setValue(`questions.${indicePregunta}.options`, [...q.options, ""])
     }
   }
 
-  const removeOption = (questionIndex: number, optionIndex: number) => {
-    const q = watchedQuestions[questionIndex]
+  const eliminarOpcion = (indicePregunta: number, indiceOpcion: number) => {
+    const q = preguntasObservadas[indicePregunta]
     if (q.type === "multiple-choice" && q.options && q.options.length > 2) {
-      const newOptions = q.options.filter((_, i) => i !== optionIndex)
-      const newCorrect = q.correctAnswer === optionIndex
+      const nuevasOpciones = q.options.filter((_, i) => i !== indiceOpcion)
+      const nuevaCorrecta = q.correctAnswer === indiceOpcion
         ? 0
-        : (q.correctAnswer || 0) > optionIndex
+        : (q.correctAnswer || 0) > indiceOpcion
         ? (q.correctAnswer || 0) - 1
         : q.correctAnswer
-      setValue(`questions.${questionIndex}.options`, newOptions)
-      setValue(`questions.${questionIndex}.correctAnswer`, newCorrect)
+      setValue(`questions.${indicePregunta}.options`, nuevasOpciones)
+      setValue(`questions.${indicePregunta}.correctAnswer`, nuevaCorrecta)
     }
   }
 
-  // ── submit ────────────────────────────────────────────────────────────────
-  const onSubmit = (data: QuizFormData) => {
+  // ── enviar ────────────────────────────────────────────────────────────────
+  const alEnviar = (data: DatosFormularioQuiz) => {
     const quiz = {
       title: data.title,
       description: data.description,
       timeLimit: data.timeLimit || 0,
       maxGrade: data.maxGrade,
-      totalScore: data.maxGrade,          // ← NEW field for backend
-      allowSeeResults: data.allowSeeResults, // ← NEW field for backend
+      totalScore: data.maxGrade,          // ← NUEVO campo para el backend
+      allowSeeResults: data.allowSeeResults, // ← NUEVO campo para el backend
       dueDate: data.dueDate || null,
       acceptLateSubmissions: data.acceptLateSubmissions,
       questions: data.questions.map(q => ({
         ...q,
-        // Compute actual points from percentage × maxGrade
-        points: calcActualPoints(q.percentage, data.maxGrade),
+        // Calcular puntos reales a partir del porcentaje × calificación máxima
+        points: calcularPuntosReales(q.percentage, data.maxGrade),
         options: q.type === "multiple-choice" ? q.options : undefined,
         correctAnswer: q.type === "multiple-choice" ? q.correctAnswer : undefined,
         expectedAnswer: q.type === "open-ended" ? q.expectedAnswer : undefined
       }))
     }
     onSave(quiz)
-    handleClose()
+    handleCerrar()
   }
 
-  const handleClose = () => {
+  const handleCerrar = () => {
     reset({
       title: "",
       description: "",
@@ -284,407 +284,516 @@ export function QuizCreator({ open, onClose, onSave, unitId, courseId }: QuizCre
     onClose()
   }
 
-  const getQuestionError = (index: number, field?: string) => {
+  const obtenerErrorPregunta = (indice: number, campo?: string) => {
     if (!errors.questions) return null
-    const qErr = errors.questions[index]
-    if (!qErr) return null
-    if (field && typeof qErr === "object" && field in qErr) return (qErr as any)[field]?.message
-    if (typeof qErr === "object" && "message" in qErr) return qErr.message
+    const errQ = errors.questions[indice]
+    if (!errQ) return null
+    if (campo && typeof errQ === "object" && campo in errQ) return (errQ as any)[campo]?.message
+    if (typeof errQ === "object" && "message" in errQ) return errQ.message
     return null
   }
 
-  // ── percentage bar color ──────────────────────────────────────────────────
-  const barColor = percentageOk
+  // ── color de la barra de porcentaje ──────────────────────────────────────────────────
+  const colorBarra = porcentajeOk
     ? "bg-green-500"
-    : totalPercentage > 100
+    : porcentajeTotal > 100
     ? "bg-red-500"
     : "bg-orange-400"
+return (
+  <Dialog open={open} onOpenChange={handleCerrar}>
+    <DialogContent className="bg-card rounded-3xl border border-border shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 sm:max-w-[95vw] md:max-w-6xl">
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Create Quiz / Exam</DialogTitle>
-        </DialogHeader>
+      {/* ── Encabezado ── */}
+      <div className="flex items-center gap-3 px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
+        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <HelpCircle className="w-4 h-4 text-primary" />
+        </span>
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+            Crear Quiz / Examen
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Configurar ajustes y agregar preguntas
+          </p>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
+      {/* ── Formulario ── */}
+      <form onSubmit={handleSubmit(alEnviar)} className="flex-1 overflow-y-auto flex flex-col">
+        <div className="px-5 py-6 sm:px-7 space-y-6 flex-1">
 
-          {/* ── Quiz Settings ─────────────────────────────────────────────── */}
-          <Card className="p-6 bg-blue-50 dark:bg-blue-950/20">
-            <h3 className="text-lg font-semibold mb-4">Quiz Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* ── Configuración del quiz ── */}
+          <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              Configuración del Quiz
+            </h3>
 
-              {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="quiz-title">Quiz Title *</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* Título */}
+              <div className="space-y-1.5">
+                <label htmlFor="quiz-title" className="text-xs font-semibold text-foreground">
+                  Título del Quiz *
+                </label>
                 <Controller name="title" control={control} render={({ field }) => (
-                  <Input {...field} id="quiz-title" placeholder="Enter quiz title"
-                    className={errors.title ? "border-red-500" : ""} />
+                  <input
+                    {...field}
+                    id="quiz-title"
+                    placeholder="Ingrese el título del quiz"
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                      errors.title ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                    }`}
+                  />
                 )} />
-                {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+                {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
               </div>
 
-              {/* Time Limit */}
-              <div className="space-y-2">
-                <Label htmlFor="time-limit">Time Limit (minutes)</Label>
+              {/* Límite de tiempo */}
+              <div className="space-y-1.5">
+                <label htmlFor="time-limit" className="text-xs font-semibold text-foreground">
+                  Límite de Tiempo (minutos)
+                </label>
                 <Controller name="timeLimit" control={control} render={({ field }) => (
-                  <Input {...field} id="time-limit" type="number" placeholder="e.g., 60"
+                  <input
+                    {...field}
+                    id="time-limit"
+                    type="number"
+                    placeholder="ej., 60"
                     value={field.value || ""}
                     onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 0)}
-                    className={errors.timeLimit ? "border-red-500" : ""} />
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                      errors.timeLimit ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                    }`}
+                  />
                 )} />
-                {errors.timeLimit && <p className="text-sm text-red-500">{errors.timeLimit.message}</p>}
+                {errors.timeLimit && <p className="text-xs text-destructive">{errors.timeLimit.message}</p>}
               </div>
 
-              {/* Description */}
-              <div className="space-y-2 md:col-span-1">
-                <Label htmlFor="quiz-description">Description</Label>
+              {/* Descripción */}
+              <div className="space-y-1.5">
+                <label htmlFor="quiz-description" className="text-xs font-semibold text-foreground">
+                  Descripción
+                </label>
                 <Controller name="description" control={control} render={({ field }) => (
-                  <Textarea {...field} id="quiz-description" placeholder="Enter quiz description"
-                    rows={2} className={errors.description ? "border-red-500" : ""} />
+                  <textarea
+                    {...field}
+                    id="quiz-description"
+                    placeholder="Ingrese la descripción del quiz"
+                    rows={2}
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all ${
+                      errors.description ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                    }`}
+                  />
                 )} />
-                {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
+                {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
               </div>
 
-              {/* Max Grade */}
-              <div className="space-y-2 md:col-span-1">
-                <Label htmlFor="max-grade-quiz">Maximum Grade *</Label>
+              {/* Calificación máxima */}
+              <div className="space-y-1.5">
+                <label htmlFor="max-grade-quiz" className="text-xs font-semibold text-foreground">
+                  Calificación Máxima *
+                </label>
                 <Controller name="maxGrade" control={control} render={({ field }) => (
-                  <Input {...field} id="max-grade-quiz" type="number"
+                  <input
+                    {...field}
+                    id="max-grade-quiz"
+                    type="number"
                     value={field.value || ""}
                     onChange={e => field.onChange(parseInt(e.target.value) || 1)}
-                    min="1" className={errors.maxGrade ? "border-red-500" : ""} />
+                    min="1"
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                      errors.maxGrade ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                    }`}
+                  />
                 )} />
-                {errors.maxGrade && <p className="text-sm text-red-500">{errors.maxGrade.message}</p>}
+                {errors.maxGrade && <p className="text-xs text-destructive">{errors.maxGrade.message}</p>}
                 <p className="text-xs text-muted-foreground">
-                  Each question's actual score = its percentage × {maxGrade || 100}
+                  La puntuación real de cada pregunta = su porcentaje × {calificacionMaxima || 100}
                 </p>
               </div>
 
-              {/* Due Date */}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="due-date">Due Date</Label>
+              {/* Fecha de entrega */}
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="due-date" className="text-xs font-semibold text-foreground">
+                  Fecha de Entrega
+                </label>
                 <Controller name="dueDate" control={control} render={({ field }) => (
-                  <Input {...field} id="due-date" type="datetime-local"
-                    className={errors.dueDate ? "border-red-500" : ""} />
+                  <input
+                    {...field}
+                    id="due-date"
+                    type="datetime-local"
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                      errors.dueDate ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                    }`}
+                  />
                 )} />
-                {errors.dueDate && <p className="text-sm text-red-500">{errors.dueDate.message}</p>}
+                {errors.dueDate && <p className="text-xs text-destructive">{errors.dueDate.message}</p>}
               </div>
 
-              {/* ── NEW: Allow See Results ──────────────────────────────── */}
-              <div className="md:col-span-2">
-                <Card className="p-4 border-2 border-dashed border-primary/30 bg-primary/5">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {allowSeeResults
-                          ? <Eye className="h-5 w-5 text-green-600" />
-                          : <EyeOff className="h-5 w-5 text-muted-foreground" />}
-                        <Label className="text-base font-semibold cursor-pointer">
-                          Allow students to see results after submission
-                        </Label>
-                      </div>
-                      <p className="text-sm text-muted-foreground ml-7">
-                        {allowSeeResults
-                          ? "Students will be able to review correct answers and their score after submitting."
-                          : "Students will only see their total score — correct answers remain hidden."}
+              {/* Alternativa para permitir ver resultados */}
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {permitirVerResultados
+                        ? <Eye className="w-4 h-4 text-primary" />
+                        : <EyeOff className="w-4 h-4 text-muted-foreground" />}
+                      <p className="text-sm font-semibold text-foreground">
+                        Permitir a los estudiantes ver los resultados después de enviar
                       </p>
                     </div>
-                    <Controller name="allowSeeResults" control={control} render={({ field }) => (
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )} />
+                    <p className="text-xs text-muted-foreground ml-6">
+                      {permitirVerResultados
+                        ? "Los estudiantes podrán revisar las respuestas correctas y su puntuación después de enviar."
+                        : "Los estudiantes solo verán su puntuación total — las respuestas correctas permanecerán ocultas."}
+                    </p>
                   </div>
-                </Card>
+                  <Controller name="allowSeeResults" control={control} render={({ field }) => (
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  )} />
+                </div>
               </div>
 
             </div>
-          </Card>
+          </div>
 
-          {/* ── Questions ─────────────────────────────────────────────────── */}
+          {/* ── Encabezado de preguntas ── */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold">
-                  Questions ({fields.length})
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  Preguntas ({fields.length})
                 </h3>
                 {errors.questions && typeof errors.questions === "object" && "message" in errors.questions && (
-                  <p className="text-sm text-red-500 mt-1">{errors.questions.message as string}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.questions.message as string}</p>
                 )}
               </div>
               <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => addQuestion("multiple-choice")} className="gap-2">
-                  <Plus className="h-4 w-4" /> Multiple Choice
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => addQuestion("open-ended")} className="gap-2">
-                  <Plus className="h-4 w-4" /> Open Answer
-                </Button>
+                <button
+                  type="button"
+                  onClick={() => agregarPregunta("multiple-choice")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Opción Múltiple
+                </button>
+                <button
+                  type="button"
+                  onClick={() => agregarPregunta("open-ended")}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Respuesta Abierta
+                </button>
               </div>
             </div>
 
-            {/* ── Percentage progress bar ──────────────────────────────── */}
+            {/* Barra de porcentaje */}
             {fields.length > 0 && (
-              <Card className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Total percentage assigned</span>
-                  <div className="flex items-center gap-3">
-                    {!percentageOk && (
-                      <span className="text-sm text-muted-foreground">
-                        {remaining > 0
-                          ? `${remaining.toFixed(1)}% remaining`
-                          : `${Math.abs(remaining).toFixed(1)}% over limit`}
+              <div className="p-4 bg-card rounded-2xl border border-border space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-foreground">Porcentaje total asignado</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {!porcentajeOk && (
+                      <span className="text-xs text-muted-foreground">
+                        {restante > 0
+                          ? `${restante.toFixed(1)}% restante`
+                          : `${Math.abs(restante).toFixed(1)}% excede el límite`}
                       </span>
                     )}
-                    <Badge
-                      variant={percentageOk ? "default" : "destructive"}
-                      className={percentageOk ? "bg-green-600" : ""}
+                    <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                      porcentajeOk ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+                    }`}>
+                      {porcentajeTotal.toFixed(1)}% / 100%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={redistribuirUniformemente}
+                      className="px-3 py-1 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                     >
-                      {totalPercentage.toFixed(1)}% / 100%
-                    </Badge>
-                    <Button type="button" variant="outline" size="sm" onClick={redistributeEvenly}
-                      className="text-xs h-7">
-                      Distribute Evenly
-                    </Button>
+                      Distribuir Uniformemente
+                    </button>
                   </div>
                 </div>
 
-                {/* Stacked percentage bar */}
-                <div className="w-full h-4 rounded-full bg-muted overflow-hidden flex">
-                  {watchedQuestions.map((q, i) => {
+                {/* Barra apilada */}
+                <div className="w-full h-3 rounded-full bg-muted/50 overflow-hidden flex">
+                  {preguntasObservadas.map((q, i) => {
                     const pct = Math.min(q.percentage || 0, 100)
                     const hue = (i * 47) % 360
                     return pct > 0 ? (
                       <div
                         key={i}
-                        title={`Q${i + 1}: ${pct}%`}
+                        title={`P${i + 1}: ${pct}%`}
                         className="h-full transition-all"
-                        style={{ width: `${pct}%`, backgroundColor: `hsl(${hue},70%,55%)` }}
+                        style={{ width: `${pct}%`, backgroundColor: `hsl(${hue},60%,50%)` }}
                       />
                     ) : null
                   })}
-                  {/* overflow indicator */}
-                  {totalPercentage > 100 && (
-                    <div className="h-full bg-red-500 flex-1" />
+                  {porcentajeTotal > 100 && (
+                    <div className="h-full bg-destructive flex-1" />
                   )}
                 </div>
 
-                {!percentageOk && (
-                  <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                    Percentages must add up to exactly 100% before you can save.
+                {!porcentajeOk && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-accent-foreground">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    Los porcentajes deben sumar exactamente 100% antes de poder guardar.
                   </div>
                 )}
 
-                {/* Actual points preview */}
-                <div className="text-xs text-muted-foreground">
-                  With a max grade of <strong>{maxGrade || 100}</strong>:
-                  {watchedQuestions.map((q, i) => (
-                    <span key={i} className="ml-2">
-                      Q{i + 1} = <strong>{calcActualPoints(q.percentage || 0, maxGrade || 100)} pts</strong>
-                      {i < watchedQuestions.length - 1 && " ·"}
+                <p className="text-xs text-muted-foreground">
+                  Con una calificación máxima de <strong className="text-foreground">{calificacionMaxima || 100}</strong>:{' '}
+                  {preguntasObservadas.map((q, i) => (
+                    <span key={i} className="ml-1">
+                      P{i + 1} = <strong className="text-foreground">{calcularPuntosReales(q.percentage || 0, calificacionMaxima || 100)} pts</strong>
+                      {i < preguntasObservadas.length - 1 && " ·"}
                     </span>
                   ))}
-                </div>
-              </Card>
+                </p>
+              </div>
             )}
 
-            {/* ── Question cards ─────────────────────────────────────────── */}
-            {fields.map((field, index) => {
-              const question = watchedQuestions[index]
-              const questionError = getQuestionError(index, "question")
-              const optionsError = getQuestionError(index, "options")
-              const expectedAnswerError = getQuestionError(index, "expectedAnswer")
-              const percentageError = getQuestionError(index, "percentage")
-              const hasError = !!(questionError || optionsError || expectedAnswerError || percentageError)
-
-              const actualPoints = calcActualPoints(question?.percentage || 0, maxGrade || 100)
+            {/* Tarjetas de preguntas */}
+            {fields.map((field, indice) => {
+              const pregunta           = preguntasObservadas[indice]
+              const errorPregunta      = obtenerErrorPregunta(indice, "question")
+              const errorOpciones       = obtenerErrorPregunta(indice, "options")
+              const errorRespuestaEsperada = obtenerErrorPregunta(indice, "expectedAnswer")
+              const errorPorcentaje    = obtenerErrorPregunta(indice, "percentage")
+              const tieneError           = !!(errorPregunta || errorOpciones || errorRespuestaEsperada || errorPorcentaje)
+              const puntosReales       = calcularPuntosReales(pregunta?.percentage || 0, calificacionMaxima || 100)
 
               return (
-                <Card key={field.id} className={`p-6 ${hasError ? "border-red-300" : ""}`}>
+                <div
+                  key={field.id}
+                  className={`p-5 bg-card rounded-2xl border transition-colors ${
+                    tieneError ? 'border-destructive/50' : 'border-border'
+                  }`}
+                >
                   <div className="space-y-4">
 
-                    {/* Header row */}
+                    {/* Fila de encabezado */}
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 flex-1">
-                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0 mt-1" />
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={question.type === "multiple-choice" ? "default" : "secondary"}>
-                              Question {index + 1}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {question.type === "multiple-choice" ? "Multiple Choice" : "Open Answer"}
-                            </Badge>
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <GripVertical className="w-4 h-4 text-muted-foreground cursor-move flex-shrink-0 mt-2.5" />
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                              pregunta.type === "multiple-choice"
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground'
+                            }`}>
+                              Pregunta {indice + 1}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                              {pregunta.type === "multiple-choice" ? "Opción Múltiple" : "Respuesta Abierta"}
+                            </span>
                           </div>
                           <Controller
-                            name={`questions.${index}.question`}
+                            name={`questions.${indice}.question`}
                             control={control}
                             render={({ field }) => (
-                              <Input {...field} placeholder="Enter your question"
-                                className={questionError ? "border-red-500" : ""} />
-                            )}
-                          />
-                          {questionError && <p className="text-sm text-red-500">{questionError}</p>}
-                        </div>
-                      </div>
-
-                      {/* Percentage input + actual points badge */}
-                      <div className="flex flex-col items-end gap-1 min-w-[120px]">
-                        <div className="flex items-center gap-2">
-                          <Controller
-                            name={`questions.${index}.percentage`}
-                            control={control}
-                            render={({ field }) => (
-                              <Input
+                              <input
                                 {...field}
-                                type="number"
-                                value={field.value}
-                                onChange={e => {
-                                  field.onChange(parseFloat(e.target.value) || 0)
-                                  trigger("questions")
-                                }}
-                                className={`w-20 text-right ${percentageError ? "border-red-500" : ""}`}
-                                min="0"
-                                max="100"
-                                step="0.1"
+                                placeholder="Ingrese su pregunta"
+                                className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                                  errorPregunta ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                                }`}
                               />
                             )}
                           />
-                          <span className="text-sm font-semibold text-muted-foreground">%</span>
-                          <Button
-                            type="button" variant="ghost" size="sm"
-                            onClick={() => deleteQuestion(index)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {errorPregunta && <p className="text-xs text-destructive">{errorPregunta}</p>}
                         </div>
-                        <span className="text-xs text-muted-foreground text-right">
-                          = <strong>{actualPoints}</strong> pts
+                      </div>
+
+                      {/* Porcentaje + eliminar */}
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                          <Controller
+                            name={`questions.${indice}.percentage`}
+                            control={control}
+                            render={({ field }) => (
+                              <input
+                                {...field}
+                                type="number"
+                                value={field.value}
+                                onChange={e => { field.onChange(parseFloat(e.target.value) || 0); trigger("questions") }}
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                className={`w-20 px-3 py-2 rounded-xl border bg-background text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                                  errorPorcentaje ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                                }`}
+                              />
+                            )}
+                          />
+                          <span className="text-xs font-semibold text-muted-foreground">%</span>
+                          <button
+                            type="button"
+                            onClick={() => eliminarPregunta(indice)}
+                            className="p-1.5 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          = <strong className="text-foreground">{puntosReales}</strong> pts
                         </span>
-                        {percentageError && <p className="text-sm text-red-500">{percentageError}</p>}
+                        {errorPorcentaje && <p className="text-xs text-destructive">{errorPorcentaje}</p>}
                       </div>
                     </div>
 
-                    {/* Multiple choice options */}
-                    {question.type === "multiple-choice" && question.options && (
-                      <div className="space-y-3 ml-8">
+                    {/* Opciones de opción múltiple */}
+                    {pregunta.type === "multiple-choice" && pregunta.options && (
+                      <div className="space-y-3 sm:ml-7">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm text-muted-foreground">Answer Options *</Label>
-                          <Button
-                            type="button" variant="outline" size="sm"
-                            onClick={() => addOption(index)}
-                            className="gap-1 h-7 text-xs"
-                            disabled={question.options.length >= 10}
+                          <label className="text-xs font-semibold text-muted-foreground">Opciones de Respuesta *</label>
+                          <button
+                            type="button"
+                            onClick={() => agregarOpcion(indice)}
+                            disabled={pregunta.options.length >= 10}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 transition-all"
                           >
-                            <Plus className="h-3 w-3" /> Add Option
-                          </Button>
+                            <Plus className="w-3 h-3" /> Agregar Opción
+                          </button>
                         </div>
-                        {question.options.map((_, optIndex) => (
-                          <div key={optIndex} className="flex items-center gap-3">
+                        {pregunta.options.map((_, indiceOpcion) => (
+                          <div key={indiceOpcion} className="flex items-center gap-3">
                             <Controller
-                              name={`questions.${index}.correctAnswer`}
+                              name={`questions.${indice}.correctAnswer`}
                               control={control}
                               render={({ field }) => (
                                 <input
                                   type="radio"
-                                  checked={field.value === optIndex}
-                                  onChange={() => field.onChange(optIndex)}
-                                  className="h-4 w-4 text-blue-600 flex-shrink-0"
+                                  checked={field.value === indiceOpcion}
+                                  onChange={() => field.onChange(indiceOpcion)}
+                                  className="w-4 h-4 accent-primary flex-shrink-0"
                                 />
                               )}
                             />
-                            <span className="font-semibold text-sm w-6 flex-shrink-0">
-                              {String.fromCharCode(65 + optIndex)})
+                            <span className="text-xs font-bold text-muted-foreground w-5 flex-shrink-0">
+                              {String.fromCharCode(65 + indiceOpcion)})
                             </span>
                             <Controller
-                              name={`questions.${index}.options.${optIndex}`}
+                              name={`questions.${indice}.options.${indiceOpcion}`}
                               control={control}
                               render={({ field }) => (
-                                <Input
+                                <input
                                   {...field}
-                                  placeholder={`Option ${optIndex + 1}`}
-                                  className={`flex-1 ${!field.value?.trim() && optionsError ? "border-red-500" : ""}`}
+                                  placeholder={`Opción ${indiceOpcion + 1}`}
+                                  className={`flex-1 px-4 py-2 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                                    !field.value?.trim() && errorOpciones
+                                      ? 'border-destructive focus:ring-destructive/40'
+                                      : 'border-border'
+                                  }`}
                                 />
                               )}
                             />
-                            {question.options && question.options.length > 2 && (
-                              <Button
-                                type="button" variant="ghost" size="sm"
-                                onClick={() => removeOption(index, optIndex)}
-                                className="text-destructive hover:text-destructive"
+                            {pregunta.options && pregunta.options.length > 2 && (
+                              <button
+                                type="button"
+                                onClick={() => eliminarOpcion(indice, indiceOpcion)}
+                                className="p-1.5 rounded-xl text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
                               >
-                                <X className="h-4 w-4" />
-                              </Button>
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             )}
                           </div>
                         ))}
-                        {optionsError && <p className="text-sm text-red-500">{optionsError}</p>}
-                        <p className="text-xs text-muted-foreground ml-9">
-                          Select the correct answer by clicking the radio button
+                        {errorOpciones && <p className="text-xs text-destructive">{errorOpciones}</p>}
+                        <p className="text-xs text-muted-foreground ml-8">
+                          Seleccione la respuesta correcta haciendo clic en el botón de radio
                         </p>
                       </div>
                     )}
 
-                    {/* Open-ended expected answer */}
-                    {question.type === "open-ended" && (
-                      <div className="ml-8">
-                        <Label htmlFor={`expected-answer-${field.id}`}
-                          className="text-sm font-semibold text-primary/80 mb-2 block">
-                          Model Answer / Expected Response (For Grading Reference)
-                        </Label>
+                    {/* Respuesta esperada para preguntas abiertas */}
+                    {pregunta.type === "open-ended" && (
+                      <div className="sm:ml-7 space-y-1.5">
+                        <label
+                          htmlFor={`expected-answer-${field.id}`}
+                          className="text-xs font-semibold text-primary"
+                        >
+                          Respuesta Modelo / Respuesta Esperada (Para Referencia de Calificación)
+                        </label>
                         <Controller
-                          name={`questions.${index}.expectedAnswer`}
+                          name={`questions.${indice}.expectedAnswer`}
                           control={control}
                           render={({ field }) => (
-                            <Textarea
+                            <textarea
                               {...field}
                               id={`expected-answer-${field.id}`}
-                              placeholder="Enter the expected answer or key points here for reference (students won't see this)."
+                              placeholder="Ingrese la respuesta esperada o puntos clave aquí como referencia (los estudiantes no verán esto)."
                               rows={3}
-                              className={`bg-gray-50 dark:bg-gray-900/50 border-primary/30 ${expectedAnswerError ? "border-red-500" : ""}`}
+                              className={`w-full px-4 py-2.5 rounded-xl border bg-muted/20 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all ${
+                                errorRespuestaEsperada
+                                  ? 'border-destructive focus:ring-destructive/40'
+                                  : 'border-primary/20'
+                              }`}
                             />
                           )}
                         />
-                        {expectedAnswerError && <p className="text-sm text-red-500 mt-1">{expectedAnswerError}</p>}
-                        <p className="text-xs text-muted-foreground mt-2">
-                          This model answer will be used for manual grading or AI comparison.
+                        {errorRespuestaEsperada && <p className="text-xs text-destructive">{errorRespuestaEsperada}</p>}
+                        <p className="text-xs text-muted-foreground">
+                          Esta respuesta modelo se utilizará para calificación manual o comparación con IA.
                         </p>
                       </div>
                     )}
 
                   </div>
-                </Card>
+                </div>
               )
             })}
 
+            {/* Estado vacío */}
             {fields.length === 0 && (
-              <Card className="p-12 text-center">
-                <p className="text-muted-foreground mb-4">
-                  No questions yet. Add your first question to get started.
+              <div className="flex flex-col items-center justify-center gap-4 p-12 bg-card rounded-2xl border border-border text-center">
+                <p className="text-sm text-muted-foreground">
+                  Aún no hay preguntas. Agregue su primera pregunta para comenzar.
                 </p>
-                <div className="flex gap-2 justify-center">
-                  <Button type="button" variant="outline" onClick={() => addQuestion("multiple-choice")} className="gap-2">
-                    <Plus className="h-4 w-4" /> Multiple Choice
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => addQuestion("open-ended")} className="gap-2">
-                    <Plus className="h-4 w-4" /> Open Answer
-                  </Button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => agregarPregunta("multiple-choice")}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  >
+                    <Plus className="w-4 h-4" /> Opción Múltiple
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => agregarPregunta("open-ended")}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  >
+                    <Plus className="w-4 h-4" /> Respuesta Abierta
+                  </button>
                 </div>
-              </Card>
+              </div>
             )}
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
-            <Button type="submit" disabled={!isValid || !percentageOk}>
-              Create Quiz
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
+          </div>
+        </div>
+
+        {/* ── Pie de página ── */}
+        <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={handleCerrar}
+              className="flex-1 flex items-center justify-center px-5 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={!isValid || !porcentajeOk}
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+            >
+              Crear Quiz
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </DialogContent>
+  </Dialog>
+)
 }

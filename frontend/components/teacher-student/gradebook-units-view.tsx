@@ -13,14 +13,14 @@ import { Search, Loader2, FileText, CheckCircle } from 'lucide-react';
 import { StudentGradebook } from '../student/api/student-gradebooks';
 import { useCourseAllUnits } from '../teacher/hooks/courses-hooks';
 
-interface GradebookUnitsViewProps {
+interface PropsVistaUnidadesLibroCalificaciones {
   courseId: string;
   onSelectUnit: (unitId: string) => void;
   isTeacher: boolean;
   studentGradebook?: StudentGradebook | null;
   courseGradebooks?: any[];
   onAssignUnitFinalGrade?: (unitId: string, studentId: string, gradeValue: string, courseId: string, feedback?: string) => Promise<void>;
-  onAssignCourseFinalGrade?: (studentId: string, gradeValue: string, feedback?: string) => Promise<void>;  // ← NEW
+  onAssignCourseFinalGrade?: (studentId: string, gradeValue: string, feedback?: string) => Promise<void>;
 }
 
 export function GradebookUnitsView({
@@ -30,367 +30,394 @@ export function GradebookUnitsView({
   studentGradebook,
   courseGradebooks,
   onAssignUnitFinalGrade,
-  onAssignCourseFinalGrade,   // ← NEW
-}: GradebookUnitsViewProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [gradeValue, setGradeValue] = useState('');
-  const [feedback, setFeedback] = useState('');
-  const [isAssigningGrade, setIsAssigningGrade] = useState(false);
+  onAssignCourseFinalGrade,
+}: PropsVistaUnidadesLibroCalificaciones) {
+  const [terminoBusqueda, setTerminoBusqueda] = useState('');
+  const [valorCalificacion, setValorCalificacion] = useState('');
+  const [retroalimentacion, setRetroalimentacion] = useState('');
+  const [asignandoCalificacion, setAsignandoCalificacion] = useState(false);
 
-  // ✅ Track which dialog is open per student row using studentId
-  const [openDialogStudentId, setOpenDialogStudentId] = useState<string | null>(null);
+  // ✅ Seguimiento de qué diálogo está abierto por fila de estudiante usando studentId
+  const [dialogoAbiertoStudentId, setDialogoAbiertoStudentId] = useState<string | null>(null);
 
-  // ✅ Track the unitId selected for the current grade assignment
-  const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+  // ✅ Seguimiento del unitId seleccionado para la asignación de calificación actual
+  const [unidadIdSeleccionada, setUnidadIdSeleccionada] = useState<string | null>(null);
 
-  const [unitTasks, setUnitTasks] = useState<Record<string, any[]>>({});
-  // Separate state for each dialog type
-  const [unitDialogStudentId, setUnitDialogStudentId] = useState<string | null>(null);
-  const [courseDialogStudentId, setCourseDialogStudentId] = useState<string | null>(null);
-  const resetDialogState = () => {
-    setGradeValue('');
-    setFeedback('');
-    setSelectedUnitId(null);
+  const [tareasPorUnidad, setTareasPorUnidad] = useState<Record<string, any[]>>({});
+  // Estado separado para cada tipo de diálogo
+  const [dialogoUnidadStudentId, setDialogoUnidadStudentId] = useState<string | null>(null);
+  const [dialogoCursoStudentId, setDialogoCursoStudentId] = useState<string | null>(null);
+  
+  const resetearEstadoDialogo = () => {
+    setValorCalificacion('');
+    setRetroalimentacion('');
+    setUnidadIdSeleccionada(null);
   };
+  
   const {
-    units: courseUnits,
-    isLoading: isLoadingUnits,
-    error: unitsError
+    units: unidadesCurso,
+    isLoading: cargandoUnidades,
+    error: errorUnidades
   } = useCourseAllUnits(courseId);
 
-  const filteredUnits = courseUnits.filter(unit =>
-    unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    unit.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const unidadesFiltradas = unidadesCurso.filter(unidad =>
+    unidad.name.toLowerCase().includes(terminoBusqueda.toLowerCase()) ||
+    unidad.description.toLowerCase().includes(terminoBusqueda.toLowerCase())
   );
 
   useEffect(() => {
     if (studentGradebook?.tasks) {
-      const groupedTasks: Record<string, any[]> = {};
-      studentGradebook.tasks.forEach(task => {
-        if (!groupedTasks[task.unitName]) {
-          groupedTasks[task.unitName] = [];
+      const tareasAgrupadas: Record<string, any[]> = {};
+      studentGradebook.tasks.forEach(tarea => {
+        if (!tareasAgrupadas[tarea.unitName]) {
+          tareasAgrupadas[tarea.unitName] = [];
         }
-        groupedTasks[task.unitName].push(task);
+        tareasAgrupadas[tarea.unitName].push(tarea);
       });
-      setUnitTasks(groupedTasks);
+      setTareasPorUnidad(tareasAgrupadas);
     }
   }, [studentGradebook]);
 
-  const getUnitGrade = (unitName: string) => {
-    const tasks = unitTasks[unitName] || [];
-    const gradedTasks = tasks.filter(task => task.score !== null);
+  const obtenerCalificacionUnidad = (nombreUnidad: string) => {
+    const tareas = tareasPorUnidad[nombreUnidad] || [];
+    const tareasCalificadas = tareas.filter(tarea => tarea.score !== null);
 
-    if (gradedTasks.length === 0) {
-      return { grade: 'N/A', color: 'gray', completed: 0, total: tasks.length, tasks };
+    if (tareasCalificadas.length === 0) {
+      return { grade: 'N/A', color: 'gray', completed: 0, total: tareas.length, tasks: tareas };
     }
 
-    const totalScore = gradedTasks.reduce((sum, task) => sum + (task.score || 0), 0);
-    const totalMaxPoints = gradedTasks.reduce((sum, task) => sum + task.maxPoints, 0);
-    const percentage = (totalScore / totalMaxPoints) * 100;
+    const puntuacionTotal = tareasCalificadas.reduce((sum, tarea) => sum + (tarea.score || 0), 0);
+    const totalPuntosMaximos = tareasCalificadas.reduce((sum, tarea) => sum + tarea.maxPoints, 0);
+    const porcentaje = (puntuacionTotal / totalPuntosMaximos) * 100;
 
     let color = 'red';
-    if (percentage >= 90) color = 'green';
-    else if (percentage >= 80) color = 'blue';
-    else if (percentage >= 70) color = 'yellow';
+    if (porcentaje >= 90) color = 'green';
+    else if (porcentaje >= 80) color = 'blue';
+    else if (porcentaje >= 70) color = 'yellow';
 
-    return { grade: `${percentage.toFixed(1)}%`, color, completed: gradedTasks.length, total: tasks.length, tasks };
+    return { grade: `${porcentaje.toFixed(1)}%`, color, completed: tareasCalificadas.length, total: tareas.length, tasks: tareas };
   };
 
 
-  // Handler for UNIT grade
-  const handleAssignUnitGrade = async (gradebook: any, unitId: string) => {
-    if (!onAssignUnitFinalGrade || !gradeValue.trim() || !unitId) return;
+  // Manejador para calificación de UNIDAD
+  const handleAsignarCalificacionUnidad = async (libroCalificaciones: any, unidadId: string) => {
+    if (!onAssignUnitFinalGrade || !valorCalificacion.trim() || !unidadId) return;
     try {
-      setIsAssigningGrade(true);
-      await onAssignUnitFinalGrade(unitId, gradebook.studentId, gradeValue, courseId, feedback);
-      setUnitDialogStudentId(null);
-      setSelectedUnitId(null);
-      setGradeValue('');
-      setFeedback('');
+      setAsignandoCalificacion(true);
+      await onAssignUnitFinalGrade(unidadId, libroCalificaciones.studentId, valorCalificacion, courseId, retroalimentacion);
+      setDialogoUnidadStudentId(null);
+      setUnidadIdSeleccionada(null);
+      setValorCalificacion('');
+      setRetroalimentacion('');
     } catch (error) {
-      console.error('Failed to assign unit grade:', error);
+      console.error('Error al asignar la calificación de la unidad:', error);
     } finally {
-      setIsAssigningGrade(false);
+      setAsignandoCalificacion(false);
     }
   };
 
-  // Handler for COURSE final grade
-  const handleAssignCourseGrade = async (gradebook: any) => {
-    if (!onAssignCourseFinalGrade || !gradeValue.trim()) return;
+  // Manejador para calificación final del CURSO
+  const handleAsignarCalificacionCurso = async (libroCalificaciones: any) => {
+    if (!onAssignCourseFinalGrade || !valorCalificacion.trim()) return;
     try {
-      setIsAssigningGrade(true);
-      await onAssignCourseFinalGrade(gradebook.studentId, gradeValue, feedback);
-      setCourseDialogStudentId(null);
-      setGradeValue('');
-      setFeedback('');
+      setAsignandoCalificacion(true);
+      await onAssignCourseFinalGrade(libroCalificaciones.studentId, valorCalificacion, retroalimentacion);
+      setDialogoCursoStudentId(null);
+      setValorCalificacion('');
+      setRetroalimentacion('');
     } catch (error) {
-      console.error('Failed to assign course grade:', error);
+      console.error('Error al asignar la calificación del curso:', error);
     } finally {
-      setIsAssigningGrade(false);
+      setAsignandoCalificacion(false);
     }
   };
 
 
-  const handleOpenDialog = (studentId: string) => {
-    setOpenDialogStudentId(studentId);
-    setGradeValue('');
-    setFeedback('');
+  const handleAbrirDialogo = (studentId: string) => {
+    setDialogoAbiertoStudentId(studentId);
+    setValorCalificacion('');
+    setRetroalimentacion('');
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialogStudentId(null);
-    setSelectedUnitId(null);
-    setGradeValue('');
-    setFeedback('');
+  const handleCerrarDialogo = () => {
+    setDialogoAbiertoStudentId(null);
+    setUnidadIdSeleccionada(null);
+    setValorCalificacion('');
+    setRetroalimentacion('');
   };
+if (cargandoUnidades) {
+  return (
+    <div className="flex justify-center items-center min-h-64">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="ml-2 text-muted-foreground">Cargando unidades...</span>
+    </div>
+  );
+}
 
-  if (isLoadingUnits) {
-    return (
-      <div className="flex justify-center items-center min-h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading units...</span>
+if (errorUnidades) {
+  return (
+    <Card className="border-border shadow-sm">
+      <CardContent className="pt-6">
+        <div className="text-center text-destructive">
+          <p>Error al cargar las unidades: {errorUnidades.message}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+return (
+  <div className="space-y-6">
+    {/* Barra de Búsqueda */}
+    <div className="flex items-center gap-4">
+      <div className="relative flex-1 max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Buscar unidades..."
+          value={terminoBusqueda}
+          onChange={(e) => setTerminoBusqueda(e.target.value)}
+          className="pl-10 border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-accent"
+        />
       </div>
-    );
-  }
+    </div>
 
-  if (unitsError) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-destructive">
-            <p>Error loading units: {unitsError.message}</p>
+    {/* ── VISTA DE ESTUDIANTE ── */}
+    {!isTeacher && studentGradebook && (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {unidadesFiltradas.map((unidad) => {
+          const calificacionUnidad = obtenerCalificacionUnidad(unidad.name);
+          return (
+            <Card
+              key={unidad.id}
+              className="cursor-pointer transition-all border-border hover:border-primary hover:shadow-md hover:bg-secondary/30"
+              onClick={() => onSelectUnit(unidad.id)}
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base text-foreground flex items-center justify-between">
+                  {unidad.name}
+                  <Badge
+                    variant="secondary"
+                    className="bg-secondary text-foreground border border-border text-xs"
+                  >
+                    Unidad {unidad.numUnity}
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">{unidad.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-accent font-medium text-center pt-2 border-t border-border">
+                  Haz clic para ver el desglose detallado de calificaciones
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    )}
+
+    {/* ── VISTA DE PROFESOR ── */}
+    {isTeacher && (
+      <div className="space-y-6">
+        {/* Tarjetas de unidades */}
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-foreground">Gestionar Calificaciones de Estudiantes</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Haz clic en una unidad para ver y gestionar las calificaciones de los estudiantes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {unidadesFiltradas.map((unidad) => (
+                <Card
+                  key={unidad.id}
+                  className="cursor-pointer transition-all border-border hover:border-primary hover:shadow-md hover:bg-secondary/30"
+                  onClick={() => onSelectUnit(unidad.id)}
+                >
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base text-foreground flex items-center justify-between">
+                      {unidad.name}
+                      <Badge
+                        variant="secondary"
+                        className="bg-secondary text-foreground border border-border text-xs"
+                      >
+                        Unidad {unidad.numUnity}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground">{unidad.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span>Ver calificaciones de estudiantes</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle className="h-4 w-4 text-accent" />
+                        <span>Asignar calificaciones finales</span>
+                      </div>
+                      <div className="text-xs text-accent font-medium text-center pt-2 border-t border-border">
+                        Haz clic para gestionar calificaciones de esta unidad
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tabla de calificaciones generales de estudiantes */}
+        {courseGradebooks && courseGradebooks.length > 0 && (
+          <Card className="border-border shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-foreground">Calificaciones Generales de Estudiantes</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Calificaciones finales para todos los estudiantes en este curso
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead className="text-muted-foreground font-medium">Nombre del Estudiante</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Calificación Final</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Total Calculado</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Última Actualización</TableHead>
+                    <TableHead className="text-muted-foreground font-medium">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {courseGradebooks.map((libroCalificaciones) => (
+                    <TableRow key={libroCalificaciones.studentId} className="border-border hover:bg-secondary/50 transition-colors">
+                      <TableCell className="font-medium text-foreground">{libroCalificaciones.studentName}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className="text-base font-semibold bg-accent/10 text-accent-foreground border border-accent/20"
+                        >
+                          {libroCalificaciones.finalGrade || 'N/A'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-muted-foreground text-sm">
+                          {libroCalificaciones.calculatedTotal || 'No calculado'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {libroCalificaciones.lastCalculated
+                          ? new Date(libroCalificaciones.lastCalculated).toLocaleDateString()
+                          : 'Nunca'}
+                      </TableCell>
+                      <TableCell>
+                        {/* ── DIÁLOGO: Asignar Calificación Final del Curso ── */}
+                        <Dialog
+                          open={dialogoCursoStudentId === libroCalificaciones.studentId}
+                          onOpenChange={(abierto) => {
+                            if (!abierto) { setDialogoCursoStudentId(null); resetearEstadoDialogo(); }
+                          }}
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-primary text-primary-foreground hover:bg-primary/90"
+                              onClick={() => { setDialogoCursoStudentId(libroCalificaciones.studentId); resetearEstadoDialogo(); }}
+                            >
+                              Calificación del Curso
+                            </Button>
+                          </DialogTrigger>
+
+                          <DialogContent className="bg-card border-border">
+                            <DialogHeader>
+                              <DialogTitle className="text-foreground">Asignar Calificación Final del Curso</DialogTitle>
+                              <DialogDescription className="text-muted-foreground">
+                                Establecer la calificación final general para {libroCalificaciones.studentName} en este curso
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="course-grade" className="text-foreground">Calificación Final</Label>
+                                <Input
+                                  id="course-grade"
+                                  value={valorCalificacion}
+                                  onChange={(e) => setValorCalificacion(e.target.value)}
+                                  placeholder="ej., 90"
+                                  className="border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-accent"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="course-feedback" className="text-foreground">Retroalimentación</Label>
+                                <Textarea
+                                  id="course-feedback"
+                                  value={retroalimentacion}
+                                  onChange={(e) => setRetroalimentacion(e.target.value)}
+                                  placeholder="Retroalimentación opcional"
+                                  rows={3}
+                                  className="border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-accent"
+                                />
+                              </div>
+                            </div>
+
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                className="border-border hover:bg-secondary"
+                                onClick={() => { setDialogoCursoStudentId(null); resetearEstadoDialogo(); }}
+                                disabled={asignandoCalificacion}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button
+                                onClick={() => handleAsignarCalificacionCurso(libroCalificaciones)}
+                                disabled={!valorCalificacion.trim() || asignandoCalificacion}
+                                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                              >
+                                {asignandoCalificacion ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Asignando...
+                                  </>
+                                ) : (
+                                  'Asignar Calificación del Curso'
+                                )}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    )}
+
+    {/* Estados Vacíos */}
+    {unidadesFiltradas.length === 0 && (
+      <Card className="border-border shadow-sm">
+        <CardContent className="pt-6 pb-10">
+          <div className="text-center text-muted-foreground py-4">
+            <p className="font-medium text-foreground">No se encontraron unidades que coincidan con tu búsqueda.</p>
           </div>
         </CardContent>
       </Card>
-    );
-  }
+    )}
 
-  return (
-    <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search units..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      {/* ── STUDENT VIEW ── */}
-      {!isTeacher && studentGradebook && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredUnits.map((unit) => {
-            const unitGrade = getUnitGrade(unit.name);
-            return (
-              <Card
-                key={unit.id}
-                className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
-                onClick={() => onSelectUnit(unit.id)}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    {unit.name}
-                    <Badge variant="secondary">Unit {unit.numUnity}</Badge>
-                  </CardTitle>
-                  <CardDescription>{unit.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xs text-primary text-center pt-2 border-t">
-                    Click to view detailed grade breakdown
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── TEACHER VIEW ── */}
-      {isTeacher && (
-        <div className="space-y-6">
-          {/* Unit cards */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Manage Student Grades</CardTitle>
-              <CardDescription>Click on a unit to view and manage student grades</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredUnits.map((unit) => (
-                  <Card
-                    key={unit.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => onSelectUnit(unit.id)}
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center justify-between">
-                        {unit.name}
-                        <Badge variant="secondary">Unit {unit.numUnity}</Badge>
-                      </CardTitle>
-                      <CardDescription>{unit.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <FileText className="h-4 w-4" />
-                          <span>View student grades</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>Assign final grades</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-                          Click to manage grades for this unit
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Student overall grades table */}
-          {courseGradebooks && courseGradebooks.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Student Overall Grades</CardTitle>
-                <CardDescription>Final grades for all students in this course</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>Final Grade</TableHead>
-                      <TableHead>Calculated Total</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {courseGradebooks.map((gradebook) => (
-                      <TableRow key={gradebook.studentId}>
-                        <TableCell className="font-medium">{gradebook.studentName}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-lg">
-                            {gradebook.finalGrade || 'N/A'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-muted-foreground">
-                            {gradebook.calculatedTotal || 'Not calculated'}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {gradebook.lastCalculated
-                            ? new Date(gradebook.lastCalculated).toLocaleDateString()
-                            : 'Never'}
-                        </TableCell>
-                        <TableCell>
-                          {/* ✅ Dialog is controlled per-row via openDialogStudentId */}
-                          {/* ── DIALOG 2: Assign Course Final Grade ── */}
-    <Dialog
-      open={courseDialogStudentId === gradebook.studentId}
-      onOpenChange={(open) => {
-        if (!open) { setCourseDialogStudentId(null); resetDialogState(); }
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => { setCourseDialogStudentId(gradebook.studentId); resetDialogState(); }}
-        >
-          Course Grade
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Assign Course Final Grade</DialogTitle>
-          <DialogDescription>
-            Set the overall final grade for {gradebook.studentName} in this course
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* No unit selector here — this is the course-level grade */}
-          <div>
-            <Label htmlFor="course-grade">Final Grade</Label>
-            <Input
-              id="course-grade"
-              value={gradeValue}
-              onChange={(e) => setGradeValue(e.target.value)}
-              placeholder="e.g., 90"
-            />
+    {!isTeacher && !studentGradebook && unidadesFiltradas.length > 0 && (
+      <Card className="border-border shadow-sm">
+        <CardContent className="pt-6 pb-10">
+          <div className="text-center text-muted-foreground space-y-1 py-4">
+            <p className="font-medium text-foreground">Aún no hay información de calificaciones disponible.</p>
+            <p className="text-sm">Tus calificaciones aparecerán aquí una vez que las tareas sean calificadas.</p>
           </div>
-
-          <div>
-            <Label htmlFor="course-feedback">Feedback</Label>
-            <Textarea
-              id="course-feedback"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="Optional feedback"
-              rows={3}
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => { setCourseDialogStudentId(null); resetDialogState(); }}
-            disabled={isAssigningGrade}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => handleAssignCourseGrade(gradebook)}
-            disabled={!gradeValue.trim() || isAssigningGrade}
-          >
-            {isAssigningGrade ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Assigning...</> : 'Assign Course Grade'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {/* Empty States */}
-      {filteredUnits.length === 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-muted-foreground py-8">
-              <p>No units found matching your search.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {!isTeacher && !studentGradebook && filteredUnits.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-muted-foreground py-8">
-              <p>No grade information available yet.</p>
-              <p className="text-sm">Your grades will appear here once assignments are graded.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+        </CardContent>
+      </Card>
+    )}
+  </div>
+);
 }

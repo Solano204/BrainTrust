@@ -1,4 +1,3 @@
-
 //DARK
 "use client";
 
@@ -28,10 +27,10 @@ import {
   Quiz,
 } from "@/app/domain/entities/CourseEntities";
 import { useAuth } from "@/app/context/AuthContext";
-import { StudentTaskView } from "../student/tasks-transactional-view-student";
-import { StudentQuizView } from "../student/quiz-transactional-view-student";
-import { QuizView as QuizTeacherView } from "../teacher/quiz-view-information-teacher";
-import { AssignmentInfoView } from "../teacher/task-view-information-teacher";
+import { VistaTareaEstudiante } from "../student/tasks-transactional-view-student";
+import { VistaQuizEstudiante } from "../student/quiz-transactional-view-student";
+import { VistaQuiz as VistaQuizProfesor } from "../teacher/quiz-view-information-teacher";
+import { VistaInfoTarea } from "../teacher/task-view-information-teacher";
 import {
   useQuizSubmission,
   useTaskSubmission,
@@ -43,285 +42,287 @@ import { useUserTeam } from "./hooks/team-hooks";
 import { useThisWeekTasks } from "@/app/presentation/hooks/calendar/task-hooks";
 import { useThisWeekQuizzes } from "@/app/presentation/hooks/calendar/quiz-hooks";
 
-export type TimelineResourceData = Assignment | Quiz;
+export type DatosRecursoLineaTiempo = Assignment | Quiz;
 
-const getResourceType = (
-  resource: TimelineResourceData
+const obtenerTipoRecurso = (
+  recurso: DatosRecursoLineaTiempo
 ): CourseResourceType => {
-  if ("questions" in resource) return "QUIZ";
+  if ("questions" in recurso) return "QUIZ";
   return "ASSIGNMENT";
 };
 
-const getResourceIcon = (resource: TimelineResourceData): React.ElementType => {
-  const type = getResourceType(resource);
-  if (type === "ASSIGNMENT") {
-    const assignment = resource as Assignment;
-    return assignment.deliveryMode === "TEAM" ? Users : AlertTriangle;
+const obtenerIconoRecurso = (recurso: DatosRecursoLineaTiempo): React.ElementType => {
+  const tipo = obtenerTipoRecurso(recurso);
+  if (tipo === "ASSIGNMENT") {
+    const tarea = recurso as Assignment;
+    return tarea.deliveryMode === "TEAM" ? Users : AlertTriangle;
   }
   return ClipboardList;
 };
 
-const getResourceTimeDisplay = (resource: TimelineResourceData): string => {
-  const dueDate = "dueDate" in resource ? resource.dueDate : null;
+const obtenerTextoPlazoRecurso = (recurso: DatosRecursoLineaTiempo): string => {
+  const fechaEntrega = "dueDate" in recurso ? recurso.dueDate : null;
 
-  if (!dueDate) return "No deadline";
+  if (!fechaEntrega) return "Sin fecha límite";
 
-  const daysUntilDue = getDaysUntilDue(dueDate);
+  const diasHastaEntrega = obtenerDiasHastaEntrega(fechaEntrega);
 
-  if (daysUntilDue < 0) return "OVERDUE";
-  if (daysUntilDue === 0) return "Due today";
-  if (daysUntilDue === 1) return "Due tomorrow";
-  if (daysUntilDue <= 2) return `Due in ${daysUntilDue} days`;
-  if (daysUntilDue <= 7) return "Due this week";
-  return "Upcoming";
+  if (diasHastaEntrega < 0) return "VENCIDO";
+  if (diasHastaEntrega === 0) return "Vence hoy";
+  if (diasHastaEntrega === 1) return "Vence mañana";
+  if (diasHastaEntrega <= 2) return `Vence en ${diasHastaEntrega} días`;
+  if (diasHastaEntrega <= 7) return "Vence esta semana";
+  return "Próximamente";
 };
 
-const getResourceStatus = (
-  resource: TimelineResourceData,
-  userType: "teacher" | "student",
+const obtenerEstadoRecurso = (
+  recurso: DatosRecursoLineaTiempo,
+  tipoUsuario: "teacher" | "student",
   userId?: string
 ): string => {
-  const type = getResourceType(resource);
-  const dueDate = "dueDate" in resource ? resource.dueDate : null;
+  const tipo = obtenerTipoRecurso(recurso);
+  const fechaEntrega = "dueDate" in recurso ? recurso.dueDate : null;
 
-  if (dueDate && new Date(dueDate) < new Date()) {
-    return "OVERDUE - Needs attention";
+  if (fechaEntrega && new Date(fechaEntrega) < new Date()) {
+    return "VENCIDO - Necesita atención";
   }
 
-  if (userType === "teacher") {
-    switch (type) {
+  if (tipoUsuario === "teacher") {
+    switch (tipo) {
       case "ASSIGNMENT":
-        const assignment = resource as Assignment;
-        const pendingSubmissions =
-          assignment.submissions?.filter(
+        const tarea = recurso as Assignment;
+        const entregasPendientes =
+          tarea.submissions?.filter(
             (s) => s.status === "SUBMITTED" || s.status === "LATE_SUBMITTED"
           ).length || 0;
-        return `${pendingSubmissions} submissions need grading`;
+        return `${entregasPendientes} entregas necesitan calificación`;
       case "QUIZ":
-        return "Needs review";
+        return "Necesita revisión";
       default:
-        return "Pending review";
+        return "Pendiente de revisión";
     }
   } else {
-    switch (type) {
+    switch (tipo) {
       case "ASSIGNMENT":
-        const assignment = resource as Assignment;
-        const isSubmitted = assignment.submissions?.some(
+        const tarea = recurso as Assignment;
+        const estaEntregado = tarea.submissions?.some(
           (s) => s.studentId === userId
         );
-        const deliveryMode =
-          assignment.deliveryMode === "TEAM" ? "Group" : "Individual";
-        return isSubmitted
-          ? `Submitted (${deliveryMode})`
-          : `Not submitted (${deliveryMode})`;
+        const modoEntrega =
+          tarea.deliveryMode === "TEAM" ? "Grupal" : "Individual";
+        return estaEntregado
+          ? `Entregado (${modoEntrega})`
+          : `No entregado (${modoEntrega})`;
       case "QUIZ":
-        return "Not attempted";
+        return "No intentado";
       default:
-        return "Not started";
+        return "No iniciado";
     }
   }
 };
 
-const getDaysUntilDue = (dueDate: string | null): number => {
-  if (!dueDate) return Infinity;
-  const due = new Date(dueDate);
-  const now = new Date();
-  const diffTime = due.getTime() - now.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+const obtenerDiasHastaEntrega = (fechaEntrega: string | null): number => {
+  if (!fechaEntrega) return Infinity;
+  const entrega = new Date(fechaEntrega);
+  const ahora = new Date();
+  const diffTiempo = entrega.getTime() - ahora.getTime();
+  return Math.ceil(diffTiempo / (1000 * 60 * 60 * 24));
 };
 
-const getTimelineUrgency = (dueDate: string | null): "urgent" | "warning" | "normal" => {
-  const daysUntilDue = getDaysUntilDue(dueDate);
+const obtenerUrgenciaLineaTiempo = (fechaEntrega: string | null): "urgent" | "warning" | "normal" => {
+  const diasHastaEntrega = obtenerDiasHastaEntrega(fechaEntrega);
 
-  if (daysUntilDue < 0) return "urgent";
-  if (daysUntilDue <= 2) return "warning";
+  if (diasHastaEntrega < 0) return "urgent";
+  if (diasHastaEntrega <= 2) return "warning";
   return "normal";
 };
 
-const getStartOfWeek = (date: Date = new Date()): Date => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+const obtenerInicioSemana = (fecha: Date = new Date()): Date => {
+  const d = new Date(fecha);
+  const dia = d.getDay();
+  const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
   d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
 };
 
-const formatForAPI = (date: Date): string => {
-  return date.toISOString().split('T')[0] + 'T00:00:00';
+const formatearParaAPI = (fecha: Date): string => {
+  return fecha.toISOString().split('T')[0] + 'T00:00:00';
 };
 
-interface TimelineSectionProps {
+interface PropsSeccionLineaTiempo {
   userId: string;
   userType: "teacher" | "student";
 }
 
-export function TimelineSection({ userId, userType }: TimelineSectionProps) {
-  const [showAll, setShowAll] = React.useState(false);
-  const [dismissingId, setDismissingId] = React.useState<string | null>(null);
-  const [activeResource, setActiveResource] =
-    React.useState<TimelineResourceData | null>(null);
-  const [selectedResourceId, setSelectedResourceId] = React.useState<
+
+
+export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
+  const [mostrarTodo, setMostrarTodo] = React.useState(false);
+  const [descartandoId, setDescartandoId] = React.useState<string | null>(null);
+  const [recursoActivo, setRecursoActivo] =
+    React.useState<DatosRecursoLineaTiempo | null>(null);
+  const [idRecursoSeleccionado, setIdRecursoSeleccionado] = React.useState<
     string | null
   >(null);
   const { user } = useAuth();
 
-  const weekStart = React.useMemo(() => {
-    const startOfWeek = getStartOfWeek();
-    return formatForAPI(startOfWeek);
+  const inicioSemana = React.useMemo(() => {
+    const inicio = obtenerInicioSemana();
+    return formatearParaAPI(inicio);
   }, []);
 
   const {
-    data: tasks = [],
-    isLoading: tasksLoading,
-    error: tasksError,
-  } = useThisWeekTasks(userId, weekStart, userType);
+    data: tareas = [],
+    isLoading: cargandoTareas,
+    error: errorTareas,
+  } = useThisWeekTasks(userId, inicioSemana, userType);
 
   const {
     data: quizzes = [],
-    isLoading: quizzesLoading,
-    error: quizzesError,
-  } = useThisWeekQuizzes(userId, weekStart, userType);
+    isLoading: cargandoQuizzes,
+    error: errorQuizzes,
+  } = useThisWeekQuizzes(userId, inicioSemana, userType);
 
-  const { data: userTeam } = useUserTeam(userId);
+  const { data: equipoUsuario } = useUserTeam(userId);
 
-  const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(
-    selectedResourceId && activeResource && "questions" in activeResource
-      ? selectedResourceId
+  const { data: detalleQuiz, isLoading: cargandoQuiz } = useQuizDetail(
+    idRecursoSeleccionado && recursoActivo && "questions" in recursoActivo
+      ? idRecursoSeleccionado
       : null,
     userType
   );
 
-  const timelineResources = React.useMemo(() => {
-    return [...tasks, ...quizzes];
-  }, [tasks, quizzes]);
+  const recursosLineaTiempo = React.useMemo(() => {
+    return [...tareas, ...quizzes];
+  }, [tareas, quizzes]);
 
-  const handleDismiss = (id: string) => {
-    setDismissingId(null);
+  const handleDescartar = (id: string) => {
+    setDescartandoId(null);
   };
 
-  const handleViewDetails = (item: TimelineResourceData) => {
-    setActiveResource(item);
-    setSelectedResourceId(item.id);
+  const handleVerDetalles = (item: DatosRecursoLineaTiempo) => {
+    setRecursoActivo(item);
+    setIdRecursoSeleccionado(item.id);
   };
 
-  const handleCloseModal = () => {
-    setActiveResource(null);
-    setSelectedResourceId(null);
+  const handleCerrarModal = () => {
+    setRecursoActivo(null);
+    setIdRecursoSeleccionado(null);
   };
 
-  const { submitTask: submitTaskMutation, isSubmitting: isSubmittingTask } =
+  const { submitTask: mutacionEnviarTarea, isSubmitting: enviandoTarea } =
     useTaskSubmission();
-  const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
+  const { submitQuiz: mutacionEnviarQuiz, isSubmitting: enviandoQuiz } =
     useQuizSubmission();
 
-  const handleTaskSubmit = async (submissionData: {
+  const handleEnvioTarea = async (datosEnvio: {
     content: string;
     attachments: File[];
   }) => {
-    if (!activeResource || !user?.id) return;
+    if (!recursoActivo || !user?.id) return;
 
     try {
-      const assignment = activeResource as Assignment;
-      const submissionType =
-        assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
+      const tarea = recursoActivo as Assignment;
+      const tipoEnvio =
+        tarea.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
 
-      let groupId: string | undefined;
-      if (submissionType === "TEAM" && userTeam) {
-        groupId = userTeam.teamId;
+      let idGrupo: string | undefined;
+      if (tipoEnvio === "TEAM" && equipoUsuario) {
+        idGrupo = equipoUsuario.teamId;
       }
 
-      const submissionParams = {
-        assignmentId: activeResource.id,
+      const parametrosEnvio = {
+        assignmentId: recursoActivo.id,
         studentId: user.id,
-        content: submissionData.content,
-        attachments: submissionData.attachments,
-        submissionType: submissionType as "INDIVIDUAL" | "TEAM",
-        ...(groupId && { groupId }),
+        content: datosEnvio.content,
+        attachments: datosEnvio.attachments,
+        submissionType: tipoEnvio as "INDIVIDUAL" | "TEAM",
+        ...(idGrupo && { groupId: idGrupo }),
       };
 
-      await submitTaskMutation.mutate(submissionParams);
-      handleCloseModal();
+      await mutacionEnviarTarea.mutate(parametrosEnvio);
+      handleCerrarModal();
     } catch (error) {
-      console.error("Failed to submit task:", error);
+      console.error("Error al enviar la tarea:", error);
     }
   };
 
-  const handleQuizSubmit = async (answers: any) => {
-    if (!activeResource || !user?.id) return;
+  const handleEnvioQuiz = async (respuestas: any) => {
+    if (!recursoActivo || !user?.id) return;
 
     try {
-      await submitQuizMutation.mutateAsync({
-        quizId: activeResource.id,
+      await mutacionEnviarQuiz.mutateAsync({
+        quizId: recursoActivo.id,
         studentId: user.id,
-        answers: answers,
+        answers: respuestas,
       });
-      handleCloseModal();
+      handleCerrarModal();
     } catch (error) {
-      console.error("Failed to submit quiz:", error);
+      console.error("Error al enviar el quiz:", error);
     }
   };
 
-  const sortedResources = React.useMemo(() => {
-    return [...timelineResources].sort((a, b) => {
-      const aDue = "dueDate" in a ? a.dueDate : null;
-      const bDue = "dueDate" in b ? b.dueDate : null;
+  const recursosOrdenados = React.useMemo(() => {
+    return [...recursosLineaTiempo].sort((a, b) => {
+      const aEntrega = "dueDate" in a ? a.dueDate : null;
+      const bEntrega = "dueDate" in b ? b.dueDate : null;
 
-      const aUrgency = getTimelineUrgency(aDue);
-      const bUrgency = getTimelineUrgency(bDue);
+      const aUrgencia = obtenerUrgenciaLineaTiempo(aEntrega);
+      const bUrgencia = obtenerUrgenciaLineaTiempo(bEntrega);
 
-      if (aUrgency !== bUrgency) {
-        const urgencyOrder = { urgent: 0, warning: 1, normal: 2 };
-        return urgencyOrder[aUrgency] - urgencyOrder[bUrgency];
+      if (aUrgencia !== bUrgencia) {
+        const ordenUrgencia = { urgent: 0, warning: 1, normal: 2 };
+        return ordenUrgencia[aUrgencia] - ordenUrgencia[bUrgencia];
       }
 
-      if (aDue && bDue) {
-        return new Date(aDue).getTime() - new Date(bDue).getTime();
+      if (aEntrega && bEntrega) {
+        return new Date(aEntrega).getTime() - new Date(bEntrega).getTime();
       }
 
       return 0;
     });
-  }, [timelineResources]);
+  }, [recursosLineaTiempo]);
 
-  const displayedResources = showAll
-    ? sortedResources
-    : sortedResources.slice(0, 4);
+  const recursosMostrados = mostrarTodo
+    ? recursosOrdenados
+    : recursosOrdenados.slice(0, 4);
 
-  const renderDetailView = () => {
-    if (!activeResource) return null;
+  const renderizarVistaDetalle = () => {
+    if (!recursoActivo) return null;
 
-    const resourceType = getResourceType(activeResource);
-    const isLoading = quizLoading && resourceType === "QUIZ";
+    const tipoRecurso = obtenerTipoRecurso(recursoActivo);
+    const cargando = cargandoQuiz && tipoRecurso === "QUIZ";
 
-    if (isLoading) {
+    if (cargando) {
       return <TimelineSectionSkeleton />;
     }
 
     if (userType === "student") {
-      if (resourceType === "ASSIGNMENT") {
+      if (tipoRecurso === "ASSIGNMENT") {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto">
-              <StudentTaskView
-                onExit={handleCloseModal}
-                assignment={activeResource as Assignment}
-                onSubmit={handleTaskSubmit}
+              <VistaTareaEstudiante
+                onExit={handleCerrarModal}
+                assignment={recursoActivo as Assignment}
+                onSubmit={handleEnvioTarea}
                 studentId={userId}
-                isSubmitting={isSubmittingTask}
+                isSubmitting={enviandoTarea}
               />
             </div>
           </div>
         );
-      } else if (resourceType === "QUIZ" && quizDetail) {
+      } else if (tipoRecurso === "QUIZ" && detalleQuiz) {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div className="w-full max-w-6xl max-h-[95vh] overflow-y-auto">
-              <StudentQuizView
-                quizData={quizDetail}
-                onSubmit={handleQuizSubmit}
-                onExit={handleCloseModal}
+              <VistaQuizEstudiante
+                quizData={detalleQuiz}
+                onSubmit={handleEnvioQuiz}
+                onExit={handleCerrarModal}
                 studentId={userId}
-                isSubmitting={isSubmittingQuiz}
+                isSubmitting={enviandoQuiz}
               />
             </div>
           </div>
@@ -330,20 +331,19 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     } else {
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          {/* ✅ was: dark:bg-gray-900 → now uses bg-card from theme */}
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl bg-card">
             <div className="min-h-full bg-background p-4 md:p-6">
               <div className="max-w-4xl mx-auto">
-                {resourceType === "ASSIGNMENT" && (
-                  <AssignmentInfoView
-                    assignment={activeResource as Assignment}
-                    onClose={handleCloseModal}
+                {tipoRecurso === "ASSIGNMENT" && (
+                  <VistaInfoTarea
+                    assignment={recursoActivo as Assignment}
+                    onClose={handleCerrarModal}
                   />
                 )}
-                {resourceType === "QUIZ" && quizDetail && (
-                  <QuizTeacherView
-                    quiz={quizDetail}
-                    onClose={handleCloseModal}
+                {tipoRecurso === "QUIZ" && detalleQuiz && (
+                  <VistaQuizProfesor
+                    quiz={detalleQuiz}
+                    onClose={handleCerrarModal}
                   />
                 )}
               </div>
@@ -356,22 +356,22 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
     return null;
   };
 
-  const weekRange = React.useMemo(() => {
-    const start = getStartOfWeek();
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
+  const rangoSemana = React.useMemo(() => {
+    const inicio = obtenerInicioSemana();
+    const fin = new Date(inicio);
+    fin.setDate(inicio.getDate() + 6);
 
     return {
-      start: start.toLocaleDateString("en-US", {
+      inicio: inicio.toLocaleDateString("es-ES", {
         month: "short",
         day: "numeric",
       }),
-      end: end.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      fin: fin.toLocaleDateString("es-ES", { month: "short", day: "numeric" }),
     };
   }, []);
 
-  const isLoading = tasksLoading || quizzesLoading;
-  const hasError = tasksError || quizzesError;
+  const cargando = cargandoTareas || cargandoQuizzes;
+  const hayError = errorTareas || errorQuizzes;
 
   return (
     <>
@@ -381,15 +381,15 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="h-5 w-5 text-primary" />
               <h2 className="text-2xl font-bold text-foreground">
-                {userType === "teacher" ? "Teaching Timeline" : "My Timeline"}
+                {userType === "teacher" ? "Línea de Tiempo Docente" : "Mi Línea de Tiempo"}
               </h2>
             </div>
             <p className="text-sm text-muted-foreground">
-              {weekRange.start} - {weekRange.end} •{" "}
-              {isLoading
-                ? "Loading..."
-                : `${sortedResources.length} ${
-                    sortedResources.length === 1 ? "item" : "items"
+              {rangoSemana.inicio} - {rangoSemana.fin} •{" "}
+              {cargando
+                ? "Cargando..."
+                : `${recursosOrdenados.length} ${
+                    recursosOrdenados.length === 1 ? "elemento" : "elementos"
                   }`}
             </p>
           </div>
@@ -397,61 +397,61 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
             variant="ghost"
             size="sm"
             className="text-primary hover:text-primary"
-            onClick={() => setShowAll(!showAll)}
-            disabled={isLoading || sortedResources.length === 0}
+            onClick={() => setMostrarTodo(!mostrarTodo)}
+            disabled={cargando || recursosOrdenados.length === 0}
           >
-            {showAll ? "Show Less" : "View All"}
+            {mostrarTodo ? "Mostrar Menos" : "Ver Todo"}
             <ArrowRight
               className={cn(
                 "ml-2 h-4 w-4 transition-transform",
-                showAll && "rotate-180"
+                mostrarTodo && "rotate-180"
               )}
             />
           </Button>
         </div>
 
-        {isLoading ? (
+        {cargando ? (
           <div className="text-center py-12">
             <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
             <p className="text-sm text-muted-foreground">
-              Loading this week's activities...
+              Cargando actividades de esta semana...
             </p>
           </div>
-        ) : hasError ? (
+        ) : hayError ? (
           <div className="text-center py-12 text-destructive">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
             <h3 className="text-lg font-semibold mb-2">
-              Error loading timeline
+              Error al cargar la línea de tiempo
             </h3>
             <p className="text-sm text-muted-foreground">
-              Please try again later.
+              Por favor, intente de nuevo más tarde.
             </p>
           </div>
-        ) : sortedResources.length === 0 ? (
+        ) : recursosOrdenados.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
               <Check className="h-8 w-8 text-primary" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              All caught up for this week!
+              ¡Todo al día para esta semana!
             </h3>
             <p className="text-sm text-muted-foreground">
-              No pending activities for this week.
+              No hay actividades pendientes para esta semana.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {displayedResources.map((item) => {
-              const itemStatus = getResourceStatus(item, userType, userId);
-              const timeDisplay = getResourceTimeDisplay(item);
-              const itemUrgency = getTimelineUrgency(
+            {recursosMostrados.map((item) => {
+              const estadoItem = obtenerEstadoRecurso(item, userType, userId);
+              const textoPlazo = obtenerTextoPlazoRecurso(item);
+              const urgenciaItem = obtenerUrgenciaLineaTiempo(
                 "dueDate" in item ? item.dueDate : null
               );
-              const itemIcon = getResourceIcon(item);
-              const isGroupAssignment =
-                getResourceType(item) === "ASSIGNMENT" &&
+              const IconoItem = obtenerIconoRecurso(item);
+              const esTareaGrupal =
+                obtenerTipoRecurso(item) === "ASSIGNMENT" &&
                 (item as Assignment).deliveryMode === "TEAM";
 
               return (
@@ -459,76 +459,73 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                   key={item.id}
                   className={cn(
                     "group relative p-4 rounded-lg border transition-all hover:shadow-md cursor-pointer",
-                    itemUrgency === "urgent"
+                    urgenciaItem === "urgent"
                       ? "border-destructive/30 bg-destructive/5 hover:border-destructive/50"
-                      : itemUrgency === "warning"
-                      // ✅ was: border-warning/* bg-warning/* → accent = gold, perfect for warnings
+                      : urgenciaItem === "warning"
                       ? "border-accent/40 bg-accent/5 hover:border-accent/60"
                       : "border-border bg-card hover:border-primary/30"
                   )}
-                  onClick={() => handleViewDetails(item)}
+                  onClick={() => handleVerDetalles(item)}
                 >
                   <div className="flex items-start gap-4">
-                    {/* Icon */}
+                    {/* Icono */}
                     <div
                       className={cn(
                         "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
-                        itemUrgency === "urgent"
+                        urgenciaItem === "urgent"
                           ? "bg-destructive/10 text-destructive"
-                          : itemUrgency === "warning"
-                          // ✅ was: bg-warning/10 text-warning → accent (gold)
+                          : urgenciaItem === "warning"
                           ? "bg-accent/10 text-accent-foreground"
-                          : isGroupAssignment
-                          // ✅ was: bg-blue-100 text-blue-600 → secondary (pale navy tint)
+                          : esTareaGrupal
                           ? "bg-secondary text-secondary-foreground"
                           : "bg-muted text-muted-foreground"
                       )}
                     >
-                      {React.createElement(itemIcon, { className: "h-5 w-5" })}
+                      {React.createElement(IconoItem, { className: "h-5 w-5" })}
                     </div>
 
-                    {/* Content */}
+                    {/* Contenido */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <h3
                           className={cn(
                             "font-semibold text-base leading-tight",
-                            itemUrgency === "urgent"
+                            urgenciaItem === "urgent"
                               ? "text-destructive"
                               : "text-foreground"
                           )}
                         >
                           {item.title}
-                          {isGroupAssignment && (
+                          {esTareaGrupal && (
                             <Badge variant="outline" className="ml-2 text-xs">
-                              Group
+                              Grupal
                             </Badge>
                           )}
                         </h3>
                         <Badge
                           variant={
-                            itemUrgency === "urgent"
+                            urgenciaItem === "urgent"
                               ? "destructive"
-                              : itemUrgency === "warning"
+                              : urgenciaItem === "warning"
                               ? "secondary"
                               : "outline"
                           }
                           className="shrink-0"
                         >
-                          {timeDisplay}
+                          {textoPlazo}
                         </Badge>
                       </div>
                       <p className="text-sm font-medium text-foreground/80 mt-1">
-                        {itemStatus}
+                        {estadoItem}
                       </p>
                       <p className="text-xs text-muted-foreground mt-2"></p>
 
-                      {/* Due date */}
+                      {/* Fecha de entrega */}
                       {"dueDate" in item && item.dueDate && (
                         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          Due:{" "}
-                          {new Date(item.dueDate).toLocaleDateString("en-US", {
+                          Entrega:{" "}
+                          {new Date(item.dueDate).toLocaleDateString("es-ES", {
                             weekday: "short",
                             month: "short",
                             day: "numeric",
@@ -539,18 +536,18 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                       )}
                     </div>
 
-                    {/* Dismiss Button */}
+                    {/* Botón Descartar */}
                     <div
                       className="flex items-center gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {dismissingId === item.id ? (
+                      {descartandoId === item.id ? (
                         <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDismiss(item.id)}
+                            onClick={() => handleDescartar(item.id)}
                           >
                             <Check className="h-4 w-4" />
                           </Button>
@@ -558,7 +555,7 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => setDismissingId(null)}
+                            onClick={() => setDescartandoId(null)}
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -568,8 +565,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => setDismissingId(item.id)}
-                          title="Dismiss"
+                          onClick={() => setDescartandoId(item.id)}
+                          title="Descartar"
                         >
                           <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                         </Button>
@@ -583,8 +580,8 @@ export function TimelineSection({ userId, userType }: TimelineSectionProps) {
         )}
       </Card>
 
-      {/* Detail Modal */}
-      {renderDetailView()}
+      {/* Modal de Detalle */}
+      {renderizarVistaDetalle()}
     </>
   );
 }

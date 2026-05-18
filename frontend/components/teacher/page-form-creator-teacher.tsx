@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Upload, X, Paperclip, LinkIcon } from "lucide-react";
+import { Upload, X, Paperclip, LinkIcon, FileText } from "lucide-react";
 import { Page } from "@/app/domain/entities/CourseEntities";
 import { Document } from "@/app/domain/valueObjects/CourseValues";
 import { z } from "zod";
@@ -37,15 +37,15 @@ const PAGE_ALLOWED_FILE_TYPES = [
 const pageFormSchema = z.object({
   title: z
     .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(200, "Title must not exceed 200 characters")
+    .min(3, "El título debe tener al menos 3 caracteres")
+    .max(200, "El título no debe exceder los 200 caracteres")
     .trim(),
   sectionContent: z
     .string()
-    .min(20, "Content must be at least 20 characters")
-    .max(10000, "Content must not exceed 10,000 characters")
+    .min(20, "El contenido debe tener al menos 20 caracteres")
+    .max(10000, "El contenido no debe exceder los 10,000 caracteres")
     .trim(),
-  urlsSupport: z.array(z.string().url("Invalid URL format")).default([]),
+  urlsSupport: z.array(z.string().url("Formato de URL inválido")).default([]),
   attachments: z.array(z.any()).default([]),
 });
 
@@ -53,8 +53,8 @@ type PageFormData = z.infer<typeof pageFormSchema>;
 
 const urlSchema = z
   .string()
-  .min(1, "URL cannot be empty")
-  .url("Please enter a valid URL (e.g., https://example.com)")
+  .min(1, "La URL no puede estar vacía")
+  .url("Por favor, ingresa una URL válida (ej., https://ejemplo.com)")
   .refine((url) => {
     try {
       const parsed = new URL(url);
@@ -62,7 +62,7 @@ const urlSchema = z
     } catch {
       return false;
     }
-  }, "URL must start with http:// or https://");
+  }, "La URL debe comenzar con http:// o https://");
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = [
@@ -129,7 +129,7 @@ export function PageCreator({
     defaultValues: {
       title: "",
       sectionContent:
-        "Create engaging content for your students here. You can include:\n\n• Learning objectives\n• Key concepts\n• Examples and explanations\n• Study tips\n• Additional resources",
+        "Crea contenido atractivo para tus estudiantes aquí. Puedes incluir:\n\n• Objetivos de aprendizaje\n• Conceptos clave\n• Ejemplos y explicaciones\n• Consejos de estudio\n• Recursos adicionales",
       attachments: [],
       urlsSupport: [],
     },
@@ -157,7 +157,7 @@ export function PageCreator({
     reset({
       title: "",
       sectionContent:
-        "Create engaging content for your students here. You can include:\n\n• Learning objectives\n• Key concepts\n• Examples and explanations\n• Study tips\n• Additional resources",
+        "Crea contenido atractivo para tus estudiantes aquí. Puedes incluir:\n\n• Objetivos de aprendizaje\n• Conceptos clave\n• Ejemplos y explicaciones\n• Consejos de estudio\n• Recursos adicionales",
       attachments: [],
       urlsSupport: [],
     });
@@ -174,13 +174,13 @@ export function PageCreator({
     maxSize: number
   ): string | null {
     if (file.size > maxSize) {
-      return `File "${file.name}" exceeds ${maxSize / (1024 * 1024)}MB limit`;
+      return `El archivo "${file.name}" excede el límite de ${maxSize / (1024 * 1024)}MB`;
     }
 
     if (!allowedTypes.includes(file.type)) {
-      return `File "${
+      return `El archivo "${
         file.name
-      }" has an unsupported format. Allowed: ${getAllowedExtensions(
+      }" tiene un formato no soportado. Permitidos: ${getAllowedExtensions(
         allowedTypes
       )}`;
     }
@@ -189,7 +189,7 @@ export function PageCreator({
     const allowedExtensions = getAllowedExtensionsArray(allowedTypes);
 
     if (extension && !allowedExtensions.includes(extension)) {
-      return `File extension ".${extension}" is not allowed`;
+      return `La extensión de archivo ".${extension}" no está permitida`;
     }
 
     return null;
@@ -293,7 +293,7 @@ export function PageCreator({
 
     const currentUrls = watchedValues.urlsSupport || [];
     if (currentUrls.includes(trimmedUrl)) {
-      setUrlError("This URL has already been added");
+      setUrlError("Esta URL ya ha sido agregada");
       return;
     }
 
@@ -321,121 +321,112 @@ export function PageCreator({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] md:max-w-6xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl sm:text-2xl">
-            Create Information Page
-          </DialogTitle>
-        </DialogHeader>
+ return (
+  <Dialog open={open} onOpenChange={handleClose}>
+    <DialogContent className="bg-card rounded-3xl border border-border shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 sm:max-w-[95vw] md:max-w-6xl">
 
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6 py-4">
-          {/* Page Title */}
-          <div className="space-y-2">
-            <Label htmlFor="page-title">Page Title *</Label>
+      {/* ── Encabezado ── */}
+      <div className="flex items-center gap-3 px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
+        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <FileText className="w-4 h-4 text-primary" />
+        </span>
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+            Crear Página de Información
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Construye una página de contenido estructurada para tus estudiantes
+          </p>
+        </div>
+      </div>
+
+      {/* ── Formulario ── */}
+      <form onSubmit={handleSubmit(handleSave)} className="flex-1 overflow-y-auto flex flex-col">
+        <div className="px-5 py-6 sm:px-7 space-y-6 flex-1">
+
+          {/* Título de la página */}
+          <div className="space-y-1.5">
+            <label htmlFor="page-title" className="text-xs font-semibold text-foreground">
+              Título de la Página *
+            </label>
             <Controller
               name="title"
               control={control}
               render={({ field }) => (
-                <Input
+                <input
                   {...field}
                   id="page-title"
-                  placeholder="Enter page title (e.g., Introduction to JavaScript)"
-                  className={`text-lg font-medium ${
-                    errors.title ? "border-red-500" : ""
+                  placeholder="Ingresa el título de la página (ej., Introducción a JavaScript)"
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-background text-base font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                    errors.title ? 'border-destructive focus:ring-destructive/40' : 'border-border'
                   }`}
                 />
               )}
             />
             {errors.title && (
-              <p className="text-sm text-red-500">{errors.title.message}</p>
+              <p className="text-xs text-destructive">{errors.title.message}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              A clear, descriptive title helps students understand what this
-              page is about.
+              Un título claro y descriptivo ayuda a los estudiantes a entender de qué trata esta página.
             </p>
           </div>
 
-          {/* Preview Card */}
-          <Card className="p-6 border-l-4 border-blue-500 bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+          {/* Tarjeta de vista previa */}
+          <div className="p-5 rounded-2xl border-l-4 border-l-primary border-t border-r border-b border-border bg-primary/5">
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  PREVIEW
-                </span>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-xs font-bold text-primary uppercase tracking-widest">Vista Previa</span>
               </div>
 
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 border-b pb-2">
-                {watchedValues.title || "Page Title Preview"}
+              <h2 className="text-xl font-bold text-foreground border-b border-border pb-2">
+                {watchedValues.title || "Vista Previa del Título de la Página"}
               </h2>
 
-              <div className="prose dark:prose-invert max-w-none">
-                <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap min-h-[100px]">
-                  {watchedValues.sectionContent ||
-                    "Content will appear here..."}
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap min-h-[80px]">
+                {watchedValues.sectionContent || "El contenido aparecerá aquí..."}
+              </p>
 
               {((watchedValues.attachments?.length || 0) > 0 ||
                 (watchedValues.urlsSupport?.length || 0) > 0) && (
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <h4 className="text-sm font-semibold mb-3 text-gray-600 dark:text-gray-400">
-                    Support Materials Preview:
-                  </h4>
+                <div className="pt-4 border-t border-border space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                    Vista Previa de Materiales de Apoyo:
+                  </p>
 
                   {(watchedValues.attachments?.length || 0) > 0 && (
-                    <div className="space-y-2 mb-4">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Files:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {watchedValues.attachments
-                          ?.slice(0, 3)
-                          .map((file: Document, index: number) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs"
-                            >
-                              <Paperclip className="h-3 w-3" />
-                              <span className="truncate max-w-[100px]">
-                                {file.name}
-                              </span>
-                            </div>
-                          ))}
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-muted-foreground">Archivos:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {watchedValues.attachments?.slice(0, 3).map((file: Document, index: number) => (
+                          <span key={index} className="flex items-center gap-1 px-2 py-1 bg-muted rounded-lg text-xs text-foreground">
+                            <Paperclip className="w-3 h-3" />
+                            <span className="truncate max-w-[100px]">{file.name}</span>
+                          </span>
+                        ))}
                         {(watchedValues.attachments?.length || 0) > 3 && (
-                          <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
-                            +{(watchedValues.attachments?.length || 0) - 3} more
-                          </div>
+                          <span className="px-2 py-1 bg-muted rounded-lg text-xs text-muted-foreground">
+                            +{(watchedValues.attachments?.length || 0) - 3} más
+                          </span>
                         )}
                       </div>
                     </div>
                   )}
 
                   {(watchedValues.urlsSupport?.length || 0) > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Links:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {watchedValues.urlsSupport
-                          ?.slice(0, 3)
-                          .map((url: string, index: number) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs"
-                            >
-                              <LinkIcon className="h-3 w-3" />
-                              <span className="truncate max-w-[120px]">
-                                {url.replace(/^https?:\/\//, "")}
-                              </span>
-                            </div>
-                          ))}
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-muted-foreground">Enlaces:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {watchedValues.urlsSupport?.slice(0, 3).map((url: string, index: number) => (
+                          <span key={index} className="flex items-center gap-1 px-2 py-1 bg-muted rounded-lg text-xs text-foreground">
+                            <LinkIcon className="w-3 h-3" />
+                            <span className="truncate max-w-[120px]">{url.replace(/^https?:\/\//, "")}</span>
+                          </span>
+                        ))}
                         {(watchedValues.urlsSupport?.length || 0) > 3 && (
-                          <div className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
-                            +{(watchedValues.urlsSupport?.length || 0) - 3} more
-                          </div>
+                          <span className="px-2 py-1 bg-muted rounded-lg text-xs text-muted-foreground">
+                            +{(watchedValues.urlsSupport?.length || 0) - 3} más
+                          </span>
                         )}
                       </div>
                     </div>
@@ -443,269 +434,253 @@ export function PageCreator({
                 </div>
               )}
             </div>
-          </Card>
+          </div>
 
-          {/* Content Section */}
-          <div className="space-y-4 border-t pt-6">
+          {/* Sección de contenido */}
+          <div className="space-y-4 border-t border-border pt-6">
             <div className="flex items-center justify-between">
-              <Label
-                htmlFor="section-content"
-                className="text-lg font-semibold"
-              >
-                Content *
-              </Label>
-              <span className="text-xs text-muted-foreground">
-                {wordCount} {wordCount === 1 ? "word" : "words"}
+              <label htmlFor="section-content" className="text-xs font-semibold text-foreground">
+                Contenido *
+              </label>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {wordCount} {wordCount === 1 ? "palabra" : "palabras"}
               </span>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Write your content here. You can use markdown-style formatting:
+
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">
+                Escribe tu contenido aquí. Puedes usar formato tipo markdown:
               </p>
-              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside ml-2">
-                <li>Use blank lines to separate paragraphs</li>
-                <li>Start lines with • for bullet points</li>
-                <li>Use **bold** or *italic* for emphasis</li>
-                <li>Add links: [text](https://example.com)</li>
+              <ul className="text-xs text-muted-foreground space-y-1 ml-3">
+                {[
+                  'Usa líneas en blanco para separar párrafos',
+                  'Comienza líneas con • para viñetas',
+                  'Usa **negrita** o *cursiva* para énfasis',
+                  'Agrega enlaces: [texto](https://ejemplo.com)',
+                ].map((tip) => (
+                  <li key={tip} className="flex items-start gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground mt-1.5 flex-shrink-0" />
+                    {tip}
+                  </li>
+                ))}
               </ul>
             </div>
+
             <Controller
               name="sectionContent"
               control={control}
               render={({ field }) => (
-                <Textarea
+                <textarea
                   {...field}
                   id="section-content"
-                  placeholder="Write your content here... You can include learning objectives, explanations, examples, study tips, etc."
+                  placeholder="Escribe tu contenido aquí... Puedes incluir objetivos de aprendizaje, explicaciones, ejemplos, consejos de estudio, etc."
                   rows={12}
-                  className={`font-mono text-sm resize-y min-h-[200px] ${
-                    errors.sectionContent ? "border-red-500" : ""
+                  className={`w-full px-4 py-3 rounded-xl border bg-background text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-ring/50 resize-y min-h-[200px] transition-all ${
+                    errors.sectionContent ? 'border-destructive focus:ring-destructive/40' : 'border-border'
                   }`}
                 />
               )}
             />
             {errors.sectionContent && (
-              <p className="text-sm text-red-500">
-                {errors.sectionContent.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.sectionContent.message}</p>
             )}
           </div>
 
-          {/* Support Materials */}
-          <div className="space-y-6 border-t pt-6">
+          {/* Materiales de apoyo */}
+          <div className="space-y-6 border-t border-border pt-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Support Materials</h3>
-              <p className="text-sm text-muted-foreground">
-                Add files and links to support your content. These will be
-                available to students.
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                Materiales de Apoyo
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Agrega archivos y enlaces para apoyar tu contenido. Estarán disponibles para los estudiantes.
               </p>
             </div>
 
-            {/* Uploaded Files */}
+            {/* Archivos */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Files ({watchedValues.attachments?.length || 0})</Label>
+                <label className="text-xs font-semibold text-foreground">
+                  Archivos ({watchedValues.attachments?.length || 0})
+                </label>
                 {(watchedValues.attachments?.length || 0) > 0 && (
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setValue("attachments", [], { shouldValidate: true });
-                      setAttachmentFiles([]);
-                      setFileError("");
-                    }}
-                    className="text-xs text-red-500 hover:text-red-700"
+                    onClick={() => { setValue("attachments", [], { shouldValidate: true }); setAttachmentFiles([]); setFileError(""); }}
+                    className="text-xs font-semibold text-destructive hover:opacity-80 transition-all"
                   >
-                    Remove All
-                  </Button>
+                    Eliminar Todos
+                  </button>
                 )}
               </div>
 
               {fileError && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <p className="text-sm text-red-600 dark:text-red-400">
-                    {fileError}
-                  </p>
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                  <p className="text-xs text-destructive">{fileError}</p>
                 </div>
               )}
 
               {(watchedValues.attachments?.length || 0) > 0 ? (
-                <div className="space-y-2">
-                  {watchedValues.attachments?.map(
-                    (file: Document, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Paperclip className="h-4 w-4 text-blue-500" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Added{" "}
-                              {new Date(file.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
+                <div className="space-y-1.5">
+                  {watchedValues.attachments?.map((file: Document, index: number) => (
+                    <div key={index} className="flex items-center justify-between bg-muted/30 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Paperclip className="w-4 h-4 text-primary flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Agregado el {new Date(file.createdAt).toLocaleDateString('es-ES')}
+                          </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
                       </div>
-                    )
-                  )}
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="p-1.5 rounded-xl text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                  <Paperclip className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-muted-foreground">
-                    No files uploaded yet
-                  </p>
+                <div className="flex flex-col items-center justify-center py-8 rounded-xl border-2 border-dashed border-border text-muted-foreground">
+                  <Paperclip className="w-7 h-7 mb-2 opacity-40" />
+                  <p className="text-xs">Aún no se han subido archivos</p>
                 </div>
               )}
 
-              {/* File Upload */}
-              <div className="space-y-2">
-                <Label htmlFor="file-upload" className="cursor-pointer">
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
-                    <Upload className="h-8 w-8 mx-auto mb-3 text-gray-400" />
-                    <p className="font-medium mb-1">Click to upload files</p>
-                    <p className="text-xs text-muted-foreground">
-                      PDF, DOC, DOCX, images, text files, ZIP (Max: 10MB each)
-                    </p>
-                  </div>
-                </Label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  multiple
-                  onChange={handleFileUpload}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.txt,.zip"
-                  className="hidden"
-                />
-              </div>
+              {/* Zona de subida de archivos */}
+              <label htmlFor="file-upload" className="cursor-pointer block">
+                <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
+                  <Upload className="w-7 h-7 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm font-semibold text-foreground mb-1">Haz clic para subir archivos</p>
+                  <p className="text-xs text-muted-foreground">
+                    PDF, DOC, DOCX, imágenes, archivos de texto, ZIP (Máx: 10MB cada uno)
+                  </p>
+                </div>
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                multiple
+                onChange={handleFileUpload}
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.txt,.zip"
+                className="hidden"
+              />
             </div>
 
             {/* URLs */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Links ({watchedValues.urlsSupport?.length || 0})</Label>
+                <label className="text-xs font-semibold text-foreground">
+                  Enlaces ({watchedValues.urlsSupport?.length || 0})
+                </label>
                 {(watchedValues.urlsSupport?.length || 0) > 0 && (
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setValue("urlsSupport", [], { shouldValidate: true });
-                      setUrlError("");
-                    }}
-                    className="text-xs text-red-500 hover:text-red-700"
+                    onClick={() => { setValue("urlsSupport", [], { shouldValidate: true }); setUrlError(""); }}
+                    className="text-xs font-semibold text-destructive hover:opacity-80 transition-all"
                   >
-                    Remove All
-                  </Button>
+                    Eliminar Todos
+                  </button>
                 )}
               </div>
 
               {(watchedValues.urlsSupport?.length || 0) > 0 && (
-                <div className="space-y-2">
-                  {watchedValues.urlsSupport?.map(
-                    (url: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <LinkIcon className="h-4 w-4 text-green-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline truncate block"
-                            >
-                              {url}
-                            </a>
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeUrl(index)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
+  <div className="space-y-1.5">
+    {watchedValues.urlsSupport?.map((url: string, index: number) => (
+      <div 
+        key={index} 
+        className="flex items-center justify-between bg-muted/30 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <LinkIcon className="w-4 h-4 text-primary flex-shrink-0" />
+          
+          {/* CORREGIDO: Etiqueta <a> añadida aquí */}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-primary hover:underline truncate block"
+          >
+            {url}
+          </a>
+        </div>
 
-              {/* URL Input */}
-              <div className="space-y-2">
-                <Label htmlFor="new-url">Add a link</Label>
+        <button
+          type="button"
+          onClick={() => removeUrl(index)}
+          className="p-1.5 rounded-xl text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
+              {/* Input de URL */}
+              <div className="space-y-1.5">
+                <label htmlFor="new-url" className="text-xs font-semibold text-foreground">
+                  Agregar un enlace
+                </label>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <Input
+                    <input
                       id="new-url"
                       value={newUrl}
-                      onChange={(e) => {
-                        setNewUrl(e.target.value);
-                        setUrlError("");
-                      }}
-                      placeholder="https://example.com/learning-resource"
+                      onChange={(e) => { setNewUrl(e.target.value); setUrlError(""); }}
+                      placeholder="https://ejemplo.com/recurso-de-aprendizaje"
                       onKeyDown={handleUrlKeyDown}
-                      className={urlError ? "border-red-500" : ""}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all ${
+                        urlError ? 'border-destructive focus:ring-destructive/40' : 'border-border'
+                      }`}
                     />
                     {urlError && (
-                      <p className="text-sm text-red-500 mt-1">{urlError}</p>
+                      <p className="text-xs text-destructive mt-1">{urlError}</p>
                     )}
                   </div>
-                  <Button
+                  <button
                     type="button"
                     onClick={addUrl}
-                    variant="outline"
                     disabled={!newUrl.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
-                    Add Link
-                  </Button>
+                    Agregar Enlace
+                  </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Add links to external resources, documentation, or related
-                  materials.
+                  Agrega enlaces a recursos externos, documentación o materiales relacionados.
                 </p>
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
-            <Button
+        </div>
+
+        {/* ── Pie de página ── */}
+        <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <button
               type="button"
-              variant="outline"
               onClick={handleClose}
-              className="w-full sm:w-auto order-2 sm:order-1"
+              className="flex-1 flex items-center justify-center px-5 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
             >
-              Cancel
-            </Button>
-            <Button
+              Cancelar
+            </button>
+            <button
               type="submit"
               disabled={!isValid}
-              className="w-full sm:w-auto order-1 sm:order-2 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
             >
-              Create Page
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+              Crear Página
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </DialogContent>
+  </Dialog>
+ )
 }

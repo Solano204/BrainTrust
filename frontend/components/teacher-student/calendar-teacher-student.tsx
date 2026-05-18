@@ -26,35 +26,35 @@ import {
 } from "@/app/presentation/hooks/calendar/task-hooks";
 import { useAuth } from "@/app/context/AuthContext";
 import { Submission } from "@/app/domain/entities";
-import { StudentTaskView } from "../student/tasks-transactional-view-student";
-import { StudentQuizView } from "../student/quiz-transactional-view-student";
-import { QuizView as QuizTeacherView } from "../teacher/quiz-view-information-teacher";
-import { AssignmentInfoView } from "../teacher/task-view-information-teacher";
+import { VistaTareaEstudiante } from "../student/tasks-transactional-view-student";
+import { VistaQuizEstudiante } from "../student/quiz-transactional-view-student";
+import { VistaQuiz } from "../teacher/quiz-view-information-teacher";
+import { VistaInfoTarea } from "../teacher/task-view-information-teacher";
 import {
   useQuizSubmission,
   useTaskSubmission,
 } from "@/components/teacher-student/hooks/submission-hooks";
 import { useUserTeam } from "./hooks/team-hooks";
 
-export type CalendarResource = Assignment | Quiz;
+export type RecursoCalendario = Assignment | Quiz;
 
-const dateFns = {
+const funcionesFecha = {
 
-  format: (date: Date, formatStr: string) => {
-    const d = new Date(date);
-    if (formatStr === "yyyy-MM-dd") {
+  format: (fecha: Date, formatoStr: string) => {
+    const d = new Date(fecha);
+    if (formatoStr === "yyyy-MM-dd") {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
         2,
         "0"
       )}-${String(d.getDate()).padStart(2, "0")}`;
     }
-    if (formatStr === "MMM yyyy") {
+    if (formatoStr === "MMM yyyy") {
       return d.toLocaleDateString(undefined, {
         year: "numeric",
         month: "long",
       });
     }
-    if (formatStr === "dd") {
+    if (formatoStr === "dd") {
       return String(d.getDate());
     }
     return d.toLocaleDateString(undefined, {
@@ -63,269 +63,269 @@ const dateFns = {
       year: "numeric",
     });
   },
-  startOfWeek: (date: Date) => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  inicioSemana: (fecha: Date) => {
+    const d = new Date(fecha);
+    const dia = d.getDay();
+    const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
     d.setDate(diff);
     d.setHours(0, 0, 0, 0);
     return d;
   },
-  getStartOfMonth: (date: Date) => {
-    const d = new Date(date);
+  obtenerInicioMes: (fecha: Date) => {
+    const d = new Date(fecha);
     d.setDate(1);
     d.setHours(0, 0, 0, 0);
     return d;
   },
-  addMonths: (date: Date, amount: number) => {
-    const d = new Date(date);
-    d.setMonth(d.getMonth() + amount);
+  agregarMeses: (fecha: Date, cantidad: number) => {
+    const d = new Date(fecha);
+    d.setMonth(d.getMonth() + cantidad);
     return d;
   },
-  subMonths: (date: Date, amount: number) => {
-    const d = new Date(date);
-    d.setMonth(d.getMonth() - amount);
+  restarMeses: (fecha: Date, cantidad: number) => {
+    const d = new Date(fecha);
+    d.setMonth(d.getMonth() - cantidad);
     return d;
   },
-  addDays: (date: Date, amount: number) => {
-    const d = new Date(date);
-    d.setDate(d.getDate() + amount);
+  agregarDias: (fecha: Date, cantidad: number) => {
+    const d = new Date(fecha);
+    d.setDate(d.getDate() + cantidad);
     return d;
   },
-  isSameDay: (date1: Date, date2: Date) =>
-    new Date(date1).toDateString() === new Date(date2).toDateString(),
-  isSameMonth: (date1: Date, date2: Date) =>
-    date1.getMonth() === date2.getMonth() &&
-    date1.getFullYear() === date2.getFullYear(),
+  esMismoDia: (fecha1: Date, fecha2: Date) =>
+    new Date(fecha1).toDateString() === new Date(fecha2).toDateString(),
+  esMismoMes: (fecha1: Date, fecha2: Date) =>
+    fecha1.getMonth() === fecha2.getMonth() &&
+    fecha1.getFullYear() === fecha2.getFullYear(),
 };
 
 const {
   format,
-  startOfWeek,
-  getStartOfMonth,
-  addMonths,
-  subMonths,
-  addDays,
-  isSameDay,
-  isSameMonth,
-} = dateFns;
+  inicioSemana,
+  obtenerInicioMes,
+  agregarMeses,
+  restarMeses,
+  agregarDias,
+  esMismoDia,
+  esMismoMes,
+} = funcionesFecha;
 
-const getResourceType = (resource: CalendarResource): CourseResourceType => {
-  if ("questions" in resource) return "QUIZ";
+const obtenerTipoRecurso = (recurso: RecursoCalendario): CourseResourceType => {
+  if ("questions" in recurso) return "QUIZ";
   return "ASSIGNMENT";
 };
 
-const getResourceStyles = (resource: CalendarResource) => {
-  const type = getResourceType(resource);
-  switch (type) {
+const obtenerEstilosRecurso = (recurso: RecursoCalendario) => {
+  const tipo = obtenerTipoRecurso(recurso);
+  switch (tipo) {
     case "ASSIGNMENT":
-      const assignment = resource as Assignment;
-      const isGroupAssignment = assignment.deliveryMode === "TEAM";
+      const tarea = recurso as Assignment;
+      const esTareaGrupal = tarea.deliveryMode === "TEAM";
       return {
-        icon: isGroupAssignment ? "👥" : "📝",
-        color: isGroupAssignment 
+        icono: esTareaGrupal ? "👥" : "📝",
+        color: esTareaGrupal 
           ? "text-blue-600 bg-blue-100 border-blue-200" 
           : "text-red-600 bg-red-100 border-red-200",
-        title: isGroupAssignment ? "Group Assignment" : "Individual Assignment",
+        titulo: esTareaGrupal ? "Tarea Grupal" : "Tarea Individual",
       };
     case "QUIZ":
       return {
-        icon: "📋",
+        icono: "📋",
         color: "text-purple-600 bg-purple-100 border-purple-200",
-        title: "Quiz",
+        titulo: "Quiz",
       };
     default:
       return {
-        icon: "📎",
+        icono: "📎",
         color: "text-gray-600 bg-gray-100 border-gray-200",
-        title: "Resource",
+        titulo: "Recurso",
       };
   }
 };
 
-const formatForAPI = (date: Date): string => {
-  return date.toISOString().split("T")[0] + "T00:00:00";
+const formatearParaAPI = (fecha: Date): string => {
+  return fecha.toISOString().split("T")[0] + "T00:00:00";
 };
 
-interface CalendarViewProps {
+interface PropsVistaCalendario {
   userId: string;
   userType: "teacher" | "student";
 }
 
-export function CalendarView({ userId, userType }: CalendarViewProps) {
-  const [currentMonth, setCurrentMonth] = React.useState(
-    getStartOfMonth(new Date())
+export function CalendarView({ userId, userType }: PropsVistaCalendario) {
+  const [mesActual, setMesActual] = React.useState(
+    obtenerInicioMes(new Date())
   );
-  const [activeResource, setActiveResource] =
-    React.useState<CalendarResource | null>(null);
-  const [selectedResourceId, setSelectedResourceId] = React.useState<
+  const [recursoActivo, setRecursoActivo] =
+    React.useState<RecursoCalendario | null>(null);
+  const [idRecursoSeleccionado, setIdRecursoSeleccionado] = React.useState<
     string | null
   >(null);
   const { user } = useAuth();
 
-  const monthStartString = formatForAPI(currentMonth);
+  const fechaInicioMes = formatearParaAPI(mesActual);
 
   const {
-    data: tasks = [],
-    isLoading: tasksLoading,
-    error: tasksError,
-  } = useTasksByMonth(userId, monthStartString, userType);
+    data: tareas = [],
+    isLoading: cargandoTareas,
+    error: errorTareas,
+  } = useTasksByMonth(userId, fechaInicioMes, userType);
 
   const {
     data: quizzes = [],
-    isLoading: quizzesLoading,
-    error: quizzesError,
-  } = useQuizzesByMonth(userId, monthStartString, userType);
+    isLoading: cargandoQuizzes,
+    error: errorQuizzes,
+  } = useQuizzesByMonth(userId, fechaInicioMes, userType);
 
 
-  console.log("QUIZES ",quizzes)
-  console.log("TASKS",tasks)
-  const { data: userTeam } = useUserTeam(userId);
+  console.log("QUIZZES ",quizzes)
+  console.log("TAREAS",tareas)
+  const { data: equipoUsuario } = useUserTeam(userId);
 
-  const { data: quizDetail, isLoading: quizLoading } = useQuizDetail(
-    selectedResourceId && activeResource && "questions" in activeResource
-      ? selectedResourceId
+  const { data: detalleQuiz, isLoading: cargandoQuiz } = useQuizDetail(
+    idRecursoSeleccionado && recursoActivo && "questions" in recursoActivo
+      ? idRecursoSeleccionado
       : null,
     userType
   );
 
-  const allResources = React.useMemo(() => {
-    return [...tasks, ...quizzes];
-  }, [tasks, quizzes]);
+  const todosRecursos = React.useMemo(() => {
+    return [...tareas, ...quizzes];
+  }, [tareas, quizzes]);
 
-  const eventsByDay = React.useMemo(() => {
-    const grouped: { [dateKey: string]: CalendarResource[] } = {};
+  const eventosPorDia = React.useMemo(() => {
+    const agrupados: { [claveFecha: string]: RecursoCalendario[] } = {};
 
-    allResources.forEach((resource) => {
-      const dueDate = "dueDate" in resource ? (resource as any).dueDate : null;
+    todosRecursos.forEach((recurso) => {
+      const fechaEntrega = "dueDate" in recurso ? (recurso as any).dueDate : null;
 
-      if (dueDate) {
-        const dateKey = format(new Date(dueDate), "yyyy-MM-dd");
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = [];
+      if (fechaEntrega) {
+        const claveFecha = format(new Date(fechaEntrega), "yyyy-MM-dd");
+        if (!agrupados[claveFecha]) {
+          agrupados[claveFecha] = [];
         }
-        grouped[dateKey].push(resource);
+        agrupados[claveFecha].push(recurso);
       }
     });
 
-    return grouped;
-  }, [allResources]);
+    return agrupados;
+  }, [todosRecursos]);
 
-  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const nombresDias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-  const goToPreviousMonth = () => {
-    setCurrentMonth((prev) => getStartOfMonth(subMonths(prev, 1)));
+  const irAlMesAnterior = () => {
+    setMesActual((prev) => obtenerInicioMes(restarMeses(prev, 1)));
   };
 
-  const goToNextMonth = () => {
-    setCurrentMonth((prev) => getStartOfMonth(addMonths(prev, 1)));
+  const irAlMesSiguiente = () => {
+    setMesActual((prev) => obtenerInicioMes(agregarMeses(prev, 1)));
   };
 
-  const goToToday = () => {
-    setCurrentMonth(getStartOfMonth(new Date()));
+  const irAlDiaActual = () => {
+    setMesActual(obtenerInicioMes(new Date()));
   };
 
-  const handleResourceClick = (resource: CalendarResource) => {
-    setActiveResource(resource);
-    setSelectedResourceId(resource.id);
+  const manejarClickRecurso = (recurso: RecursoCalendario) => {
+    setRecursoActivo(recurso);
+    setIdRecursoSeleccionado(recurso.id);
   };
 
-  const handleBackFromDetail = () => {
-    setActiveResource(null);
-    setSelectedResourceId(null);
+  const manejarVolverDelDetalle = () => {
+    setRecursoActivo(null);
+    setIdRecursoSeleccionado(null);
   };
 
-  const { submitTask: submitTaskMutation, isSubmitting: isSubmittingTask } =
+  const { submitTask: mutacionEnviarTarea, isSubmitting: enviandoTarea } =
     useTaskSubmission();
-  const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
+  const { submitQuiz: mutacionEnviarQuiz, isSubmitting: enviandoQuiz } =
     useQuizSubmission();
 
-  const handleTaskSubmit = async (submissionData: {
+  const manejarEnvioTarea = async (datosEnvio: {
   content: string;
   attachments: File[];
 }) => {
-  if (!activeResource || !user?.id) return;
+  if (!recursoActivo || !user?.id) return;
 
   try {
-    const assignment = activeResource as Assignment;
-    const submissionType = assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
+    const tarea = recursoActivo as Assignment;
+    const tipoEnvio = tarea.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
     
-    let groupId: string | undefined;
-    if (submissionType === "TEAM" && userTeam) {
-      groupId = userTeam.teamId;
+    let idGrupo: string | undefined;
+    if (tipoEnvio === "TEAM" && equipoUsuario) {
+      idGrupo = equipoUsuario.teamId;
     }
     
-    const submissionParams = {
-      assignmentId: activeResource.id,
+    const parametrosEnvio = {
+      assignmentId: recursoActivo.id,
       studentId: user.id,
-      content: submissionData.content,
-      attachments: submissionData.attachments,
-      submissionType: submissionType as "INDIVIDUAL" | "TEAM",
-      ...(groupId && { groupId })
+      content: datosEnvio.content,
+      attachments: datosEnvio.attachments,
+      submissionType: tipoEnvio as "INDIVIDUAL" | "TEAM",
+      ...(idGrupo && { groupId: idGrupo })
     };
 
-    await submitTaskMutation.mutateAsync(submissionParams);
+    await mutacionEnviarTarea.mutateAsync(parametrosEnvio);
 
-    handleBackFromDetail();
+    manejarVolverDelDetalle();
   } catch (error) {
-    console.error("Failed to submit task:", error);
+    console.error("Error al enviar la tarea:", error);
   }
 };
 
-  const handleQuizSubmit = async (answers: any) => {
-    if (!activeResource || !user?.id) return;
+  const manejarEnvioQuiz = async (respuestas: any) => {
+    if (!recursoActivo || !user?.id) return;
     try {
-      await submitQuizMutation.mutateAsync({
-        quizId: activeResource.id,
+      await mutacionEnviarQuiz.mutateAsync({
+        quizId: recursoActivo.id,
         studentId: user.id,
-        answers: answers,
+        answers: respuestas,
       });
 
-      handleBackFromDetail();
+      manejarVolverDelDetalle();
     } catch (error) {
-      console.error("Failed to submit quiz:", error);
+      console.error("Error al enviar el quiz:", error);
     }
   };
 
-  const getExistingSubmission = (
-    resourceId: string
+  const obtenerEnvioExistente = (
+    idRecurso: string
   ): Submission | undefined => {
     if (userType === "student") {
-      return tasks
+      return tareas
         .flatMap((t) => t.submissions)
         .find((s) => s.studentId === userId);
     }
     return undefined;
   };
 
-  const firstDayOfMonth = getStartOfMonth(currentMonth);
-  const startDayOfGrid = startOfWeek(firstDayOfMonth);
-  const calendarDays: Date[] = [];
-  let currentDate = startDayOfGrid;
+  const primerDiaDelMes = obtenerInicioMes(mesActual);
+  const diaInicioGrilla = inicioSemana(primerDiaDelMes);
+  const diasCalendario: Date[] = [];
+  let fechaActual = diaInicioGrilla;
 
   for (let i = 0; i < 42; i++) {
-    calendarDays.push(currentDate);
-    currentDate = addDays(currentDate, 1);
-    if (i >= 28 && !isSameMonth(currentDate, currentMonth)) break;
+    diasCalendario.push(fechaActual);
+    fechaActual = agregarDias(fechaActual, 1);
+    if (i >= 28 && !esMismoMes(fechaActual, mesActual)) break;
   }
 
-  const renderDayCell = (date: Date) => {
-    const dateKey = format(date, "yyyy-MM-dd");
-    const isToday = isSameDay(date, new Date());
-    const isOutsideMonth = !isSameMonth(date, currentMonth);
-    const dayEvents = eventsByDay[dateKey] || [];
+  const renderizarCeldaDia = (fecha: Date) => {
+    const claveFecha = format(fecha, "yyyy-MM-dd");
+    const esHoy = esMismoDia(fecha, new Date());
+    const esFueraDelMes = !esMismoMes(fecha, mesActual);
+    const eventosDia = eventosPorDia[claveFecha] || [];
 
     return (
       <div
-        key={dateKey}
+        key={claveFecha}
         className={`flex flex-col p-2 min-h-[8rem] border border-border/50 transition-colors 
                     ${
-                      isOutsideMonth
+                      esFueraDelMes
                         ? "bg-gray-100/50 text-muted-foreground/60 dark:bg-gray-700/50"
                         : "bg-white dark:bg-gray-800"
                     }
                     ${
-                      isToday
+                      esHoy
                         ? "ring-2 ring-primary border-primary/50 dark:bg-blue-900/20"
                         : ""
                     }
@@ -333,61 +333,61 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
       >
         <div
           className={`text-sm font-semibold mb-2 ${
-            isToday && !isOutsideMonth ? "text-primary" : "text-foreground"
+            esHoy && !esFueraDelMes ? "text-primary" : "text-foreground"
           }`}
         >
-          {format(date, "dd")}
+          {format(fecha, "dd")}
         </div>
 
-        {dayEvents.map((resource, index) => {
-          const { icon, color, title } = getResourceStyles(resource);
-          const displayTitle =
-            resource.title.length > 20
-              ? resource.title.substring(0, 20) + "..."
-              : resource.title;
+        {eventosDia.map((recurso, indice) => {
+          const { icono, color, titulo } = obtenerEstilosRecurso(recurso);
+          const tituloMostrar =
+            recurso.title.length > 20
+              ? recurso.title.substring(0, 20) + "..."
+              : recurso.title;
 
-          const existingSubmission =
+          const envioExistente =
             userType === "student"
-              ? getExistingSubmission(resource.id)
+              ? obtenerEnvioExistente(recurso.id)
               : undefined;
-          const isSubmitted = !!existingSubmission;
+          const estaEnviado = !!envioExistente;
 
           return (
             <div
-              key={`${resource.id}-${index}`}
-              onClick={() => handleResourceClick(resource)}
+              key={`${recurso.id}-${indice}`}
+              onClick={() => manejarClickRecurso(recurso)}
               className={`flex items-center gap-1 p-1.5 rounded text-xs font-medium cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md border ${color} mb-1 ${
-                isSubmitted ? "opacity-80" : ""
+                estaEnviado ? "opacity-80" : ""
               }`}
-              title={`${title}: ${resource.title}${
-                isSubmitted ? " (Submitted)" : ""
+              title={`${titulo}: ${recurso.title}${
+                estaEnviado ? " (Enviado)" : ""
               }`}
             >
-              <span className="text-xs">{icon}</span>
-              <span className="truncate flex-1">{displayTitle}</span>
-              {isSubmitted && <span className="text-xs">✓</span>}
+              <span className="text-xs">{icono}</span>
+              <span className="truncate flex-1">{tituloMostrar}</span>
+              {estaEnviado && <span className="text-xs">✓</span>}
             </div>
           );
         })}
 
-        {(tasksLoading || quizzesLoading) && isToday && (
+        {(cargandoTareas || cargandoQuizzes) && esHoy && (
           <div className="flex items-center text-xs text-muted-foreground mt-auto">
             <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            Loading...
+            Cargando...
           </div>
         )}
       </div>
     );
   };
 
-  const renderDetailView = () => {
-    if (!activeResource) return null;
+  const renderizarVistaDetalle = () => {
+    if (!recursoActivo) return null;
 
-    const resourceType = getResourceType(activeResource);
+    const tipoRecurso = obtenerTipoRecurso(recursoActivo);
     
-    const isLoading = quizLoading && resourceType === "QUIZ";
+    const cargando = cargandoQuiz && tipoRecurso === "QUIZ";
 
-    if (isLoading) {
+    if (cargando) {
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
@@ -395,7 +395,7 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
                 <p className="text-xl text-primary">
-                  Loading quiz details...
+                  Cargando detalles del quiz...
                 </p>
               </div>
             </div>
@@ -405,44 +405,44 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     }
 
     if (userType === "student") {
-      if (resourceType === "ASSIGNMENT") {
-        const assignment = activeResource as Assignment;
-        const existingSubmission = getExistingSubmission(assignment.id);
+      if (tipoRecurso === "ASSIGNMENT") {
+        const tarea = recursoActivo as Assignment;
+        const envioExistente = obtenerEnvioExistente(tarea.id);
 
         return (
           <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <div className="container mx-auto py-4">
-              <StudentTaskView
-                onExit={handleBackFromDetail}
-                assignment={assignment}
-                onSubmit={handleTaskSubmit}
+              <VistaTareaEstudiante
+                onExit={manejarVolverDelDetalle}
+                assignment={tarea}
+                onSubmit={manejarEnvioTarea}
                 studentId={userId}
-                isSubmitting={isSubmittingTask}
+                isSubmitting={enviandoTarea}
               />
               <div className="text-center mt-4">
                 <Button
-                  onClick={handleBackFromDetail}
+                  onClick={manejarVolverDelDetalle}
                   variant="outline"
                   className="mx-auto"
                 >
-                  Back to Calendar
+                  Volver al Calendario
                 </Button>
               </div>
             </div>
           </div>
         );
-      } else if (resourceType === "QUIZ" && quizDetail) {
-        const existingSubmission = getExistingSubmission(quizDetail.id);
+      } else if (tipoRecurso === "QUIZ" && detalleQuiz) {
+        const envioExistente = obtenerEnvioExistente(detalleQuiz.id);
 
         return (
           <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900 overflow-y-auto">
             <div className="container mx-auto py-4">
-              <StudentQuizView
-                quizData={quizDetail}
-                onSubmit={handleQuizSubmit}
-                onExit={handleBackFromDetail}
+              <VistaQuizEstudiante
+                quizData={detalleQuiz}
+                onSubmit={manejarEnvioQuiz}
+                onExit={manejarVolverDelDetalle}
                 studentId={userId}
-                isSubmitting={isSubmittingQuiz}
+                isSubmitting={enviandoQuiz}
               />
             </div>
           </div>
@@ -454,13 +454,13 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
             <div className="min-h-full bg-background p-4 md:p-6">
               <div className="max-w-4xl mx-auto">
-                {resourceType === "ASSIGNMENT" && (
-                  <AssignmentInfoView assignment={activeResource as Assignment} onClose={handleBackFromDetail} />
+                {tipoRecurso === "ASSIGNMENT" && (
+                  <VistaInfoTarea assignment={recursoActivo as Assignment} onClose={manejarVolverDelDetalle} />
                 )}
-                {resourceType === "QUIZ" && quizDetail && (
-                  <QuizTeacherView
-                    quiz={quizDetail}
-                    onClose={handleBackFromDetail}
+                {tipoRecurso === "QUIZ" && detalleQuiz && (
+                  <VistaQuiz
+                    quiz={detalleQuiz}
+                    onClose={manejarVolverDelDetalle}
                   />
                 )}
               </div>
@@ -473,139 +473,146 @@ export function CalendarView({ userId, userType }: CalendarViewProps) {
     return null;
   };
 
-  const isLoading = tasksLoading || quizzesLoading;
-  const hasError = tasksError || quizzesError;
+  const cargando = cargandoTareas || cargandoQuizzes;
+  const hayError = errorTareas || errorQuizzes;
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
+return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <Card className="max-w-7xl mx-auto p-6 space-y-4">
-        <div className="flex justify-between items-center border-b pb-4">
-          <Button onClick={goToToday} variant="outline" className="text-sm">
-            Today
+        {/* Encabezado del Calendario */}
+        <div className="flex justify-between items-center border-b border-border pb-4">
+          <Button onClick={irAlDiaActual} variant="outline" className="text-sm">
+            Hoy
           </Button>
           <div className="flex items-center gap-4">
             <Button
-              onClick={goToPreviousMonth}
+              onClick={irAlMesAnterior}
               size="icon"
               className="h-8 w-8 p-0"
-              disabled={isLoading}
+              disabled={cargando}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <h2 className="text-xl font-bold text-foreground min-w-[200px] text-center">
-              {format(currentMonth, "MMM yyyy")}
+              {format(mesActual, "MMM yyyy")}
             </h2>
             <Button
-              onClick={goToNextMonth}
+              onClick={irAlMesSiguiente}
               size="icon"
               className="h-8 w-8 p-0"
-              disabled={isLoading}
+              disabled={cargando}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CalendarIcon className="h-4 w-4" />
-            <span className="capitalize">{userType}</span>
+            <span className="capitalize">{userType === "teacher" ? "Profesor" : "Estudiante"}</span>
             {user && (
-              <span className="text-xs bg-primary/10 px-2 py-1 rounded">
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
                 {user.name}
               </span>
             )}
           </div>
         </div>
 
+        {/* Estadísticas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {tasks.length}
+          <Card className="p-4 text-center border border-border">
+            <div className="text-2xl font-bold text-primary">
+              {tareas.length}
             </div>
-            <div className="text-sm text-muted-foreground">Tasks</div>
+            <div className="text-sm text-muted-foreground">Tareas</div>
           </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
+          <Card className="p-4 text-center border border-border">
+            <div className="text-2xl font-bold text-accent">
               {quizzes.length}
             </div>
             <div className="text-sm text-muted-foreground">Quizzes</div>
           </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
+          <Card className="p-4 text-center border border-border">
+            <div className="text-2xl font-bold text-primary/70">
               {
-                allResources.filter((r) => {
-                  const dueDate = "dueDate" in r ? r.dueDate : null;
-                  return dueDate && new Date(dueDate) >= new Date();
+                todosRecursos.filter((r) => {
+                  const fechaEntrega = "dueDate" in r ? r.dueDate : null;
+                  return fechaEntrega && new Date(fechaEntrega) >= new Date();
                 }).length
               }
             </div>
-            <div className="text-sm text-muted-foreground">Upcoming</div>
+            <div className="text-sm text-muted-foreground">Próximos</div>
           </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">
+          <Card className="p-4 text-center border border-border">
+            <div className="text-2xl font-bold text-destructive">
               {
-                allResources.filter((r) => {
-                  const dueDate = "dueDate" in r ? r.dueDate : null;
-                  return dueDate && new Date(dueDate) < new Date();
+                todosRecursos.filter((r) => {
+                  const fechaEntrega = "dueDate" in r ? r.dueDate : null;
+                  return fechaEntrega && new Date(fechaEntrega) < new Date();
                 }).length
               }
             </div>
-            <div className="text-sm text-muted-foreground">Overdue</div>
+            <div className="text-sm text-muted-foreground">Vencidos</div>
           </Card>
         </div>
 
+        {/* Nombres de los Días */}
         <div className="grid grid-cols-7 text-center font-bold text-sm uppercase tracking-wider text-muted-foreground border-b border-border/50">
-          {dayNames.map((day) => (
-            <div key={day} className="p-2">
-              {day}
+          {nombresDias.map((dia) => (
+            <div key={dia} className="p-2">
+              {dia}
             </div>
           ))}
         </div>
 
+        {/* Cuadrícula del Calendario */}
         <div className="grid grid-cols-7 gap-px border border-border/50 rounded-lg overflow-hidden bg-border/50">
-          {calendarDays.map(renderDayCell)}
+          {diasCalendario.map(renderizarCeldaDia)}
         </div>
 
+        {/* Leyenda */}
         <div className="flex flex-wrap gap-4 justify-center text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-            <span>Individual Assignment</span>
+            <div className="w-3 h-3 bg-destructive/20 border border-destructive/30 rounded"></div>
+            <span>Tarea Individual</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-100 border border-blue-200 rounded"></div>
-            <span>Group Assignment</span>
+            <div className="w-3 h-3 bg-primary/20 border border-primary/30 rounded"></div>
+            <span>Tarea Grupal</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-100 border border-purple-200 rounded"></div>
+            <div className="w-3 h-3 bg-accent/20 border border-accent/30 rounded"></div>
             <span>Quiz</span>
           </div>
           {userType === "student" && (
             <div className="flex items-center gap-1">
-              <span className="text-green-600">✓</span>
-              <span>Submitted</span>
+              <span className="text-primary font-bold">✓</span>
+              <span>Enviado</span>
             </div>
           )}
         </div>
 
-        {isLoading && (
+        {/* Cargando */}
+        {cargando && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
             <span className="text-muted-foreground">
-              Loading {tasksLoading ? "tasks" : ""}
-              {tasksLoading && quizzesLoading ? " and " : ""}
-              {quizzesLoading ? "quizzes" : ""}...
+              Cargando {cargandoTareas ? "tareas" : ""}
+              {cargandoTareas && cargandoQuizzes ? " y " : ""}
+              {cargandoQuizzes ? "quizzes" : ""}...
             </span>
           </div>
         )}
 
-        {hasError && (
+        {/* Error */}
+        {hayError && (
           <div className="text-center py-8 text-destructive">
-            Error loading calendar data. Please try again.
-            {tasksError && <div>Tasks: {tasksError.message}</div>}
-            {quizzesError && <div>Quizzes: {quizzesError.message}</div>}
+            Error al cargar los datos del calendario. Por favor, intente de nuevo.
+            {errorTareas && <div>Tareas: {errorTareas.message}</div>}
+            {errorQuizzes && <div>Quizzes: {errorQuizzes.message}</div>}
           </div>
         )}
       </Card>
 
-      {renderDetailView()}
+      {renderizarVistaDetalle()}
     </div>
   );
 }

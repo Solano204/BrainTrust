@@ -21,10 +21,10 @@ import { useQuizDetail, useQuizMutations } from "../teacher-student/hooks/quiz-h
 import { Quiz } from "@/app/shared/models/quiz.model";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types
+// Tipos
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface EditData {
+interface DatosEdicion {
   title: string;
   description: string;
   timeLimit: string;
@@ -35,48 +35,49 @@ interface EditData {
   totalScore: number;
 }
 
-interface QuizViewProps {
+interface PropsVistaQuiz {
   quiz: Quiz;
   onClose: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Redistribution preview helper
+// Ayudante de previsualización de redistribución
 // ─────────────────────────────────────────────────────────────────────────────
 
-function computeRedistributedPoints(
-  questions: Question[],
-  newTotalScore: number
+function calcularRedistribucionPuntos(
+  preguntas: Question[],
+  nuevaPuntuacionTotal: number
 ): { id: string; question: string; oldPoints: number; weight: number; newPoints: number }[] {
-  const currentTotal = questions.reduce((s, q) => s + (q.points ?? 0), 0);
+  const totalActual = preguntas.reduce((s, q) => s + (q.points ?? 0), 0);
 
-  return questions.map((q) => {
-    const weight = currentTotal > 0 ? (q.points ?? 0) / currentTotal : 1 / questions.length;
-    const newPoints = +(newTotalScore * weight).toFixed(2);
+  return preguntas.map((q) => {
+    const peso = totalActual > 0 ? (q.points ?? 0) / totalActual : 1 / preguntas.length;
+    const nuevosPuntos = +(nuevaPuntuacionTotal * peso).toFixed(2);
     return {
       id: q.id,
-      question: q.question || "(empty question)",
+      question: q.question || "(pregunta vacía)",
       oldPoints: q.points ?? 0,
-      weight: +(weight * 100).toFixed(1),
-      newPoints,
+      weight: +(peso * 100).toFixed(1),
+      newPoints: nuevosPuntos,
     };
   });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Component
+// Componente
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
+
+export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   const { user } = useAuth();
-  const userType = user?.role === "teacher" ? "teacher" : "student";
+  const tipoUsuario = user?.role === "teacher" ? "teacher" : "student";
 
   const {
     data: quiz,
-    isLoading: isQuizLoading,
-    error: quizError,
+    isLoading: cargandoQuiz,
+    error: errorQuiz,
     refetch,
-  } = useQuizDetail(initialQuiz.id);
+  } = useQuizDetail(quizInicial.id);
 
   const {
     updateQuiz,
@@ -91,59 +92,59 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
   } = useQuizMutations();
 
   console.log("quiz", quiz);
-  const quizData: Quiz = quiz ?? initialQuiz;
+  const datosQuiz: Quiz = quiz ?? quizInicial;
 
-  const [showCorrectAnswers, setShowCorrectAnswers] = useState(userType === "teacher");
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editData, setEditData] = useState<EditData>({
-    title: quizData.title,
-    description: quizData.description,
-    timeLimit: quizData.timeLimit.toString(),
-    maxGrade: quizData.maxGrade,
-    dueDate: quizData.dueDate ?? "",
-    acceptLateSubmissions: quizData.acceptLateSubmissions,
-    allowSeeResults: quizData.allowSeeResults,
-    totalScore: quizData.totalScore ?? quizData.maxGrade ?? 100,
+  const [mostrarRespuestasCorrectas, setMostrarRespuestasCorrectas] = useState(tipoUsuario === "teacher");
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [datosEdicion, setDatosEdicion] = useState<DatosEdicion>({
+    title: datosQuiz.title,
+    description: datosQuiz.description,
+    timeLimit: datosQuiz.timeLimit.toString(),
+    maxGrade: datosQuiz.maxGrade,
+    dueDate: datosQuiz.dueDate ?? "",
+    acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
+    allowSeeResults: datosQuiz.allowSeeResults,
+    totalScore: datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100,
   });
 
-  const [editQuestions, setEditQuestions] = useState<Question[]>([]);
-  const [deletedQuestionIds, setDeletedQuestionIds] = useState<string[]>([]);
-  const [isEditingQuestions, setIsEditingQuestions] = useState(false);
-  const [showRedistributionPreview, setShowRedistributionPreview] = useState(false);
+  const [preguntasEdicion, setPreguntasEdicion] = useState<Question[]>([]);
+  const [idsPreguntasEliminadas, setIdsPreguntasEliminadas] = useState<string[]>([]);
+  const [editandoPreguntas, setEditandoPreguntas] = useState(false);
+  const [mostrarPrevisualizacionRedistribucion, setMostrarPrevisualizacionRedistribucion] = useState(false);
 
   useEffect(() => {
-    if (quizData) {
-      setEditData({
-        title: quizData.title,
-        description: quizData.description,
-        timeLimit: quizData.timeLimit.toString(),
-        maxGrade: quizData.maxGrade,
-        dueDate: quizData.dueDate ?? "",
-        acceptLateSubmissions: quizData.acceptLateSubmissions,
-        allowSeeResults: quizData.allowSeeResults,
-        totalScore: quizData.totalScore ?? quizData.maxGrade ?? 100,
+    if (datosQuiz) {
+      setDatosEdicion({
+        title: datosQuiz.title,
+        description: datosQuiz.description,
+        timeLimit: datosQuiz.timeLimit.toString(),
+        maxGrade: datosQuiz.maxGrade,
+        dueDate: datosQuiz.dueDate ?? "",
+        acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
+        allowSeeResults: datosQuiz.allowSeeResults,
+        totalScore: datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100,
       });
-      setEditQuestions(quizData.questions ?? []);
+      setPreguntasEdicion(datosQuiz.questions ?? []);
     }
-  }, [quizData]);
+  }, [datosQuiz]);
 
-  // ── Computed values ──────────────────────────────────────────────────────
-  const totalPoints = editQuestions.reduce((sum, q) => sum + (q.points ?? 0), 0);
-  const multipleChoiceCount = editQuestions.filter((q) => q.type === "multiple-choice").length;
-  const openEndedCount = editQuestions.filter((q) => q.type === "open-ended").length;
+  // ── Valores calculados ──────────────────────────────────────────────────────
+  const puntosTotales = preguntasEdicion.reduce((sum, q) => sum + (q.points ?? 0), 0);
+  const cantidadOpcionMultiple = preguntasEdicion.filter((q) => q.type === "multiple-choice").length;
+  const cantidadRespuestaAbierta = preguntasEdicion.filter((q) => q.type === "open-ended").length;
 
-  const redistributionPreview = useMemo(() => {
-    const existing = editQuestions.filter((q) => !q.id.startsWith("temp_"));
-    if (existing.length === 0) return [];
-    return computeRedistributedPoints(existing, editData.totalScore);
-  }, [editQuestions, editData.totalScore]);
+  const previsualizacionRedistribucion = useMemo(() => {
+    const existentes = preguntasEdicion.filter((q) => !q.id.startsWith("temp_"));
+    if (existentes.length === 0) return [];
+    return calcularRedistribucionPuntos(existentes, datosEdicion.totalScore);
+  }, [preguntasEdicion, datosEdicion.totalScore]);
 
-  const totalScoreChanged =
-    editData.totalScore !== (quizData.totalScore ?? quizData.maxGrade ?? 100);
+  const puntuacionTotalCambio =
+    datosEdicion.totalScore !== (datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100);
 
-  // ── Loading flag ─────────────────────────────────────────────────────────
-  const isLoading =
-    isQuizLoading ||
+  // ── Indicador de carga ─────────────────────────────────────────────────────────
+  const cargando =
+    cargandoQuiz ||
     updateQuiz.isPending ||
     addQuestionsBulk.isPending ||
     updateQuestionsBulk.isPending ||
@@ -154,57 +155,57 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
     updateQuestionsTypesBulk.isPending ||
     deleteQuestionsBulk.isPending;
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
-  const handleSaveSettings = async () => {
+  // ── Manejadores ─────────────────────────────────────────────────────────────
+  const handleGuardarConfiguracion = async () => {
     try {
       await updateQuiz.mutateAsync({
-        quizId: quizData.id,
+        quizId: datosQuiz.id,
         quizData: {
-          title: editData.title,
-          description: editData.description,
-          timeLimit: parseInt(editData.timeLimit),
-          maxGrade: editData.maxGrade,
-          dueDate: editData.dueDate || undefined,
-          acceptLateSubmissions: editData.acceptLateSubmissions,
-          allowSeeResults: editData.allowSeeResults,
-          totalScore: editData.totalScore,
+          title: datosEdicion.title,
+          description: datosEdicion.description,
+          timeLimit: parseInt(datosEdicion.timeLimit),
+          maxGrade: datosEdicion.maxGrade,
+          dueDate: datosEdicion.dueDate || undefined,
+          acceptLateSubmissions: datosEdicion.acceptLateSubmissions,
+          allowSeeResults: datosEdicion.allowSeeResults,
+          totalScore: datosEdicion.totalScore,
         },
       });
-      setIsEditMode(false);
-      setShowRedistributionPreview(false);
+      setModoEdicion(false);
+      setMostrarPrevisualizacionRedistribucion(false);
       refetch();
     } catch (error) {
-      console.error("Failed to update quiz:", error);
+      console.error("Error al actualizar el quiz:", error);
     }
   };
 
-  const handleSaveQuestions = async () => {
+  const handleGuardarPreguntas = async () => {
     try {
       await updateQuiz.mutateAsync({
-        quizId: quizData.id,
+        quizId: datosQuiz.id,
         quizData: {
-          title: quizData.title,
-          description: quizData.description,
-          timeLimit: quizData.timeLimit,
-          maxGrade: totalPoints,
-          dueDate: quizData.dueDate || undefined,
-          acceptLateSubmissions: quizData.acceptLateSubmissions,
-          allowSeeResults: quizData.allowSeeResults,
-          totalScore: totalPoints,
+          title: datosQuiz.title,
+          description: datosQuiz.description,
+          timeLimit: datosQuiz.timeLimit,
+          maxGrade: puntosTotales,
+          dueDate: datosQuiz.dueDate || undefined,
+          acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
+          allowSeeResults: datosQuiz.allowSeeResults,
+          totalScore: puntosTotales,
         },
       });
 
-      if (deletedQuestionIds.length > 0) {
-        await deleteQuestionsBulk.mutateAsync({ quizId: quizData.id, questionIds: deletedQuestionIds });
+      if (idsPreguntasEliminadas.length > 0) {
+        await deleteQuestionsBulk.mutateAsync({ quizId: datosQuiz.id, questionIds: idsPreguntasEliminadas });
       }
 
-      const newQuestions = editQuestions.filter((q) => q.id.startsWith("temp_"));
-      const existingQuestions = editQuestions.filter((q) => !q.id.startsWith("temp_"));
+      const preguntasNuevas = preguntasEdicion.filter((q) => q.id.startsWith("temp_"));
+      const preguntasExistentes = preguntasEdicion.filter((q) => !q.id.startsWith("temp_"));
 
-      if (newQuestions.length > 0) {
+      if (preguntasNuevas.length > 0) {
         await addQuestionsBulk.mutateAsync({
-          quizId: quizData.id,
-          questions: newQuestions.map((q) => ({
+          quizId: datosQuiz.id,
+          questions: preguntasNuevas.map((q) => ({
             question: q.question,
             type: q.type,
             points: q.points,
@@ -215,10 +216,10 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
         });
       }
 
-      if (existingQuestions.length > 0) {
+      if (preguntasExistentes.length > 0) {
         await updateQuestionsBulk.mutateAsync({
-          quizId: quizData.id,
-          updates: existingQuestions.map((q) => ({
+          quizId: datosQuiz.id,
+          updates: preguntasExistentes.map((q) => ({
             questionId: q.id,
             questionText: q.question,
             type: q.type,
@@ -231,165 +232,161 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
         });
       }
 
-      setIsEditingQuestions(false);
-      setDeletedQuestionIds([]);
+      setEditandoPreguntas(false);
+      setIdsPreguntasEliminadas([]);
       await refetch();
     } catch (error) {
-      console.error("Failed to update questions:", error);
-      alert("Error saving questions. Please try again.");
+      console.error("Error al actualizar las preguntas:", error);
+      alert("Error al guardar las preguntas. Por favor, intente de nuevo.");
     }
   };
 
-  const handleCancelSettings = () => {
-    setEditData({
-      title: quizData.title,
-      description: quizData.description,
-      timeLimit: quizData.timeLimit.toString(),
-      maxGrade: quizData.maxGrade,
-      dueDate: quizData.dueDate ?? "",
-      acceptLateSubmissions: quizData.acceptLateSubmissions,
-      allowSeeResults: quizData.allowSeeResults,
-      totalScore: quizData.totalScore ?? quizData.maxGrade ?? 100,
+  const handleCancelarConfiguracion = () => {
+    setDatosEdicion({
+      title: datosQuiz.title,
+      description: datosQuiz.description,
+      timeLimit: datosQuiz.timeLimit.toString(),
+      maxGrade: datosQuiz.maxGrade,
+      dueDate: datosQuiz.dueDate ?? "",
+      acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
+      allowSeeResults: datosQuiz.allowSeeResults,
+      totalScore: datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100,
     });
-    setIsEditMode(false);
-    setShowRedistributionPreview(false);
+    setModoEdicion(false);
+    setMostrarPrevisualizacionRedistribucion(false);
   };
 
-  const handleCancelQuestions = () => {
-    setEditQuestions(quizData.questions ?? []);
-    setDeletedQuestionIds([]);
-    setIsEditingQuestions(false);
+  const handleCancelarPreguntas = () => {
+    setPreguntasEdicion(datosQuiz.questions ?? []);
+    setIdsPreguntasEliminadas([]);
+    setEditandoPreguntas(false);
   };
 
-  const addNewQuestion = (type: "multiple-choice" | "open-ended") => {
-    const questionCount = editQuestions.length;
-    const defaultPoints = questionCount > 0
-      ? Math.round(totalPoints / questionCount)
+  const agregarNuevaPregunta = (tipo: "multiple-choice" | "open-ended") => {
+    const cantidadPreguntas = preguntasEdicion.length;
+    const puntosPorDefecto = cantidadPreguntas > 0
+      ? Math.round(puntosTotales / cantidadPreguntas)
       : 10;
 
-    const newQ: Question = {
+    const nuevaPregunta: Question = {
       id: "temp_" + Date.now(),
-      type,
+      type: tipo,
       question: "",
-      points: defaultPoints,
+      points: puntosPorDefecto,
       text: "",
-      maxPoints: defaultPoints,
-      ...(type === "multiple-choice" && { options: ["", "", "", ""], correctAnswer: 0 }),
-      ...(type === "open-ended" && { expectedAnswer: "" }),
+      maxPoints: puntosPorDefecto,
+      ...(tipo === "multiple-choice" && { options: ["", "", "", ""], correctAnswer: 0 }),
+      ...(tipo === "open-ended" && { expectedAnswer: "" }),
     };
-    setEditQuestions([...editQuestions, newQ]);
+    setPreguntasEdicion([...preguntasEdicion, nuevaPregunta]);
   };
 
-  const updateEditQuestion = (id: string, updates: Partial<Question>) =>
-    setEditQuestions(editQuestions.map((q) => (q.id === id ? { ...q, ...updates } : q)));
+  const actualizarPreguntaEdicion = (id: string, actualizaciones: Partial<Question>) =>
+    setPreguntasEdicion(preguntasEdicion.map((q) => (q.id === id ? { ...q, ...actualizaciones } : q)));
 
-  const deleteEditQuestion = (id: string) => {
-    setEditQuestions(editQuestions.filter((q) => q.id !== id));
-    if (!id.startsWith("temp_")) setDeletedQuestionIds([...deletedQuestionIds, id]);
+  const eliminarPreguntaEdicion = (id: string) => {
+    setPreguntasEdicion(preguntasEdicion.filter((q) => q.id !== id));
+    if (!id.startsWith("temp_")) setIdsPreguntasEliminadas([...idsPreguntasEliminadas, id]);
   };
 
-  const updateOption = (questionId: string, optionIndex: number, value: string) =>
-    setEditQuestions(
-      editQuestions.map((q) => {
-        if (q.id === questionId && q.options) {
-          const newOptions = [...q.options];
-          newOptions[optionIndex] = value;
-          return { ...q, options: newOptions };
+  const actualizarOpcion = (idPregunta: string, indiceOpcion: number, valor: string) =>
+    setPreguntasEdicion(
+      preguntasEdicion.map((q) => {
+        if (q.id === idPregunta && q.options) {
+          const nuevasOpciones = [...q.options];
+          nuevasOpciones[indiceOpcion] = valor;
+          return { ...q, options: nuevasOpciones };
         }
         return q;
       })
     );
 
-  const addOption = (questionId: string) =>
-    setEditQuestions(
-      editQuestions.map((q) =>
-        q.id === questionId && q.options ? { ...q, options: [...q.options, ""] } : q
+  const agregarOpcion = (idPregunta: string) =>
+    setPreguntasEdicion(
+      preguntasEdicion.map((q) =>
+        q.id === idPregunta && q.options ? { ...q, options: [...q.options, ""] } : q
       )
     );
 
-  const removeOption = (questionId: string, optionIndex: number) =>
-    setEditQuestions(
-      editQuestions.map((q) => {
-        if (q.id === questionId && q.options && q.options.length > 2) {
-          const newOptions = q.options.filter((_, i) => i !== optionIndex);
-          const newCorrect =
-            q.correctAnswer === optionIndex
+  const eliminarOpcion = (idPregunta: string, indiceOpcion: number) =>
+    setPreguntasEdicion(
+      preguntasEdicion.map((q) => {
+        if (q.id === idPregunta && q.options && q.options.length > 2) {
+          const nuevasOpciones = q.options.filter((_, i) => i !== indiceOpcion);
+          const nuevaCorrecta =
+            q.correctAnswer === indiceOpcion
               ? 0
-              : (q.correctAnswer ?? 0) > optionIndex
+              : (q.correctAnswer ?? 0) > indiceOpcion
               ? (q.correctAnswer ?? 0) - 1
               : q.correctAnswer;
-          return { ...q, options: newOptions, correctAnswer: newCorrect };
+          return { ...q, options: nuevasOpciones, correctAnswer: nuevaCorrecta };
         }
         return q;
       })
     );
 
-  // ── Date helpers ─────────────────────────────────────────────────────────
-  const formatDate = (d: string | null | undefined) => {
-    if (!d) return "No date set";
-    return new Date(d).toLocaleDateString("en-US", {
+  // ── Ayudantes de fecha ─────────────────────────────────────────────────────────
+  const formatearFecha = (d: string | null | undefined) => {
+    if (!d) return "Sin fecha establecida";
+    return new Date(d).toLocaleDateString("es-ES", {
       weekday: "long", year: "numeric", month: "long", day: "numeric",
       hour: "2-digit", minute: "2-digit",
     });
   };
-  const formatCreatedDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-US", {
+  const formatearFechaCreacion = (d: string) =>
+    new Date(d).toLocaleDateString("es-ES", {
       year: "numeric", month: "short", day: "numeric",
       hour: "2-digit", minute: "2-digit",
     });
 
-  const getTimeRemaining = (dueDate: string | null | undefined) => {
-    if (!dueDate) return { text: "No due date", color: "secondary" as const };
-    const diffMs = new Date(dueDate).getTime() - Date.now();
-    const diffDays = Math.ceil(diffMs / 86_400_000);
-    if (diffMs < 0) return { text: "Overdue", color: "destructive" as const };
-    if (diffDays === 0) {
+  const obtenerTiempoRestante = (fechaEntrega: string | null | undefined) => {
+    if (!fechaEntrega) return { text: "Sin fecha de entrega", color: "secondary" as const };
+    const diffMs = new Date(fechaEntrega).getTime() - Date.now();
+    const diffDias = Math.ceil(diffMs / 86_400_000);
+    if (diffMs < 0) return { text: "Vencido", color: "destructive" as const };
+    if (diffDias === 0) {
       const hrs = Math.ceil(diffMs / 3_600_000);
       return hrs <= 0
-        ? { text: "Due within the hour", color: "destructive" as const }
-        : { text: `Due in ${hrs}h`, color: "default" as const };
+        ? { text: "Vence en la próxima hora", color: "destructive" as const }
+        : { text: `Vence en ${hrs}h`, color: "default" as const };
     }
-    if (diffDays === 1) return { text: "Due tomorrow", color: "default" as const };
-    return { text: `Due in ${diffDays} days`, color: diffDays <= 7 ? ("default" as const) : ("secondary" as const) };
+    if (diffDias === 1) return { text: "Vence mañana", color: "default" as const };
+    return { text: `Vence en ${diffDias} días`, color: diffDias <= 7 ? ("default" as const) : ("secondary" as const) };
   };
 
-  const timeRemaining = getTimeRemaining(quizData.dueDate);
+  const tiempoRestante = obtenerTiempoRestante(datosQuiz.dueDate);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Loading / error states
+  // Estados de carga / error
   // ─────────────────────────────────────────────────────────────────────────
-  if (isQuizLoading) {
+  if (cargandoQuiz) {
     return (
       <div className="min-h-screen bg-background p-4 md:p-6 flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <span>Loading quiz details…</span>
+          <span>Cargando detalles del quiz…</span>
         </div>
       </div>
     );
   }
 
-  if (quizError) {
+  if (errorQuiz) {
     return (
       <div className="min-h-screen bg-background p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
-          {/* ✅ was: border-red-200 bg-red-50 dark:bg-red-950/20 → destructive tokens */}
           <Card className="p-6 border-destructive/30 bg-destructive/5">
             <div className="flex items-start gap-3">
-              {/* ✅ was: text-red-600 → text-destructive */}
               <AlertCircle className="h-6 w-6 text-destructive flex-shrink-0 mt-0.5" />
               <div className="space-y-2">
-                {/* ✅ was: text-red-800 dark:text-red-300 → text-destructive */}
                 <h3 className="text-lg font-semibold text-destructive">
-                  Failed to Load Quiz Details
+                  Error al Cargar los Detalles del Quiz
                 </h3>
-                {/* ✅ was: text-red-700 dark:text-red-400 → text-destructive/80 */}
                 <p className="text-destructive/80">
-                  {quizError instanceof Error ? quizError.message : "Unable to load quiz information."}
+                  {errorQuiz instanceof Error ? errorQuiz.message : "No se pudo cargar la información del quiz."}
                 </p>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
-                  <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
+                  <Button variant="outline" size="sm" onClick={() => refetch()}>Reintentar</Button>
+                  <Button variant="ghost" size="sm" onClick={onClose}>Cerrar</Button>
                 </div>
               </div>
             </div>
@@ -400,622 +397,669 @@ export function QuizView({ quiz: initialQuiz, onClose }: QuizViewProps) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Main render
+  // Renderizado principal
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    // ✅ was: bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 → bg-background
-    <div className="min-h-screen bg-background p-4 md:p-6">
-      <div className="max-w-6xl mx-auto">
+  <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+    <div className="max-w-6xl mx-auto space-y-8">
 
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="mb-8">
-          <Button variant="ghost" onClick={onClose} className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Resources
-          </Button>
+      {/* ── Encabezado ── */}
+      <div className="space-y-4">
+        <button
+          onClick={onClose}
+          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Volver a Recursos
+        </button>
 
-          <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                {/* ✅ was: bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 → primary tokens */}
-                <Badge className="bg-primary/10 text-primary border-primary/20">QUIZ</Badge>
-                {quizData.active === false && (
-                  <Badge variant="secondary" className="gap-1">
-                    <EyeOff className="h-3 w-3" /> Inactive
-                  </Badge>
-                )}
-                {quizData.availableNow && (
-                  <Badge variant="default" className="gap-1">
-                    <Eye className="h-3 w-3" /> Available
-                  </Badge>
-                )}
-              </div>
-
-              {isEditMode ? (
-                <Input
-                  value={editData.title}
-                  onChange={(e) => setEditData((p) => ({ ...p, title: e.target.value }))}
-                  className="text-3xl md:text-4xl font-bold mb-3 h-auto py-2"
-                />
-              ) : (
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">{quizData.title}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                QUIZ
+              </span>
+              {datosQuiz.active === false && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-semibold">
+                  <EyeOff className="w-3 h-3" /> Inactivo
+                </span>
               )}
-
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {quizData.timeLimit > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{quizData.timeLimit} min</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Calculator className="h-4 w-4" />
-                  <span>Total Points: {totalPoints}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  <span>{editQuestions.length} Questions</span>
-                </div>
-              </div>
+              {datosQuiz.availableNow && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                  <Eye className="w-3 h-3" /> Disponible
+                </span>
+              )}
             </div>
 
-            {userType === "teacher" && (
-              <div className="flex gap-2 self-start">
-                {isEditMode ? (
-                  <>
-                    <Button onClick={handleSaveSettings} disabled={isLoading} size="sm" className="gap-2">
-                      {updateQuiz.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      Save Settings
-                    </Button>
-                    <Button onClick={handleCancelSettings} variant="outline" size="sm" className="gap-2">
-                      <XCircle className="h-4 w-4" /> Cancel
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button onClick={() => setIsEditMode(true)} variant="outline" size="sm" className="gap-2">
-                      <Edit className="h-4 w-4" /> Edit Settings
-                    </Button>
-                    <Button variant="outline" onClick={onClose}>Close</Button>
-                  </>
-                )}
-              </div>
+            {modoEdicion ? (
+              <input
+                value={datosEdicion.title}
+                onChange={(e) => setDatosEdicion((p) => ({ ...p, title: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-2xl sm:text-3xl font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all mb-3"
+              />
+            ) : (
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-3">
+                {datosQuiz.title}
+              </h1>
             )}
+
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+              {datosQuiz.timeLimit > 0 && (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />{datosQuiz.timeLimit} min
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Calculator className="w-3.5 h-3.5" />Puntos Totales: {puntosTotales}
+              </span>
+              <span className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5" />{preguntasEdicion.length} Preguntas
+              </span>
+            </div>
           </div>
+
+          {tipoUsuario === "teacher" && (
+            <div className="flex flex-wrap gap-2 self-start">
+              {modoEdicion ? (
+                <>
+                  <button
+                    onClick={handleGuardarConfiguracion}
+                    disabled={cargando}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-all"
+                  >
+                    {updateQuiz.isPending
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <Save className="w-3.5 h-3.5" />}
+                    Guardar Configuración
+                  </button>
+                  <button
+                    onClick={handleCancelarConfiguracion}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  >
+                    <XCircle className="w-3.5 h-3.5" /> Cancelar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setModoEdicion(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  >
+                    <Edit className="w-3.5 h-3.5" /> Editar Configuración
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                  >
+                    Cerrar
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* ── Body ───────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* ── Cuerpo ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* Left column */}
-          <div className="lg:col-span-2 space-y-8">
+        {/* ── Columna izquierda ── */}
+        <div className="lg:col-span-2 space-y-5">
 
-            {/* Description */}
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-bold">Quiz Description</h2>
+          {/* Descripción */}
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="px-5 py-4 sm:px-6 border-b border-border">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-4 h-4 text-primary" />
+                </span>
+                <h2 className="text-base font-bold text-foreground">Descripción del Quiz</h2>
               </div>
-              {isEditMode ? (
-                <Textarea
-                  value={editData.description}
-                  onChange={(e) => setEditData((p) => ({ ...p, description: e.target.value }))}
+            </div>
+            <div className="px-5 py-5 sm:px-6">
+              {modoEdicion ? (
+                <textarea
+                  value={datosEdicion.description}
+                  onChange={(e) => setDatosEdicion((p) => ({ ...p, description: e.target.value }))}
                   rows={4}
-                  className="w-full"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all"
                 />
               ) : (
-                <p className="text-foreground whitespace-pre-wrap leading-relaxed text-lg">
-                  {quizData.description}
+                <p className="text-foreground whitespace-pre-wrap leading-relaxed text-sm">
+                  {datosQuiz.description}
                 </p>
               )}
-            </Card>
+            </div>
+          </div>
 
-            {/* Questions */}
-            <Card className="p-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          {/* Preguntas */}
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="px-5 py-4 sm:px-6 border-b border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-2xl font-bold">Questions</h2>
-                  <Badge variant="outline" className="text-lg">{editQuestions.length} Total</Badge>
+                  <h2 className="text-base font-bold text-foreground">Preguntas</h2>
+                  <span className="px-2 py-0.5 rounded-md border border-border text-xs font-semibold text-muted-foreground">
+                    {preguntasEdicion.length} Total
+                  </span>
                 </div>
 
-                {userType === "teacher" && (
-                  <div className="flex flex-wrap gap-3 mt-2 md:mt-0">
-                    {isEditingQuestions ? (
+                {tipoUsuario === "teacher" && (
+                  <div className="flex flex-wrap gap-2">
+                    {editandoPreguntas ? (
                       <>
-                        <Button onClick={handleSaveQuestions} disabled={isLoading} size="sm" className="gap-2">
-                          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                          Save Questions
-                        </Button>
-                        <Button onClick={handleCancelQuestions} variant="outline" size="sm" className="gap-2">
-                          <XCircle className="h-4 w-4" /> Cancel
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => addNewQuestion("multiple-choice")} className="gap-2">
-                          <Plus className="h-4 w-4" /> Add Multiple Choice
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => addNewQuestion("open-ended")} className="gap-2">
-                          <Plus className="h-4 w-4" /> Add Open Answer
-                        </Button>
+                        <button
+                          onClick={handleGuardarPreguntas}
+                          disabled={cargando}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-40 transition-all"
+                        >
+                          {cargando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                          Guardar
+                        </button>
+                        <button
+                          onClick={handleCancelarPreguntas}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                        >
+                          <XCircle className="w-3.5 h-3.5" /> Cancelar
+                        </button>
+                        <button
+                          onClick={() => agregarNuevaPregunta("multiple-choice")}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                        >
+                          <Plus className="w-3 h-3" /> Opción Múltiple
+                        </button>
+                        <button
+                          onClick={() => agregarNuevaPregunta("open-ended")}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                        >
+                          <Plus className="w-3 h-3" /> Respuesta Abierta
+                        </button>
                       </>
                     ) : (
-                      <Button onClick={() => setIsEditingQuestions(true)} variant="outline" size="sm" className="gap-2">
-                        <Edit className="h-4 w-4" /> Edit Questions
-                      </Button>
+                      <button
+                        onClick={() => setEditandoPreguntas(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Editar Preguntas
+                      </button>
                     )}
                   </div>
                 )}
               </div>
+            </div>
 
-              {editQuestions.length > 0 ? (
-                <div className="space-y-8">
+            <div className="px-5 py-5 sm:px-6">
+              {preguntasEdicion.length > 0 ? (
+                <div className="space-y-6">
 
-                  {isEditingQuestions && (
-                    // ✅ was: bg-green-100/text-green-700 (match) or bg-orange-100/text-orange-700 (mismatch)
-                    // → primary (match) or accent/gold (mismatch)
-                    <div className={`flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full ${
-                      totalPoints === editData.totalScore
-                        ? "bg-primary/10 text-primary"
-                        : "bg-accent/10 text-accent-foreground"
+                  {/* Indicador de puntos totales */}
+                  {editandoPreguntas && (
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${
+                      puntosTotales === datosEdicion.totalScore
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-accent/10 text-accent-foreground'
                     }`}>
-                      <Calculator className="h-4 w-4" />
-                      {totalPoints} pts total
-                    </div>
+                      <Calculator className="w-3.5 h-3.5" />
+                      {puntosTotales} pts total
+                    </span>
                   )}
 
-                  {editQuestions.map((question, index) => (
-                    <div key={question.id} className="border-l-4 border-primary pl-4">
-                      {isEditingQuestions && userType === "teacher" ? (
-                        /* ── EDIT MODE ── */
-                        <Card className="p-4 mb-4">
-                          <div className="space-y-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex items-start gap-3 flex-1">
-                                <GripVertical className="h-5 w-5 text-muted-foreground cursor-move flex-shrink-0 mt-1" />
-                                <div className="flex-1 space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant={question.type === "multiple-choice" ? "default" : "secondary"}>
-                                      Question {index + 1}
-                                    </Badge>
-                                    <Badge variant="outline" className="text-xs">
-                                      {question.type === "multiple-choice" ? "Multiple Choice" : "Open Answer"}
-                                    </Badge>
-                                    {question.id.startsWith("temp_") && (
-                                      <Badge variant="secondary" className="text-xs">New</Badge>
-                                    )}
-                                  </div>
-                                  <Input
-                                    value={question.question}
-                                    onChange={(e) => updateEditQuestion(question.id, { question: e.target.value })}
-                                    placeholder="Enter your question"
-                                  />
+                  {preguntasEdicion.map((pregunta, indice) => (
+                    <div key={pregunta.id} className="border-l-4 border-primary pl-4">
+                      {editandoPreguntas && tipoUsuario === "teacher" ? (
+
+                        /* ── Modo edición ── */
+                        <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <GripVertical className="w-4 h-4 text-muted-foreground cursor-move flex-shrink-0 mt-2.5" />
+                              <div className="flex-1 min-w-0 space-y-2">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                                    pregunta.type === "multiple-choice"
+                                      ? 'bg-primary/10 text-primary'
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}>
+                                    Pregunta {indice + 1}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                                    {pregunta.type === "multiple-choice" ? "Opción Múltiple" : "Respuesta Abierta"}
+                                  </span>
+                                  {pregunta.id.startsWith("temp_") && (
+                                    <span className="px-2 py-0.5 rounded-md bg-accent/20 text-accent-foreground text-xs font-semibold">Nueva</span>
+                                  )}
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  type="number"
-                                  value={question.points}
-                                  onChange={(e) => updateEditQuestion(question.id, { points: parseInt(e.target.value) || 0 })}
-                                  className="w-20"
-                                  min="1"
+                                <input
+                                  value={pregunta.question}
+                                  onChange={(e) => actualizarPreguntaEdicion(pregunta.id, { question: e.target.value })}
+                                  placeholder="Ingrese su pregunta"
+                                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
                                 />
-                                <span className="text-sm text-muted-foreground">pts</span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteEditQuestion(question.id)}
-                                  className="text-destructive hover:text-destructive"
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <input
+                                type="number"
+                                value={pregunta.points}
+                                onChange={(e) => actualizarPreguntaEdicion(pregunta.id, { points: parseInt(e.target.value) || 0 })}
+                                min="1"
+                                className="w-16 px-3 py-2 rounded-xl border border-border bg-background text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                              />
+                              <span className="text-xs text-muted-foreground">pts</span>
+                              <button
+                                onClick={() => eliminarPreguntaEdicion(pregunta.id)}
+                                className="p-1.5 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Opciones de opción múltiple */}
+                          {pregunta.type === "multiple-choice" && pregunta.options && (
+                            <div className="space-y-2 sm:ml-7">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold text-muted-foreground">Opciones de Respuesta</label>
+                                <button
+                                  onClick={() => agregarOpcion(pregunta.id)}
+                                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
                                 >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                  <Plus className="w-3 h-3" /> Agregar Opción
+                                </button>
                               </div>
-                            </div>
-
-                            {question.type === "multiple-choice" && question.options && (
-                              <div className="space-y-3 ml-8">
-                                <div className="flex items-center justify-between">
-                                  <Label className="text-sm text-muted-foreground">Answer Options</Label>
-                                  <Button
-                                    variant="outline" size="sm"
-                                    onClick={() => addOption(question.id)}
-                                    className="gap-1 h-7 text-xs"
-                                  >
-                                    <Plus className="h-3 w-3" /> Add Option
-                                  </Button>
+                              {pregunta.options.map((opcion, indiceOpcion) => (
+                                <div key={indiceOpcion} className="flex items-center gap-3">
+                                  <input
+                                    type="radio"
+                                    name={`correct-${pregunta.id}`}
+                                    checked={pregunta.correctAnswer === indiceOpcion}
+                                    onChange={() => actualizarPreguntaEdicion(pregunta.id, { correctAnswer: indiceOpcion })}
+                                    className="w-4 h-4 accent-primary flex-shrink-0"
+                                  />
+                                  <span className="text-xs font-bold text-muted-foreground w-5 flex-shrink-0">
+                                    {String.fromCharCode(65 + indiceOpcion)})
+                                  </span>
+                                  <input
+                                    value={opcion}
+                                    onChange={(e) => actualizarOpcion(pregunta.id, indiceOpcion, e.target.value)}
+                                    placeholder={`Opción ${indiceOpcion + 1}`}
+                                    className="flex-1 px-4 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                                  />
+                                  {pregunta.options && pregunta.options.length > 2 && (
+                                    <button
+                                      onClick={() => eliminarOpcion(pregunta.id, indiceOpcion)}
+                                      className="p-1.5 rounded-xl text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
                                 </div>
-                                {question.options.map((option, optIndex) => (
-                                  <div key={optIndex} className="flex items-center gap-3">
-                                    {/* ✅ was: text-blue-600 → accent-foreground via CSS accent-color */}
-                                    <input
-                                      type="radio"
-                                      name={`correct-${question.id}`}
-                                      checked={question.correctAnswer === optIndex}
-                                      onChange={() => updateEditQuestion(question.id, { correctAnswer: optIndex })}
-                                      className="h-4 w-4 flex-shrink-0 accent-primary"
-                                    />
-                                    <span className="font-semibold text-sm w-6 flex-shrink-0">
-                                      {String.fromCharCode(65 + optIndex)})
-                                    </span>
-                                    <Input
-                                      value={option}
-                                      onChange={(e) => updateOption(question.id, optIndex, e.target.value)}
-                                      placeholder={`Option ${optIndex + 1}`}
-                                      className="flex-1"
-                                    />
-                                    {question.options && question.options.length > 2 && (
-                                      <Button
-                                        variant="ghost" size="sm"
-                                        onClick={() => removeOption(question.id, optIndex)}
-                                        className="text-destructive hover:text-destructive"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                              ))}
+                            </div>
+                          )}
 
-                            {question.type === "open-ended" && (
-                              <div className="ml-8">
-                                <Label className="text-sm font-semibold text-primary/80 mb-2 block">
-                                  Model Answer / Expected Response
-                                </Label>
-                                {/* ✅ was: bg-gray-50 dark:bg-gray-900/50 → bg-muted/40 */}
-                                <Textarea
-                                  value={question.expectedAnswer ?? ""}
-                                  onChange={(e) => updateEditQuestion(question.id, { expectedAnswer: e.target.value })}
-                                  placeholder="Enter the expected answer…"
-                                  rows={3}
-                                  className="bg-muted/40"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </Card>
+                          {/* Respuesta abierta */}
+                          {pregunta.type === "open-ended" && (
+                            <div className="sm:ml-7 space-y-1.5">
+                              <label className="text-xs font-semibold text-primary">
+                                Respuesta Modelo / Respuesta Esperada
+                              </label>
+                              <textarea
+                                value={pregunta.expectedAnswer ?? ""}
+                                onChange={(e) => actualizarPreguntaEdicion(pregunta.id, { expectedAnswer: e.target.value })}
+                                placeholder="Ingrese la respuesta esperada…"
+                                rows={3}
+                                className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted/40 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all"
+                              />
+                            </div>
+                          )}
+                        </div>
+
                       ) : (
-                        /* ── VIEW MODE ── */
+
+                        /* ── Modo visualización ── */
                         <>
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
-                                {index + 1}
-                              </div>
-                              <div>
-                                <Badge variant="outline" className="mr-2">{question.points ?? 0} points</Badge>
-                                <Badge variant="secondary">
-                                  {question.type === "multiple-choice" ? "Multiple Choice" : "Open Answer"}
-                                </Badge>
-                              </div>
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
+                              {indice + 1}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                                {pregunta.points ?? 0} puntos
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-semibold">
+                                {pregunta.type === "multiple-choice" ? "Opción Múltiple" : "Respuesta Abierta"}
+                              </span>
                             </div>
                           </div>
 
-                          <h3 className="text-xl font-semibold mb-4 whitespace-pre-wrap">{question.question}</h3>
+                          <h3 className="text-sm font-semibold text-foreground mb-4 whitespace-pre-wrap">
+                            {pregunta.question}
+                          </h3>
 
-                          {question.type === "multiple-choice" && question.options && (
-                            <div className="space-y-2 ml-4">
-                              {question.options.map((option, optIndex) => {
-                                const isCorrect = question.correctAnswer === optIndex;
-                                const highlight = userType === "teacher" && showCorrectAnswers && isCorrect;
+                          {pregunta.type === "multiple-choice" && pregunta.options && (
+                            <div className="space-y-2 sm:ml-4">
+                              {pregunta.options.map((opcion, indiceOpcion) => {
+                                const esCorrecta = pregunta.correctAnswer === indiceOpcion;
+                                const resaltar = tipoUsuario === "teacher" && mostrarRespuestasCorrectas && esCorrecta;
                                 return (
                                   <div
-                                    key={optIndex}
-                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                      highlight
-                                        // ✅ was: border-green-500 bg-green-50 dark:bg-green-950/30 → primary tokens
-                                        ? "border-primary/50 bg-primary/8"
-                                        : "border-border hover:bg-muted/50"
+                                    key={indiceOpcion}
+                                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                                      resaltar
+                                        ? 'border-primary/40 bg-primary/8'
+                                        : 'border-border hover:bg-muted/30'
                                     }`}
                                   >
-                                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold ${
-                                      highlight
-                                        // ✅ was: border-green-500 bg-green-500 text-white → primary tokens
-                                        ? "border-primary bg-primary text-primary-foreground"
-                                        : "border-border"
+                                    <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                      resaltar
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'border-border text-muted-foreground'
                                     }`}>
-                                      {String.fromCharCode(65 + optIndex)}
+                                      {String.fromCharCode(65 + indiceOpcion)}
                                     </div>
-                                    <span className={`text-lg flex-1 ${
-                                      // ✅ was: text-green-700 dark:text-green-300 → text-primary
-                                      highlight ? "font-semibold text-primary" : ""
-                                    }`}>
-                                      {option}
+                                    <span className={`text-sm flex-1 ${resaltar ? 'font-semibold text-primary' : 'text-foreground'}`}>
+                                      {opcion}
                                     </span>
-                                    {/* ✅ was: text-green-500 → text-primary */}
-                                    {highlight && <CheckCircle className="h-5 w-5 text-primary" />}
+                                    {resaltar && <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />}
                                   </div>
                                 );
                               })}
                             </div>
                           )}
 
-                          {question.type === "open-ended" && (
-                            <div className="ml-4 space-y-4">
-                              <div className="p-4 bg-muted/30 rounded-lg border border-dashed">
-                                <Badge variant="outline">Student Response Area</Badge>
-                                <p className="text-muted-foreground italic mt-2">Students will write their response here</p>
+                          {pregunta.type === "open-ended" && (
+                            <div className="sm:ml-4 space-y-3">
+                              <div className="p-4 bg-muted/30 rounded-xl border-2 border-dashed border-border">
+                                <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                                  Área de Respuesta del Estudiante
+                                </span>
+                                <p className="text-xs text-muted-foreground italic mt-2">
+                                  Los estudiantes escribirán su respuesta aquí
+                                </p>
                               </div>
-                              {userType === "teacher" && question.expectedAnswer && (
-                                // ✅ was: bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 → primary tokens
-                                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                                  <Badge variant="outline" className="mb-2">Expected Answer</Badge>
-                                  <p className="text-foreground whitespace-pre-wrap">{question.expectedAnswer}</p>
+                              {tipoUsuario === "teacher" && pregunta.expectedAnswer && (
+                                <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+                                  <span className="px-2 py-0.5 rounded-md border border-primary/20 text-xs text-primary font-semibold">
+                                    Respuesta Esperada
+                                  </span>
+                                  <p className="text-sm text-foreground whitespace-pre-wrap mt-2">
+                                    {pregunta.expectedAnswer}
+                                  </p>
                                 </div>
                               )}
                             </div>
                           )}
 
-                          <Separator className="my-6" />
+                          <div className="mt-5 border-b border-border/50" />
                         </>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-lg">No questions added yet.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+                  <FileText className="w-10 h-10 mb-3 opacity-30" />
+                  <p className="text-sm">Aún no se han agregado preguntas.</p>
                 </div>
               )}
-            </Card>
-          </div>
-
-          {/* ── Sidebar ──────────────────────────────────────────────────── */}
-          <div className="space-y-6">
-
-            {/* Quiz Details */}
-            <Card className="p-6">
-              <h3 className="text-lg font-bold mb-4">Quiz Details</h3>
-              <div className="space-y-4">
-
-                {/* Due Date */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                    <Calendar className="h-3 w-3" /> Due Date
-                  </h4>
-                  {isEditMode ? (
-                    <Input
-                      type="datetime-local"
-                      value={editData.dueDate}
-                      onChange={(e) => setEditData((p) => ({ ...p, dueDate: e.target.value }))}
-                      className="mt-1"
-                    />
-                  ) : (
-                    <>
-                      <p className="font-medium">{formatDate(quizData.dueDate)}</p>
-                      {quizData.dueDate && (
-                        <Badge variant={timeRemaining.color} className="mt-1 gap-1">
-                          <Clock className="h-3 w-3" /> {timeRemaining.text}
-                        </Badge>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Time Limit */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> Time Limit
-                  </h4>
-                  {isEditMode ? (
-                    <Input
-                      type="number"
-                      value={editData.timeLimit}
-                      onChange={(e) => setEditData((p) => ({ ...p, timeLimit: e.target.value }))}
-                      min="0"
-                      className="mt-1"
-                    />
-                  ) : (
-                    <p className="font-medium">
-                      {quizData.timeLimit > 0 ? `${quizData.timeLimit} minutes` : "No time limit"}
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Points & Grading */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                    <Award className="h-3 w-3" /> Points & Grading
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Total Points (sum):</span>
-                      <span className="font-bold">{totalPoints}</span>
-                    </div>
-                    {isEditMode ? (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Max Grade:</span>
-                        <Input
-                          type="number"
-                          value={editData.maxGrade}
-                          onChange={(e) => setEditData((p) => ({ ...p, maxGrade: parseInt(e.target.value) || 0 }))}
-                          min="1"
-                          className="w-20"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex justify-between">
-                        <span className="text-sm">Max Grade:</span>
-                        <span>{quizData.maxGrade ?? 100}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-sm">Multiple Choice:</span>
-                      <span>{multipleChoiceCount}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Open Ended:</span>
-                      <span>{openEndedCount}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Total Score */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-1">
-                    <Award className="h-3 w-3" /> Total Score
-                  </h4>
-                  {isEditMode ? (
-                    <div className="space-y-2">
-                      <Input
-                        type="number"
-                        value={editData.totalScore}
-                        onChange={(e) =>
-                          setEditData((p) => ({ ...p, totalScore: parseInt(e.target.value) || 0 }))
-                        }
-                        min="1"
-                        className="mt-1"
-                      />
-                      {editQuestions.filter((q) => !q.id.startsWith("temp_")).length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1 text-xs h-7 text-muted-foreground"
-                          onClick={() => setShowRedistributionPreview((v) => !v)}
-                        >
-                          <Info className="h-3 w-3" />
-                          {showRedistributionPreview ? "Hide" : "Preview"} point redistribution
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="font-medium">{quizData.totalScore ?? quizData.maxGrade ?? 100}</p>
-                  )}
-                </div>
-
-                {/* ── Redistribution preview table ── */}
-                {isEditMode && showRedistributionPreview && redistributionPreview.length > 0 && (
-                  <div className="mt-2 rounded-lg border overflow-hidden">
-                    <div className="bg-muted/60 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Point Redistribution Preview
-                    </div>
-                    <div className="divide-y">
-                      {redistributionPreview.map((row, i) => (
-                        <div key={row.id} className="px-3 py-2 flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground w-5 shrink-0">Q{i + 1}</span>
-                          <span className="flex-1 truncate text-xs text-muted-foreground" title={row.question}>
-                            {row.question.length > 28 ? row.question.slice(0, 28) + "…" : row.question}
-                          </span>
-                          <span className="text-muted-foreground text-xs">{row.weight}%</span>
-                          <span className="text-muted-foreground text-xs">=</span>
-                          <span className="font-semibold tabular-nums">{row.newPoints} pts</span>
-                        </div>
-                      ))}
-                      <div className="px-3 py-2 flex justify-between text-sm font-bold bg-muted/30">
-                        <span>TOTAL</span>
-                        <span>{redistributionPreview.reduce((s, r) => +(s + r.newPoints).toFixed(2), 0)} pts</span>
-                      </div>
-                    </div>
-                    {/* ✅ was: bg-blue-50 dark:bg-blue-950/20 → bg-primary/5 */}
-                    <p className="px-3 py-2 text-xs text-muted-foreground bg-primary/5">
-                      Points will be proportionally redistributed when you save.
-                    </p>
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Late Submissions */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Late Submissions</h4>
-                  {isEditMode ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Switch
-                        checked={editData.acceptLateSubmissions}
-                        onCheckedChange={(checked) =>
-                          setEditData((p) => ({ ...p, acceptLateSubmissions: checked }))
-                        }
-                      />
-                      <Label className="text-sm">Allow late submissions</Label>
-                    </div>
-                  ) : (
-                    <Badge variant={quizData.acceptLateSubmissions ? "default" : "secondary"} className="mt-1">
-                      {quizData.acceptLateSubmissions ? "Allowed" : "Not allowed"}
-                    </Badge>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Student Results Visibility */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                    Student Results Visibility
-                  </h4>
-                  {isEditMode ? (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Switch
-                        checked={editData.allowSeeResults}
-                        onCheckedChange={(checked) =>
-                          setEditData((p) => ({ ...p, allowSeeResults: checked }))
-                        }
-                      />
-                      <Label className="text-sm">Allow students to see results</Label>
-                    </div>
-                  ) : (
-                    <Badge variant={quizData.allowSeeResults ? "default" : "secondary"} className="mt-1">
-                      {quizData.allowSeeResults ? "Results visible" : "Results hidden"}
-                    </Badge>
-                  )}
-                </div>
-
-                <Separator />
-
-                {/* Created info */}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Created Information</h4>
-                  <div className="space-y-1">
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Created: </span>
-                      {formatCreatedDate(quizData.createdAt ?? new Date().toISOString())}
-                    </div>
-                    {quizData.courseName && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Course: </span>
-                        {quizData.courseName}
-                      </div>
-                    )}
-                    {(quizData as any).unitName && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Unit: </span>
-                        {(quizData as any).unitName}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Answer visibility toggle (teacher, view mode) */}
-            {userType === "teacher" && !isEditingQuestions && editQuestions.some((q) => q.type === "multiple-choice") && (
-              <Card className="p-6">
-                <h3 className="text-lg font-bold mb-4">Answer Visibility</h3>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Show Correct Answers</Label>
-                  <Switch checked={showCorrectAnswers} onCheckedChange={setShowCorrectAnswers} />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Toggle to show/hide correct answers in the questions section
-                </p>
-              </Card>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* ── Footer ──────────────────────────────────────────────────────── */}
-        <div className="mt-12 pt-6 border-t border-border">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-muted-foreground">
-              Last updated: {formatCreatedDate(quizData.createdAt ?? new Date().toISOString())}
+        {/* ── Barra lateral ── */}
+        <div className="space-y-4">
+
+          {/* Detalles del quiz */}
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-border">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                Detalles del Quiz
+              </h3>
             </div>
-            <Button variant="outline" onClick={onClose}>Close</Button>
+            <div className="px-4 py-4 space-y-4">
+
+              {/* Fecha de entrega */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Calendar className="w-3 h-3" /> Fecha de Entrega
+                </p>
+                {modoEdicion ? (
+                  <input
+                    type="datetime-local"
+                    value={datosEdicion.dueDate}
+                    onChange={(e) => setDatosEdicion((p) => ({ ...p, dueDate: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                  />
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-foreground">{formatearFecha(datosQuiz.dueDate)}</p>
+                    {datosQuiz.dueDate && (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/10 text-primary`}>
+                        <Clock className="w-3 h-3" /> {tiempoRestante.text}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="border-t border-border/50" />
+
+              {/* Límite de tiempo */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> Límite de Tiempo
+                </p>
+                {modoEdicion ? (
+                  <input
+                    type="number"
+                    value={datosEdicion.timeLimit}
+                    onChange={(e) => setDatosEdicion((p) => ({ ...p, timeLimit: e.target.value }))}
+                    min="0"
+                    className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                  />
+                ) : (
+                  <p className="text-sm font-semibold text-foreground">
+                    {datosQuiz.timeLimit > 0 ? `${datosQuiz.timeLimit} minutos` : "Sin límite de tiempo"}
+                  </p>
+                )}
+              </div>
+
+              <div className="border-t border-border/50" />
+
+              {/* Puntos y calificación */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Award className="w-3 h-3" /> Puntos y Calificación
+                </p>
+                {[
+                  { label: 'Puntos Totales (suma)', value: <span className="font-bold text-foreground">{puntosTotales}</span> },
+                  {
+                    label: 'Calificación Máx.',
+                    value: modoEdicion ? (
+                      <input
+                        type="number"
+                        value={datosEdicion.maxGrade}
+                        onChange={(e) => setDatosEdicion((p) => ({ ...p, maxGrade: parseInt(e.target.value) || 0 }))}
+                        min="1"
+                        className="w-16 px-2 py-1 rounded-lg border border-border bg-background text-xs text-right text-foreground focus:outline-none focus:ring-1 focus:ring-ring/50"
+                      />
+                    ) : <span className="text-xs text-foreground">{datosQuiz.maxGrade ?? 100}</span>
+                  },
+                  { label: 'Opción Múltiple', value: <span className="text-xs text-foreground">{cantidadOpcionMultiple}</span> },
+                  { label: 'Respuesta Abierta', value: <span className="text-xs text-foreground">{cantidadRespuestaAbierta}</span> },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-muted-foreground">{label}:</span>
+                    {value}
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-border/50" />
+
+              {/* Puntuación total */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Award className="w-3 h-3" /> Puntuación Total
+                </p>
+                {modoEdicion ? (
+                  <div className="space-y-1.5">
+                    <input
+                      type="number"
+                      value={datosEdicion.totalScore}
+                      onChange={(e) => setDatosEdicion((p) => ({ ...p, totalScore: parseInt(e.target.value) || 0 }))}
+                      min="1"
+                      className="w-full px-3 py-2 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                    />
+                    {preguntasEdicion.filter((q) => !q.id.startsWith("temp_")).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setMostrarPrevisualizacionRedistribucion((v) => !v)}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Info className="w-3 h-3" />
+                        {mostrarPrevisualizacionRedistribucion ? "Ocultar" : "Previsualizar"} redistribución de puntos
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm font-semibold text-foreground">
+                    {datosQuiz.totalScore ?? datosQuiz.maxGrade ?? 100}
+                  </p>
+                )}
+              </div>
+
+              {/* Previsualización de redistribución */}
+              {modoEdicion && mostrarPrevisualizacionRedistribucion && previsualizacionRedistribucion.length > 0 && (
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <div className="bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                    Previsualización de Redistribución de Puntos
+                  </div>
+                  <div className="divide-y divide-border/50">
+                    {previsualizacionRedistribucion.map((fila, i) => (
+                      <div key={fila.id} className="px-3 py-2 flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground w-5 flex-shrink-0">P{i + 1}</span>
+                        <span className="flex-1 truncate text-muted-foreground" title={fila.question}>
+                          {fila.question.length > 28 ? fila.question.slice(0, 28) + "…" : fila.question}
+                        </span>
+                        <span className="text-muted-foreground">{fila.weight}%</span>
+                        <span className="text-muted-foreground">=</span>
+                        <span className="font-semibold text-foreground tabular-nums">{fila.newPoints} pts</span>
+                      </div>
+                    ))}
+                    <div className="px-3 py-2 flex justify-between text-xs font-bold bg-muted/30 text-foreground">
+                      <span>TOTAL</span>
+                      <span>{previsualizacionRedistribucion.reduce((s, r) => +(s + r.newPoints).toFixed(2), 0)} pts</span>
+                    </div>
+                  </div>
+                  <p className="px-3 py-2 text-xs text-muted-foreground bg-primary/5">
+                    Los puntos se redistribuirán proporcionalmente al guardar.
+                  </p>
+                </div>
+              )}
+
+              <div className="border-t border-border/50" />
+
+              {/* Entregas tardías */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-muted-foreground">Entregas Tardías</p>
+                {modoEdicion ? (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={datosEdicion.acceptLateSubmissions}
+                      onCheckedChange={(checked) => setDatosEdicion((p) => ({ ...p, acceptLateSubmissions: checked }))}
+                    />
+                    <label className="text-xs text-foreground">Permitir entregas tardías</label>
+                  </div>
+                ) : (
+                  <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${
+                    datosQuiz.acceptLateSubmissions
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {datosQuiz.acceptLateSubmissions ? "Permitidas" : "No permitidas"}
+                  </span>
+                )}
+              </div>
+
+              <div className="border-t border-border/50" />
+
+              {/* Visibilidad de resultados */}
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-muted-foreground">Visibilidad de Resultados para Estudiantes</p>
+                {modoEdicion ? (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={datosEdicion.allowSeeResults}
+                      onCheckedChange={(checked) => setDatosEdicion((p) => ({ ...p, allowSeeResults: checked }))}
+                    />
+                    <label className="text-xs text-foreground">Permitir que los estudiantes vean los resultados</label>
+                  </div>
+                ) : (
+                  <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-semibold ${
+                    datosQuiz.allowSeeResults
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {datosQuiz.allowSeeResults ? "Resultados visibles" : "Resultados ocultos"}
+                  </span>
+                )}
+              </div>
+
+              <div className="border-t border-border/50" />
+
+              {/* Información de creación */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">Información de Creación</p>
+                {[
+                  { label: 'Creado', value: formatearFechaCreacion(datosQuiz.createdAt ?? new Date().toISOString()) },
+                  ...(datosQuiz.courseName ? [{ label: 'Curso', value: datosQuiz.courseName }] : []),
+                  ...((datosQuiz as any).unitName ? [{ label: 'Unidad', value: (datosQuiz as any).unitName }] : []),
+                ].map(({ label, value }) => (
+                  <p key={label} className="text-xs text-foreground">
+                    <span className="text-muted-foreground">{label}: </span>{value}
+                  </p>
+                ))}
+              </div>
+
+            </div>
           </div>
+
+          {/* Alternativa de visibilidad de respuestas */}
+          {tipoUsuario === "teacher" && !editandoPreguntas && preguntasEdicion.some((q) => q.type === "multiple-choice") && (
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-4 space-y-3">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                Visibilidad de Respuestas
+              </h3>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-foreground">Mostrar Respuestas Correctas</label>
+                <Switch checked={mostrarRespuestasCorrectas} onCheckedChange={setMostrarRespuestasCorrectas} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Active para mostrar/ocultar las respuestas correctas en la sección de preguntas
+              </p>
+            </div>
+          )}
+
         </div>
       </div>
+
+      {/* ── Pie de página ── */}
+      <div className="pt-6 border-t border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <p className="text-xs text-muted-foreground">
+            Última actualización: {formatearFechaCreacion(datosQuiz.createdAt ?? new Date().toISOString())}
+          </p>
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+
     </div>
-  );
+  </div>
+);
 }

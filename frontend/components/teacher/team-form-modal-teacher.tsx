@@ -12,50 +12,50 @@ import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const teamFormSchema = z.object({
+const esquemaFormularioEquipo = z.object({
   name: z.string()
-    .min(2, "Team name must be at least 2 characters")
-    .max(100, "Team name must not exceed 100 characters")
+    .min(2, "El nombre del equipo debe tener al menos 2 caracteres")
+    .max(100, "El nombre del equipo no debe exceder los 100 caracteres")
     .trim()
-    .refine((name) => {
-      return /^[a-zA-Z0-9\s\-_]+$/.test(name)
-    }, "Team name can only contain letters, numbers, spaces, hyphens, and underscores"),
+    .refine((nombre) => {
+      return /^[a-zA-Z0-9\s\-_]+$/.test(nombre)
+    }, "El nombre del equipo solo puede contener letras, números, espacios, guiones y guiones bajos"),
   description: z.string()
-    .max(500, "Description must not exceed 500 characters")
+    .max(500, "La descripción no debe exceder los 500 caracteres")
     .trim()
     .optional()
     .or(z.literal("")),
   maxMembers: z.number()
-    .min(1, "Team must have at least 1 member")
-    .max(20, "Team cannot exceed 20 members")
-    .int("Maximum members must be a whole number"),
+    .min(1, "El equipo debe tener al menos 1 miembro")
+    .max(20, "El equipo no puede exceder los 20 miembros")
+    .int("El número máximo de miembros debe ser un número entero"),
   active: z.boolean().default(true)
 });
 
-type TeamFormData = z.infer<typeof teamFormSchema>;
+type DatosFormularioEquipo = z.infer<typeof esquemaFormularioEquipo>;
 
-interface TeamFormModalProps {
+interface PropsModalFormularioEquipo {
   open: boolean;
   onClose: () => void;
   onSave: (
-    teamData: Omit<Team, "courseId" | "leaderId" | "members" | "createdAt">
+    datosEquipo: Omit<Team, "courseId" | "leaderId" | "members" | "createdAt">
   ) => void;
   isSaving?: boolean;
 }
 
-export function TeamFormModal({
+export function ModalFormularioEquipo({
   open,
   onClose,
   onSave,
   isSaving = false,
-}: TeamFormModalProps) {
+}: PropsModalFormularioEquipo) {
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     reset
-  } = useForm<TeamFormData>({
-    resolver: zodResolver(teamFormSchema),
+  } = useForm<DatosFormularioEquipo>({
+    resolver: zodResolver(esquemaFormularioEquipo),
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -67,7 +67,7 @@ export function TeamFormModal({
 
   React.useEffect(() => {
     if (!open) {
-      // Reset form when modal closes
+      // Reiniciar formulario cuando se cierra el modal
       reset({
         name: "",
         description: "",
@@ -77,20 +77,19 @@ export function TeamFormModal({
     }
   }, [open, reset]);
 
-  const onSubmit = (data: TeamFormData) => {
-    onSave(data );
+  const alEnviar = (data: DatosFormularioEquipo) => {
+    onSave(data);
   };
 
   if (!open) return null;
-
-  return (
+return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl dark:bg-gray-900">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Header */}
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <form onSubmit={handleSubmit(alEnviar)}>
+          {/* Encabezado */}
           <div className="flex justify-between items-center p-6 border-b border-border">
-            <h2 className="text-2xl font-bold flex items-center gap-3 text-primary">
-              <Users className="h-6 w-6" /> Create New Team
+            <h2 className="text-2xl font-bold flex items-center gap-3 text-foreground">
+              <Users className="h-6 w-6 text-primary" /> Crear Nuevo Equipo
             </h2>
             <Button
               type="button"
@@ -103,12 +102,12 @@ export function TeamFormModal({
             </Button>
           </div>
 
-          {/* Form Body */}
-          <div className="p-6 space-y-6">
-            {/* Team Name */}
+          {/* Cuerpo del Formulario */}
+          <div className="p-6 space-y-6 bg-card">
+            {/* Nombre del Equipo */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="font-semibold">
-                Team Name *
+              <Label htmlFor="name" className="font-semibold text-foreground">
+                Nombre del Equipo *
               </Label>
               <Controller
                 name="name"
@@ -118,23 +117,23 @@ export function TeamFormModal({
                     {...field}
                     id="name"
                     disabled={isSaving}
-                    placeholder="Enter team name"
-                    className={errors.name ? "border-red-500" : ""}
+                    placeholder="Ingrese el nombre del equipo"
+                    className={errors.name ? "border-destructive" : ""}
                   />
                 )}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
+                <p className="text-sm text-destructive">{errors.name.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                Use letters, numbers, spaces, hyphens, or underscores
+                Use letras, números, espacios, guiones o guiones bajos
               </p>
             </div>
 
-            {/* Description */}
+            {/* Descripción */}
             <div className="space-y-2">
-              <Label htmlFor="description" className="font-semibold">
-                Description
+              <Label htmlFor="description" className="font-semibold text-foreground">
+                Descripción
               </Label>
               <Controller
                 name="description"
@@ -144,21 +143,21 @@ export function TeamFormModal({
                     {...field}
                     id="description"
                     rows={3}
-                    placeholder="Describe the team's purpose or focus..."
+                    placeholder="Describa el propósito o enfoque del equipo..."
                     disabled={isSaving}
-                    className={errors.description ? "border-red-500" : ""}
+                    className={errors.description ? "border-destructive" : ""}
                   />
                 )}
               />
               {errors.description && (
-                <p className="text-sm text-red-500">{errors.description.message}</p>
+                <p className="text-sm text-destructive">{errors.description.message}</p>
               )}
             </div>
 
-            {/* Max Members */}
+            {/* Miembros Máximos */}
             <div className="space-y-2">
-              <Label htmlFor="maxMembers" className="font-semibold">
-                Maximum Members *
+              <Label htmlFor="maxMembers" className="font-semibold text-foreground">
+                Miembros Máximos *
               </Label>
               <Controller
                 name="maxMembers"
@@ -173,60 +172,62 @@ export function TeamFormModal({
                     value={field.value || ""}
                     onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                     disabled={isSaving}
-                    className={errors.maxMembers ? "border-red-500" : ""}
+                    className={errors.maxMembers ? "border-destructive" : ""}
                   />
                 )}
               />
               {errors.maxMembers && (
-                <p className="text-sm text-red-500">{errors.maxMembers.message}</p>
+                <p className="text-sm text-destructive">{errors.maxMembers.message}</p>
               )}
               <p className="text-sm text-muted-foreground">
-                Maximum number of students allowed in this team (1-20)
+                Número máximo de estudiantes permitidos en este equipo (1-20)
               </p>
             </div>
 
-            {/* Active Status */}
+            {/* Estado Activo */}
             <div className="space-y-2">
               <Controller
                 name="active"
                 control={control}
                 render={({ field }) => (
-                  <Label htmlFor="active" className="font-semibold flex items-center gap-2">
+                  <Label htmlFor="active" className="font-semibold text-foreground flex items-center gap-2">
                     <input
                       id="active"
                       type="checkbox"
                       checked={field.value}
                       onChange={field.onChange}
                       disabled={isSaving}
-                      className="rounded"
+                      className="rounded accent-primary"
                     />
-                    Active Team
+                    Equipo Activo
                   </Label>
                 )}
               />
               <p className="text-sm text-muted-foreground">
-                Inactive teams won't be available for new assignments
+                Los equipos inactivos no estarán disponibles para nuevas tareas
               </p>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                Team Creation Information
+            {/* Cuadro de Información */}
+            <div className="bg-primary/10 p-4 rounded-lg border border-primary/30">
+              <h4 className="font-semibold text-foreground mb-2">
+                Información de Creación de Equipo
               </h4>
-              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                <li>• Team will be created with no members initially</li>
-                <li>• You can add members after creation</li>
-                <li>• Team leader can be assigned later</li>
-                <li>• Team name must be unique within the course</li>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• El equipo se creará sin miembros inicialmente</li>
+                <li>• Puede agregar miembros después de la creación</li>
+                <li>• El líder del equipo se puede asignar más tarde</li>
+                <li>• El nombre del equipo debe ser único dentro del curso</li>
               </ul>
             </div>
 
+            {/* Errores de Validación */}
             {Object.keys(errors).length > 0 && !isValid && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2">
-                  Please fix the following errors:
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+                <h4 className="font-semibold text-foreground mb-2">
+                  Por favor, corrija los siguientes errores:
                 </h4>
-                <ul className="text-sm text-red-800 dark:text-red-200 space-y-1">
+                <ul className="text-sm text-destructive space-y-1">
                   {errors.name && <li>• {errors.name.message}</li>}
                   {errors.description && <li>• {errors.description.message}</li>}
                   {errors.maxMembers && <li>• {errors.maxMembers.message}</li>}
@@ -235,14 +236,15 @@ export function TeamFormModal({
             )}
           </div>
 
-          <div className="flex justify-end gap-3 p-6 border-t border-border bg-gray-50 dark:bg-gray-800">
+          {/* Pie de página */}
+          <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSaving}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button
               type="submit"
@@ -254,7 +256,7 @@ export function TeamFormModal({
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              {isSaving ? "Creating..." : "Create Team"}
+              {isSaving ? "Creando..." : "Crear Equipo"}
             </Button>
           </div>
         </form>

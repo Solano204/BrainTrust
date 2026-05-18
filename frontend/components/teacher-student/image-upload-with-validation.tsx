@@ -4,55 +4,55 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, ImageIcon, AlertCircle, Check } from 'lucide-react';
 
 
-const validateImageSignature = (file: File): Promise<{ valid: boolean; type: string }> => {
+const validarFirmaImagen = (archivo: File): Promise<{ valid: boolean; type: string }> => {
   return new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
+    const lectorArchivo = new FileReader();
 
-    fileReader.onloadend = (e) => {
+    lectorArchivo.onloadend = (e) => {
       const arr = new Uint8Array(e.target?.result as ArrayBuffer).subarray(0, 4);
-      let header = "";
+      let cabecera = "";
       for (let i = 0; i < arr.length; i++) {
-        header += arr[i].toString(16).toUpperCase().padStart(2, '0');
+        cabecera += arr[i].toString(16).toUpperCase().padStart(2, '0');
       }
 
-      let type = "unknown";
+      let tipo = "unknown";
       
-      switch (header) {
+      switch (cabecera) {
         case "89504E47": // PNG
-          type = "image/png";
+          tipo = "image/png";
           break;
         case "FFD8FFDB":
         case "FFD8FFE0":
         case "FFD8FFEE":
         case "FFD8FFE1":
-          type = "image/jpeg";
+          tipo = "image/jpeg";
           break;
         case "47494638":
-          type = "image/gif";
+          tipo = "image/gif";
           break;
         default:
-          if (header.startsWith("52494646")) {
-            type = "image/webp";
+          if (cabecera.startsWith("52494646")) {
+            tipo = "image/webp";
           }
           break;
       }
 
-      if (type !== "unknown") {
-        resolve({ valid: true, type });
+      if (tipo !== "unknown") {
+        resolve({ valid: true, type: tipo });
       } else {
         resolve({ valid: false, type: "unknown" });
       }
     };
 
-    fileReader.onerror = () => reject(new Error("Failed to read file"));
-    fileReader.readAsArrayBuffer(file.slice(0, 4));
+    lectorArchivo.onerror = () => reject(new Error("Error al leer el archivo"));
+    lectorArchivo.readAsArrayBuffer(archivo.slice(0, 4));
   });
 };
 
 
-interface ImageUploadWithValidationProps {
+interface PropsSubidaImagenConValidacion {
   currentImageUrl?: string;
-  onImageChange: (imageData: { file: File; previewUrl: string; validationType: string } | null) => void;
+  onImageChange: (datosImagen: { file: File; previewUrl: string; validationType: string } | null) => void;
   label?: string;
   className?: string;
   disabled?: boolean;
@@ -61,201 +61,199 @@ interface ImageUploadWithValidationProps {
 export function ImageUploadWithValidation({ 
   currentImageUrl = "", 
   onImageChange,
-  label = "Unit Image",
+  label = "Imagen de la Unidad",
   className = "",
   disabled = false
-}: ImageUploadWithValidationProps) {
-  const [previewUrl, setPreviewUrl] = useState(currentImageUrl);
-  const [validationStatus, setValidationStatus] = useState<'valid' | 'invalid' | null>(null);
+}: PropsSubidaImagenConValidacion) {
+  const [urlVistaPrevia, setUrlVistaPrevia] = useState(currentImageUrl);
+  const [estadoValidacion, setEstadoValidacion] = useState<'valid' | 'invalid' | null>(null);
   const [error, setError] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [validando, setValidando] = useState(false);
+  const referenciaInputArchivo = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    setPreviewUrl(currentImageUrl);
+    setUrlVistaPrevia(currentImageUrl);
   }, [currentImageUrl]);
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleSeleccionArchivo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const archivo = event.target.files?.[0];
     
-    if (!file) {
+    if (!archivo) {
       return;
     }
 
     setError("");
-    setValidationStatus(null);
-    setIsValidating(true);
+    setEstadoValidacion(null);
+    setValidando(true);
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      setError("File size must be less than 5MB");
-      setIsValidating(false);
+    const tamanoMaximo = 5 * 1024 * 1024; // 5MB
+    if (archivo.size > tamanoMaximo) {
+      setError("El tamaño del archivo debe ser menor a 5MB");
+      setValidando(false);
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      setError("File must be an image");
-      setIsValidating(false);
+    if (!archivo.type.startsWith('image/')) {
+      setError("El archivo debe ser una imagen");
+      setValidando(false);
       return;
     }
 
     try {
-      const validation = await validateImageSignature(file);
+      const validacion = await validarFirmaImagen(archivo);
       
-      if (!validation.valid) {
-        setError("Invalid or corrupted image file");
-        setValidationStatus("invalid");
-        setIsValidating(false);
+      if (!validacion.valid) {
+        setError("Archivo de imagen inválido o corrupto");
+        setEstadoValidacion("invalid");
+        setValidando(false);
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        setPreviewUrl(dataUrl);
-        setValidationStatus("valid");
-        setIsValidating(false);
+      const lector = new FileReader();
+      lector.onloadend = () => {
+        const dataUrl = lector.result as string;
+        setUrlVistaPrevia(dataUrl);
+        setEstadoValidacion("valid");
+        setValidando(false);
         
         if (onImageChange) {
           onImageChange({ 
-            file, 
+            file: archivo, 
             previewUrl: dataUrl,
-            validationType: validation.type 
+            validationType: validacion.type 
           });
         }
       };
-      reader.readAsDataURL(file);
+      lector.readAsDataURL(archivo);
 
     } catch (err) {
-      setError("Failed to validate image");
-      setValidationStatus("invalid");
-      setIsValidating(false);
+      setError("Error al validar la imagen");
+      setEstadoValidacion("invalid");
+      setValidando(false);
     }
   };
 
-  const handleRemoveImage = () => {
-    setPreviewUrl("");
-    setValidationStatus(null);
+  const handleEliminarImagen = () => {
+    setUrlVistaPrevia("");
+    setEstadoValidacion(null);
     setError("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (referenciaInputArchivo.current) {
+      referenciaInputArchivo.current.value = "";
     }
     if (onImageChange) {
       onImageChange(null);
     }
   };
 
-  const handleClickUpload = () => {
+  const handleClickSubir = () => {
     if (!disabled) {
-      fileInputRef.current?.click();
+      referenciaInputArchivo.current?.click();
     }
   };
+return (
+  <div className={`space-y-3 ${className}`}>
+    <label className="block text-sm font-medium text-foreground">
+      {label}
+    </label>
 
-  return (
-    <div className={`space-y-3 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {label}
-      </label>
-
-      {/* Preview Area */}
-      <div className="relative">
-        {previewUrl ? (
-          <div className="relative group">
-            <div className="aspect-video w-full rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay on hover */}
-              {!disabled && (
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClickUpload}
-                    className="px-4 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Change
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Remove
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {/* Validation Badge */}
-            {validationStatus === "valid" && (
-              <div className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
-                <Check className="h-3 w-3" />
-                Verified Image
+    {/* Área de Vista Previa */}
+    <div className="relative">
+      {urlVistaPrevia ? (
+        <div className="relative group">
+          <div className="aspect-video w-full rounded-lg overflow-hidden border-2 border-border bg-secondary">
+            <img
+              src={urlVistaPrevia}
+              alt="Vista previa"
+              className="w-full h-full object-cover"
+            />
+            {!disabled && (
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleClickSubir}
+                  className="px-4 py-2 bg-card text-foreground rounded-lg font-medium hover:bg-secondary transition-colors flex items-center gap-2 border border-border"
+                >
+                  <Upload className="h-4 w-4" />
+                  Cambiar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEliminarImagen}
+                  className="px-4 py-2 bg-destructive text-white rounded-lg font-medium hover:bg-destructive/90 transition-colors flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Eliminar
+                </button>
               </div>
             )}
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handleClickUpload}
-            disabled={disabled}
-            className="w-full aspect-video rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors bg-gray-50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-3 cursor-pointer group disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <div className="p-4 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
-              <ImageIcon className="h-8 w-8 text-gray-400 group-hover:text-blue-500 transition-colors" />
-            </div>
-            <div className="text-center px-4">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Click to upload image
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-500">
-                PNG, JPG, GIF, WEBP up to 5MB
-              </p>
-            </div>
-          </button>
-        )}
-      </div>
 
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/png, image/jpeg, image/gif, image/webp"
-        onChange={handleFileSelect}
-        disabled={disabled}
-        className="hidden"
-      />
-
-      {/* Validation Status */}
-      {isValidating && (
-        <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-          <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full" />
-          Validating image...
+          {/* Insignia de Validación */}
+          {estadoValidacion === "valid" && (
+            <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+              <Check className="h-3 w-3" />
+              Imagen Verificada
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-800 dark:text-red-300">
-              {error}
+      ) : (
+        <button
+          type="button"
+          onClick={handleClickSubir}
+          disabled={disabled}
+          className="w-full aspect-video rounded-lg border-2 border-dashed border-border hover:border-primary transition-colors bg-secondary/50 flex flex-col items-center justify-center gap-3 cursor-pointer group disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div className="p-4 rounded-full bg-secondary group-hover:bg-primary/10 transition-colors">
+            <ImageIcon className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <div className="text-center px-4">
+            <p className="text-sm font-medium text-foreground mb-1">
+              Haz clic para subir imagen
             </p>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-              Please select a valid image file
+            <p className="text-xs text-muted-foreground">
+              PNG, JPG, GIF, WEBP hasta 5MB
             </p>
           </div>
-        </div>
+        </button>
       )}
-
-      <p className="text-xs text-gray-500 dark:text-gray-400">
-        Images are validated using binary signatures for security
-      </p>
     </div>
-  );
+
+    {/* Input de archivo oculto */}
+    <input
+      ref={referenciaInputArchivo}
+      type="file"
+      accept="image/png, image/jpeg, image/gif, image/webp"
+      onChange={handleSeleccionArchivo}
+      disabled={disabled}
+      className="hidden"
+    />
+
+    {/* Estado de Validación */}
+    {validando && (
+      <div className="flex items-center gap-2 text-sm text-primary">
+        <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+        Validando imagen...
+      </div>
+    )}
+
+    {/* Mensaje de Error */}
+    {error && (
+      <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+        <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-destructive">
+            {error}
+          </p>
+          <p className="text-xs text-destructive/80 mt-1">
+            Por favor, seleccione un archivo de imagen válido
+          </p>
+        </div>
+      </div>
+    )}
+
+    <p className="text-xs text-muted-foreground">
+      Las imágenes se validan mediante firmas binarias por seguridad
+    </p>
+  </div>
+);
 }

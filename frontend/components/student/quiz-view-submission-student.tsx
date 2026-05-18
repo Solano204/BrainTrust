@@ -64,7 +64,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
   onExit,
 }) => {
 
-  console.log("DATA OF QUIZ", quiz)
+  console.log("DATOS DEL CUESTIONARIO", quiz)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
   const [timeRemaining, setTimeRemaining] = useState<number>(
@@ -124,7 +124,7 @@ export const QuizView: React.FC<QuizViewProps> = ({
           points: 0,
           maxPoints: question.points,
           isCorrect: false,
-          feedback: "No answer provided",
+          feedback: "No se proporcionó respuesta",
         });
         continue;
       }
@@ -140,8 +140,8 @@ export const QuizView: React.FC<QuizViewProps> = ({
         isCorrect = studentChoice === correctChoice;
         points = isCorrect ? question.points : 0;
         feedback = isCorrect
-          ? "Correct!"
-          : `Incorrect. The correct answer is option ${correctChoice + 1}.`;
+          ? "¡Correcto!"
+          : `Incorrecto. La respuesta correcta es la opción ${correctChoice + 1}.`;
       } else if (question.type === "open_ended") {
         const studentText = String(studentAnswer.studentAnswer || "")
           .trim()
@@ -154,13 +154,13 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
         if (isCorrect) {
           points = question.points;
-          feedback = "Correct!";
+          feedback = "¡Correcto!";
         } else if (studentText === "") {
           points = 0;
-          feedback = "No answer provided";
+          feedback = "No se proporcionó respuesta";
         } else {
           points = 0;
-          feedback = `Incorrect. Expected: "${question.correctAnswer}"`;
+          feedback = `Incorrecto. Se esperaba: "${question.correctAnswer}"`;
         }
       }
 
@@ -315,612 +315,501 @@ export const QuizView: React.FC<QuizViewProps> = ({
     );
   }
 
-  return (
-    <>
-
-      <Dialog 
-        open={showStartDialog} 
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-             setShowStartDialog(false);
-             onExit?.(); 
-          }
-          setShowStartDialog(isOpen);
-        }}
+ return (
+  <>
+    {/* ══ Diálogo de Inicio ══ */}
+    <Dialog
+      open={showStartDialog}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) { setShowStartDialog(false); onExit?.(); }
+        setShowStartDialog(isOpen);
+      }}
+    >
+      <DialogContent
+        className="sm:max-w-md bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogContent 
-          className="sm:max-w-md"
-          onInteractOutside={(e) => {
-            e.preventDefault();
-          }}
-          // onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-blue-500" />
-              Start Quiz
-            </DialogTitle>
-            <DialogDescription>
-              Are you ready to begin "{quiz.title}"?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Quiz Details */}
-            <Card>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Duration:</span>
-                  <Badge variant="outline" className="gap-1">
-                    <Timer className="h-3 w-3" />
-                    {quiz.timeLimit} minutes
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Questions:</span>
-                  <Badge variant="outline" className="gap-1">
-                    <FileQuestion className="h-3 w-3" />
-                    {quiz.questions.length} questions
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Max Score:</span>
-                  <Badge variant="outline" className="gap-1">
-                    <Award className="h-3 w-3" />
-                    {quiz.maxGrade} points
-                  </Badge>
-                </div>
-                {quiz.dueDate && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Due Date:</span>
-                    <Badge variant="outline" className="gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(quiz.dueDate).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                )}
-                {quiz.availableFrom && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Opens:</span>
-                    <Badge variant="outline" className="gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(quiz.availableFrom).toLocaleDateString()}
-                    </Badge>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {isStartDisabled && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-red-800">
-                    Quiz Unavailable
-                  </h4>
-                  <p className="text-sm text-red-700 mt-1">
-                    {getStatusMessage()}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
-                Important Instructions:
-              </h4>
-              <ul className="text-sm space-y-1 text-muted-foreground">
-                <li>• Timer will start immediately when you begin</li>
-                <li>• You can flag questions for review</li>
-                <li>• Navigate freely between questions</li>
-                <li>• Answers are saved as you go</li>
-                <li>• Submit before time runs out</li>
-              </ul>
+        {/* Encabezado */}
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <DialogTitle className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-4 h-4 text-primary" />
+            </span>
+            <div>
+              <p className="text-base font-bold text-foreground">Iniciar Cuestionario</p>
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
+                ¿Estás listo para comenzar &ldquo;{quiz.title}&rdquo;?
+              </p>
             </div>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="px-6 py-5 space-y-4">
+          {/* Detalles del cuestionario */}
+          <div className="bg-muted/30 rounded-2xl border border-border divide-y divide-border/50">
+            {[
+              { icon: Timer,        label: 'Duración',   value: `${quiz.timeLimit} minutos` },
+              { icon: FileQuestion, label: 'Preguntas',  value: `${quiz.questions.length} preguntas` },
+              { icon: Award,        label: 'Puntaje Máx.',  value: `${quiz.maxGrade} puntos` },
+              ...(quiz.dueDate ? [{ icon: Calendar, label: 'Fecha Límite', value: new Date(quiz.dueDate).toLocaleDateString() }] : []),
+              ...(quiz.availableFrom ? [{ icon: Calendar, label: 'Apertura', value: new Date(quiz.availableFrom).toLocaleDateString() }] : []),
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex items-center justify-between px-4 py-3">
+                <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+                <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border text-xs font-semibold text-foreground">
+                  <Icon className="w-3 h-3 text-primary" />
+                  {value}
+                </span>
+              </div>
+            ))}
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowStartDialog(false);
-                onExit?.(); 
-              }}
-            >
-              Exit
-            </Button>
-            
-            <Button 
-              onClick={handleStartQuiz} 
-              className="gap-2"
-              disabled={isStartDisabled}
-            >
-              {isStartDisabled ? (
-                <Lock className="h-4 w-4" />
-              ) : (
-                <CheckCircle className="h-4 w-4" />
-              )}
-              Start Quiz
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Advertencia de no disponible */}
+          {isStartDisabled && (
+            <div className="flex items-start gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
+              <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-destructive">Cuestionario No Disponible</p>
+                <p className="text-xs text-destructive/80 mt-0.5">{getStatusMessage()}</p>
+              </div>
+            </div>
+          )}
 
-      {/* Main Quiz Interface */}
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
-        <div className="max-w-5xl mx-auto">
-          {/* Quiz Header */}
-          <Card className="shadow-lg mb-6 border-l-4 border-blue-500">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {quiz.title}
-                    </h1>
-                    <Badge variant="secondary">Student View</Badge>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    {quiz.description}
+          {/* Instrucciones */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 text-accent-foreground" />
+              Instrucciones Importantes
+            </p>
+            <ul className="space-y-1 pl-1">
+              {[
+                'El temporizador comenzará inmediatamente al iniciar',
+                'Puedes marcar preguntas para revisar',
+                'Navega libremente entre las preguntas',
+                'Las respuestas se guardan a medida que avanzas',
+                'Envía antes de que se acabe el tiempo',
+              ].map((item) => (
+                <li key={item} className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>{item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Pie de página */}
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row gap-2">
+          <button
+            type="button"
+            onClick={() => { setShowStartDialog(false); onExit?.(); }}
+            className="flex-1 flex items-center justify-center px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+          >
+            Salir
+          </button>
+          <button
+            onClick={handleStartQuiz}
+            disabled={isStartDisabled}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 active:scale-95 transition-all shadow-sm"
+          >
+            {isStartDisabled ? <Lock className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+            Iniciar Cuestionario
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* ══ Interfaz Principal del Cuestionario ══ */}
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-5xl mx-auto space-y-5">
+
+        {/* ── Tarjeta de encabezado del cuestionario ── */}
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="border-l-4 border-primary p-5 sm:p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+                    {quiz.title}
+                  </h1>
+                  <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                    Vista Estudiante
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">{quiz.description}</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                {/* Temporizador */}
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-base font-bold ${
+                  timeRemaining < 300
+                    ? "bg-destructive/10 text-destructive border border-destructive/20"
+                    : "bg-primary/10 text-primary border border-primary/20"
+                }`}>
+                  <Clock className="w-4 h-4" />
+                  {formatTime(timeRemaining)}
+                </div>
+
+                {/* Progreso */}
+                <div className="text-center min-w-[8rem]">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Pregunta {currentQuestionIndex + 1} de {quiz.questions.length}
+                  </p>
+                  <Progress value={progress} className="w-32 h-1.5" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {answeredCount} respondidas · {unansweredCount} pendientes
                   </p>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                  {/* Timer */}
-                  <div
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-lg font-bold ${
-                      timeRemaining < 300
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                        : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                    }`}
-                  >
-                    <Clock className="h-5 w-5" />
-                    {formatTime(timeRemaining)}
-                  </div>
-
-                  {/* Progress */}
-                  <div className="text-center">
-                    <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      Question {currentQuestionIndex + 1} of{" "}
-                      {quiz.questions.length}
-                    </div>
-                    <Progress value={progress} className="w-32" />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {answeredCount} answered • {unansweredCount} unanswered
-                    </div>
-                  </div>
-                </div>
               </div>
-
-              {/* Quiz Info Bar */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t">
-                <div className="text-center">
-                  <div className="text-sm font-medium">Time Limit</div>
-                  <div className="text-lg font-semibold">
-                    {quiz.timeLimit} min
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium">Max Score</div>
-                  <div className="text-lg font-semibold">{quiz.maxGrade}</div>
-                </div>
-                <div className="text-center">
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium">Due Date</div>
-                  <div className="text-lg font-semibold">
-                    {quiz.dueDate
-                      ? new Date(quiz.dueDate).toLocaleDateString()
-                      : "No due date"}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
-              <Card className="shadow-lg sticky top-4">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    Questions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-2">
-                    {quiz.questions.map((question, index) => {
-                      const answer = answers[question.id];
-                      const isAnswered =
-                        answer &&
-                        (answer.questionType === "multiple-choice"
-                          ? answer.studentAnswer !== -1
-                          : answer.studentAnswer !== "");
-
-                      return (
-                        <Button
-                          key={question.id}
-                          variant={
-                            currentQuestionIndex === index
-                              ? "default"
-                              : isAnswered
-                              ? "secondary"
-                              : "outline"
-                          }
-                          size="sm"
-                          className={`relative h-12 ${
-                            flaggedQuestions.has(question.id)
-                              ? "border-yellow-400 border-2"
-                              : ""
-                          }`}
-                          onClick={() => setCurrentQuestionIndex(index)}
-                        >
-                          {index + 1}
-                          {flaggedQuestions.has(question.id) && (
-                            <Flag className="h-3 w-3 absolute -top-1 -right-1 text-yellow-500 fill-yellow-500" />
-                          )}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-primary rounded"></div>
-                      <span>Current</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-secondary rounded"></div>
-                      <span>Answered</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-gray-200 rounded border"></div>
-                      <span>Unanswered</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Flag className="h-3 w-3 text-yellow-500" />
-                      <span>Flagged</span>
-                    </div>
-                  </div>
-
-                  {/* Quick Stats */}
-                  <div className="mt-4 pt-4 border-t space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Answered:</span>
-                      <span className="font-medium">
-                        {answeredCount}/{quiz.questions.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Flagged:</span>
-                      <span className="font-medium">
-                        {flaggedQuestions.size}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
-            {/* Question Content */}
-            <div className="lg:col-span-3 space-y-6">
-              <Card className="shadow-lg">
-                <CardContent className="p-6">
-                  {/* Question Header */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="text-sm">
-                          {currentQuestion.type === "multiple-choice"
-                            ? "Multiple Choice"
-                            : "Open Ended"}
-                        </Badge>
-                        <Badge variant="secondary" className="text-sm">
-                          {currentQuestion.points} point
-                          {currentQuestion.points !== 1 ? "s" : ""}
-                        </Badge>
-                        {flaggedQuestions.has(currentQuestion.id) && (
-                          <Badge variant="outline" className="text-sm gap-1">
-                            <Flag className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                            Flagged
-                          </Badge>
-                        )}
-                      </div>
-                      <h2 className="text-xl font-semibold">
-                        {currentQuestion.question}
-                      </h2>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleFlag(currentQuestion.id)}
-                      className="gap-2"
-                    >
-                      <Flag
-                        className={`h-4 w-4 ${
-                          flaggedQuestions.has(currentQuestion.id)
-                            ? "text-yellow-500 fill-yellow-500"
-                            : ""
-                        }`}
-                      />
-                      {flaggedQuestions.has(currentQuestion.id)
-                        ? "Unflag"
-                        : "Flag for Review"}
-                    </Button>
-                  </div>
-
-                  {/* Question Content */}
-                  <div className="space-y-4">
-                    {currentQuestion.type === "multiple-choice" ? (
-                      <RadioGroup
-                        value={
-                          answers[currentQuestion.id]?.studentAnswer?.toString() ||
-                          ""
-                        }
-                        onValueChange={(value) =>
-                          handleAnswerChange(
-                            currentQuestion.id,
-                            parseInt(value)
-                          )
-                        }
-                        className="space-y-3"
-                      >
-                        {currentQuestion.options?.map((option, index) => (
-                          <div
-                            key={index}
-                            className={`flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
-                              answers[currentQuestion.id]?.studentAnswer ===
-                              index
-                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                                : ""
-                            }`}
-                          >
-                            <RadioGroupItem
-                              value={index.toString()}
-                              id={`option-${index}`}
-                              className="h-5 w-5"
-                            />
-                            <Label
-                              htmlFor={`option-${index}`}
-                              className="flex-1 cursor-pointer text-sm"
-                            >
-                              <div className="flex items-start gap-3">
-                                <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
-                                  {String.fromCharCode(65 + index)}
-                                </span>
-                                <span className="flex-1">{option}</span>
-                              </div>
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    ) : (
-                      <div className="space-y-3">
-                        <Textarea
-                          placeholder="Type your answer here... Be as detailed and specific as possible. You can include formulas, explanations, or any relevant information."
-                          value={
-                            answers[currentQuestion.id]?.studentAnswer?.toString() ||
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleAnswerChange(
-                              currentQuestion.id,
-                              e.target.value
-                            )
-                          }
-                          rows={10}
-                          className="resize-none font-mono text-sm"
-                        />
-                        <div className="text-right text-xs text-muted-foreground">
-                          Character count:{" "}
-                          {answers[currentQuestion.id]?.studentAnswer?.toString()
-                            .length || 0}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between items-center">
-                <Button
-                  variant="outline"
-                  onClick={goToPreviousQuestion}
-                  disabled={isFirstQuestion}
-                  className="gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowExitConfirm(true)}
-                    disabled={isSubmitting}
-                    className="gap-2"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Exit Quiz
-                  </Button>
-
-                  {isLastQuestion ? (
-                    <Button
-                      onClick={() => setShowSubmitConfirm(true)}
-                      disabled={isSubmitting}
-                      className="gap-2 bg-green-600 hover:bg-green-700"
-                      size="lg"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4" />
-                          Submit Quiz
-                        </>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={goToNextQuestion}
-                      className="gap-2"
-                      size="lg"
-                    >
-                      Next Question
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  )}
+            {/* Barra de información */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-border">
+              {[
+                { label: 'Tiempo Límite', value: `${quiz.timeLimit} min` },
+                { label: 'Puntaje Máx.',  value: quiz.maxGrade },
+                { label: '',           value: '' },
+                { label: 'Fecha Límite',   value: quiz.dueDate ? new Date(quiz.dueDate).toLocaleDateString() : 'Sin fecha límite' },
+              ].map(({ label, value }, i) => label ? (
+                <div key={i} className="text-center">
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="text-base font-bold text-foreground mt-0.5">{value}</p>
                 </div>
-              </div>
-
-              {/* Time Warning */}
-              {timeRemaining < 300 && timeRemaining > 0 && (
-                <Card className="border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-red-500 animate-pulse" />
-                    <div>
-                      <p className="font-medium text-red-700 dark:text-red-300">
-                        Time is running out!
-                      </p>
-                      <p className="text-sm text-red-600 dark:text-red-400">
-                        {timeRemaining < 60
-                          ? "Less than 1 minute remaining"
-                          : `${Math.ceil(
-                              timeRemaining / 60
-                            )} minutes remaining`}
-                        {unansweredCount > 0 &&
-                          ` • ${unansweredCount} unanswered questions`}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              ) : <div key={i} />)}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Exit Confirmation Dialog */}
-      <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-              Exit Quiz?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Your progress will be saved, but you'll need to complete the quiz
-              later. You have answered {answeredCount} out of{" "}
-              {quiz.questions.length} questions.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continue Quiz</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleExitConfirm}
-              className="bg-red-600 hover:bg-red-700 gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Exit Quiz
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
 
-      {/* Submit Confirmation Dialog */}
-      <AlertDialog
-        open={showSubmitConfirm}
-        onOpenChange={setShowSubmitConfirm}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-green-500" />
-              Submit Quiz?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {unansweredCount > 0 ? (
-                <>
-                  You have <strong>{unansweredCount}</strong> unanswered
-                  question{unansweredCount !== 1 ? "s" : ""}. Are you sure you
-                  want to submit your quiz?
-                </>
+          {/* ── Navegador de preguntas ── */}
+          <div className="lg:col-span-1">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-4 sticky top-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-3">
+                <Eye className="w-3.5 h-3.5" />
+                Preguntas
+              </p>
+
+              <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5">
+                {quiz.questions.map((question, index) => {
+                  const answer = answers[question.id];
+                  const isAnswered = answer && (
+                    answer.questionType === 'multiple-choice'
+                      ? answer.studentAnswer !== -1
+                      : answer.studentAnswer !== ''
+                  );
+                  const isCurrent  = currentQuestionIndex === index;
+                  const isFlagged  = flaggedQuestions.has(question.id);
+
+                  return (
+                    <button
+                      key={question.id}
+                      onClick={() => setCurrentQuestionIndex(index)}
+                      className={`relative h-10 rounded-xl text-xs font-bold transition-all border ${
+                        isCurrent
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : isAnswered
+                          ? 'bg-primary/10 text-primary border-primary/20'
+                          : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/60'
+                      } ${isFlagged ? 'border-accent-foreground border-2' : ''}`}
+                    >
+                      {index + 1}
+                      {isFlagged && (
+                        <Flag className="w-2.5 h-2.5 absolute -top-1 -right-1 text-accent-foreground fill-accent-foreground" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Leyenda */}
+              <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
+                {[
+                  { color: 'bg-primary',      label: 'Actual'    },
+                  { color: 'bg-primary/10',   label: 'Respondida'   },
+                  { color: 'bg-muted/30',     label: 'No respondida' },
+                ].map(({ color, label }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded ${color} border border-border`} />
+                    <span>{label}</span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2">
+                  <Flag className="w-3 h-3 text-accent-foreground" />
+                  <span>Marcada</span>
+                </div>
+              </div>
+
+              {/* Estadísticas rápidas */}
+              <div className="mt-4 pt-4 border-t border-border space-y-2">
+                {[
+                  { label: 'Respondidas', value: `${answeredCount}/${quiz.questions.length}` },
+                  { label: 'Marcadas',  value: flaggedQuestions.size },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className="font-semibold text-foreground">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Contenido de la pregunta ── */}
+          <div className="lg:col-span-3 space-y-4">
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
+
+              {/* Encabezado de la pregunta */}
+              <div className="flex items-start justify-between gap-3 mb-6">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-muted/50 border border-border text-xs font-semibold text-muted-foreground">
+                      {currentQuestion.type === 'multiple-choice' ? 'Opción Múltiple' : 'Respuesta Abierta'}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                      {currentQuestion.points} punto{currentQuestion.points !== 1 ? 's' : ''}
+                    </span>
+                    {flaggedQuestions.has(currentQuestion.id) && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent/20 border border-accent/30 text-xs font-semibold text-accent-foreground">
+                        <Flag className="w-3 h-3" />
+                        Marcada
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-lg font-bold text-foreground">{currentQuestion.question}</h2>
+                </div>
+
+                <button
+                  onClick={() => toggleFlag(currentQuestion.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all flex-shrink-0 ${
+                    flaggedQuestions.has(currentQuestion.id)
+                      ? 'bg-accent/20 border-accent/30 text-accent-foreground'
+                      : 'border-border text-muted-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Flag className={`w-3.5 h-3.5 ${flaggedQuestions.has(currentQuestion.id) ? 'fill-current' : ''}`} />
+                  {flaggedQuestions.has(currentQuestion.id) ? 'Desmarcar' : 'Marcar'}
+                </button>
+              </div>
+
+              {/* Área de respuesta */}
+              {currentQuestion.type === 'multiple-choice' ? (
+                <RadioGroup
+                  value={answers[currentQuestion.id]?.studentAnswer?.toString() || ''}
+                  onValueChange={(value) => handleAnswerChange(currentQuestion.id, parseInt(value))}
+                  className="space-y-2.5"
+                >
+                  {currentQuestion.options?.map((option, index) => {
+                    const isSelected = answers[currentQuestion.id]?.studentAnswer === index;
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:bg-muted/30'
+                        }`}
+                      >
+                        <RadioGroupItem value={index.toString()} id={`option-${index}`} className="h-4 w-4" />
+                        <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-sm">
+                          <div className="flex items-start gap-3">
+                            <span className="font-mono bg-muted/50 border border-border px-2 py-0.5 rounded-md text-xs font-bold text-muted-foreground flex-shrink-0">
+                              {String.fromCharCode(65 + index)}
+                            </span>
+                            <span className="flex-1 text-foreground">{option}</span>
+                          </div>
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </RadioGroup>
               ) : (
-                "Are you ready to submit your quiz? You won't be able to make changes after submission."
+                <div className="space-y-2">
+                  <textarea
+                    placeholder="Escribe tu respuesta aquí... Sé lo más detallado y específico posible."
+                    value={answers[currentQuestion.id]?.studentAnswer?.toString() || ''}
+                    onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                    rows={10}
+                    className="w-full px-4 py-3 rounded-xl border border-border bg-background text-sm text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none transition-all"
+                  />
+                  <p className="text-right text-xs text-muted-foreground">
+                    {answers[currentQuestion.id]?.studentAnswer?.toString().length || 0} caracteres
+                  </p>
+                </div>
               )}
-            </AlertDialogDescription>
-            {timeRemaining > 0 && (
-              <div className="mt-2 text-sm">
-                <p>Time remaining: {formatTime(timeRemaining)}</p>
+            </div>
+
+            {/* Navegación */}
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={goToPreviousQuestion}
+                disabled={isFirstQuestion}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Anterior
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowExitConfirm(true)}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 transition-all"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Salir
+                </button>
+
+                {isLastQuestion ? (
+                  <button
+                    onClick={() => setShowSubmitConfirm(true)}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 active:scale-95 transition-all shadow-sm"
+                  >
+                    {isSubmitting ? (
+                      <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />Enviando...</>
+                    ) : (
+                      <><Send className="w-4 h-4" />Enviar Cuestionario</>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={goToNextQuestion}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                  >
+                    Siguiente
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Advertencia de tiempo */}
+            {timeRemaining < 300 && timeRemaining > 0 && (
+              <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 border-l-4 border-l-destructive">
+                <Clock className="w-5 h-5 text-destructive animate-pulse flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-bold text-destructive">¡El tiempo se está acabando!</p>
+                  <p className="text-xs text-destructive/80 mt-0.5">
+                    {timeRemaining < 60
+                      ? 'Menos de 1 minuto restante'
+                      : `${Math.ceil(timeRemaining / 60)} minutos restantes`}
+                    {unansweredCount > 0 && ` · ${unansweredCount} preguntas sin responder`}
+                  </p>
+                </div>
               </div>
             )}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Review Questions</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 gap-2"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Submit Quiz
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      {/* Time Up Dialog */}
-      <Dialog open={showTimeUpDialog} onOpenChange={setShowTimeUpDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <Clock className="h-6 w-6" />
-              Time's Up!
-            </DialogTitle>
-            <DialogDescription>
-              The quiz time has ended. Your answers will be automatically
-              submitted now.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex sm:justify-between gap-2">
-            <Button
-              variant="outline"
-              onClick={handleTimeUpSubmit}
-              disabled={isSubmitting}
-              className="w-full"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Now"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
+    {/* ══ Confirmación de Salida ══ */}
+    <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+      <AlertDialogContent className="bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden">
+        <AlertDialogHeader className="px-6 pt-6 pb-4">
+          <AlertDialogTitle className="flex items-center gap-3 text-base font-bold text-foreground">
+            <span className="w-8 h-8 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-4 h-4 text-destructive" />
+            </span>
+            ¿Salir del Cuestionario?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm text-muted-foreground mt-2">
+            Tu progreso se guardará, pero deberás completar el cuestionario más tarde.
+            Has respondido <span className="font-semibold text-foreground">{answeredCount}</span> de{' '}
+            <span className="font-semibold text-foreground">{quiz.questions.length}</span> preguntas.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row gap-2">
+          <AlertDialogCancel className="flex-1 rounded-xl border-border text-sm font-medium">
+            Continuar Cuestionario
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleExitConfirm}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Salir del Cuestionario
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
+    {/* ══ Confirmación de Envío ══ */}
+    <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+      <AlertDialogContent className="bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden">
+        <AlertDialogHeader className="px-6 pt-6 pb-4">
+          <AlertDialogTitle className="flex items-center gap-3 text-base font-bold text-foreground">
+            <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Send className="w-4 h-4 text-primary" />
+            </span>
+            ¿Enviar Cuestionario?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm text-muted-foreground mt-2">
+            {unansweredCount > 0 ? (
+              <>Tienes <strong className="text-foreground">{unansweredCount}</strong> pregunta{unansweredCount !== 1 ? 's' : ''} sin responder. ¿Estás seguro de que deseas enviar?</>
+            ) : (
+              "¿Estás listo para enviar? No podrás hacer cambios después del envío."
+            )}
+          </AlertDialogDescription>
+          {timeRemaining > 0 && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Tiempo restante: <span className="font-semibold text-foreground">{formatTime(timeRemaining)}</span>
+            </p>
+          )}
+        </AlertDialogHeader>
+        <AlertDialogFooter className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row gap-2">
+          <AlertDialogCancel className="flex-1 rounded-xl border-border text-sm font-medium">
+            Revisar Preguntas
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-all"
+          >
+            {isSubmitting ? (
+              <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />Enviando...</>
+            ) : (
+              <><Send className="w-4 h-4" />Enviar Cuestionario</>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* ══ Diálogo de Tiempo Agotado ══ */}
+    <Dialog open={showTimeUpDialog} onOpenChange={setShowTimeUpDialog}>
+      <DialogContent className="sm:max-w-md bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <DialogTitle className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4 text-destructive" />
+            </span>
+            <div>
+              <p className="text-base font-bold text-destructive">¡Tiempo Agotado!</p>
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">
+                Tus respuestas se enviarán automáticamente ahora.
+              </p>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <button
+            onClick={handleTimeUpSubmit}
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-all"
+          >
+            {isSubmitting ? (
+              <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />Enviando...</>
+            ) : (
+              'Enviar Ahora'
+            )}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
+);
+}
 interface QuizResultsProps {
   quiz: Quiz;
   submission: QuizSubmission;
@@ -968,10 +857,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   // ── Student answer display ─────────────────────────────────────────────────
   const formatStudentAnswer = (question: any, answer: any): string => {
     const raw = answer?.studentAnswer;
-    if (raw === undefined || raw === null || raw === "") return "No answer provided";
+    if (raw === undefined || raw === null || raw === "") return "No se proporcionó respuesta";
     if (question.type === "multiple-choice") {
       const idx = Number(raw);
-      return question.options?.[idx] ?? `Option ${idx + 1}`;
+      return question.options?.[idx] ?? `Opción ${idx + 1}`;
     }
     return String(raw);
   };
@@ -1009,11 +898,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       if (question.correctAnswer !== undefined) {
         const idx = Number(question.correctAnswer);
         return {
-          text: question.options?.[idx] ?? `Option ${idx + 1}`,
+          text: question.options?.[idx] ?? `Opción ${idx + 1}`,
           optionIndex: idx,
         };
       }
-      return { text: "Not available" };
+      return { text: "No disponible" };
     }
 
     // Open-ended ─────────────────────────────────────────────────────────────
@@ -1026,348 +915,323 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     }
     return { text: "" };
   };
+return (
+  <div className="min-h-screen bg-background p-4">
+    <div className="max-w-4xl mx-auto space-y-5">
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
-      <div className="max-w-4xl mx-auto">
-
-        {/* ── Results Header ── */}
-        <Card className="shadow-lg mb-6 text-center">
-          <CardContent className="p-8">
-            <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
-              passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-            }`}>
-              {passed ? <CheckCircle className="h-10 w-10" /> : <HelpCircle className="h-10 w-10" />}
-            </div>
-
-            <h1 className="text-3xl font-bold mb-2">{passed ? "Quiz Completed!" : "Quiz Finished"}</h1>
-            <p className="text-lg text-muted-foreground mb-4">{quiz.title}</p>
-
-            {/* Visible indicator when answers are hidden */}
-            {!canViewResults && (
-              <div className="mb-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full text-sm text-amber-800">
-                <EyeOff className="h-4 w-4" />
-                Correct answers are not available for this quiz
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-md mx-auto">
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-blue-600">{Math.round(finalScore * 100) / 100}</p>
-                <p className="text-sm text-muted-foreground">Your Score</p>
-              </div>
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{totalMaxScore}</p>
-                <p className="text-sm text-muted-foreground">Max Score</p>
-              </div>
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-purple-600">{Math.round(percentage)}%</p>
-                <p className="text-sm text-muted-foreground">Percentage</p>
-              </div>
-              {hasDetailedData && (
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-orange-600">
-                    {Math.round((submission.quizData?.timeSpent ?? 0) / 60)}m
-                  </p>
-                  <p className="text-sm text-muted-foreground">Time Spent</p>
-                </div>
-              )}
-            </div>
-
-            {submission.teacherFeedback && (
-              <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg max-w-md mx-auto">
-                <p className="font-semibold mb-2">Teacher Feedback:</p>
-                <p className="text-sm text-muted-foreground">{submission.teacherFeedback}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ── Question Review ── */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Question Review</span>
-              {!canViewResults && (
-                <span className="text-sm font-normal text-muted-foreground flex items-center gap-1">
-                  <EyeOff className="h-4 w-4" />
-                  Answers hidden
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {quiz.questions.map((question, index) => {
-              const detailedAnswer = quizAnswers.find((a) => a.questionId === question.id);
-              const userAnswer = userAnswers[question.id];
-              const sourceAnswer = userAnswer ?? detailedAnswer;
-
-              const studentAnswerText = formatStudentAnswer(question, sourceAnswer);
-              const { text: correctAnswerText, optionIndex: correctOptionIndex } =
-                resolveCorrectAnswer(question, detailedAnswer);
-
-              const isOpenEnded = question.type !== "multiple-choice";
-              const needsReview =
-                detailedAnswer?.isCorrect === undefined ||
-                (isOpenEnded && detailedAnswer?.isCorrect === undefined);
-
-              let displayPoints = detailedAnswer?.points ?? 0;
-              if (detailedAnswer?.isCorrect && displayPoints === 0) {
-                displayPoints = question.points;
-              }
-
-              return (
-                <div key={question.id} className="border rounded-lg p-4">
-                  {/* Question header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold">Question {index + 1}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{question.question}</p>
-                    </div>
-                    <div className="flex gap-2 flex-col items-end">
-                      {detailedAnswer && (
-                        <>
-                          <Badge
-                            variant={displayPoints === question.points ? "default" : "secondary"}
-                            className="text-sm"
-                          >
-                            Score: {displayPoints}/{question.points}
-                          </Badge>
-                          {detailedAnswer.feedback && (
-                            <Badge variant="outline" className="text-xs">Teacher Reviewed</Badge>
-                          )}
-                          {needsReview ? (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                              Pending Review
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant={detailedAnswer.isCorrect ? "default" : "destructive"}
-                              className="text-xs"
-                            >
-                              {detailedAnswer.isCorrect ? "Correct" : "Incorrect"}
-                            </Badge>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* ── Student's answer ── */}
-                    <div>
-                      <strong className="text-sm block mb-1">Your answer:</strong>
-                      <div className={`p-3 rounded border ${
-                        needsReview
-                          ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700"
-                          : detailedAnswer?.isCorrect
-                          ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
-                          : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-                      }`}>
-                        <p className="text-sm font-medium">{studentAnswerText}</p>
-                        {question.type === "multiple-choice" && sourceAnswer?.studentAnswer !== undefined && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Selected option {Number(sourceAnswer.studentAnswer) + 1}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* ── Pending review notice ── */}
-                    {needsReview && (
-                      <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-300">
-                        <div className="flex items-start gap-2">
-                          <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
-                              This answer is pending teacher review
-                            </p>
-                            <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
-                              Your answer may be correct but uses different wording or requires manual grading.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── Expected answer — only shown when canViewResults=true ── */}
-                    {!needsReview && canViewResults && (
-                      <div>
-                        <strong className="text-sm block mb-1">Expected answer:</strong>
-
-                        {isOpenEnded ? (
-                          correctAnswerText ? (
-                            <div className="p-3 rounded border bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-                              <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                                {correctAnswerText}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="p-3 rounded border bg-gray-50 border-gray-200">
-                              <p className="text-sm text-muted-foreground italic">
-                                No reference answer provided for this question.
-                              </p>
-                            </div>
-                          )
-                        ) : (
-                          <div className="p-3 rounded border bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-                            <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                              {correctAnswerText}
-                            </p>
-                            {correctOptionIndex !== undefined && (
-                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                Option {correctOptionIndex + 1}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── Answers hidden message — only shown when canViewResults=false ── */}
-                    {!needsReview && !canViewResults && (
-                      <div className="p-3 rounded border bg-gray-50 border-gray-200 flex items-center gap-2">
-                        <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                        <p className="text-sm text-muted-foreground italic">
-                          Correct answer is not available for this quiz.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* ── Multiple choice: all options ── */}
-                    {question.type === "multiple-choice" && question.options && question.options.length > 0 && (
-                      <div>
-                        <strong className="text-sm block mb-1">All options:</strong>
-                        <div className="space-y-1">
-                          {question.options.map((option, optIndex) => {
-                            const isStudentChoice = Number(sourceAnswer?.studentAnswer) === optIndex;
-
-                            // Only highlight correct option if canViewResults is true
-                            const isCorrectOption =
-                              canViewResults &&
-                              (correctOptionIndex === optIndex || correctAnswerText === option);
-
-                            return (
-                              <div
-                                key={optIndex}
-                                className={`p-2 rounded text-sm ${
-                                  isStudentChoice && isCorrectOption
-                                    ? "bg-green-100 border border-green-300 dark:bg-green-900/30 dark:border-green-700"
-                                    : isStudentChoice
-                                    ? "bg-red-100 border border-red-300 dark:bg-red-900/30 dark:border-red-700"
-                                    : isCorrectOption
-                                    ? "bg-blue-100 border border-blue-300 dark:bg-blue-900/30 dark:border-blue-700"
-                                    : "bg-gray-100 dark:bg-gray-800"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
-                                    {String.fromCharCode(65 + optIndex)}
-                                  </span>
-                                  <span className="flex-1">{option}</span>
-                                  <div className="flex gap-1">
-                                    {isStudentChoice && (
-                                      <Badge variant="outline" className="text-xs">Your choice</Badge>
-                                    )}
-                                    {isCorrectOption && (
-                                      <Badge variant="default" className="text-xs">Correct</Badge>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ── Teacher feedback per question ── */}
-                    {detailedAnswer?.feedback && (
-                      <div>
-                        <strong className="text-sm block mb-1">Teacher Feedback:</strong>
-                        <div className="p-3 rounded border bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800">
-                          <p className="text-sm text-purple-800 dark:text-purple-200">
-                            {detailedAnswer.feedback}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* ── Performance Summary ── */}
-        {hasDetailedData && (
-          <Card className="shadow-lg mt-6">
-            <CardHeader>
-              <CardTitle>Performance Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{correctCount}</p>
-                  <p className="text-sm text-muted-foreground">Correct Answers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-red-600">{incorrectCount}</p>
-                  <p className="text-sm text-muted-foreground">Incorrect Answers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-                  <p className="text-sm text-muted-foreground">Pending Review</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-purple-600">
-                    {Math.round((submission.quizData?.timeSpent ?? 0) / 60)}m
-                  </p>
-                  <p className="text-sm text-muted-foreground">Total Time</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Final Grade Notice ── */}
-        <Card className="shadow-lg mt-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-3">
-              <Award className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-2">
-                  Final Grade
-                </h3>
-                <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-                  Your current grade for this quiz is{" "}
-                  <strong>{Math.round(finalScore * 100) / 100} / {totalMaxScore}</strong>{" "}
-                  ({Math.round(percentage)}%).
-                  {pendingCount > 0 && (
-                    <>
-                      <br />
-                      <span className="text-yellow-600 font-semibold">
-                        Note: There are {pendingCount} questions pending review. Your final grade may increase once the teacher grades them.
-                      </span>
-                    </>
-                  )}
-                </p>
-                {submission.status === "GRADED" && (
-                  <Badge variant="default" className="bg-blue-600">Graded by Teacher</Badge>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="text-center mt-6">
-          <Button onClick={onExit} size="lg" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Return to Course
-          </Button>
+      {/* ── Encabezado de Resultados ── */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8 text-center">
+        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
+          passed ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+        }`}>
+          {passed
+            ? <CheckCircle className="w-8 h-8" />
+            : <HelpCircle className="w-8 h-8" />}
         </div>
 
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">
+          {passed ? "¡Cuestionario Completado!" : "Cuestionario Finalizado"}
+        </h1>
+        <p className="text-sm text-muted-foreground mb-5">{quiz.title}</p>
+
+        {/* Aviso de respuestas ocultas */}
+        {!canViewResults && (
+          <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 bg-accent/10 border border-accent/30 rounded-xl text-xs font-semibold text-accent-foreground">
+            <EyeOff className="w-3.5 h-3.5" />
+            Las respuestas correctas no están disponibles para este cuestionario
+          </div>
+        )}
+
+        {/* Cuadrícula de puntuación */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
+            <p className="text-2xl font-bold text-primary">{Math.round(finalScore * 100) / 100}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Tu Puntaje</p>
+          </div>
+          <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 text-center">
+            <p className="text-2xl font-bold text-primary">{totalMaxScore}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Puntaje Máx.</p>
+          </div>
+          <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4 text-center">
+            <p className="text-2xl font-bold text-accent-foreground">{Math.round(percentage)}%</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Porcentaje</p>
+          </div>
+          {hasDetailedData && (
+            <div className="bg-muted/50 border border-border rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">
+                {Math.round((submission.quizData?.timeSpent ?? 0) / 60)}m
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Tiempo Empleado</p>
+            </div>
+          )}
+        </div>
+
+        {/* Retroalimentación del profesor */}
+        {submission.teacherFeedback && (
+          <div className="mt-5 p-4 bg-accent/10 border border-accent/30 rounded-2xl max-w-lg mx-auto text-left">
+            <p className="text-xs font-semibold text-foreground mb-1">Retroalimentación del Profesor</p>
+            <p className="text-sm text-muted-foreground">{submission.teacherFeedback}</p>
+          </div>
+        )}
       </div>
+
+      {/* ── Revisión de Preguntas ── */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="px-5 py-4 sm:px-6 border-b border-border flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            Revisión de Preguntas
+          </h2>
+          {!canViewResults && (
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <EyeOff className="w-3.5 h-3.5" />
+              Respuestas ocultas
+            </span>
+          )}
+        </div>
+
+        <div className="p-5 sm:p-6 space-y-5">
+          {quiz.questions.map((question, index) => {
+            const detailedAnswer    = quizAnswers.find((a) => a.questionId === question.id);
+            const userAnswer        = userAnswers[question.id];
+            const sourceAnswer      = userAnswer ?? detailedAnswer;
+            const studentAnswerText = formatStudentAnswer(question, sourceAnswer);
+            const { text: correctAnswerText, optionIndex: correctOptionIndex } =
+              resolveCorrectAnswer(question, detailedAnswer);
+            const isOpenEnded  = question.type !== "multiple-choice";
+            const needsReview  = detailedAnswer?.isCorrect === undefined || (isOpenEnded && detailedAnswer?.isCorrect === undefined);
+            let displayPoints  = detailedAnswer?.points ?? 0;
+            if (detailedAnswer?.isCorrect && displayPoints === 0) displayPoints = question.points;
+
+            return (
+              <div key={question.id} className="bg-muted/20 rounded-2xl border border-border p-4 sm:p-5 space-y-4">
+
+                {/* Encabezado de la pregunta */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                      Pregunta {index + 1}
+                    </p>
+                    <p className="text-sm font-semibold text-foreground">{question.question}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    {detailedAnswer && (
+                      <>
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                          displayPoints === question.points
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-muted text-muted-foreground'
+                        }`}>
+                          {displayPoints}/{question.points}
+                        </span>
+                        {detailedAnswer.feedback && (
+                          <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                            Revisado por Profesor
+                          </span>
+                        )}
+                        {needsReview ? (
+                          <span className="px-2 py-0.5 rounded-md bg-accent/20 border border-accent/30 text-xs font-semibold text-accent-foreground">
+                            Pendiente de Revisión
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                            detailedAnswer.isCorrect
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-destructive/10 text-destructive'
+                          }`}>
+                            {detailedAnswer.isCorrect ? "Correcta" : "Incorrecta"}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Respuesta del estudiante */}
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1.5">Tu respuesta:</p>
+                  <div className={`p-3 rounded-xl border text-sm font-medium ${
+                    needsReview
+                      ? "bg-accent/10 border-accent/30 text-accent-foreground"
+                      : detailedAnswer?.isCorrect
+                      ? "bg-primary/5 border-primary/20 text-foreground"
+                      : "bg-destructive/5 border-destructive/20 text-foreground"
+                  }`}>
+                    {studentAnswerText}
+                    {question.type === "multiple-choice" && sourceAnswer?.studentAnswer !== undefined && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Opción seleccionada {Number(sourceAnswer.studentAnswer) + 1}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Aviso de revisión pendiente */}
+                {needsReview && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/10 border border-accent/30">
+                    <AlertCircle className="w-4 h-4 text-accent-foreground flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Esta respuesta está pendiente de revisión del profesor</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Tu respuesta puede ser correcta pero utiliza una redacción diferente o requiere calificación manual.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Respuesta esperada */}
+                {!needsReview && canViewResults && (
+                  <div>
+                    <p className="text-xs font-semibold text-foreground mb-1.5">Respuesta esperada:</p>
+                    {isOpenEnded ? (
+                      correctAnswerText ? (
+                        <div className="p-3 rounded-xl border bg-primary/5 border-primary/20">
+                          <p className="text-sm text-primary font-medium">{correctAnswerText}</p>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-xl border border-border bg-muted/30">
+                          <p className="text-sm text-muted-foreground italic">No se proporcionó respuesta de referencia.</p>
+                        </div>
+                      )
+                    ) : (
+                      <div className="p-3 rounded-xl border bg-primary/5 border-primary/20">
+                        <p className="text-sm text-primary font-medium">{correctAnswerText}</p>
+                        {correctOptionIndex !== undefined && (
+                          <p className="text-xs text-primary/70 mt-1">Opción {correctOptionIndex + 1}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Respuestas ocultas */}
+                {!needsReview && !canViewResults && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl border border-border bg-muted/30">
+                    <EyeOff className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground italic">La respuesta correcta no está disponible para este cuestionario.</p>
+                  </div>
+                )}
+
+                {/* Todas las opciones de MC */}
+                {question.type === "multiple-choice" && question.options && question.options.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-foreground mb-1.5">Todas las opciones:</p>
+                    <div className="space-y-1.5">
+                      {question.options.map((option, optIndex) => {
+                        const isStudentChoice = Number(sourceAnswer?.studentAnswer) === optIndex;
+                        const isCorrectOption = canViewResults && (correctOptionIndex === optIndex || correctAnswerText === option);
+
+                        return (
+                          <div
+                            key={optIndex}
+                            className={`flex items-center gap-2.5 p-2.5 rounded-xl text-sm border ${
+                              isStudentChoice && isCorrectOption
+                                ? "bg-primary/5 border-primary/30"
+                                : isStudentChoice
+                                ? "bg-destructive/5 border-destructive/20"
+                                : isCorrectOption
+                                ? "bg-primary/5 border-primary/20"
+                                : "bg-muted/20 border-border"
+                            }`}
+                          >
+                            <span className="font-mono text-xs bg-muted/50 border border-border px-1.5 py-0.5 rounded-md font-bold text-muted-foreground flex-shrink-0">
+                              {String.fromCharCode(65 + optIndex)}
+                            </span>
+                            <span className="flex-1 text-foreground">{option}</span>
+                            <div className="flex gap-1 flex-shrink-0">
+                              {isStudentChoice && (
+                                <span className="px-1.5 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                                  Tu elección
+                                </span>
+                              )}
+                              {isCorrectOption && (
+                                <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                                  Correcta
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Retroalimentación del profesor por pregunta */}
+                {detailedAnswer?.feedback && (
+                  <div>
+                    <p className="text-xs font-semibold text-foreground mb-1.5">Retroalimentación del Profesor:</p>
+                    <div className="p-3 rounded-xl border bg-accent/10 border-accent/30">
+                      <p className="text-sm text-accent-foreground">{detailedAnswer.feedback}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Resumen de Rendimiento ── */}
+      {hasDetailedData && (
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+            Resumen de Rendimiento
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Correctas',        value: correctCount,   style: 'bg-primary/5 border-primary/20 text-primary'          },
+              { label: 'Incorrectas',      value: incorrectCount, style: 'bg-destructive/5 border-destructive/20 text-destructive' },
+              { label: 'Pendientes', value: pendingCount,   style: 'bg-accent/10 border-accent/20 text-accent-foreground'  },
+              { label: 'Tiempo Total',     value: `${Math.round((submission.quizData?.timeSpent ?? 0) / 60)}m`, style: 'bg-muted/50 border-border text-foreground' },
+            ].map(({ label, value, style }) => (
+              <div key={label} className={`rounded-2xl border p-4 text-center ${style}`}>
+                <p className="text-2xl font-bold">{value}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Aviso de Calificación Final ── */}
+      <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 sm:p-6 flex items-start gap-4">
+        <span className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Award className="w-5 h-5 text-primary" />
+        </span>
+        <div>
+          <h3 className="font-bold text-base text-foreground mb-1">Calificación Final</h3>
+          <p className="text-sm text-muted-foreground mb-3">
+            Tu calificación actual para este cuestionario es{' '}
+            <span className="font-bold text-foreground">
+              {Math.round(finalScore * 100) / 100} / {totalMaxScore}
+            </span>{' '}
+            ({Math.round(percentage)}%).
+            {pendingCount > 0 && (
+              <span className="block mt-1 text-accent-foreground font-semibold">
+                Nota: {pendingCount} pregunta{pendingCount !== 1 ? 's' : ''} pendiente{pendingCount !== 1 ? 's' : ''} de revisión. Tu calificación podría aumentar.
+              </span>
+            )}
+          </p>
+          {submission.status === "GRADED" && (
+            <span className="px-2.5 py-1 rounded-xl bg-primary text-primary-foreground text-xs font-bold">
+              Calificado por el Profesor
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Botón de regreso ── */}
+      <div className="text-center pb-4">
+        <button
+          onClick={onExit}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Regresar al Curso
+        </button>
+      </div>
+
     </div>
-  );
+  </div>
+);
 };

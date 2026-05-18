@@ -1,3 +1,4 @@
+//DARK DUDOSO
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -6,12 +7,7 @@ import {
   useUpdateCourseAdmin,
   useAdminTeachersPaginated,
 } from "@/components/admin/hooks/useCourses";
-import {
-  AdminCourse,
-  CreateCourseCommand,
-  UpdateCourseCommand,
-  Teacher,
-} from "@/components/admin/api/coursesApi";
+
 import {
   X,
   Search,
@@ -29,6 +25,9 @@ import {
   BookOpen,
 } from "lucide-react";
 import { ImageUploadWithValidation } from "../teacher-student/image-upload-with-validation";
+import { AdminCourse } from "@/app/shared/models/admin-course.model";
+import { CreateCourseCommand, UpdateCourseCommand } from "@/app/shared/dtos/commands/course.commands";
+import { Teacher } from "@/app/shared/models/user.model";
 
 interface CreateEditCourseModalProps {
   course?: AdminCourse | null;
@@ -125,7 +124,7 @@ export function CreateEditCourseModal({
         setImagePreview(course.urlImage || "");
         setImageFile(null);
 
-        setTeacherSearch(`Teacher ID: ${course.teacherId}`);
+        setTeacherSearch(`ID del Profesor: ${course.teacherId}`);
       } else {
         setFormData({
           code: "",
@@ -228,7 +227,7 @@ export function CreateEditCourseModal({
 
         if (imageFile) {
           // TODO: Implement image upload to your backend
-          console.log("Image file ready for upload:", imageFile);
+          console.log("Imagen lista para subir:", imageFile);
         }
 
         const command: CreateCourseCommand = {
@@ -246,13 +245,13 @@ export function CreateEditCourseModal({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error("Failed to save course:", error);
+      console.error("Error al guardar el curso:", error);
     }
   };
 
   const handleTeacherSelect = (teacher: Teacher) => {
     if (!teacher.userId) {
-      console.error("Teacher object is missing userId property:", teacher);
+      console.error("El objeto Teacher no tiene la propiedad userId:", teacher);
       return;
     }
 
@@ -350,490 +349,401 @@ export function CreateEditCourseModal({
   };
 
   if (!isOpen) return null;
+return (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div className="bg-card rounded-3xl border border-border shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border bg-card rounded-t-3xl flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <BookOpen className="w-4 h-4 text-primary" />
+          </span>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {isEdit ? "Edit Course" : "Create New Course"}
+            <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+              {isEdit ? "Editar Curso" : "Crear Nuevo Curso"}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {isEdit
-                ? "Update course information and assign teacher"
-                : "Create a new course with all necessary details"}
+                ? "Actualiza la información del curso y asigna profesor"
+                : "Crea un nuevo curso con todos los detalles necesarios"}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded-lg"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            {/* Course Code */}
-            {!isEdit && (
-              <div className="bg-gradient-to-r from-blue-50 to-transparent p-4 rounded-lg">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    Course Code *
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="e.g., CS-101, MATH-201, ENG-301"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Unique identifier for the course. Use a consistent format.
-                </p>
-              </div>
-            )}
+      {/* ── Form ── */}
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col">
+        <div className="px-5 py-6 sm:px-7 space-y-5 flex-1">
 
-            {/* Course Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Course Name *
+          {/* Course Code — create only */}
+          {!isEdit && (
+            <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-2">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                Código del Curso *
               </label>
               <input
                 type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="e.g., Introduction to Computer Science, Advanced Mathematics"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                placeholder="ej., CS-101, MATH-201, ENG-301"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Identificador único para el curso. Usa un formato consistente.
+              </p>
+            </div>
+          )}
+
+          {/* Course Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Nombre del Curso *</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+              placeholder="ej., Introducción a la Computación"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-foreground">Descripción *</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all resize-none"
+              rows={3}
+              placeholder="Descripción breve del contenido, objetivos y requisitos del curso..."
+              required
+            />
+          </div>
+
+          {/* Grade + Group */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Nivel / Grado *</label>
+              <input
+                value={formData.grade}
+                onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
                 required
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-                rows={3}
-                placeholder="Brief description of the course content, objectives, and requirements..."
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">Grupo / Sección *</label>
+              <input
+                type="text"
+                value={formData.group}
+                onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                placeholder="ej., Sección A, Grupo 1"
                 required
               />
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Grade Level *
-                </label>
-                <input
-                  value={formData.grade}
-                  onChange={(e) =>
-                    setFormData({ ...formData, grade: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition appearance-none bg-white"
-                  required
-                >
-                 
-                </input>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Group / Section *
-                </label>
-                <input
-                  type="text"
-                  value={formData.group}
-                  onChange={(e) =>
-                    setFormData({ ...formData, group: e.target.value })
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="e.g., Section A, Group 1"
-                  required
-                />
+          {/* Teacher picker */}
+          <div className="relative space-y-1.5" ref={dropdownRef}>
+            <label className="text-xs font-semibold text-foreground flex items-center gap-2">
+              <UserCheck className="w-3.5 h-3.5 text-primary" />
+              Asignar Profesor *
+            </label>
+
+            {/* Search input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={teacherSearch}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={handleSearchFocus}
+                className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                placeholder="Buscar profesor por nombre o correo..."
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                ) : (
+                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showTeacherDropdown ? "rotate-180" : ""}`} />
+                )}
               </div>
             </div>
 
-            <div className="relative" ref={dropdownRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <span className="flex items-center gap-2">
-                  <UserCheck className="w-4 h-4" />
-                  Assign Teacher *
-                </span>
-              </label>
-
-              <div className="relative">
-                {/* Search Input */}
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={teacherSearch}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={handleSearchFocus}
-                  className="w-full px-4 py-3 pl-11 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="Search for a teacher by name or email..."
-                />
-                <div className="absolute left-3 top-3.5 pointer-events-none">
-                  <Search className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="absolute right-3 top-3.5 pointer-events-none">
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-                  ) : (
-                    <ChevronDown
-                      className={`w-5 h-5 text-gray-400 transition-transform ${
-                        showTeacherDropdown ? "rotate-180" : ""
-                      }`}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {selectedTeacher && !showTeacherDropdown && (
-                <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
-                        {getInitials(selectedTeacher.fullName)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-blue-900 flex items-center gap-2">
-                          {selectedTeacher.fullName}
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            <Star className="w-3 h-3 mr-1" />
-                            Teacher
-                          </span>
-                        </div>
-                        <div className="text-sm text-blue-700 flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
-                          {selectedTeacher.email}
-                        </div>
-                      </div>
+            {/* Selected teacher card */}
+            {selectedTeacher && !showTeacherDropdown && (
+              <div className="p-4 rounded-2xl border border-primary/30 bg-primary/5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm flex-shrink-0">
+                    {getInitials(selectedTeacher.fullName)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm text-foreground flex items-center gap-2 flex-wrap">
+                      {selectedTeacher.fullName}
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/10 text-primary">
+                        <Star className="w-3 h-3" />
+                        Profesor
+                      </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({ ...formData, teacherId: "" });
-                        setTeacherSearch("");
-                        setDebouncedSearch("");
-                      }}
-                      className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition"
-                      title="Remove teacher"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{selectedTeacher.email}</span>
+                    </div>
                   </div>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => { setFormData({ ...formData, teacherId: "" }); setTeacherSearch(""); setDebouncedSearch(""); }}
+                  className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex-shrink-0"
+                  title="Eliminar profesor"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-              {showTeacherDropdown && (
-                <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-h-[400px] overflow-hidden flex flex-col">
-                  {/* Header */}
-                  <div className="p-4 border-b border-gray-200 bg-gray-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="font-medium text-gray-900">
-                        Select Teacher{" "}
-                        {totalElements > 0 && `(${totalElements} found)`}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={teacherSort}
-                          onChange={(e) =>
-                            handleSortChange(e.target.value as any)
-                          }
-                          className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="fullName,asc">Sort by Name</option>
-                          <option value="email,asc">Sort by Email</option>
-                        </select>
-                        <select
-                          value={teacherPageSize}
-                          onChange={(e) =>
-                            handlePageSizeChange(Number(e.target.value))
-                          }
-                          className="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="5">5 per page</option>
-                          <option value="10">10 per page</option>
-                          <option value="20">20 per page</option>
-                        </select>
-                      </div>
+            {/* Dropdown */}
+            {showTeacherDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-2xl shadow-xl max-h-[400px] overflow-hidden flex flex-col">
+
+                {/* Dropdown header */}
+                <div className="px-4 py-3 border-b border-border bg-muted/40 flex-shrink-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <span className="text-xs font-semibold text-foreground">
+                      Seleccionar Profesor {totalElements > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-bold">
+                          {totalElements}
+                        </span>
+                      )}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={teacherSort}
+                        onChange={(e) => handleSortChange(e.target.value as any)}
+                        className="text-xs px-2 py-1.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring/50"
+                      >
+                        <option value="fullName,asc">Por Nombre</option>
+                        <option value="email,asc">Por Correo</option>
+                      </select>
+                      <select
+                        value={teacherPageSize}
+                        onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                        className="text-xs px-2 py-1.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring/50"
+                      >
+                        <option value="5">5 / página</option>
+                        <option value="10">10 / página</option>
+                        <option value="20">20 / página</option>
+                      </select>
                     </div>
-                    {debouncedSearch && (
-                      <div className="text-sm text-gray-500">
-                        Searching for: "{debouncedSearch}"
-                      </div>
+                  </div>
+                  {debouncedSearch && (
+                    <p className="text-xs text-muted-foreground">
+                      Buscando: &ldquo;{debouncedSearch}&rdquo;
+                    </p>
+                  )}
+                </div>
+
+                {/* Loading */}
+                {isLoading && teachers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+                    <Loader2 className="w-7 h-7 animate-spin text-primary mb-3" />
+                    <p className="text-sm">Cargando profesores...</p>
+                    {error && (
+                      <p className="text-xs text-destructive mt-1">Error al cargar profesores. Por favor intenta de nuevo.</p>
                     )}
                   </div>
-
-                  {/* Loading State */}
-                  {isLoading && teachers.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8">
-                      <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
-                      <div className="text-gray-500">Loading teachers...</div>
-                      {error && (
-                        <div className="mt-2 text-sm text-red-500">
-                          Error loading teachers. Please try again.
+                ) : (
+                  <>
+                    {/* List */}
+                    <div ref={teachersListRef} className="flex-1 overflow-y-auto" style={{ maxHeight: "280px" }}>
+                      {teachers.length > 0 ? (
+                        teachers.map((teacher) => (
+                          <button
+                            key={teacher.userId}
+                            type="button"
+                            onClick={() => handleTeacherSelect(teacher)}
+                            className="w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0 flex items-center justify-between group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-semibold text-xs flex-shrink-0">
+                                {getInitials(teacher.fullName)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                                  {teacher.fullName}
+                                </p>
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Mail className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">{teacher.email}</span>
+                                </p>
+                              </div>
+                            </div>
+                            {formData.teacherId === teacher.userId && (
+                              <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-8 text-center">
+                          <User className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                          <p className="text-sm font-medium text-muted-foreground">
+                            {debouncedSearch ? "No se encontraron profesores" : "No hay profesores disponibles"}
+                          </p>
+                          {debouncedSearch && (
+                            <p className="text-xs text-muted-foreground/60 mt-1">Prueba con otro término de búsqueda</p>
+                          )}
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <>
-                      {/* Teacher List */}
-                      <div
-                        ref={teachersListRef}
-                        className="flex-1 overflow-y-auto"
-                        style={{ maxHeight: "280px" }}
-                      >
-                        {teachers.length > 0 ? (
-                          teachers.map((teacher) => (
-                            <button
-                              key={teacher.userId}
-                              type="button"
-                              onClick={() => handleTeacherSelect(teacher)}
-                              className="w-full px-4 py-4 text-left hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0 flex items-center justify-between group"
-                            >
-                              <div className="flex items-center space-x-3">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-                                  {getInitials(teacher.fullName)}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900 group-hover:text-blue-600 transition">
-                                    {teacher.fullName}
-                                  </div>
-                                  <div className="text-sm text-gray-500 flex items-center gap-1">
-                                    <Mail className="w-3 h-3" />
-                                    {teacher.email}
-                                  </div>
-                                </div>
-                              </div>
-                              {formData.teacherId === teacher.userId && (
-                                <Check className="w-5 h-5 text-blue-600" />
-                              )}
-                            </button>
-                          ))
-                        ) : (
-                          <div className="flex flex-col items-center justify-center p-8 text-center">
-                            <User className="w-12 h-12 text-gray-300 mb-4" />
-                            <div className="text-gray-500 font-medium mb-1">
-                              {debouncedSearch
-                                ? "No teachers found"
-                                : "No teachers available"}
-                            </div>
-                            {debouncedSearch && (
-                              <div className="text-sm text-gray-400">
-                                Try a different search term
-                              </div>
+
+                    {/* Dropdown pagination */}
+                    {totalPages > 0 && (
+                      <div className="border-t border-border bg-muted/30 flex-shrink-0">
+                        <div className="px-4 py-2 border-b border-border/50 flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            <span className="font-medium text-foreground">{startItem}–{endItem}</span> de{" "}
+                            <span className="font-medium text-foreground">{totalElements}</span> profesores
+                          </span>
+                          <span>
+                            Página <span className="font-medium text-foreground">{teacherPage + 1}</span> de{" "}
+                            <span className="font-medium text-foreground">{totalPages}</span>
+                          </span>
+                        </div>
+                        <div className="px-4 py-2 flex items-center justify-between gap-1">
+                          <button type="button" onClick={() => setTeacherPage(0)} disabled={teacherPage === 0}
+                            className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                            <ChevronsLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button type="button" onClick={handlePrevPage} disabled={teacherPage === 0}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                            Anterior
+                          </button>
+                          <div className="flex items-center gap-1">
+                            {getPageNumbers().map((pageNum, index) =>
+                              pageNum === -1 ? (
+                                <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground text-xs select-none">…</span>
+                              ) : (
+                                <button
+                                  key={pageNum}
+                                  type="button"
+                                  onClick={() => { setTeacherPage(pageNum); if (teachersListRef.current) teachersListRef.current.scrollTop = 0; }}
+                                  className={`w-7 h-7 flex items-center justify-center rounded-xl text-xs font-semibold transition-all ${
+                                    teacherPage === pageNum
+                                      ? "bg-primary text-primary-foreground shadow-sm"
+                                      : "border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                                  }`}
+                                >
+                                  {pageNum + 1}
+                                </button>
+                              )
                             )}
                           </div>
-                        )}
-                      </div>
-
-                      {/* Pagination Controls */}
-                      {totalPages > 0 && (
-                        <div className="border-t border-gray-200 bg-gray-50">
-                          <div className="px-4 py-3 border-b border-gray-200">
-                            <div className="flex items-center justify-between text-sm">
-                              <div className="text-gray-600">
-                                Showing{" "}
-                                <span className="font-medium">
-                                  {startItem}-{endItem}
-                                </span>{" "}
-                                of{" "}
-                                <span className="font-medium">
-                                  {totalElements}
-                                </span>{" "}
-                                teachers
-                              </div>
-                              <div className="text-gray-600">
-                                Page{" "}
-                                <span className="font-medium">
-                                  {teacherPage + 1}
-                                </span>{" "}
-                                of{" "}
-                                <span className="font-medium">
-                                  {totalPages}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="px-4 py-3">
-                            <div className="flex items-center justify-between">
-                              <button
-                                type="button"
-                                onClick={() => setTeacherPage(0)}
-                                disabled={teacherPage === 0}
-                                className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition flex items-center gap-1 text-sm"
-                              >
-                                <ChevronsLeft className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handlePrevPage}
-                                disabled={teacherPage === 0}
-                                className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition flex items-center gap-1 text-sm"
-                              >
-                                <ChevronLeft className="w-4 h-4" />
-                                <span>Previous</span>
-                              </button>
-
-                              <div className="flex items-center gap-1">
-                                {getPageNumbers().map((pageNum, index) =>
-                                  pageNum === -1 ? (
-                                    <span
-                                      key={`ellipsis-${index}`}
-                                      className="px-2 py-1 text-gray-400"
-                                    >
-                                      ...
-                                    </span>
-                                  ) : (
-                                    <button
-                                      key={pageNum}
-                                      type="button"
-                                      onClick={() => {
-                                        setTeacherPage(pageNum);
-                                        if (teachersListRef.current) {
-                                          teachersListRef.current.scrollTop = 0;
-                                        }
-                                      }}
-                                      className={`w-8 h-8 flex items-center justify-center rounded text-sm font-medium ${
-                                        teacherPage === pageNum
-                                          ? "bg-blue-600 text-white"
-                                          : "border border-gray-300 hover:bg-gray-50 text-gray-700"
-                                      }`}
-                                    >
-                                      {pageNum + 1}
-                                    </button>
-                                  )
-                                )}
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={handleNextPage}
-                                disabled={teacherPage >= totalPages - 1}
-                                className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition flex items-center gap-1 text-sm"
-                              >
-                                <span>Next</span>
-                                <ChevronRight className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setTeacherPage(totalPages - 1)}
-                                disabled={teacherPage >= totalPages - 1}
-                                className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition flex items-center gap-1 text-sm"
-                              >
-                                <ChevronsRight className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
+                          <button type="button" onClick={handleNextPage} disabled={teacherPage >= totalPages - 1}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                            Siguiente
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                          <button type="button" onClick={() => setTeacherPage(totalPages - 1)} disabled={teacherPage >= totalPages - 1}
+                            className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                            <ChevronsRight className="w-3.5 h-3.5" />
+                          </button>
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {!isEdit && (
-              <ImageUploadWithValidation
-                currentImageUrl={imagePreview}
-                onImageChange={handleImageChange}
-                label="Course Cover Image"
-                disabled={createMutation.isPending}
-              />
-            )}
-          </div>
-          {/* Footer Actions */}
-          <div className="border-t border-gray-200 bg-gray-50 p-6 sticky bottom-0">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition font-medium flex items-center justify-center gap-2"
-              >
-                <X className="w-5 h-5" />
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={
-                  createMutation.isPending ||
-                  updateMutation.isPending ||
-                  !formData.teacherId ||
-                  !formData.name ||
-                  !formData.description ||
-                  !formData.grade ||
-                  !formData.group ||
-                  (!isEdit && !formData.code)
-                }
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25"
-              >
-                {createMutation.isPending || updateMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    {isEdit ? "Updating..." : "Creating..."}
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-5 h-5" />
-                    {isEdit ? "Update Course" : "Create Course"}
+                      </div>
+                    )}
                   </>
                 )}
-              </button>
-            </div>
-
-            {/* Validation Messages */}
-            <div className="mt-4 space-y-2">
-              {!formData.teacherId && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">
-                  <div className="font-medium mb-1">⚠️ Teacher Required</div>
-                  <div>
-                    Please select a teacher from the dropdown list above.
-                  </div>
-                </div>
-              )}
-
-              {(createMutation.error || updateMutation.error) && (
-                <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">
-                  <div className="font-medium mb-1">❌ Error</div>
-                  <div>
-                    {(createMutation.error || updateMutation.error)?.message ||
-                      "An error occurred while saving the course."}
-                  </div>
-                </div>
-              )}
-
-              {/* Success Message */}
-              {(createMutation.isSuccess || updateMutation.isSuccess) && (
-                <div className="text-sm text-green-600 bg-green-50 border border-green-100 rounded-lg p-3">
-                  <div className="font-medium mb-1">✅ Success!</div>
-                  <div>
-                    {isEdit
-                      ? "Course updated successfully!"
-                      : "Course created successfully!"}
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-        </form>
-      </div>
+
+          {/* Image upload — create only */}
+          {!isEdit && (
+            <ImageUploadWithValidation
+              currentImageUrl={imagePreview}
+              onImageChange={handleImageChange}
+              label="Imagen de Portada del Curso"
+              disabled={createMutation.isPending}
+            />
+          )}
+
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="border-t border-border bg-muted/30 px-5 py-4 sm:px-7 sticky bottom-0 flex-shrink-0 rounded-b-3xl">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+            >
+              <X className="w-4 h-4" />
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={
+                createMutation.isPending || updateMutation.isPending ||
+                !formData.teacherId || !formData.name || !formData.description ||
+                !formData.grade || !formData.group || (!isEdit && !formData.code)
+              }
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+            >
+              {createMutation.isPending || updateMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 animate-spin" />{isEdit ? "Actualizando..." : "Creando..."}</>
+              ) : (
+                <><Check className="w-4 h-4" />{isEdit ? "Actualizar Curso" : "Crear Curso"}</>
+              )}
+            </button>
+          </div>
+
+          {/* Validation messages */}
+          <div className="mt-3 space-y-2">
+            {!formData.teacherId && (
+              <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">
+                <span className="font-semibold mt-0.5">⚠️</span>
+                <div>
+                  <p className="font-semibold">Profesor Requerido</p>
+                  <p className="text-destructive/80">Por favor selecciona un profesor de la lista desplegable arriba.</p>
+                </div>
+              </div>
+            )}
+            {(createMutation.error || updateMutation.error) && (
+              <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">
+                <span className="font-semibold mt-0.5">❌</span>
+                <div>
+                  <p className="font-semibold">Error</p>
+                  <p className="text-destructive/80">
+                    {(createMutation.error || updateMutation.error)?.message || "Ocurrió un error al guardar el curso."}
+                  </p>
+                </div>
+              </div>
+            )}
+            {(createMutation.isSuccess || updateMutation.isSuccess) && (
+              <div className="flex items-start gap-2 text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3 py-2.5">
+                <span className="font-semibold mt-0.5">✅</span>
+                <div>
+                  <p className="font-semibold">¡Éxito!</p>
+                  <p className="text-primary/80">{isEdit ? "¡Curso actualizado correctamente!" : "¡Curso creado correctamente!"}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </form>
     </div>
-  );
+  </div>
+);
 }

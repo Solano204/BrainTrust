@@ -22,808 +22,748 @@ import {
 } from "lucide-react";
 import { useQuizMutations, useQuizSubmissionDetail } from "./hooks/quiz-hooks";
 
-interface QuizSubmissionsViewProps {
+interface PropsVistaEntregasQuiz {
   submissionId: string;
   onBack: () => void;
-  /** The quiz's totalScore (e.g. 22). Used for weight-based grading.
-   *  If not provided, falls back to sum of question maxPoints. */
-  quizTotalScore?: number;
+  /** Puntuación total del quiz (ej. 22). Se usa para la calificación basada en pesos.
+   *  Si no se proporciona, se usa la suma de los puntos máximos de las preguntas. */
+  puntuacionTotalQuiz?: number;
 }
 
-// ─── Weight helpers ───────────────────────────────────────────────────────────
+// ─── Ayudantes de pesos ───────────────────────────────────────────────────────────
 
 /**
- * Given the list of question responses, compute each question's weight (%)
- * as its proportion of the total maxPoints sum.
- * e.g. Q1 has 10pts out of 40 total → weight = 25%
+ * Dada la lista de respuestas de preguntas, calcula el peso (%) de cada pregunta
+ * como su proporción de la suma total de puntos máximos.
+ * ej. P1 tiene 10pts de 40 totales → peso = 25%
  */
-function computeWeights(
-  questionResponses: { questionId: string; maxPoints: number }[]
+function calcularPesos(
+  respuestasPreguntas: { questionId: string; maxPoints: number }[]
 ): Record<string, number> {
-  const totalMaxPoints = questionResponses.reduce((s, q) => s + q.maxPoints, 0);
-  if (totalMaxPoints === 0) return {};
-  const weights: Record<string, number> = {};
-  questionResponses.forEach((q) => {
-    weights[q.questionId] =
-      Math.round((q.maxPoints / totalMaxPoints) * 10000) / 100; // 2 decimal %
+  const totalPuntosMaximos = respuestasPreguntas.reduce((s, q) => s + q.maxPoints, 0);
+  if (totalPuntosMaximos === 0) return {};
+  const pesos: Record<string, number> = {};
+  respuestasPreguntas.forEach((q) => {
+    pesos[q.questionId] =
+      Math.round((q.maxPoints / totalPuntosMaximos) * 10000) / 100; // % con 2 decimales
   });
-  return weights;
+  return pesos;
 }
 
 /**
- * Compute the weighted final grade scaled to quizTotalScore.
- * Formula: Σ (earnedPoints_i / maxPoints_i) * weight_i * quizTotalScore
+ * Calcula la calificación final ponderada escalada a puntuacionTotalQuiz.
+ * Fórmula: Σ (puntosObtenidos_i / puntosMaximos_i) * peso_i * puntuacionTotalQuiz
  */
-function computeWeightedFinalGrade(
-  grades: Record<string, number>,
-  questionResponses: { questionId: string; maxPoints: number }[],
-  weights: Record<string, number>,
-  quizTotalScore: number
+function calcularCalificacionFinalPonderada(
+  calificaciones: Record<string, number>,
+  respuestasPreguntas: { questionId: string; maxPoints: number }[],
+  pesos: Record<string, number>,
+  puntuacionTotalQuiz: number
 ): number {
-  let weightedSum = 0;
-  questionResponses.forEach((q) => {
-    const earned = grades[q.questionId] ?? 0;
-    const max = q.maxPoints;
-    const weight = (weights[q.questionId] ?? 0) / 100; // convert % to decimal
-    if (max > 0) {
-      weightedSum += (earned / max) * weight;
+  let sumaPonderada = 0;
+  respuestasPreguntas.forEach((q) => {
+    const obtenido = calificaciones[q.questionId] ?? 0;
+    const maximo = q.maxPoints;
+    const peso = (pesos[q.questionId] ?? 0) / 100; // convertir % a decimal
+    if (maximo > 0) {
+      sumaPonderada += (obtenido / maximo) * peso;
     }
   });
-  return Math.round(weightedSum * quizTotalScore * 100) / 100;
+  return Math.round(sumaPonderada * puntuacionTotalQuiz * 100) / 100;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Componente ────────────────────────────────────────────────────────────────
 
 export function QuizSubmissionsView({
   submissionId,
   onBack,
-  quizTotalScore,
-}: QuizSubmissionsViewProps) {
+  puntuacionTotalQuiz,
+}: PropsVistaEntregasQuiz) {
   const { gradeSubmission } = useQuizMutations();
 
   const {
-    data: submissionDetail,
-    isLoading: isSubmissionLoading,
-    error: submissionError,
+    data: detalleEntrega,
+    isLoading: cargandoEntrega,
+    error: errorEntrega,
   } = useQuizSubmissionDetail(submissionId);
 
-  const [grades, setGrades] = React.useState<Record<string, number>>({});
-  const [feedbacks, setFeedbacks] = React.useState<Record<string, string>>({});
-  const [isExpanded, setIsExpanded] = React.useState(true);
-  const [overallGrade, setOverallGrade] = React.useState<string>("");
-  const [showWeightTable, setShowWeightTable] = React.useState(false);
+  const [calificaciones, setCalificaciones] = React.useState<Record<string, number>>({});
+  const [retroalimentaciones, setRetroalimentaciones] = React.useState<Record<string, string>>({});
+  const [expandido, setExpandido] = React.useState(true);
+  const [calificacionGeneral, setCalificacionGeneral] = React.useState<string>("");
+  const [mostrarTablaPesos, setMostrarTablaPesos] = React.useState(false);
 
-  // ── Derived values ──────────────────────────────────────────────────────────
+  // ── Valores derivados ──────────────────────────────────────────────────────────
 
-  const questionResponses = submissionDetail?.questionResponses ?? [];
+  const respuestasPreguntas = detalleEntrega?.questionResponses ?? [];
 
-  /** Total quiz score (either passed as prop or sum of maxPoints) */
-  const resolvedTotalScore = React.useMemo(() => {
-    if (quizTotalScore && quizTotalScore > 0) return quizTotalScore;
-    return questionResponses.reduce((s, q) => s + q.maxPoints, 0);
-  }, [quizTotalScore, questionResponses]);
+  /** Puntuación total del quiz (ya sea la propuesta o la suma de puntos máximos) */
+  const puntuacionTotalResuelta = React.useMemo(() => {
+    if (puntuacionTotalQuiz && puntuacionTotalQuiz > 0) return puntuacionTotalQuiz;
+    return respuestasPreguntas.reduce((s, q) => s + q.maxPoints, 0);
+  }, [puntuacionTotalQuiz, respuestasPreguntas]);
 
-  /** Weight (%) per question */
-  const weights = React.useMemo(
-    () => computeWeights(questionResponses),
-    [questionResponses]
+  /** Peso (%) por pregunta */
+  const pesos = React.useMemo(
+    () => calcularPesos(respuestasPreguntas),
+    [respuestasPreguntas]
   );
 
-  /** Weighted point value per question = weight% × resolvedTotalScore */
-  const weightedPointValues = React.useMemo(() => {
-    const result: Record<string, number> = {};
-    questionResponses.forEach((q) => {
-      const weight = (weights[q.questionId] ?? 0) / 100;
-      result[q.questionId] =
-        Math.round(weight * resolvedTotalScore * 100) / 100;
+  /** Valor de punto ponderado por pregunta = peso% × puntuacionTotalResuelta */
+  const valoresPuntosPonderados = React.useMemo(() => {
+    const resultado: Record<string, number> = {};
+    respuestasPreguntas.forEach((q) => {
+      const peso = (pesos[q.questionId] ?? 0) / 100;
+      resultado[q.questionId] =
+        Math.round(peso * puntuacionTotalResuelta * 100) / 100;
     });
-    return result;
-  }, [weights, resolvedTotalScore, questionResponses]);
+    return resultado;
+  }, [pesos, puntuacionTotalResuelta, respuestasPreguntas]);
 
-  /** Weighted final grade (scaled to resolvedTotalScore) */
-  const weightedFinalGrade = React.useMemo(
+  /** Calificación final ponderada (escalada a puntuacionTotalResuelta) */
+  const calificacionFinalPonderada = React.useMemo(
     () =>
-      computeWeightedFinalGrade(
-        grades,
-        questionResponses,
-        weights,
-        resolvedTotalScore
+      calcularCalificacionFinalPonderada(
+        calificaciones,
+        respuestasPreguntas,
+        pesos,
+        puntuacionTotalResuelta
       ),
-    [grades, questionResponses, weights, resolvedTotalScore]
+    [calificaciones, respuestasPreguntas, pesos, puntuacionTotalResuelta]
   );
 
-  /** Percentage score */
-  const scorePercentage = resolvedTotalScore > 0
-    ? Math.round((weightedFinalGrade / resolvedTotalScore) * 100)
+  /** Porcentaje de puntuación */
+  const porcentajePuntuacion = puntuacionTotalResuelta > 0
+    ? Math.round((calificacionFinalPonderada / puntuacionTotalResuelta) * 100)
     : 0;
 
-  // ── Effects ─────────────────────────────────────────────────────────────────
+  // ── Efectos ─────────────────────────────────────────────────────────────────
 
   React.useEffect(() => {
-    if (submissionDetail?.questionResponses) {
-      const initialGrades: Record<string, number> = {};
-      const initialFeedbacks: Record<string, string> = {};
-      submissionDetail.questionResponses.forEach((response) => {
-        initialGrades[response.questionId] = response.earnedPoints;
-        initialFeedbacks[response.questionId] = response.teacherFeedback ?? "";
+    if (detalleEntrega?.questionResponses) {
+      const calificacionesIniciales: Record<string, number> = {};
+      const retroalimentacionesIniciales: Record<string, string> = {};
+      detalleEntrega.questionResponses.forEach((respuesta) => {
+        calificacionesIniciales[respuesta.questionId] = respuesta.earnedPoints;
+        retroalimentacionesIniciales[respuesta.questionId] = respuesta.teacherFeedback ?? "";
       });
-      setGrades(initialGrades);
-      setFeedbacks(initialFeedbacks);
+      setCalificaciones(calificacionesIniciales);
+      setRetroalimentaciones(retroalimentacionesIniciales);
     }
-    if (submissionDetail?.grade?.value) {
-      setOverallGrade(submissionDetail.grade.value);
+    if (detalleEntrega?.grade?.value) {
+      setCalificacionGeneral(detalleEntrega.grade.value);
     }
-  }, [submissionDetail]);
+  }, [detalleEntrega]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
+  // ── Manejadores ─────────────────────────────────────────────────────────────────
 
-  const normalizeText = (text: string): string => {
-    if (!text) return "";
-    return text.toLowerCase().replace(/\s+/g, "").replace(/[^\w]/g, "");
+  const normalizarTexto = (texto: string): string => {
+    if (!texto) return "";
+    return texto.toLowerCase().replace(/\s+/g, "").replace(/[^\w]/g, "");
   };
 
-  const handleGradeChange = (questionId: string, score: number) => {
-    const question = questionResponses.find((q) => q.questionId === questionId);
-    const maxPoints = question?.maxPoints ?? 0;
-    const normalizedScore = Math.max(0, Math.min(score, maxPoints));
-    setGrades((prev) => ({ ...prev, [questionId]: normalizedScore }));
+  const manejarCambioCalificacion = (preguntaId: string, puntuacion: number) => {
+    const pregunta = respuestasPreguntas.find((q) => q.questionId === preguntaId);
+    const puntosMaximos = pregunta?.maxPoints ?? 0;
+    const puntuacionNormalizada = Math.max(0, Math.min(puntuacion, puntosMaximos));
+    setCalificaciones((prev) => ({ ...prev, [preguntaId]: puntuacionNormalizada }));
   };
 
-  const handleFeedbackChange = (questionId: string, feedback: string) => {
-    setFeedbacks((prev) => ({ ...prev, [questionId]: feedback }));
+  const manejarCambioRetroalimentacion = (preguntaId: string, retroalimentacion: string) => {
+    setRetroalimentaciones((prev) => ({ ...prev, [preguntaId]: retroalimentacion }));
   };
 
-  const handleSubmitGrades = () => {
-    if (!submissionDetail) return;
+  const manejarEnvioCalificaciones = () => {
+    if (!detalleEntrega) return;
 
-    const gradeUpdates = questionResponses.map((q) => ({
+    const actualizacionesCalificacion = respuestasPreguntas.map((q) => ({
       questionId: q.questionId,
-      earnedPoints: grades[q.questionId] ?? 0,
+      earnedPoints: calificaciones[q.questionId] ?? 0,
       maxPoints: q.maxPoints,
-      feedback: feedbacks[q.questionId] ?? "",
+      feedback: retroalimentaciones[q.questionId] ?? "",
     }));
 
     gradeSubmission.mutate(
       {
-        submissionId: submissionDetail.id,
-        grades: gradeUpdates,
-        // Pass weighted final grade scaled to resolvedTotalScore
+        submissionId: detalleEntrega.id,
+        grades: actualizacionesCalificacion,
+        // Pasar calificación final ponderada escalada a puntuacionTotalResuelta
         overallGrade: {
-          earnedPoints: weightedFinalGrade,
-          totalPoints: resolvedTotalScore,
+          earnedPoints: calificacionFinalPonderada,
+          totalPoints: puntuacionTotalResuelta,
         },
       },
       {
-        onSuccess: (updatedSubmission) => {
-          console.log("Grades saved successfully:", updatedSubmission);
+        onSuccess: (entregaActualizada) => {
+          console.log("Calificaciones guardadas exitosamente:", entregaActualizada);
         },
         onError: (error) => {
-          console.error("Error saving grades:", error);
+          console.error("Error al guardar calificaciones:", error);
         },
       }
     );
   };
 
-  // ── Loading / Error states ────────────────────────────────────────────────
+  // ── Estados de carga / error ────────────────────────────────────────────────
 
-  if (isSubmissionLoading) {
+  if (cargandoEntrega) {
     return (
       <div className="p-8 text-center">
-        <p>Loading submission data...</p>
+        <p>Cargando datos de la entrega...</p>
       </div>
     );
   }
 
-  if (submissionError || !submissionDetail) {
+  if (errorEntrega || !detalleEntrega) {
     return (
       <div className="p-8 text-center text-destructive">
-        <p>Error loading submission data</p>
+        <p>Error al cargar los datos de la entrega</p>
         <Button onClick={onBack} className="mt-4">
-          Back to Inventory
+          Volver al Inventario
         </Button>
       </div>
     );
   }
 
-  const passingScore = 70;
-  const isGraded = submissionDetail.status === "GRADED";
-  const existingGrade = submissionDetail.grade;
-  const hasGradeChanged =
-    isGraded &&
-    existingGrade?.value &&
-    String(weightedFinalGrade) !== existingGrade.value;
+  const puntuacionAprobatoria = 70;
+  const estaCalificado = detalleEntrega.status === "GRADED";
+  const calificacionExistente = detalleEntrega.grade;
+  const hayCambioCalificacion =
+    estaCalificado &&
+    calificacionExistente?.value &&
+    String(calificacionFinalPonderada) !== calificacionExistente.value;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
-            <ArrowLeft className="h-4 w-4" /> Back to Inventory
-          </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {submissionDetail.quizTitle} — Student Submission
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Student: {submissionDetail.studentName} ({submissionDetail.studentId})
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>
-              Submitted:{" "}
-              {new Date(submissionDetail.submittedAt).toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span>
-              Score: {scorePercentage}% ({weightedFinalGrade}/
-              {resolvedTotalScore} pts)
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>Status: {submissionDetail.status}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>Attempt: {submissionDetail.attemptNumber}</span>
-          </div>
-        </div>
+  // ── Renderizado ─────────────────────────────────────────────────────────────────
+return (
+  <div className="p-4 md:p-6 lg:p-8 space-y-6">
+    {/* ── Encabezado ── */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <Button onClick={onBack} variant="outline" className="gap-2 mb-4 text-sm">
+          <ArrowLeft className="h-4 w-4" /> Volver al Inventario
+        </Button>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
+          {detalleEntrega.quizTitle} — Entrega del Estudiante
+        </h1>
+        <p className="text-muted-foreground mt-2 text-sm">
+          Estudiante: {detalleEntrega.studentName} ({detalleEntrega.studentId})
+        </p>
       </div>
 
-      {/* ── Already graded warning ── */}
-      {isGraded && existingGrade?.value && (
-        <Card className="p-4 bg-amber-50 border-amber-300 border-2">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-amber-900 text-lg">
-                This submission has already been graded
-              </h3>
-              <div className="mt-2 space-y-1">
-                <p className="text-sm text-amber-800">
-                  <strong>Current Grade:</strong> {existingGrade.value} /{" "}
-                  {existingGrade.maxScore} ({existingGrade.percentage}%)
-                </p>
-                <p className="text-xs text-amber-700 mt-2">
-                  You can modify grades below. The existing grade will be
-                  preserved until you save changes.
-                </p>
-              </div>
+      <div className="flex flex-wrap gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 min-w-fit">
+          <Users className="h-4 w-4 flex-shrink-0" />
+          <span className="text-muted-foreground">
+            Entregado: {new Date(detalleEntrega.submittedAt).toLocaleString()}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 min-w-fit">
+          <BarChart3 className="h-4 w-4 flex-shrink-0" />
+          <span className="text-muted-foreground">
+            Puntuación: {porcentajePuntuacion}% ({calificacionFinalPonderada}/{puntuacionTotalResuelta} pts)
+          </span>
+        </div>
+        <div className="flex items-center gap-2 min-w-fit">
+          <Clock className="h-4 w-4 flex-shrink-0" />
+          <span className="text-muted-foreground">Estado: {detalleEntrega.status}</span>
+        </div>
+        <div className="flex items-center gap-2 min-w-fit">
+          <span className="text-muted-foreground">Intento: {detalleEntrega.attemptNumber}</span>
+        </div>
+      </div>
+    </div>
+
+    {/* ── Advertencia de ya calificado ── */}
+    {estaCalificado && calificacionExistente?.value && (
+      <Card className="p-4 bg-accent/10 border-2 border-accent/30">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-6 w-6 text-accent-foreground flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-accent-foreground text-base sm:text-lg">
+              Esta entrega ya ha sido calificada
+            </h3>
+            <div className="mt-2 space-y-1 text-sm">
+              <p className="text-accent-foreground/90">
+                <strong>Calificación Actual:</strong> {calificacionExistente.value} / {calificacionExistente.maxScore} ({calificacionExistente.percentage}%)
+              </p>
+              <p className="text-xs text-accent-foreground/75 mt-2">
+                Puedes modificar las calificaciones a continuación. La calificación existente se conservará hasta que guardes los cambios.
+              </p>
             </div>
           </div>
-        </Card>
-      )}
-
-      {/* ── Weight Table Toggle ── */}
-      <Card className="p-4 border-purple-200 bg-purple-50">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Scale className="h-5 w-5 text-purple-700" />
-            <h3 className="font-semibold text-purple-900">
-              Question Weight Distribution
-            </h3>
-            <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
-              Total Score: {resolvedTotalScore} pts
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowWeightTable((v) => !v)}
-            className="gap-2 border-purple-300 text-purple-800 hover:bg-purple-100"
-          >
-            <Info className="h-4 w-4" />
-            {showWeightTable ? "Hide" : "Show"} Weight Table
-          </Button>
         </div>
-
-        {showWeightTable && (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="bg-purple-100">
-                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
-                    Question
-                  </th>
-                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
-                    Raw Points
-                  </th>
-                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
-                    Weight (%)
-                  </th>
-                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
-                    Calculation
-                  </th>
-                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
-                    Weighted Value
-                  </th>
-                  <th className="text-left p-3 border border-purple-200 text-purple-900 font-semibold">
-                    Earned (Weighted)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {questionResponses.map((q, idx) => {
-                  const weight = weights[q.questionId] ?? 0;
-                  const wpv = weightedPointValues[q.questionId] ?? 0;
-                  const earned = grades[q.questionId] ?? 0;
-                  const weightedEarned =
-                    q.maxPoints > 0
-                      ? Math.round(
-                          (earned / q.maxPoints) * wpv * 100
-                        ) / 100
-                      : 0;
-
-                  return (
-                    <tr
-                      key={q.questionId}
-                      className={idx % 2 === 0 ? "bg-white" : "bg-purple-50/40"}
-                    >
-                      <td className="p-3 border border-purple-200 font-medium">
-                        Question #{idx + 1}
-                      </td>
-                      <td className="p-3 border border-purple-200">
-                        {earned} / {q.maxPoints}
-                      </td>
-                      <td className="p-3 border border-purple-200">
-                        <span className="font-semibold text-purple-700">
-                          {weight}%
-                        </span>
-                      </td>
-                      <td className="p-3 border border-purple-200 text-muted-foreground font-mono text-xs">
-                        {resolvedTotalScore} × {(weight / 100).toFixed(2)} ×
-                        ({earned}/{q.maxPoints})
-                      </td>
-                      <td className="p-3 border border-purple-200 text-purple-800 font-semibold">
-                        {wpv} pts
-                      </td>
-                      <td className="p-3 border border-purple-200">
-                        <span
-                          className={
-                            weightedEarned >= wpv * 0.7
-                              ? "text-green-700 font-semibold"
-                              : "text-red-700 font-semibold"
-                          }
-                        >
-                          {weightedEarned} pts
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-purple-200 font-bold">
-                  <td className="p-3 border border-purple-300">TOTAL</td>
-                  <td className="p-3 border border-purple-300">—</td>
-                  <td className="p-3 border border-purple-300">100%</td>
-                  <td className="p-3 border border-purple-300">—</td>
-                  <td className="p-3 border border-purple-300 text-purple-900">
-                    {resolvedTotalScore} pts
-                  </td>
-                  <td className="p-3 border border-purple-300 text-purple-900">
-                    {weightedFinalGrade} pts
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
       </Card>
+    )}
 
-      {/* ── Submission Card ── */}
-      <Card className="p-4 border-l-4 border-blue-500">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="font-semibold text-lg">
-              Student {submissionDetail.studentName}
-            </h3>
-            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
-              <span>
-                Submitted:{" "}
-                {new Date(submissionDetail.submittedAt).toLocaleString()}
-              </span>
-              <Badge
-                variant={scorePercentage >= passingScore ? "default" : "secondary"}
-              >
-                {scorePercentage}% ({weightedFinalGrade}/{resolvedTotalScore} pts)
-              </Badge>
-              <span>Status: {submissionDetail.status}</span>
-              {submissionDetail.autoGraded && (
-                <Badge variant="outline">Auto-graded</Badge>
-              )}
-            </div>
-          </div>
-          <Button
-            onClick={() => setIsExpanded(!isExpanded)}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-            {isExpanded ? "Collapse" : "Expand"}
-          </Button>
+    {/* ── Alternativa de Tabla de Pesos ── */}
+    <Card className="p-4 border border-primary/30 bg-primary/5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Scale className="h-5 w-5 text-primary flex-shrink-0" />
+          <h3 className="font-semibold text-primary text-sm sm:text-base">
+            Distribución de Pesos de Preguntas
+          </h3>
+          <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+            Puntuación Total: {puntuacionTotalResuelta} pts
+          </span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setMostrarTablaPesos((v) => !v)}
+          className="gap-2 text-sm"
+        >
+          <Info className="h-4 w-4" />
+          {mostrarTablaPesos ? "Ocultar" : "Mostrar"} Tabla de Pesos
+        </Button>
+      </div>
 
-        {isExpanded && (
-          <div className="space-y-4 mt-4 pt-4 border-t">
-            {/* ── Questions ── */}
-            {questionResponses.map((question, index) => {
-              const isMultipleChoice =
-                question.questionType === "MULTIPLE_CHOICE";
-              const isOpenEnded = question.questionType === "OPEN_ENDED";
-              const currentScore = grades[question.questionId] ?? 0;
-              const currentFeedback = feedbacks[question.questionId] ?? "";
-              const studentSelectedOptions = question.selectedOptions ?? [];
-              const hasOptions =
-                question.options && question.options.length > 0;
+      {mostrarTablaPesos && (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-xs sm:text-sm border-collapse">
+            <thead>
+              <tr className="bg-primary/10">
+                <th className="text-left p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                  Pregunta
+                </th>
+                <th className="text-left p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                  Puntos Brutos
+                </th>
+                <th className="text-left p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                  Peso (%)
+                </th>
+                <th className="text-left p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                  Cálculo
+                </th>
+                <th className="text-left p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                  Valor Ponderado
+                </th>
+                <th className="text-left p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                  Obtenido (Ponderado)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {respuestasPreguntas.map((q, idx) => {
+                const peso = pesos[q.questionId] ?? 0;
+                const vpp = valoresPuntosPonderados[q.questionId] ?? 0;
+                const obtenido = calificaciones[q.questionId] ?? 0;
+                const ponderadoObtenido =
+                  q.maxPoints > 0
+                    ? Math.round((obtenido / q.maxPoints) * vpp * 100) / 100
+                    : 0;
 
-              const normalizedStudentAnswer = normalizeText(
-                question.textAnswer
-              );
-              const normalizedCorrectAnswer = normalizeText(
-                question.correctAnswer
-              );
-              const answersMatchNormalized =
-                normalizedStudentAnswer &&
-                normalizedCorrectAnswer &&
-                normalizedStudentAnswer === normalizedCorrectAnswer;
-
-              // Weight info for this question
-              const qWeight = weights[question.questionId] ?? 0;
-              const qWPV = weightedPointValues[question.questionId] ?? 0;
-              const qWeightedEarned =
-                question.maxPoints > 0
-                  ? Math.round(
-                      (currentScore / question.maxPoints) * qWPV * 100
-                    ) / 100
-                  : 0;
-
-              return (
-                <div
-                  key={question.questionId}
-                  className="p-4 bg-muted/30 rounded-lg"
-                >
-                  {/* Question header */}
-                  <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-medium">Question {index + 1}</h4>
-                      {/* Weight badge */}
-                      <span className="text-xs bg-purple-100 text-purple-800 border border-purple-200 rounded-full px-2 py-0.5 font-semibold">
-                        Weight: {qWeight}%
-                      </span>
-                      {/* Weighted point value badge */}
-                      <span className="text-xs bg-blue-100 text-blue-800 border border-blue-200 rounded-full px-2 py-0.5 font-semibold">
-                        Value: {qWPV} / {resolvedTotalScore} pts
-                      </span>
-                      {/* Raw points */}
-                      <span className="text-xs text-muted-foreground">
-                        (Raw: {question.maxPoints} pts)
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={question.isCorrect ? "default" : "secondary"}
+                return (
+                  <tr
+                    key={q.questionId}
+                    className={idx % 2 === 0 ? "bg-card" : "bg-primary/5"}
+                  >
+                    <td className="p-2 sm:p-3 border border-primary/30 font-medium text-foreground">
+                      Pregunta #{idx + 1}
+                    </td>
+                    <td className="p-2 sm:p-3 border border-primary/30 text-foreground">
+                      {obtenido} / {q.maxPoints}
+                    </td>
+                    <td className="p-2 sm:p-3 border border-primary/30">
+                      <span className="font-semibold text-primary">{peso}%</span>
+                    </td>
+                    <td className="p-2 sm:p-3 border border-primary/30 text-muted-foreground font-mono text-xs">
+                      {puntuacionTotalResuelta} × {(peso / 100).toFixed(2)} × ({obtenido}/{q.maxPoints})
+                    </td>
+                    <td className="p-2 sm:p-3 border border-primary/30 text-primary font-semibold">
+                      {vpp} pts
+                    </td>
+                    <td className="p-2 sm:p-3 border border-primary/30">
+                      <span
+                        className={
+                          ponderadoObtenido >= vpp * 0.7
+                            ? "text-accent font-semibold"
+                            : "text-destructive font-semibold"
+                        }
                       >
-                        {question.questionType.replace("_", " ")}
-                      </Badge>
-                      {question.isAutoGraded && (
-                        <Badge variant="outline" className="text-xs">
-                          Auto-graded
-                        </Badge>
-                      )}
-                      {isOpenEnded && !answersMatchNormalized ? (
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                      ) : question.isCorrect ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      )}
-                    </div>
+                        {ponderadoObtenido} pts
+                      </span>
+                    </td>
+                   </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="bg-primary/10 font-bold">
+                <td className="p-2 sm:p-3 border border-primary/30 text-primary">TOTAL</td>
+                <td className="p-2 sm:p-3 border border-primary/30 text-primary">—</td>
+                <td className="p-2 sm:p-3 border border-primary/30 text-primary">100%</td>
+                <td className="p-2 sm:p-3 border border-primary/30 text-primary">—</td>
+                <td className="p-2 sm:p-3 border border-primary/30 text-primary">
+                  {puntuacionTotalResuelta} pts
+                </td>
+                <td className="p-2 sm:p-3 border border-primary/30 text-primary">
+                  {calificacionFinalPonderada} pts
+                </td>
+               </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </Card>
+
+    {/* ── Tarjeta de Entrega ── */}
+    <Card className="p-4 border-l-4 border-primary">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+        <div>
+          <h3 className="font-semibold text-base sm:text-lg text-foreground">
+            Estudiante {detalleEntrega.studentName}
+          </h3>
+          <div className="flex items-center gap-3 mt-2 text-xs sm:text-sm text-muted-foreground flex-wrap">
+            <span>Entregado: {new Date(detalleEntrega.submittedAt).toLocaleString()}</span>
+            <Badge
+              variant={porcentajePuntuacion >= puntuacionAprobatoria ? "default" : "secondary"}
+              className="text-xs"
+            >
+              {porcentajePuntuacion}% ({calificacionFinalPonderada}/{puntuacionTotalResuelta} pts)
+            </Badge>
+            <span>Estado: {detalleEntrega.status}</span>
+            {detalleEntrega.autoGraded && (
+              <Badge variant="outline" className="text-xs">Auto-calificado</Badge>
+            )}
+          </div>
+        </div>
+        <Button
+          onClick={() => setExpandido(!expandido)}
+          variant="outline"
+          size="sm"
+          className="gap-2 text-sm flex-shrink-0"
+        >
+          {expandido ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+          {expandido ? "Colapsar" : "Expandir"}
+        </Button>
+      </div>
+
+      {expandido && (
+        <div className="space-y-4 mt-4 pt-4 border-t border-border">
+          {/* ── Preguntas ── */}
+          {respuestasPreguntas.map((pregunta, indice) => {
+            const esOpcionMultiple = pregunta.questionType === "MULTIPLE_CHOICE";
+            const esRespuestaAbierta = pregunta.questionType === "OPEN_ENDED";
+            const puntuacionActual = calificaciones[pregunta.questionId] ?? 0;
+            const retroalimentacionActual = retroalimentaciones[pregunta.questionId] ?? "";
+            const opcionesSeleccionadasEstudiante = pregunta.selectedOptions ?? [];
+            const tieneOpciones = pregunta.options && pregunta.options.length > 0;
+
+            const respuestaEstudianteNormalizada = normalizarTexto(pregunta.textAnswer);
+            const respuestaCorrectaNormalizada = normalizarTexto(pregunta.correctAnswer);
+            const respuestasCoincidenNormalizadas =
+              respuestaEstudianteNormalizada &&
+              respuestaCorrectaNormalizada &&
+              respuestaEstudianteNormalizada === respuestaCorrectaNormalizada;
+
+            const pesoPregunta = pesos[pregunta.questionId] ?? 0;
+            const vppPregunta = valoresPuntosPonderados[pregunta.questionId] ?? 0;
+            const ponderadoObtenidoPregunta =
+              pregunta.maxPoints > 0
+                ? Math.round((puntuacionActual / pregunta.maxPoints) * vppPregunta * 100) / 100
+                : 0;
+
+            return (
+              <div key={pregunta.questionId} className="p-3 sm:p-4 bg-card/50 rounded-lg border border-border">
+                {/* Encabezado de pregunta */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4 mb-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-medium text-foreground text-sm sm:text-base">Pregunta {indice + 1}</h4>
+                    <span className="text-xs bg-primary/10 text-primary border border-primary/30 rounded-full px-2 py-0.5 font-semibold">
+                      Peso: {pesoPregunta}%
+                    </span>
+                    <span className="text-xs bg-primary/10 text-primary border border-primary/30 rounded-full px-2 py-0.5 font-semibold">
+                      Valor: {vppPregunta} / {puntuacionTotalResuelta} pts
+                    </span>
+                    <span className="text-xs text-muted-foreground">(Bruto: {pregunta.maxPoints} pts)</span>
                   </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" className="text-xs">
+                      {pregunta.questionType === "MULTIPLE_CHOICE" ? "Opción Múltiple" : "Respuesta Abierta"}
+                    </Badge>
+                    {pregunta.isAutoGraded && (
+                      <Badge variant="outline" className="text-xs">Auto-calificado</Badge>
+                    )}
+                    {esRespuestaAbierta && !respuestasCoincidenNormalizadas ? (
+                      <AlertCircle className="h-4 w-4 text-accent-foreground" />
+                    ) : pregunta.isCorrect ? (
+                      <CheckCircle className="h-4 w-4 text-accent" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                </div>
 
-                  <p className="mb-3 font-medium">{question.questionText}</p>
+                <p className="mb-3 font-medium text-foreground text-sm sm:text-base">{pregunta.questionText}</p>
 
-                  {/* ── Student Answer ── */}
-                  <div className="mb-3">
-                    <strong className="text-sm">Student's Answer:</strong>
+                {/* ── Respuesta del Estudiante ── */}
+                <div className="mb-3">
+                  <strong className="text-xs sm:text-sm text-foreground">Respuesta del Estudiante:</strong>
 
-                    {isMultipleChoice && hasOptions ? (
-                      <div className="mt-2 space-y-2">
-                        {question.options.map((option, optIndex) => {
-                          const isSelected =
-                            studentSelectedOptions.includes(optIndex);
-                          const isCorrectOption = option.correct;
-                          const isStudentAnswerCorrect =
-                            isSelected && isCorrectOption;
-                          const isStudentAnswerIncorrect =
-                            isSelected && !isCorrectOption;
-                          const isCorrectButNotSelected =
-                            !isSelected && isCorrectOption;
+                  {esOpcionMultiple && tieneOpciones ? (
+                    <div className="mt-2 space-y-2">
+                      {pregunta.options.map((opcion, indiceOpcion) => {
+                        const estaSeleccionada = opcionesSeleccionadasEstudiante.includes(indiceOpcion);
+                        const esOpcionCorrecta = opcion.correct;
+                        const esRespuestaEstudianteCorrecta = estaSeleccionada && esOpcionCorrecta;
+                        const esRespuestaEstudianteIncorrecta = estaSeleccionada && !esOpcionCorrecta;
+                        const esCorrectaPeroNoSeleccionada = !estaSeleccionada && esOpcionCorrecta;
 
-                          return (
-                            <div
-                              key={optIndex}
-                              className={`p-3 rounded-lg border-2 ${
-                                isStudentAnswerCorrect
-                                  ? "bg-green-50 border-green-500"
-                                  : isStudentAnswerIncorrect
-                                  ? "bg-red-50 border-red-500"
-                                  : isCorrectButNotSelected
-                                  ? "bg-yellow-50 border-yellow-500"
-                                  : "bg-gray-50 border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
-                                  {isStudentAnswerCorrect ? (
-                                    <CheckCircle className="h-6 w-6 text-green-600" />
-                                  ) : isStudentAnswerIncorrect ? (
-                                    <XCircle className="h-6 w-6 text-red-600" />
-                                  ) : isCorrectButNotSelected ? (
-                                    <AlertCircle className="h-6 w-6 text-yellow-600" />
-                                  ) : (
-                                    <Circle className="h-6 w-6 text-gray-400" />
+                        return (
+                          <div
+                            key={indiceOpcion}
+                            className={`p-2 sm:p-3 rounded-lg border-2 ${
+                              esRespuestaEstudianteCorrecta
+                                ? "bg-accent/10 border-accent/50"
+                                : esRespuestaEstudianteIncorrecta
+                                ? "bg-destructive/10 border-destructive/50"
+                                : esCorrectaPeroNoSeleccionada
+                                ? "bg-accent/5 border-accent/30"
+                                : "bg-muted/30 border-border"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 mt-0.5">
+                                {esRespuestaEstudianteCorrecta ? (
+                                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+                                ) : esRespuestaEstudianteIncorrecta ? (
+                                  <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
+                                ) : esCorrectaPeroNoSeleccionada ? (
+                                  <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-accent-foreground" />
+                                ) : (
+                                  <Circle className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-medium text-sm sm:text-base text-foreground">
+                                  {String.fromCharCode(65 + indiceOpcion)}. {opcion.text}
+                                </span>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {estaSeleccionada && (
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs ${
+                                        esOpcionCorrecta
+                                          ? "border-accent text-accent bg-accent/10"
+                                          : "border-destructive text-destructive bg-destructive/10"
+                                      }`}
+                                    >
+                                      ✓ Seleccionada
+                                    </Badge>
                                   )}
-                                </div>
-                                <div className="flex-1">
-                                  <span className="font-medium text-base">
-                                    {String.fromCharCode(65 + optIndex)}.{" "}
-                                    {option.text}
-                                  </span>
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    {isSelected && (
-                                      <Badge
-                                        variant="outline"
-                                        className={
-                                          isCorrectOption
-                                            ? "border-green-600 text-green-800 bg-green-100"
-                                            : "border-red-600 text-red-800 bg-red-100"
-                                        }
-                                      >
-                                        ✓ Student Selected
-                                      </Badge>
-                                    )}
-                                    {isCorrectOption && (
-                                      <Badge
-                                        className={
-                                          isSelected
-                                            ? "bg-green-600 text-white"
-                                            : "bg-yellow-600 text-white"
-                                        }
-                                      >
-                                        {isSelected
-                                          ? "✓ Correct"
-                                          : "★ Correct Answer"}
-                                      </Badge>
-                                    )}
-                                  </div>
+                                  {esOpcionCorrecta && (
+                                    <Badge
+                                      className={`text-xs ${
+                                        estaSeleccionada
+                                          ? "bg-accent text-accent-foreground"
+                                          : "bg-primary text-primary-foreground"
+                                      }`}
+                                    >
+                                      {estaSeleccionada ? "✓ Correcta" : "★ Respuesta Correcta"}
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : isOpenEnded ? (
-                      <div className="mt-2 space-y-4">
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1">
-                            Student's Response:
-                          </label>
-                          <Textarea
-                            value={
-                              question.textAnswer || "No answer provided"
-                            }
-                            readOnly
-                            className={`min-h-[100px] ${
-                              answersMatchNormalized
-                                ? "bg-green-50 border-green-500"
-                                : "bg-white"
-                            }`}
-                          />
-                        </div>
-                        {question.correctAnswer && (
-                          <div className="p-3 bg-blue-50 rounded-lg border-2 border-blue-400">
-                            <label className="text-sm text-blue-800 font-semibold block mb-1">
-                              Expected Answer:
-                            </label>
-                            <p className="text-sm text-blue-800">
-                              {question.correctAnswer}
-                            </p>
                           </div>
-                        )}
+                        );
+                      })}
+                    </div>
+                  ) : esRespuestaAbierta ? (
+                    <div className="mt-2 space-y-4">
+                      <div>
+                        <label className="text-xs text-muted-foreground block mb-1">
+                          Respuesta del Estudiante:
+                        </label>
+                        <Textarea
+                          value={pregunta.textAnswer || "No se proporcionó respuesta"}
+                          readOnly
+                          className={`min-h-[80px] sm:min-h-[100px] text-sm ${
+                            respuestasCoincidenNormalizadas
+                              ? "bg-accent/10 border-accent/50"
+                              : ""
+                          }`}
+                        />
                       </div>
-                    ) : null}
-                  </div>
+                      {pregunta.correctAnswer && (
+                        <div className="p-3 sm:p-4 bg-primary/5 rounded-lg border-2 border-primary/30">
+                          <label className="text-xs sm:text-sm text-primary font-semibold block mb-2">
+                            Respuesta Esperada:
+                          </label>
+                          <p className="text-xs sm:text-sm text-primary">{pregunta.correctAnswer}</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
 
-                  {/* ── Grading Section ── */}
-                  <div className="mt-6 pt-4 border-t space-y-4">
-                    {/* Weighted score preview */}
-                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg flex flex-wrap items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1.5">
-                        <Scale className="h-4 w-4 text-purple-600" />
-                        <span className="text-purple-800 font-semibold">
-                          Weighted Score:
-                        </span>
-                        <span className="font-bold text-purple-900">
-                          {qWeightedEarned} / {qWPV} pts
-                        </span>
-                      </div>
-                      <span className="text-purple-600 text-xs">
-                        ({currentScore}/{question.maxPoints} raw × {qWeight}%
-                        weight × {resolvedTotalScore} total)
+                {/* ── Sección de Calificación ── */}
+                <div className="mt-4 sm:mt-6 pt-4 border-t border-border space-y-4">
+                  {/* Vista previa de puntuación ponderada */}
+                  <div className="p-3 bg-primary/5 border border-primary/30 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3 text-xs sm:text-sm">
+                    <div className="flex items-center gap-1.5">
+                      <Scale className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="text-primary font-semibold">Puntuación Ponderada:</span>
+                      <span className="font-bold text-primary">
+                        {ponderadoObtenidoPregunta} / {vppPregunta} pts
                       </span>
                     </div>
+                    <span className="text-muted-foreground text-xs">
+                      ({puntuacionActual}/{pregunta.maxPoints} brutos × {pesoPregunta}% peso)
+                    </span>
+                  </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="text-sm font-medium">
-                          Raw Points:
-                        </label>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Adjust score (0 – {question.maxPoints} points)
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max={question.maxPoints}
-                          value={currentScore}
-                          onChange={(e) =>
-                            handleGradeChange(
-                              question.questionId,
-                              parseInt(e.target.value) || 0
-                            )
-                          }
-                          className="w-24"
-                        />
-                        <span className="text-sm text-muted-foreground">
-                          / {question.maxPoints}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Feedback */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                      <label className="text-sm font-medium block mb-2">
-                        Teacher Feedback (Optional):
-                      </label>
-                      <Textarea
-                        value={currentFeedback}
+                      <label className="text-xs sm:text-sm font-medium text-foreground">Puntos Brutos:</label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ajustar puntuación (0 – {pregunta.maxPoints} puntos)
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max={pregunta.maxPoints}
+                        value={puntuacionActual}
                         onChange={(e) =>
-                          handleFeedbackChange(
-                            question.questionId,
-                            e.target.value
+                          manejarCambioCalificacion(
+                            pregunta.questionId,
+                            parseInt(e.target.value) || 0
                           )
                         }
-                        placeholder="Provide feedback for this question..."
-                        className="min-h-[80px]"
+                        className="w-20 text-sm"
                       />
-                      {question.teacherFeedback &&
-                        question.teacherFeedback !== currentFeedback && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Previous feedback: {question.teacherFeedback}
-                          </p>
-                        )}
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        / {pregunta.maxPoints}
+                      </span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
 
-            {/* ── Overall Grade Management ── */}
-            <Card className="p-4 bg-purple-50 border-purple-200">
-              <h4 className="font-semibold text-purple-800 mb-3">
-                Overall Grade Management
-              </h4>
-
-              {isGraded && existingGrade?.value && (
-                <div className="mb-4 p-3 bg-white rounded-lg border border-purple-300">
-                  <p className="text-sm font-semibold text-purple-900 mb-1">
-                    Current Grade:
-                  </p>
-                  <p className="text-lg font-bold text-purple-700">
-                    {existingGrade.value} / {existingGrade.maxScore} (
-                    {existingGrade.percentage}%)
-                  </p>
-                </div>
-              )}
-
-              {/* Auto-calculated weighted grade display */}
-              <div className="p-3 bg-white rounded-lg border border-purple-300 mb-4">
-                <p className="text-sm font-semibold text-purple-900 mb-1">
-                  Auto-Calculated Weighted Grade:
-                </p>
-                <p className="text-lg font-bold text-purple-700">
-                  {weightedFinalGrade} / {resolvedTotalScore} pts (
-                  {scorePercentage}%)
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Calculated from question weights × raw scores
-                </p>
-              </div>
-
-              {hasGradeChanged && (
-                <div className="p-3 bg-amber-100 rounded-lg border border-amber-400">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm text-amber-900 font-semibold">
-                        Grade will be updated
-                      </p>
-                      <p className="text-xs text-amber-800 mt-1">
-                        Previous: {existingGrade?.value} → New:{" "}
-                        {weightedFinalGrade}
-                      </p>
-                    </div>
+                  {/* Retroalimentación */}
+                  <div>
+                    <label className="text-xs sm:text-sm font-medium block mb-2 text-foreground">
+                      Retroalimentación del Profesor (Opcional):
+                    </label>
+                    <Textarea
+                      value={retroalimentacionActual}
+                      onChange={(e) =>
+                        manejarCambioRetroalimentacion(pregunta.questionId, e.target.value)
+                      }
+                      placeholder="Proporcionar retroalimentación para esta pregunta..."
+                      className="min-h-[70px] sm:min-h-[80px] text-sm"
+                    />
+                    {pregunta.teacherFeedback &&
+                      pregunta.teacherFeedback !== retroalimentacionActual && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Retroalimentación anterior: {pregunta.teacherFeedback}
+                        </p>
+                      )}
                   </div>
-                </div>
-              )}
-            </Card>
-
-            {/* ── Score Summary ── */}
-            <Card className="p-4 bg-blue-50 border-blue-200">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-semibold text-blue-800">
-                    Total Score Summary
-                  </h4>
-                  <div className="mt-2 space-y-1">
-                    <p className="text-sm text-blue-700">
-                      Weighted grade:{" "}
-                      <strong>
-                        {weightedFinalGrade} / {resolvedTotalScore} pts (
-                        {scorePercentage}%)
-                      </strong>
-                    </p>
-                    <p className="text-sm text-blue-700">
-                      Passing score: {passingScore}% required
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-800">
-                    {weightedFinalGrade} / {resolvedTotalScore}
-                  </div>
-                  <Badge
-                    variant={
-                      scorePercentage >= passingScore ? "default" : "secondary"
-                    }
-                    className="mt-2"
-                  >
-                    {scorePercentage >= passingScore
-                      ? "✓ PASSING"
-                      : "✗ NOT PASSING"}
-                  </Badge>
                 </div>
               </div>
-            </Card>
+            );
+          })}
 
-            {/* ── Save Button ── */}
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button
-                onClick={handleSubmitGrades}
-                disabled={gradeSubmission.isPending}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {gradeSubmission.isPending ? "Saving..." : "Save All Grades"}
-              </Button>
+          {/* ── Gestión de Calificación General ── */}
+          <Card className="p-4 bg-primary/5 border border-primary/30">
+            <h4 className="font-semibold text-primary mb-3 text-sm sm:text-base">
+              Gestión de Calificación General
+            </h4>
+
+            {estaCalificado && calificacionExistente?.value && (
+              <div className="mb-4 p-3 bg-card rounded-lg border border-primary/30">
+                <p className="text-xs sm:text-sm font-semibold text-primary mb-1">
+                  Calificación Actual:
+                </p>
+                <p className="text-base sm:text-lg font-bold text-primary">
+                  {calificacionExistente.value} / {calificacionExistente.maxScore} ({calificacionExistente.percentage}%)
+                </p>
+              </div>
+            )}
+
+            {/* Visualización de calificación ponderada auto-calculada */}
+            <div className="p-3 bg-card rounded-lg border border-primary/30 mb-4">
+              <p className="text-xs sm:text-sm font-semibold text-primary mb-1">
+                Calificación Ponderada Auto-Calculada:
+              </p>
+              <p className="text-base sm:text-lg font-bold text-primary">
+                {calificacionFinalPonderada} / {puntuacionTotalResuelta} pts ({porcentajePuntuacion}%)
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Calculada a partir de los pesos de las preguntas × puntuaciones brutas
+              </p>
             </div>
+
+            {hayCambioCalificacion && (
+              <div className="p-3 bg-accent/10 rounded-lg border border-accent/30">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-accent-foreground flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs sm:text-sm text-accent-foreground font-semibold">
+                      La calificación será actualizada
+                    </p>
+                    <p className="text-xs text-accent-foreground/75 mt-1">
+                      Anterior: {calificacionExistente?.value} → Nueva: {calificacionFinalPonderada}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* ── Resumen de Puntuación ── */}
+          <Card className="p-4 bg-primary/5 border border-primary/30">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+              <div>
+                <h4 className="font-semibold text-primary text-sm sm:text-base">
+                  Resumen de Puntuación Total
+                </h4>
+                <div className="mt-2 space-y-1 text-xs sm:text-sm">
+                  <p className="text-primary">
+                    Calificación ponderada:{" "}
+                    <strong>
+                      {calificacionFinalPonderada} / {puntuacionTotalResuelta} pts ({porcentajePuntuacion}%)
+                    </strong>
+                  </p>
+                  <p className="text-primary">
+                    Puntuación aprobatoria: {puntuacionAprobatoria}% requerido
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-primary">
+                  {calificacionFinalPonderada} / {puntuacionTotalResuelta}
+                </div>
+                <Badge
+                  variant={porcentajePuntuacion >= puntuacionAprobatoria ? "default" : "secondary"}
+                  className="mt-2 text-xs"
+                >
+                  {porcentajePuntuacion >= puntuacionAprobatoria ? "✓ APROBADO" : "✗ NO APROBADO"}
+                </Badge>
+              </div>
+            </div>
+          </Card>
+
+          {/* ── Botón Guardar ── */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button
+              onClick={manejarEnvioCalificaciones}
+              disabled={gradeSubmission.isPending}
+              size="sm"
+              className="text-sm"
+            >
+              {gradeSubmission.isPending ? "Guardando..." : "Guardar Todas las Calificaciones"}
+            </Button>
           </div>
-        )}
-      </Card>
-    </div>
-  );
+        </div>
+      )}
+    </Card>
+  </div>
+);
 }

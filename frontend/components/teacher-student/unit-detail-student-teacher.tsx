@@ -29,14 +29,14 @@ import {
 } from "@/app/domain/entities/CourseEntities";
 import { CourseId, UnitId } from "@/app/domain/valueObjects/CourseValues";
 import { ResourceTypeSelector } from "../teacher/resource-type-selector-teacher";
-import { TaskCreator } from "../teacher/task-form-creator-teacher";
-import { PageCreator } from "../teacher/page-form-creator-teacher";
-import { QuizCreator } from "../teacher/quiz-form-creator-teacher";
-import { QuizView } from "../teacher/quiz-view-information-teacher";
-import { PageView } from "./page-view-student-teacher";
-import { AssignmentInfoView } from "../teacher/task-view-information-teacher";
-import { StudentTaskView } from "../student/tasks-transactional-view-student";
-import { StudentQuizView } from "../student/quiz-transactional-view-student";
+import { CreadorTarea } from "../teacher/task-form-creator-teacher";
+import { CreadorPagina, PageCreator } from "../teacher/page-form-creator-teacher";
+import { CreadorQuiz } from "../teacher/quiz-form-creator-teacher";
+import { VistaQuiz } from "../teacher/quiz-view-information-teacher";
+import { VistaPagina } from "./page-view-student-teacher";
+import { VistaInfoTarea } from "../teacher/task-view-information-teacher";
+import { VistaTareaEstudiante } from "../student/tasks-transactional-view-student";
+import { VistaQuizEstudiante } from "../student/quiz-transactional-view-student";
 
 import { useAuth } from "@/app/context/AuthContext";
 import {
@@ -50,7 +50,7 @@ import { useUserTeam } from "./hooks/team-hooks";
 import { useQuizSubmission, useTaskSubmission } from "./hooks/submission-hooks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface UnitDetailProps {
+interface PropsDetalleUnidad {
   idUnit: UnitId;
   idCourse: CourseId;
   onBack: () => void;
@@ -62,105 +62,105 @@ export function UnitDetail({
   idCourse,
   onBack,
   unitData,
-}: UnitDetailProps) {
+}: PropsDetalleUnidad) {
   const { user } = useAuth();
-  const isStudent = user?.role === "student";
+  const esEstudiante = user?.role === "student";
 
   const {
-    data: assignments = [],
-    isLoading: isLoadingAssignments,
-    refetch: refetchAssignments,
+    data: tareas = [],
+    isLoading: cargandoTareas,
+    refetch: recargarTareas,
   } = useAssignmentsByUnit(idCourse, idUnit);
 
   const {
     data: quizzes = [],
-    isLoading: isLoadingQuizzes,
-    refetch: refetchQuizzes,
+    isLoading: cargandoQuizzes,
+    refetch: recargarQuizzes,
   } = useQuizzesByUnit(idCourse, idUnit);
 
   const {
-    data: pages = [],
-    isLoading: isLoadingPages,
-    refetch: refetchPages,
+    data: paginas = [],
+    isLoading: cargandoPaginas,
+    refetch: recargarPaginas,
   } = usePagesByUnit(idCourse, idUnit);
 
-  const { data: userTeam } = useUserTeam(user?.id || "");
+  const { data: equipoUsuario } = useUserTeam(user?.id || "");
 
-  const assignmentMutations = useAssignmentMutations();
-  const quizMutations = useQuizMutations();
-  const pageMutations = usePageMutations();
+  const mutacionesTarea = useAssignmentMutations();
+  const mutacionesQuiz = useQuizMutations();
+  const mutacionesPagina = usePageMutations();
 
-  const { submitTask: submitTaskMutation, isSubmitting: isSubmittingTask } =
+  const { submitTask: mutacionEnviarTarea, isSubmitting: enviandoTarea } =
     useTaskSubmission();
-  const { submitQuiz: submitQuizMutation, isSubmitting: isSubmittingQuiz } =
+  const { submitQuiz: mutacionEnviarQuiz, isSubmitting: enviandoQuiz } =
     useQuizSubmission();
 
-  const resources = React.useMemo((): UnitResource[] => {
-    return [...assignments, ...quizzes, ...pages].sort((a, b) =>
+  const recursos = React.useMemo((): UnitResource[] => {
+    return [...tareas, ...quizzes, ...paginas].sort((a, b) =>
       a.title.localeCompare(b.title)
     );
-  }, [assignments, quizzes, pages]);
+  }, [tareas, quizzes, paginas]);
 
-  const [currentResourceIndex, setCurrentResourceIndex] = React.useState(0);
-  const [viewMode, setViewMode] = React.useState<"carousel" | "detail" | "student">("carousel");
-  const [currentResource, setCurrentResource] = React.useState<UnitResource | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
-  const [showResourceSelector, setShowResourceSelector] = React.useState(false);
-  const [selectedResourceType, setSelectedResourceType] = React.useState<"ASSIGNMENT" | "QUIZ" | "PAGE" | null>(null);
-  const [quizAvailabilityError, setQuizAvailabilityError] = React.useState<string | null>(null);
+  const [indiceRecursoActual, setIndiceRecursoActual] = React.useState(0);
+  const [modoVista, setModoVista] = React.useState<"carousel" | "detail" | "student">("carousel");
+  const [recursoActual, setRecursoActual] = React.useState<UnitResource | null>(null);
+  const [confirmacionEliminar, setConfirmacionEliminar] = React.useState<string | null>(null);
+  const [mostrarSelectorRecurso, setMostrarSelectorRecurso] = React.useState(false);
+  const [tipoRecursoSeleccionado, setTipoRecursoSeleccionado] = React.useState<"ASSIGNMENT" | "QUIZ" | "PAGE" | null>(null);
+  const [errorDisponibilidadQuiz, setErrorDisponibilidadQuiz] = React.useState<string | null>(null);
 
-  const { data: viewedAssignment, refetch: refetchViewedAssignment } =
+  const { data: tareaVista, refetch: recargarTareaVista } =
     useAssignment(
-      viewMode === "detail" &&
-        currentResource &&
-        getResourceType(currentResource) === "ASSIGNMENT"
-        ? currentResource.id
+      modoVista === "detail" &&
+        recursoActual &&
+        obtenerTipoRecurso(recursoActual) === "ASSIGNMENT"
+        ? recursoActual.id
         : null
     );
 
-  const isLoading = isLoadingAssignments || isLoadingQuizzes || isLoadingPages;
+  const cargando = cargandoTareas || cargandoQuizzes || cargandoPaginas;
 
-  function getResourceType(
-    resource: UnitResource
+  function obtenerTipoRecurso(
+    recurso: UnitResource
   ): "ASSIGNMENT" | "QUIZ" | "PAGE" {
-    if ("questions" in resource) return "QUIZ";
-    if ("submissions" in resource) return "ASSIGNMENT";
-    if ("sectionContent" in resource) return "PAGE";
+    if ("questions" in recurso) return "QUIZ";
+    if ("submissions" in recurso) return "ASSIGNMENT";
+    if ("sectionContent" in recurso) return "PAGE";
     return "PAGE";
   }
 
-  // Check if quiz is available for student to take
-  const isQuizAvailable = (quiz: Quiz): { available: boolean; reason?: string } => {
-    const now = new Date();
+  // Verificar si el quiz está disponible para que el estudiante lo realice
+  const estaQuizDisponible = (quiz: Quiz): { available: boolean; reason?: string } => {
+    const ahora = new Date();
 
-    // Check if quiz has availability dates
+    // Verificar si el quiz tiene fechas de disponibilidad
     if (quiz.availableFrom) {
-      const availableFrom = new Date(quiz.availableFrom);
-      if (now < availableFrom) {
+      const disponibleDesde = new Date(quiz.availableFrom);
+      if (ahora < disponibleDesde) {
         return {
           available: false,
-          reason: `This quiz is not available yet. It will be available from ${availableFrom.toLocaleDateString()} at ${availableFrom.toLocaleTimeString()}.`
+          reason: `Este quiz no está disponible aún. Estará disponible desde el ${disponibleDesde.toLocaleDateString()} a las ${disponibleDesde.toLocaleTimeString()}.`
         };
       }
     }
 
     if (quiz.availableUntil) {
-      const availableUntil = new Date(quiz.availableUntil);
-      if (now > availableUntil) {
+      const disponibleHasta = new Date(quiz.availableUntil);
+      if (ahora > disponibleHasta) {
         return {
           available: false,
-          reason: `This quiz is no longer available. It was available until ${availableUntil.toLocaleDateString()} at ${availableUntil.toLocaleTimeString()}.`
+          reason: `Este quiz ya no está disponible. Estuvo disponible hasta el ${disponibleHasta.toLocaleDateString()} a las ${disponibleHasta.toLocaleTimeString()}.`
         };
       }
     }
 
-    // Check due date if no availableUntil is set
+    // Verificar fecha de entrega si no hay availableUntil
     if (!quiz.availableUntil && quiz.dueDate && !quiz.acceptLateSubmissions) {
-      const dueDate = new Date(quiz.dueDate);
-      if (now > dueDate) {
+      const fechaEntrega = new Date(quiz.dueDate);
+      if (ahora > fechaEntrega) {
         return {
           available: false,
-          reason: `This quiz is past its due date (${dueDate.toLocaleDateString()}) and late submissions are not accepted.`
+          reason: `Este quiz ha pasado su fecha de entrega (${fechaEntrega.toLocaleDateString()}) y no se aceptan entregas tardías.`
         };
       }
     }
@@ -168,278 +168,278 @@ export function UnitDetail({
     return { available: true };
   };
 
-  const handleCreateResource = (resourceData: any, files?: File[]) => {
-    if (!selectedResourceType) return;
+  const handleCrearRecurso = (datosRecurso: any, archivos?: File[]) => {
+    if (!tipoRecursoSeleccionado) return;
 
-    const commonConfig = {
+    const configComun = {
       courseId: idCourse,
       unitId: idUnit,
       onSuccess: () => {
-        setSelectedResourceType(null);
-        refetchAssignments();
-        refetchQuizzes();
-        refetchPages();
+        setTipoRecursoSeleccionado(null);
+        recargarTareas();
+        recargarQuizzes();
+        recargarPaginas();
       },
     };
 
-    switch (selectedResourceType) {
+    switch (tipoRecursoSeleccionado) {
       case "ASSIGNMENT":
-        assignmentMutations.createAssignment.mutate({
-          ...commonConfig,
-          assignmentData: resourceData,
-          files: files,
+        mutacionesTarea.createAssignment.mutate({
+          ...configComun,
+          assignmentData: datosRecurso,
+          files: archivos,
         });
         break;
       case "QUIZ":
-        quizMutations.createQuiz.mutate({
-          ...commonConfig,
-          quizData: resourceData,
+        mutacionesQuiz.createQuiz.mutate({
+          ...configComun,
+          quizData: datosRecurso,
         });
         break;
       case "PAGE":
-        pageMutations.createPage.mutate({
-          ...commonConfig,
-          pageData: resourceData,
-          attachments: files,
+        mutacionesPagina.createPage.mutate({
+          ...configComun,
+          pageData: datosRecurso,
+          attachments: archivos,
         });
         break;
     }
   };
 
-  const handleDeleteResource = (resource: UnitResource) => {
-    const resourceType = getResourceType(resource);
+  const handleEliminarRecurso = (recurso: UnitResource) => {
+    const tipoRecurso = obtenerTipoRecurso(recurso);
 
-    const commonConfig = {
+    const configComun = {
       onSuccess: () => {
-        setDeleteConfirm(null);
+        setConfirmacionEliminar(null);
         if (
-          currentResourceIndex >= resources.length - 1 &&
-          currentResourceIndex > 0
+          indiceRecursoActual >= recursos.length - 1 &&
+          indiceRecursoActual > 0
         ) {
-          setCurrentResourceIndex(currentResourceIndex - 1);
+          setIndiceRecursoActual(indiceRecursoActual - 1);
         }
-        refetchAssignments();
-        refetchQuizzes();
-        refetchPages();
+        recargarTareas();
+        recargarQuizzes();
+        recargarPaginas();
       },
     };
 
-    switch (resourceType) {
+    switch (tipoRecurso) {
       case "ASSIGNMENT":
-        assignmentMutations.deleteAssignment.mutate(resource.id, commonConfig);
+        mutacionesTarea.deleteAssignment.mutate(recurso.id, configComun);
         break;
       case "QUIZ":
-        quizMutations.deleteQuiz.mutate(resource.id, commonConfig);
+        mutacionesQuiz.deleteQuiz.mutate(recurso.id, configComun);
         break;
       case "PAGE":
-        pageMutations.deletePage.mutate(resource.id, commonConfig);
+        mutacionesPagina.deletePage.mutate(recurso.id, configComun);
         break;
     }
   };
 
-  const handleStudentView = (resource: UnitResource) => {
-    const resourceType = getResourceType(resource);
+  const handleVistaEstudiante = (recurso: UnitResource) => {
+    const tipoRecurso = obtenerTipoRecurso(recurso);
 
-    // If it's a quiz and the user is a student, check availability
-    if (resourceType === "QUIZ" && isStudent) {
-      const quiz = resource as Quiz;
-      const availability = isQuizAvailable(quiz);
+    // Si es un quiz y el usuario es estudiante, verificar disponibilidad
+    if (tipoRecurso === "QUIZ" && esEstudiante) {
+      const quiz = recurso as Quiz;
+      const disponibilidad = estaQuizDisponible(quiz);
       
-      if (!availability.available) {
-        setQuizAvailabilityError(availability.reason || "This quiz is not available.");
+      if (!disponibilidad.available) {
+        setErrorDisponibilidadQuiz(disponibilidad.reason || "Este quiz no está disponible.");
         return;
       }
     }
 
-    setQuizAvailabilityError(null);
-    setCurrentResource(resource);
-    setViewMode("student");
+    setErrorDisponibilidadQuiz(null);
+    setRecursoActual(recurso);
+    setModoVista("student");
   };
 
-  const handleTaskSubmit = async (submissionData: {
+  const handleEnvioTarea = async (datosEnvio: {
     content: string;
     attachments: File[];
   }) => {
-    if (!currentResource || !user?.id) return;
+    if (!recursoActual || !user?.id) return;
 
     try {
-      const assignment = currentResource as Assignment;
-      const submissionType =
-        assignment.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
+      const tarea = recursoActual as Assignment;
+      const tipoEnvio =
+        tarea.deliveryMode === "TEAM" ? "TEAM" : "INDIVIDUAL";
 
-      let groupId: string | undefined;
-      if (submissionType === "TEAM" && userTeam) {
-        groupId = userTeam.teamId;
+      let idGrupo: string | undefined;
+      if (tipoEnvio === "TEAM" && equipoUsuario) {
+        idGrupo = equipoUsuario.teamId;
       }
 
-      const submissionParams = {
-        assignmentId: currentResource.id,
+      const parametrosEnvio = {
+        assignmentId: recursoActual.id,
         studentId: user.id,
-        content: submissionData.content,
-        attachments: submissionData.attachments,
-        submissionType: submissionType as "INDIVIDUAL" | "TEAM",
-        ...(groupId && { groupId }),
+        content: datosEnvio.content,
+        attachments: datosEnvio.attachments,
+        submissionType: tipoEnvio as "INDIVIDUAL" | "TEAM",
+        ...(idGrupo && { groupId: idGrupo }),
       };
 
-      await submitTaskMutation.mutateAsync(submissionParams);
+      await mutacionEnviarTarea.mutateAsync(parametrosEnvio);
 
-      setViewMode("carousel");
-      setCurrentResource(null);
-      refetchAssignments();
+      setModoVista("carousel");
+      setRecursoActual(null);
+      recargarTareas();
     } catch (error) {
-      console.error("Failed to submit task:", error);
+      console.error("Error al enviar la tarea:", error);
     }
   };
 
-  const handleQuizSubmit = async (answers: any) => {
-    if (!currentResource || !user?.id) return;
+  const handleEnvioQuiz = async (respuestas: any) => {
+    if (!recursoActual || !user?.id) return;
 
     try {
-      // Double-check availability before submitting
-      const quiz = currentResource as Quiz;
-      const availability = isQuizAvailable(quiz);
+      // Verificar disponibilidad nuevamente antes de enviar
+      const quiz = recursoActual as Quiz;
+      const disponibilidad = estaQuizDisponible(quiz);
       
-      if (!availability.available) {
-        setQuizAvailabilityError(availability.reason || "This quiz is not available.");
-        setViewMode("carousel");
-        setCurrentResource(null);
+      if (!disponibilidad.available) {
+        setErrorDisponibilidadQuiz(disponibilidad.reason || "Este quiz no está disponible.");
+        setModoVista("carousel");
+        setRecursoActual(null);
         return;
       }
 
-      await submitQuizMutation.mutateAsync({
-        quizId: currentResource.id,
+      await mutacionEnviarQuiz.mutateAsync({
+        quizId: recursoActual.id,
         studentId: user.id,
-        answers: answers,
+        answers: respuestas,
       });
 
-      setViewMode("carousel");
-      setCurrentResource(null);
-      setQuizAvailabilityError(null);
-      refetchQuizzes();
+      setModoVista("carousel");
+      setRecursoActual(null);
+      setErrorDisponibilidadQuiz(null);
+      recargarQuizzes();
     } catch (error) {
-      console.error("Failed to submit quiz:", error);
+      console.error("Error al enviar el quiz:", error);
     }
   };
 
-  const handlePrevious = () => {
-    if (currentResourceIndex > 0) {
-      setCurrentResourceIndex(currentResourceIndex - 1);
-      setQuizAvailabilityError(null);
+  const handleAnterior = () => {
+    if (indiceRecursoActual > 0) {
+      setIndiceRecursoActual(indiceRecursoActual - 1);
+      setErrorDisponibilidadQuiz(null);
     }
   };
 
-  const handleNext = () => {
-    if (currentResourceIndex < resources.length - 1) {
-      setCurrentResourceIndex(currentResourceIndex + 1);
-      setQuizAvailabilityError(null);
+  const handleSiguiente = () => {
+    if (indiceRecursoActual < recursos.length - 1) {
+      setIndiceRecursoActual(indiceRecursoActual + 1);
+      setErrorDisponibilidadQuiz(null);
     }
   };
 
-  const handleView = (resource: UnitResource) => {
-    setCurrentResource(resource);
-    setViewMode("detail");
+  const handleVer = (recurso: UnitResource) => {
+    setRecursoActual(recurso);
+    setModoVista("detail");
   };
 
-  const handleBackFromDetail = () => {
-    setViewMode("carousel");
-    setCurrentResource(null);
-    setQuizAvailabilityError(null);
-    refetchAssignments();
-    refetchQuizzes();
-    refetchPages();
+  const handleVolverDelDetalle = () => {
+    setModoVista("carousel");
+    setRecursoActual(null);
+    setErrorDisponibilidadQuiz(null);
+    recargarTareas();
+    recargarQuizzes();
+    recargarPaginas();
   };
 
-  const getResourceIcon = (resource: UnitResource) => {
-    const resourceType = getResourceType(resource);
-    if (resourceType === "ASSIGNMENT") {
-      const assignment = resource as Assignment;
-      if (assignment.submissionFormat === "NOTEBOOK") {
+  const obtenerIconoRecurso = (recurso: UnitResource) => {
+    const tipoRecurso = obtenerTipoRecurso(recurso);
+    if (tipoRecurso === "ASSIGNMENT") {
+      const tarea = recurso as Assignment;
+      if (tarea.submissionFormat === "NOTEBOOK") {
         return "📓";
       }
-      return assignment.deliveryMode === "TEAM" ? "👥" : "📝";
+      return tarea.deliveryMode === "TEAM" ? "👥" : "📝";
     }
-    if (resourceType === "QUIZ") return "📋";
-    if (resourceType === "PAGE") return "📄";
+    if (tipoRecurso === "QUIZ") return "📋";
+    if (tipoRecurso === "PAGE") return "📄";
     return "📚";
   };
 
-  const getResourceColor = (resource: UnitResource) => {
-    const resourceType = getResourceType(resource);
-    if (resourceType === "ASSIGNMENT") {
-      const assignment = resource as Assignment;
-      return assignment.deliveryMode === "TEAM"
+  const obtenerColorRecurso = (recurso: UnitResource) => {
+    const tipoRecurso = obtenerTipoRecurso(recurso);
+    if (tipoRecurso === "ASSIGNMENT") {
+      const tarea = recurso as Assignment;
+      return tarea.deliveryMode === "TEAM"
         ? "from-blue-500 to-blue-600"
         : "from-orange-500 to-orange-600";
     }
-    if (resourceType === "QUIZ") return "from-purple-500 to-purple-600";
-    if (resourceType === "PAGE") return "from-cyan-500 to-cyan-600";
+    if (tipoRecurso === "QUIZ") return "from-purple-500 to-purple-600";
+    if (tipoRecurso === "PAGE") return "from-cyan-500 to-cyan-600";
     return "from-gray-500 to-gray-600";
   };
 
-  const getResourceDetails = (resource: UnitResource) => {
-    const resourceType = getResourceType(resource);
+  const obtenerDetallesRecurso = (recurso: UnitResource) => {
+    const tipoRecurso = obtenerTipoRecurso(recurso);
 
-    switch (resourceType) {
+    switch (tipoRecurso) {
       case "ASSIGNMENT": {
-        const assign = resource as Assignment;
-        const deliveryMode =
-          assign.deliveryMode === "TEAM"
-            ? "Group Assignment"
-            : "Individual Assignment";
-        const submissionFormat =
-          assign.submissionFormat === "NOTEBOOK"
-            ? "Notebook Submission"
-            : "Digital Submission";
-        const dueDate = assign.dueDate
-          ? `Due: ${new Date(assign.dueDate).toLocaleDateString()}`
+        const tarea = recurso as Assignment;
+        const modoEntrega =
+          tarea.deliveryMode === "TEAM"
+            ? "Tarea Grupal"
+            : "Tarea Individual";
+        const formatoEntrega =
+          tarea.submissionFormat === "NOTEBOOK"
+            ? "Entrega en Cuaderno"
+            : "Entrega Digital";
+        const fechaEntrega = tarea.dueDate
+          ? `Entrega: ${new Date(tarea.dueDate).toLocaleDateString()}`
           : "";
-        const maxScore = `Max Score: ${assign.maxScore.maxPoints}`;
-        return `${deliveryMode} | ${submissionFormat} | ${maxScore} ${dueDate ? `| ${dueDate}` : ""}`;
+        const puntuacionMaxima = `Puntuación Máx: ${tarea.maxScore.maxPoints}`;
+        return `${modoEntrega} | ${formatoEntrega} | ${puntuacionMaxima} ${fechaEntrega ? `| ${fechaEntrega}` : ""}`;
       }
       case "QUIZ": {
-        const quiz = resource as Quiz;
-        const availability = isStudent ? isQuizAvailable(quiz) : { available: true };
-        const availabilityText = !availability.available ? " | NOT AVAILABLE" : "";
-        return `Max Grade: ${quiz.maxGrade} | Time: ${quiz.timeLimit} min${availabilityText}`;
+        const quiz = recurso as Quiz;
+        const disponibilidad = esEstudiante ? estaQuizDisponible(quiz) : { available: true };
+        const textoDisponibilidad = !disponibilidad.available ? " | NO DISPONIBLE" : "";
+        return `Calificación Máx: ${quiz.maxGrade} | Tiempo: ${quiz.timeLimit} min${textoDisponibilidad}`;
       }
       case "PAGE": {
-        const page = resource as Page;
-        const preview = page.sectionContent.substring(0, 100);
-        return preview + (page.sectionContent.length > 100 ? "..." : "");
+        const pagina = recurso as Page;
+        const vistaPrevia = pagina.sectionContent.substring(0, 100);
+        return vistaPrevia + (pagina.sectionContent.length > 100 ? "..." : "");
       }
       default:
         return "";
     }
   };
 
-  const getQuizAvailabilityBadge = (quiz: Quiz) => {
-    if (!isStudent) return null;
+  const obtenerInsigniaDisponibilidadQuiz = (quiz: Quiz) => {
+    if (!esEstudiante) return null;
 
-    const availability = isQuizAvailable(quiz);
-    const now = new Date();
+    const disponibilidad = estaQuizDisponible(quiz);
+    const ahora = new Date();
 
-    if (!availability.available) {
-      if (quiz.availableFrom && now < new Date(quiz.availableFrom)) {
+    if (!disponibilidad.available) {
+      if (quiz.availableFrom && ahora < new Date(quiz.availableFrom)) {
         return (
           <Badge variant="secondary" className="text-sm">
             <Clock className="h-3 w-3 mr-1" />
-            Opens {new Date(quiz.availableFrom).toLocaleDateString()}
+            Abre el {new Date(quiz.availableFrom).toLocaleDateString()}
           </Badge>
         );
       }
-      if (quiz.availableUntil && now > new Date(quiz.availableUntil)) {
+      if (quiz.availableUntil && ahora > new Date(quiz.availableUntil)) {
         return (
           <Badge variant="destructive" className="text-sm">
             <CalendarX className="h-3 w-3 mr-1" />
-            Closed
+            Cerrado
           </Badge>
         );
       }
-      if (quiz.dueDate && !quiz.acceptLateSubmissions && now > new Date(quiz.dueDate)) {
+      if (quiz.dueDate && !quiz.acceptLateSubmissions && ahora > new Date(quiz.dueDate)) {
         return (
           <Badge variant="destructive" className="text-sm">
             <CalendarX className="h-3 w-3 mr-1" />
-            Past Due
+            Vencido
           </Badge>
         );
       }
@@ -448,30 +448,30 @@ export function UnitDetail({
     return null;
   };
 
-  const renderDetailView = () => {
-    if (!currentResource) return null;
+  const renderizarVistaDetalle = () => {
+    if (!recursoActual) return null;
 
-    const resourceType = getResourceType(currentResource);
+    const tipoRecurso = obtenerTipoRecurso(recursoActual);
 
     return (
       <div className="min-h-screen bg-background p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
-          {resourceType === "ASSIGNMENT" && viewedAssignment && (
-            <AssignmentInfoView
-              assignment={viewedAssignment}
-              onClose={handleBackFromDetail}
+          {tipoRecurso === "ASSIGNMENT" && tareaVista && (
+            <VistaInfoTarea
+              assignment={tareaVista}
+              onClose={handleVolverDelDetalle}
             />
           )}
-          {resourceType === "QUIZ" && (
-            <QuizView
-              quiz={currentResource as Quiz}
-              onClose={handleBackFromDetail}
+          {tipoRecurso === "QUIZ" && (
+            <VistaQuiz
+              quiz={recursoActual as Quiz}
+              onClose={handleVolverDelDetalle}
             />
           )}
-          {resourceType === "PAGE" && (
-            <PageView
-              page={currentResource as Page}
-              onClose={handleBackFromDetail}
+          {tipoRecurso === "PAGE" && (
+            <VistaPagina
+              page={recursoActual as Page}
+              onClose={handleVolverDelDetalle}
             />
           )}
         </div>
@@ -479,36 +479,36 @@ export function UnitDetail({
     );
   };
 
-  const renderStudentView = () => {
-    if (!currentResource || !user) return null;
+  const renderizarVistaEstudiante = () => {
+    if (!recursoActual || !user) return null;
 
-    const resourceType = getResourceType(currentResource);
+    const tipoRecurso = obtenerTipoRecurso(recursoActual);
 
-    if (resourceType === "ASSIGNMENT") {
+    if (tipoRecurso === "ASSIGNMENT") {
       return (
-        <StudentTaskView
-          assignment={currentResource as Assignment}
+        <VistaTareaEstudiante
+          assignment={recursoActual as Assignment}
           studentId={user.id}
-          onSubmit={handleTaskSubmit}
-          onExit={handleBackFromDetail}
-          isSubmitting={isSubmittingTask}
+          onSubmit={handleEnvioTarea}
+          onExit={handleVolverDelDetalle}
+          isSubmitting={enviandoTarea}
         />
       );
-    } else if (resourceType === "QUIZ") {
+    } else if (tipoRecurso === "QUIZ") {
       return (
-        <StudentQuizView
-          quizData={currentResource as Quiz}
+        <VistaQuizEstudiante
+          quizData={recursoActual as Quiz}
           studentId={user.id}
-          onSubmit={handleQuizSubmit}
-          onExit={handleBackFromDetail}
-          isSubmitting={isSubmittingQuiz}
+          onSubmit={handleEnvioQuiz}
+          onExit={handleVolverDelDetalle}
+          isSubmitting={enviandoQuiz}
         />
       );
-    } else if (resourceType === "PAGE") {
+    } else if (tipoRecurso === "PAGE") {
       return (
-        <PageView
-          page={currentResource as Page}
-          onClose={handleBackFromDetail}
+        <VistaPagina
+          page={recursoActual as Page}
+          onClose={handleVolverDelDetalle}
         />
       );
     }
@@ -516,345 +516,343 @@ export function UnitDetail({
     return null;
   };
 
-  if (isLoading) {
+  if (cargando) {
     return (
       <div className="min-h-screen p-10 flex items-center justify-center text-lg text-primary">
         <Loader2 className="h-8 w-8 animate-spin mr-2" />
-        Loading Unit Resources...
+        Cargando Recursos de la Unidad...
       </div>
     );
   }
 
-  if (viewMode === "detail" && currentResource) {
-    return renderDetailView();
+  if (modoVista === "detail" && recursoActual) {
+    return renderizarVistaDetalle();
   }
 
-  if (viewMode === "student" && currentResource) {
-    return renderStudentView();
+  if (modoVista === "student" && recursoActual) {
+    return renderizarVistaEstudiante();
   }
 
-  const currentCarouselResource = resources[currentResourceIndex];
-  const currentResourceType = currentCarouselResource
-    ? getResourceType(currentCarouselResource)
+  const recursoCarruselActual = recursos[indiceRecursoActual];
+  const tipoRecursoActual = recursoCarruselActual
+    ? obtenerTipoRecurso(recursoCarruselActual)
     : null;
-  const isGroupAssignment =
-    currentResourceType === "ASSIGNMENT" &&
-    (currentCarouselResource as Assignment).deliveryMode === "TEAM";
+  const esTareaGrupal =
+    tipoRecursoActual === "ASSIGNMENT" &&
+    (recursoCarruselActual as Assignment).deliveryMode === "TEAM";
+return (
+  <div className="min-h-screen bg-background">
+    {/* Encabezado */}
+    <div className="bg-card border-b border-border p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" onClick={onBack} className="hover:bg-secondary">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver al Curso
+          </Button>
+          <Badge variant="secondary" className="bg-secondary text-foreground border border-border text-sm">
+            {recursos.length}{" "}
+            {recursos.length === 1 ? "recurso" : "recursos"}
+          </Badge>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+              {unitData
+                ? `Unidad ${unitData.numUnity}: ${unitData.name}`
+                : `Recursos de la Unidad`}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {esEstudiante
+                ? "Ver y completar recursos de aprendizaje"
+                : "Gestionar recursos de aprendizaje para esta unidad"}
+            </p>
+          </div>
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-950 dark:to-blue-950/20">
-      {/* Header */}
-      <div className="bg-card border-b border-border p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" onClick={onBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Course
+          {!esEstudiante && (
+            <Button
+              onClick={() => setMostrarSelectorRecurso(true)}
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 self-start sm:self-auto"
+              disabled={
+                mutacionesTarea.createAssignment.isPending ||
+                mutacionesQuiz.createQuiz.isPending ||
+                mutacionesPagina.createPage.isPending
+              }
+            >
+              {mutacionesTarea.createAssignment.isPending ||
+              mutacionesQuiz.createQuiz.isPending ||
+              mutacionesPagina.createPage.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              Agregar Recurso
             </Button>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="text-sm">
-                {resources.length}{" "}
-                {resources.length === 1 ? "resource" : "resources"}
-              </Badge>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                {unitData
-                  ? `Unit ${unitData.numUnity}: ${unitData.name}`
-                  : `Unit Resources`}
-              </h1>
-              <p className="text-muted-foreground">
-                {isStudent
-                  ? "View and complete learning resources"
-                  : "Manage learning resources for this unit"}
-              </p>
-            </div>
-
-            {!isStudent && (
-              <Button
-                onClick={() => setShowResourceSelector(true)}
-                className="gap-2"
-                disabled={
-                  assignmentMutations.createAssignment.isPending ||
-                  quizMutations.createQuiz.isPending ||
-                  pageMutations.createPage.isPending
-                }
-              >
-                {assignmentMutations.createAssignment.isPending ||
-                quizMutations.createQuiz.isPending ||
-                pageMutations.createPage.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-                Add Resource
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
+    </div>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
-        <Card className="overflow-hidden border-2 border-gray-600">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
-              UNIT RESOURCES
-            </h2>
-          </div>
+    <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+      <Card className="overflow-hidden border-border shadow-sm">
+        {/* Banner de la tarjeta */}
+        <div className="bg-primary p-6 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-wide">
+            RECURSOS DE LA UNIDAD
+          </h2>
+        </div>
 
-          <div className="p-8 md:p-12">
-            {resources.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground text-lg mb-4">
-                  {isStudent ? "No resources available" : "No resources yet"}
-                </p>
-                {!isStudent && (
-                  <Button onClick={() => setShowResourceSelector(true)}>
-                    Add Your First Resource
-                  </Button>
-                )}
+        <div className="p-8 md:p-12">
+          {recursos.length === 0 ? (
+            <div className="text-center py-16 space-y-4">
+              <p className="text-muted-foreground text-lg">
+                {esEstudiante ? "No hay recursos disponibles" : "Aún no hay recursos"}
+              </p>
+              {!esEstudiante && (
+                <Button
+                  onClick={() => setMostrarSelectorRecurso(true)}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  Agregar Tu Primer Recurso
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-12">
+              {errorDisponibilidadQuiz && (
+                <Alert variant="destructive">
+                  <CalendarX className="h-4 w-4" />
+                  <AlertDescription>{errorDisponibilidadQuiz}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Navegación del carrusel */}
+              <div className="flex items-center justify-center gap-8">
+                <button
+                  onClick={handleAnterior}
+                  disabled={indiceRecursoActual === 0}
+                  className={`h-16 w-16 rounded-full border-4 border-primary flex items-center justify-center transition-all text-foreground ${
+                    indiceRecursoActual === 0
+                      ? "opacity-30 cursor-not-allowed"
+                      : "hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                  }`}
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </button>
+
+                <div
+                  className={`h-40 w-40 md:h-48 md:w-48 rounded-full ${obtenerColorRecurso(
+                    recursoCarruselActual
+                  )} flex items-center justify-center border-4 border-border`}
+                >
+                  <div className="text-primary-foreground text-4xl">
+                    {obtenerIconoRecurso(recursoCarruselActual)}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSiguiente}
+                  disabled={indiceRecursoActual === recursos.length - 1}
+                  className={`h-16 w-16 rounded-full border-4 border-primary flex items-center justify-center transition-all text-foreground ${
+                    indiceRecursoActual === recursos.length - 1
+                      ? "opacity-30 cursor-not-allowed"
+                      : "hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                  }`}
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </button>
               </div>
-            ) : (
-              <div className="space-y-12">
-                {quizAvailabilityError && (
-                  <Alert variant="destructive">
-                    <CalendarX className="h-4 w-4" />
-                    <AlertDescription>{quizAvailabilityError}</AlertDescription>
-                  </Alert>
-                )}
 
-                <div className="flex items-center justify-center gap-8">
-                  <button
-                    onClick={handlePrevious}
-                    disabled={currentResourceIndex === 0}
-                    className={`h-16 w-16 rounded-full border-4 border-orange-500 flex items-center justify-center transition-all ${
-                      currentResourceIndex === 0
-                        ? "opacity-30 cursor-not-allowed"
-                        : "hover:bg-orange-500 hover:text-white cursor-pointer"
-                    }`}
-                  >
-                    <ChevronLeft className="h-8 w-8" />
-                  </button>
+              {/* Información del recurso */}
+              <div className="text-center space-y-4 max-w-2xl mx-auto">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <Badge className="bg-accent/10 text-accent-foreground border border-accent/20 text-sm">
+                    {tipoRecursoActual === "ASSIGNMENT" ? "TAREA" : tipoRecursoActual === "QUIZ" ? "QUIZ" : "PÁGINA"}
+                  </Badge>
+                  {esTareaGrupal && (
+                    <Badge variant="secondary" className="bg-secondary text-foreground border border-border text-sm">
+                      <Users className="h-3 w-3 mr-1" />
+                      Tarea Grupal
+                    </Badge>
+                  )}
 
-                  <div
-                    className={`h-40 w-40 md:h-48 md:w-48 rounded-full bg-gradient-to-br ${getResourceColor(
-                      currentCarouselResource
-                    )} flex items-center justify-center shadow-2xl border-4 border-white dark:border-gray-800`}
-                  >
-                    <div className="text-white text-4xl">
-                      {getResourceIcon(currentCarouselResource)}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleNext}
-                    disabled={currentResourceIndex === resources.length - 1}
-                    className={`h-16 w-16 rounded-full border-4 border-orange-500 flex items-center justify-center transition-all ${
-                      currentResourceIndex === resources.length - 1
-                        ? "opacity-30 cursor-not-allowed"
-                        : "hover:bg-orange-500 hover:text-white cursor-pointer"
-                    }`}
-                  >
-                    <ChevronRight className="h-8 w-8" />
-                  </button>
-                </div>
-
-                <div className="text-center space-y-4 max-w-2xl mx-auto">
-                  <div className="flex items-center justify-center gap-2 flex-wrap">
-                    <Badge className="text-sm">{currentResourceType}</Badge>
-                    {isGroupAssignment && (
-                      <Badge variant="secondary" className="text-sm">
-                        <Users className="h-3 w-3 mr-1" />
-                        Group Assignment
-                      </Badge>
-                    )}
-
-                    {currentResourceType === "ASSIGNMENT" && (
-                      <Badge
-                        variant={
-                          (currentCarouselResource as Assignment).submissionFormat === "NOTEBOOK"
-                            ? "outline"
-                            : "secondary"
-                        }
-                        className="text-sm"
-                      >
-                        {(currentCarouselResource as Assignment).submissionFormat === "NOTEBOOK" ? (
-                          <>
-                            <BookOpen className="h-3 w-3 mr-1" />
-                            Notebook
-                          </>
-                        ) : (
-                          <>
-                            <Monitor className="h-3 w-3 mr-1" />
-                            Digital
-                          </>
-                        )}
-                      </Badge>
-                    )}
-
-                    {currentResourceType === "QUIZ" && 
-                      getQuizAvailabilityBadge(currentCarouselResource as Quiz)}
-                  </div>
-
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    {currentCarouselResource.title}
-                  </h2>
-                  <p className="text-muted-foreground text-lg">
-                    {"description" in currentCarouselResource
-                      ? (currentCarouselResource as Assignment).description
-                      : ""}
-                    {"sectionContent" in currentCarouselResource
-                      ? (
-                          currentCarouselResource as Page
-                        ).sectionContent.substring(0, 200) + "..."
-                      : ""}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {getResourceDetails(currentCarouselResource)}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-center gap-4">
-                  {isStudent ? (
-                    // Student Actions
-                    <Button
-                      onClick={() => handleStudentView(currentCarouselResource)}
-                      className="gap-2"
-                      size="lg"
-                      disabled={
-                        currentResourceType === "QUIZ" &&
-                        !isQuizAvailable(currentCarouselResource as Quiz).available
+                  {tipoRecursoActual === "ASSIGNMENT" && (
+                    <Badge
+                      variant={
+                        (recursoCarruselActual as Assignment).submissionFormat === "NOTEBOOK"
+                          ? "outline"
+                          : "secondary"
                       }
+                      className="border-border text-foreground text-sm"
                     >
-                      <Eye className="h-4 w-4" />
-                      {currentResourceType === "PAGE"
-                        ? "View Content"
-                        : currentResourceType === "QUIZ" &&
-                          !isQuizAvailable(currentCarouselResource as Quiz).available
-                        ? "Not Available"
-                        : "Start"}
-                    </Button>
-                  ) : (
-       
-                    <>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleView(currentCarouselResource)}
-                        className="gap-2"
-                      >
-                        <Eye className="h-4 w-4" /> View & Edit
-                      </Button>
-
-                      {deleteConfirm === currentCarouselResource.id ? (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() =>
-                              handleDeleteResource(currentCarouselResource)
-                            }
-                            className="gap-2"
-                            disabled={
-                              assignmentMutations.deleteAssignment.isPending ||
-                              quizMutations.deleteQuiz.isPending ||
-                              pageMutations.deletePage.isPending
-                            }
-                          >
-                            {assignmentMutations.deleteAssignment.isPending ||
-                            quizMutations.deleteQuiz.isPending ||
-                            pageMutations.deletePage.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Check className="h-4 w-4" />
-                            )}
-                            {assignmentMutations.deleteAssignment.isPending ||
-                            quizMutations.deleteQuiz.isPending ||
-                            pageMutations.deletePage.isPending
-                              ? "Deleting..."
-                              : "Confirm"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setDeleteConfirm(null)}
-                            className="gap-2"
-                          >
-                            <X className="h-4 w-4" /> Cancel
-                          </Button>
-                        </div>
+                      {(recursoCarruselActual as Assignment).submissionFormat === "NOTEBOOK" ? (
+                        <>
+                          <BookOpen className="h-3 w-3 mr-1" />
+                          Cuaderno
+                        </>
                       ) : (
+                        <>
+                          <Monitor className="h-3 w-3 mr-1" />
+                          Digital
+                        </>
+                      )}
+                    </Badge>
+                  )}
+
+                  {tipoRecursoActual === "QUIZ" &&
+                    obtenerInsigniaDisponibilidadQuiz(recursoCarruselActual as Quiz)}
+                </div>
+
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  {recursoCarruselActual.title}
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  {"description" in recursoCarruselActual
+                    ? (recursoCarruselActual as Assignment).description
+                    : ""}
+                  {"sectionContent" in recursoCarruselActual
+                    ? (recursoCarruselActual as Page).sectionContent.substring(0, 200) + "..."
+                    : ""}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {obtenerDetallesRecurso(recursoCarruselActual)}
+                </p>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex items-center justify-center gap-4">
+                {esEstudiante ? (
+                  <Button
+                    onClick={() => handleVistaEstudiante(recursoCarruselActual)}
+                    className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                    size="lg"
+                    disabled={
+                      tipoRecursoActual === "QUIZ" &&
+                      !estaQuizDisponible(recursoCarruselActual as Quiz).available
+                    }
+                  >
+                    <Eye className="h-4 w-4" />
+                    {tipoRecursoActual === "PAGE"
+                      ? "Ver Contenido"
+                      : tipoRecursoActual === "QUIZ" &&
+                        !estaQuizDisponible(recursoCarruselActual as Quiz).available
+                      ? "No Disponible"
+                      : "Comenzar"}
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleVer(recursoCarruselActual)}
+                      className="gap-2 border-border hover:bg-secondary"
+                    >
+                      <Eye className="h-4 w-4" /> Ver y Editar
+                    </Button>
+
+                    {confirmacionEliminar === recursoCarruselActual.id ? (
+                      <div className="flex gap-2">
                         <Button
                           variant="destructive"
-                          onClick={() =>
-                            setDeleteConfirm(currentCarouselResource.id)
-                          }
+                          size="sm"
+                          onClick={() => handleEliminarRecurso(recursoCarruselActual)}
                           className="gap-2"
+                          disabled={
+                            mutacionesTarea.deleteAssignment.isPending ||
+                            mutacionesQuiz.deleteQuiz.isPending ||
+                            mutacionesPagina.deletePage.isPending
+                          }
                         >
-                          <Trash2 className="h-4 w-4" /> Delete
+                          {mutacionesTarea.deleteAssignment.isPending ||
+                          mutacionesQuiz.deleteQuiz.isPending ||
+                          mutacionesPagina.deletePage.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Check className="h-4 w-4" />
+                          )}
+                          {mutacionesTarea.deleteAssignment.isPending ||
+                          mutacionesQuiz.deleteQuiz.isPending ||
+                          mutacionesPagina.deletePage.isPending
+                            ? "Eliminando..."
+                            : "Confirmar"}
                         </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="flex justify-center gap-2 pt-4 pb-8">
-                  {resources.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentResourceIndex(index)}
-                      className={`h-3 rounded-full transition-all ${
-                        index === currentResourceIndex
-                          ? "w-8 bg-orange-500"
-                          : "w-3 bg-gray-300 dark:bg-gray-600"
-                      }`}
-                    />
-                  ))}
-                </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setConfirmacionEliminar(null)}
+                          className="gap-2 border-border hover:bg-secondary"
+                        >
+                          <X className="h-4 w-4" /> Cancelar
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="destructive"
+                        onClick={() => setConfirmacionEliminar(recursoCarruselActual.id)}
+                        className="gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" /> Eliminar
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-          </div>
-        </Card>
-      </div>
 
-      {!isStudent && (
-        <>
-          <ResourceTypeSelector
-            open={showResourceSelector}
-            onClose={() => setShowResourceSelector(false)}
-            onSelect={setSelectedResourceType}
-          />
-
-          {selectedResourceType === "ASSIGNMENT" && (
-            <TaskCreator
-              idCourse={idCourse}
-              idUnit={idUnit}
-              open={true}
-              onClose={() => setSelectedResourceType(null)}
-              onSave={handleCreateResource}
-            />
+              {/* Indicadores de puntos */}
+              <div className="flex justify-center gap-2 pt-4 pb-8">
+                {recursos.map((_, indice) => (
+                  <button
+                    key={indice}
+                    onClick={() => setIndiceRecursoActual(indice)}
+                    className={`h-3 rounded-full transition-all ${
+                      indice === indiceRecursoActual
+                        ? "w-8 bg-accent"
+                        : "w-3 bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           )}
-          {selectedResourceType === "PAGE" && (
-            <PageCreator
-              courseId={idCourse}
-              open={true}
-              onClose={() => setSelectedResourceType(null)}
-              unitId={idUnit}
-              onSave={handleCreateResource}
-            />
-          )}
-          {selectedResourceType === "QUIZ" && (
-            <QuizCreator
-              courseId={idCourse}
-              unitId={idUnit}
-              open={true}
-              onClose={() => setSelectedResourceType(null)}
-              onSave={handleCreateResource}
-            />
-          )}
-        </>
-      )}
+        </div>
+      </Card>
     </div>
-  );
+
+    {!esEstudiante && (
+      <>
+        <ResourceTypeSelector
+          open={mostrarSelectorRecurso}
+          onClose={() => setMostrarSelectorRecurso(false)}
+          onSelect={setTipoRecursoSeleccionado}
+        />
+        {tipoRecursoSeleccionado === "ASSIGNMENT" && (
+          <CreadorTarea
+            idCourse={idCourse}
+            idUnit={idUnit}
+            open={true}
+            onClose={() => setTipoRecursoSeleccionado(null)}
+            onSave={handleCrearRecurso}
+          />
+        )}
+        {tipoRecursoSeleccionado === "PAGE" && (
+          <PageCreator
+            courseId={idCourse}
+            open={true}
+            onClose={() => setTipoRecursoSeleccionado(null)}
+            unitId={idUnit}
+            onSave={handleCrearRecurso}
+          />
+        )}
+        {tipoRecursoSeleccionado === "QUIZ" && (
+          <CreadorQuiz
+            courseId={idCourse}
+            unitId={idUnit}
+            open={true}
+            onClose={() => setTipoRecursoSeleccionado(null)}
+            onSave={handleCrearRecurso}
+          />
+        )}
+      </>
+    )}
+  </div>
+);
 }

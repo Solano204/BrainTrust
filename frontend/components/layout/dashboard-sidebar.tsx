@@ -7,7 +7,8 @@ import {
   BookOpen, 
   X, 
   Users, 
-  BarChart3
+  BarChart3,
+  TrendingUp
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -40,10 +41,10 @@ function normalizeRole(role: string | undefined): string {
 const getNavigationItems = (normalizedRole: string) => {
   
   const standardItems = [
-    { name: "Dashboard", icon: Home, href: "/", permission: null },
-    { name: "Calendar", icon: Calendar, href: "/calendar", permission: null },
-    { name: "Courses", icon: BookOpen, href: "/courses", permission: null },
-    { name: "Settings", icon: Settings, href: "/settings", permission: null },
+    { name: "Tablero", icon: Home, href: "/", permission: null },
+    { name: "Calendario", icon: Calendar, href: "/calendar", permission: null },
+    { name: "Cursos", icon: BookOpen, href: "/courses", permission: null },
+    { name: "Configuración", icon: Settings, href: "/settings", permission: null },
   ];
 
   const adminItems = [
@@ -68,7 +69,7 @@ const getNavigationItems = (normalizedRole: string) => {
       permission: PERMISSIONS.USER_MANAGEMENT 
     },
      { 
-      name: "Gestión de  Actividades", 
+      name: "Gestión de Actividades", 
       icon: BookOpen, 
       href: "/admin/activities", 
       permission: PERMISSIONS.ACTIVITIES 
@@ -80,7 +81,13 @@ const getNavigationItems = (normalizedRole: string) => {
       permission: PERMISSIONS.CATALOG_MANAGEMENT 
     },
     { 
-      name: "Settings", 
+      name: "Gráficos y Estadísticas", 
+      icon: TrendingUp, 
+      href: "/admin/statistics", 
+      permission: PERMISSIONS.CATALOG_MANAGEMENT 
+    },
+    { 
+      name: "Configuración", 
       icon: Settings, 
       href: "/settings", 
       permission: null 
@@ -116,17 +123,17 @@ export function DashboardSidebar({
   const rawRole = user?.role || userRole;
   const currentRole = normalizeRole(rawRole);
 
-  console.log('=== SIDEBAR ROLE ===', currentRole);
+  console.log('=== ROL DEL SIDEBAR ===', currentRole);
 
   const navigation = getNavigationItems(currentRole).filter(item => {
-    console.log(`Checking permission for ${item.name}:`, item.permission);
+    console.log(`Verificando permiso para ${item.name}:`, item.permission);
     if (!item.permission) return true;
     return hasPermission(item.permission);
   });
 
   const handleNavClick = (href: string, name: string) => {
 
-   console.log(`Navigating to ${name} (${href})`);
+   console.log(`Navegando a ${name} (${href})`);
     onNavigate(name)
     router.push(href)
     onClose()
@@ -148,7 +155,7 @@ export function DashboardSidebar({
         />
       )}
 
-      {/* Mobile Sidebar */}
+      {/* Sidebar Móvil */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden",
@@ -169,7 +176,7 @@ export function DashboardSidebar({
             </Button>
           </div>
 
-          {/* Navigation */}
+          {/* Navegación */}
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-2">
               {navigation.map((item) => (
@@ -196,7 +203,7 @@ export function DashboardSidebar({
             </ul>
           </nav>
 
-          {/* User Info */}
+          {/* Información del Usuario */}
           <div className="mt-auto pt-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/30">
               <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
@@ -204,10 +211,10 @@ export function DashboardSidebar({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                  {user?.name || 'User'}
+                  {user?.name || 'Usuario'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate capitalize">
-                  {currentRole}
+                  {currentRole === 'admin' ? 'Administrador' : currentRole === 'teacher' ? 'Profesor' : 'Estudiante'}
                 </p>
               </div>
             </div>
@@ -215,7 +222,7 @@ export function DashboardSidebar({
         </div>
       </aside>
 
-      {/* Desktop Sidebar */}
+      {/* Sidebar de Escritorio */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-sidebar border-r border-sidebar-border px-6 py-6">
           <div className="flex h-12 shrink-0 items-center">
@@ -253,7 +260,7 @@ export function DashboardSidebar({
             </ul>
           </nav>
 
-          {/* User Info Desktop */}
+          {/* Información del Usuario - Escritorio */}
           <div className="mt-auto pt-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent/30">
               <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
@@ -261,10 +268,10 @@ export function DashboardSidebar({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                  {user?.name || 'User'}
+                  {user?.name || 'Usuario'}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate capitalize">
-                  {currentRole}
+                  {currentRole === 'admin' ? 'Administrador' : currentRole === 'teacher' ? 'Profesor' : 'Estudiante'}
                 </p>
               </div>
             </div>

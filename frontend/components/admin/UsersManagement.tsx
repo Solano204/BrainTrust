@@ -161,126 +161,170 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
     }
 
     if (!open) return null
+return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div className="bg-card rounded-3xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                <form onSubmit={handleSubmit}>
-                    <div className="flex justify-between items-center p-6 border-b">
-                        <h2 className="text-2xl font-bold flex items-center gap-3">
-                            <Users className="h-6 w-6" />
-                            {isEditMode ? 'Editar Usuario' : 'Crear Usuario'}
-                        </h2>
-                        <Button variant="ghost" size="icon" onClick={onClose} disabled={isSaving}>
-                            <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="firstName" className="font-semibold">Nombre *</Label>
-                                <Input
-                                    id="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={isSaving}
-                                    placeholder="Ej: Juan"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="lastName" className="font-semibold">Apellidos *</Label>
-                                <Input
-                                    id="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={isSaving}
-                                    placeholder="Ej: Pérez García"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="email" className="font-semibold">Email *</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                disabled={isSaving}
-                                placeholder="usuario@universidad.edu"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="phone" className="font-semibold">Teléfono</Label>
-                            <Input
-                                id="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                disabled={isSaving}
-                                placeholder="+52 961 123 4567"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="role" className="font-semibold">Rol *</Label>
-                                <select
-                                    id="role"
-                                    value={formData.role}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-md px-3 py-2"
-                                    disabled={isSaving}
-                                >
-                                    <option value="STUDENT">Estudiante</option>
-                                    <option value="TEACHER">Profesor</option>
-                                    <option value="ADMIN">Administrador</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="status" className="font-semibold">Estado *</Label>
-                                <select
-                                    id="status"
-                                    value={formData.status}
-                                    onChange={handleChange}
-                                    className="w-full border rounded-md px-3 py-2"
-                                    disabled={isSaving}
-                                >
-                                    <option value="ACTIVE">Activo</option>
-                                    <option value="INACTIVE">Inactivo</option>
-                                    <option value="SUSPENDED">Suspendido</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 p-6 border-t bg-gray-50 dark:bg-gray-800">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" disabled={isSaving} className="gap-2">
-                            {isSaving ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Save className="h-4 w-4" />
-                            )}
-                            {isSaving ? 'Guardando...' : isEditMode ? 'Guardar Cambios' : 'Crear Usuario'}
-                        </Button>
-                    </div>
-                </form>
-            </Card>
+        {/* ── Encabezado ── */}
+        <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+              <Users className="w-4 h-4 text-primary" />
+            </span>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+                {isEditMode ? 'Editar Usuario' : 'Crear Usuario'}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isEditMode ? 'Actualiza los datos del usuario' : 'Completa los datos del nuevo usuario'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSaving}
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-30"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-    )
-}
 
+        {/* ── Cuerpo ── */}
+        <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 space-y-5">
 
+          {/* Nombre + Apellidos */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="firstName" className="text-xs font-semibold text-foreground">
+                Nombre *
+              </label>
+              <input
+                id="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+                disabled={isSaving}
+                placeholder="Ej: Juan"
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="lastName" className="text-xs font-semibold text-foreground">
+                Apellidos *
+              </label>
+              <input
+                id="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+                disabled={isSaving}
+                placeholder="Ej: Pérez García"
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label htmlFor="email" className="text-xs font-semibold text-foreground">
+              Correo Electrónico *
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              disabled={isSaving}
+              placeholder="usuario@universidad.edu"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+            />
+          </div>
+
+          {/* Teléfono */}
+          <div className="space-y-1.5">
+            <label htmlFor="phone" className="text-xs font-semibold text-foreground">
+              Teléfono
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="+52 961 123 4567"
+              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+            />
+          </div>
+
+          {/* Rol + Estado */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="role" className="text-xs font-semibold text-foreground">
+                Rol *
+              </label>
+              <select
+                id="role"
+                value={formData.role}
+                onChange={handleChange}
+                disabled={isSaving}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+              >
+                <option value="STUDENT">Estudiante</option>
+                <option value="TEACHER">Profesor</option>
+                <option value="ADMIN">Administrador</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="status" className="text-xs font-semibold text-foreground">
+                Estado *
+              </label>
+              <select
+                id="status"
+                value={formData.status}
+                onChange={handleChange}
+                disabled={isSaving}
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+              >
+                <option value="ACTIVE">Activo</option>
+                <option value="INACTIVE">Inactivo</option>
+                <option value="SUSPENDED">Suspendido</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Pie de página ── */}
+        <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSaving}
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all shadow-sm"
+            >
+              {isSaving
+                ? <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</>
+                : <><Save className="w-4 h-4" />{isEditMode ? 'Guardar Cambios' : 'Crear Usuario'}</>
+              }
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+);}
 function UserDetailModal({ user, open, onClose }: { user: User | null, open: boolean, onClose: () => void }) {
     if (!open || !user) return null
 
@@ -293,108 +337,134 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-                <div className="flex justify-between items-center p-6 border-b">
-                    <h2 className="text-2xl font-bold flex items-center gap-3">
-                        <Eye className="h-6 w-6" />
-                        Detalles del Usuario
-                    </h2>
-                    <Button variant="ghost" size="icon" onClick={onClose}>
-                        <X className="h-5 w-5" />
-                    </Button>
-                </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div className="bg-card rounded-3xl border border-border shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
 
-                <div className="p-6 space-y-6">
-                    {/* Avatar y nombre */}
-                    <div className="flex items-center gap-4 pb-4 border-b">
-                        <img
-                            src={user.avatarUrl}
-                            alt={user.firstName}
-                            className="w-20 h-20 rounded-full border-4 border-primary/50"
-                        />
-                        <div className="flex-1">
-                            <h3 className="text-2xl font-bold">{user.firstName} {user.lastName}</h3>
-                            <p className="text-muted-foreground">{user.email}</p>
-                        </div>
-                        <Badge variant={user.status === 'ACTIVE' ? 'default' : 'secondary'}>
-                            {user.status}
-                        </Badge>
-                    </div>
-
-                    {/* Información de contacto */}
-                    <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            Información de Contacto
-                        </h4>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <p className="text-muted-foreground">Email</p>
-                                <p className="font-medium">{user.email}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Teléfono</p>
-                                <p className="font-medium">{user.phone}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                            <Shield className="h-4 w-4" />
-                            Información de Cuenta
-                        </h4>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <p className="text-muted-foreground">Rol</p>
-                                <p className="font-medium">{user.role}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Estado</p>
-                                <p className="font-medium">{user.status}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Creado</p>
-                                <p className="font-medium">{formatDate(user.createdAt)}</p>
-                            </div>
-                            <div>
-                                <p className="text-muted-foreground">Último acceso</p>
-                                <p className="font-medium">{formatDate(user.lastLogin)}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            Estadísticas
-                        </h4>
-                        <div className="grid grid-cols-3 gap-4">
-                            <Card className="p-4 text-center">
-                                <p className="text-2xl font-bold text-primary">{user.coursesCount}</p>
-                                <p className="text-xs text-muted-foreground">Cursos</p>
-                            </Card>
-                            <Card className="p-4 text-center">
-                                <p className="text-2xl font-bold text-green-600">24</p>
-                                <p className="text-xs text-muted-foreground">Tareas</p>
-                            </Card>
-                            <Card className="p-4 text-center">
-                                <p className="text-2xl font-bold text-blue-600">87%</p>
-                                <p className="text-xs text-muted-foreground">Rendimiento</p>
-                            </Card>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-6 border-t">
-                    <Button onClick={onClose} className="w-full">
-                        Cerrar
-                    </Button>
-                </div>
-            </Card>
+      {/* ── Encabezado ── */}
+      <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
+        <div className="flex items-center gap-3">
+          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <Eye className="w-4 h-4 text-primary" />
+          </span>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+              Detalles del Usuario
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Información completa del perfil
+            </p>
+          </div>
         </div>
-    )
+        <button
+          onClick={onClose}
+          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* ── Cuerpo ── */}
+      <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 space-y-6">
+
+        {/* Avatar + nombre */}
+        <div className="flex items-center gap-4 pb-5 border-b border-border">
+          <img
+            src={user.avatarUrl}
+            alt={user.firstName}
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-border object-cover flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg sm:text-xl font-bold text-foreground truncate">
+              {user.firstName} {user.lastName}
+            </h3>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
+          </div>
+          <span className={`flex-shrink-0 px-2.5 py-1 rounded-xl text-xs font-semibold ${
+            user.status === 'ACTIVE'
+              ? 'bg-primary/10 text-primary'
+              : 'bg-muted text-muted-foreground'
+          }`}>
+            {user.status === 'ACTIVE' ? 'Activo' : user.status === 'INACTIVE' ? 'Inactivo' : 'Suspendido'}
+          </span>
+        </div>
+
+        {/* Información de contacto */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Mail className="w-3.5 h-3.5" />
+            Información de Contacto
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: 'Correo Electrónico',     value: user.email },
+              { label: 'Teléfono', value: user.phone },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-muted/50 rounded-2xl px-4 py-3 border border-border">
+                <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                <p className="text-sm font-semibold text-foreground">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Información de la cuenta */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5" />
+            Información de la Cuenta
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: 'Rol',           value: user.role === 'ADMIN' ? 'Administrador' : user.role === 'TEACHER' ? 'Profesor' : 'Estudiante' },
+              { label: 'Estado',        value: user.status === 'ACTIVE' ? 'Activo' : user.status === 'INACTIVE' ? 'Inactivo' : 'Suspendido' },
+              { label: 'Creado',        value: formatDate(user.createdAt) },
+              { label: 'Último acceso', value: formatDate(user.lastLogin) },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-muted/50 rounded-2xl px-4 py-3 border border-border">
+                <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                <p className="text-sm font-semibold text-foreground">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Estadísticas */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+            <BarChart3 className="w-3.5 h-3.5" />
+            Estadísticas
+          </h4>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-primary">{user.coursesCount}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Cursos</p>
+            </div>
+            <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-primary">24</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Tareas</p>
+            </div>
+            <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-accent-foreground">87%</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Rendimiento</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Pie de página ── */}
+      <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
+        <button
+          onClick={onClose}
+          className="w-full flex items-center justify-center px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+        >
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+);
 }
 
 export default function AdminUsersModule() {
@@ -466,247 +536,277 @@ export default function AdminUsersModule() {
     }
 
     return (
-        <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-background min-h-screen">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold">Gestión de Usuarios</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Administra todos los usuarios del sistema
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <Button onClick={handleExport} variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Exportar
-                    </Button>
-                    <Button onClick={() => {
-                        setSelectedUser(null)
-                        setShowFormModal(true)
-                    }} className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Nuevo Usuario
-                    </Button>
-                </div>
+  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+
+    {/* ── Encabezado de página ── */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          Gestión de Usuarios
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Administra todos los usuarios del sistema
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+        >
+          <Download className="w-4 h-4" />
+          Exportar
+        </button>
+        <button
+          onClick={() => { setSelectedUser(null); setShowFormModal(true); }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Nuevo Usuario
+        </button>
+      </div>
+    </div>
+
+    {/* ── Estadísticas ── */}
+    <UserStatsCards users={users} />
+
+    {/* ── Búsqueda ── */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      <input
+        placeholder="Buscar por nombre, apellido o correo..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      />
+    </div>
+
+    {/* ── Pestañas ── */}
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+      <TabsList className="w-full grid grid-cols-4 rounded-2xl bg-muted/50 p-1 h-auto">
+        {[
+          { value: 'all',     label: 'Todos',       count: users.length },
+          { value: 'student', label: 'Estudiantes', count: users.filter(u => u.role === 'STUDENT').length },
+          { value: 'teacher', label: 'Profesores',  count: users.filter(u => u.role === 'TEACHER').length },
+          { value: 'admin',   label: 'Admins',      count: users.filter(u => u.role === 'ADMIN').length },
+        ].map(({ value, label, count }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            className="rounded-xl py-2 text-xs sm:text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm text-muted-foreground transition-all"
+          >
+            {label}
+            <span className="ml-1.5 px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold hidden sm:inline">
+              {count}
+            </span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      <TabsContent value={activeTab} className="space-y-4">
+
+        {/* Cargando */}
+        {isLoading ? (
+          <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+            <p className="text-sm">Cargando usuarios...</p>
+          </div>
+
+        ) : filteredUsers.length === 0 ? (
+          <div className="bg-card rounded-2xl border border-border p-12 text-center text-sm text-muted-foreground">
+            No se encontraron usuarios
+          </div>
+
+        ) : (
+          <>
+            {/* ── Tabla de escritorio ── */}
+            <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+              <table className="w-full">
+                <thead className="bg-muted/40">
+                  <tr>
+                    {[
+                      { label: 'Usuario',       align: 'left'   },
+                      { label: 'Contacto',      align: 'left'   },
+                      { label: 'Rol',           align: 'left'   },
+                      { label: 'Estado',        align: 'left'   },
+                      { label: 'Último Acceso', align: 'left'   },
+                      { label: 'Acciones',      align: 'center' },
+                    ].map(({ label, align }) => (
+                      <th
+                        key={label}
+                        className={`px-6 py-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground text-${align}`}
+                      >
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-muted/30 transition-colors group">
+
+                      {/* Usuario */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={user.avatarUrl}
+                            alt={user.firstName}
+                            className="w-9 h-9 rounded-xl object-cover flex-shrink-0"
+                          />
+                          <div>
+                            <p className="font-semibold text-sm text-foreground">
+                              {user.firstName} {user.lastName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{user.coursesCount} cursos</p>
+                          </div>
+                        </div>
+                       </td>
+
+                      {/* Contacto */}
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-semibold text-foreground">{user.email}</p>
+                        <p className="text-xs text-muted-foreground">{user.phone}</p>
+                       </td>
+
+                      {/* Rol */}
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${getRoleBadge(user.role)}`}>
+                          {user.role === 'ADMIN' ? 'Administrador' : user.role === 'TEACHER' ? 'Profesor' : 'Estudiante'}
+                        </span>
+                       </td>
+
+                      {/* Estado */}
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${getStatusBadge(user.status)}`}>
+                          {user.status === 'ACTIVE' ? 'Activo' : user.status === 'INACTIVE' ? 'Inactivo' : 'Suspendido'}
+                        </span>
+                       </td>
+
+                      {/* Último acceso */}
+                      <td className="px-6 py-4 text-xs text-muted-foreground">
+                        {user.lastLogin
+                          ? new Date(user.lastLogin).toLocaleDateString('es-MX')
+                          : 'Nunca'}
+                       </td>
+
+                      {/* Acciones */}
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => handleView(user)}
+                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                            title="Ver"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(user)}
+                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                       </td>
+
+                     </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <UserStatsCards users={users} />
+            {/* ── Tarjetas móviles ── */}
+            <div className="lg:hidden space-y-3">
+              {filteredUsers.map((user) => (
+                <div key={user.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
 
-            <Card className="p-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar por nombre, apellido o email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
+                  {/* Avatar + nombre + etiquetas */}
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.firstName}
+                      className="w-11 h-11 rounded-xl object-cover flex-shrink-0"
                     />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-sm text-foreground truncate">
+                        {user.firstName} {user.lastName}
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <div className="flex gap-1.5 mt-2 flex-wrap">
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${getRoleBadge(user.role)}`}>
+                          {user.role === 'ADMIN' ? 'Administrador' : user.role === 'TEACHER' ? 'Profesor' : 'Estudiante'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${getStatusBadge(user.status)}`}>
+                          {user.status === 'ACTIVE' ? 'Activo' : user.status === 'INACTIVE' ? 'Inactivo' : 'Suspendido'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cuadrícula de información */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'Teléfono', value: user.phone },
+                      { label: 'Cursos',   value: user.coursesCount },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
+                        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                        <p className="text-sm font-bold text-foreground">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleView(user)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      Ver
+                    </button>
+                    <button
+                      onClick={() => handleEdit(user)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      Editar
+                    </button>
+                    <button
+                      className="p-2 rounded-xl border border-border text-destructive hover:bg-destructive/10 transition-all"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
                 </div>
-            </Card>
+              ))}
+            </div>
+          </>
+        )}
+      </TabsContent>
+    </Tabs>
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="all">
-                        Todos ({users.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="student">
-                        Estudiantes ({users.filter(u => u.role === 'STUDENT').length})
-                    </TabsTrigger>
-                    <TabsTrigger value="teacher">
-                        Profesores ({users.filter(u => u.role === 'TEACHER').length})
-                    </TabsTrigger>
-                    <TabsTrigger value="admin">
-                        Admins ({users.filter(u => u.role === 'ADMIN').length})
-                    </TabsTrigger>
-                </TabsList>
+    {/* ── Modales ── */}
+    <UserFormModal
+      open={showFormModal}
+      onClose={() => { setShowFormModal(false); setSelectedUser(null); }}
+      initialData={selectedUser || undefined}
+      onSave={handleSave}
+      isSaving={isSaving}
+    />
+    <UserDetailModal
+      user={selectedUser}
+      open={showDetailModal}
+      onClose={() => { setShowDetailModal(false); setSelectedUser(null); }}
+    />
 
-                <TabsContent value={activeTab} className="space-y-4 mt-6">
-                    {isLoading ? (
-                        <Card className="p-8 text-center">
-                            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                            <p>Cargando usuarios...</p>
-                        </Card>
-                    ) : filteredUsers.length === 0 ? (
-                        <Card className="p-8 text-center text-muted-foreground">
-                            No se encontraron usuarios
-                        </Card>
-                    ) : (
-                        <>
-                            {/* Desktop Table */}
-                            <Card className="hidden lg:block overflow-hidden shadow-lg">
-                                <table className="w-full">
-                                    <thead className="bg-muted/50">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left font-semibold">Usuario</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Contacto</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Rol</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Estado</th>
-                                            <th className="px-6 py-4 text-left font-semibold">Último Acceso</th>
-                                            <th className="px-6 py-4 text-center font-semibold">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredUsers.map((user) => (
-                                            <tr key={user.id} className="border-b hover:bg-muted/30 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <img
-                                                            src={user.avatarUrl}
-                                                            alt={user.firstName}
-                                                            className="w-10 h-10 rounded-full"
-                                                        />
-                                                        <div>
-                                                            <p className="font-medium">{user.firstName} {user.lastName}</p>
-                                                            <p className="text-sm text-muted-foreground">{user.coursesCount} cursos</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm">
-                                                        <p className="font-medium">{user.email}</p>
-                                                        <p className="text-muted-foreground">{user.phone}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge className={getRoleBadge(user.role)}>
-                                                        {user.role}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge className={getStatusBadge(user.status)}>
-                                                        {user.status}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-muted-foreground">
-                                                    {user.lastLogin
-                                                        ? new Date(user.lastLogin).toLocaleDateString('es-MX')
-                                                        : 'Nunca'
-                                                    }
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleView(user)}
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleEdit(user)}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-red-600"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </Card>
-
-                            <div className="lg:hidden space-y-4">
-                                {filteredUsers.map((user) => (
-                                    <Card key={user.id} className="p-4">
-                                        <div className="flex items-start gap-3 mb-4">
-                                            <img
-                                                src={user.avatarUrl}
-                                                alt={user.firstName}
-                                                className="w-12 h-12 rounded-full"
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-bold text-lg truncate">
-                                                    {user.firstName} {user.lastName}
-                                                </h3>
-                                                <p className="text-sm text-muted-foreground truncate">
-                                                    {user.email}
-                                                </p>
-                                                <div className="flex gap-2 mt-2">
-                                                    <Badge className={getRoleBadge(user.role)}>
-                                                        {user.role}
-                                                    </Badge>
-                                                    <Badge className={getStatusBadge(user.status)}>
-                                                        {user.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
-                                            <div>
-                                                <p className="text-muted-foreground">Teléfono</p>
-                                                <p className="font-medium">{user.phone}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-muted-foreground">Cursos</p>
-                                                <p className="font-medium">{user.coursesCount}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1"
-                                                onClick={() => handleView(user)}
-                                            >
-                                                <Eye className="h-4 w-4 mr-2" />
-                                                Ver
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="flex-1"
-                                                onClick={() => handleEdit(user)}
-                                            >
-                                                <Edit className="h-4 w-4 mr-2" />
-                                                Editar
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-red-600"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                </TabsContent>
-            </Tabs>
-
-            <UserFormModal
-                open={showFormModal}
-                onClose={() => {
-                    setShowFormModal(false)
-                    setSelectedUser(null)
-                }}
-                initialData={selectedUser || undefined}
-                onSave={handleSave}
-                isSaving={isSaving}
-            />
-
-            <UserDetailModal
-                user={selectedUser}
-                open={showDetailModal}
-                onClose={() => {
-                    setShowDetailModal(false)
-                    setSelectedUser(null)
-                }}
-            />
-        </div>
-    )
+  </div>
+);
 }

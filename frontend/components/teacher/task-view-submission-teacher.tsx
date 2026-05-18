@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -39,7 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { SubmissionTask } from "@/app/shared/models/assignment.model";
 
-interface SubmissionDetailViewProps {
+interface PropsVistaDetalleEntrega {
   data: SubmissionTask;
   onBack: () => void;
   onUpdateGrade: (data: {
@@ -56,6 +55,7 @@ interface SubmissionDetailViewProps {
   isDownloadingAttachment?: boolean;
 }
 
+
 export function SubmissionDetailView({
   data,
   onBack,
@@ -63,33 +63,33 @@ export function SubmissionDetailView({
   onDownloadAttachment,
   isUpdatingGrade,
   isDownloadingAttachment = false,
-}: SubmissionDetailViewProps) {
-  const [gradeValue, setGradeValue] = React.useState(
+}: PropsVistaDetalleEntrega) {
+  const [valorCalificacion, setValorCalificacion] = React.useState(
     data.submission?.grade?.value || ""
   );
-  const [feedback, setFeedback] = React.useState(
+  const [retroalimentacion, setRetroalimentacion] = React.useState(
     data.submission?.teacherFeedback || ""
   );
-  const [showAIAnalysisModal, setShowAIAnalysisModal] = React.useState(false);
+  const [mostrarModalAnalisisIA, setMostrarModalAnalisisIA] = React.useState(false);
 
-  const percentage = React.useMemo(() => {
+  const porcentaje = React.useMemo(() => {
     if (!data.submission?.grade) return 0;
-    const gradeNum = Number(gradeValue || data.submission.grade.value);
-    return (gradeNum / data.maxPoints) * 100;
-  }, [gradeValue, data.submission?.grade, data.maxPoints]);
+    const calificacionNum = Number(valorCalificacion || data.submission.grade.value);
+    return (calificacionNum / data.maxPoints) * 100;
+  }, [valorCalificacion, data.submission?.grade, data.maxPoints]);
 
-  const handleSubmitGrade = () => {
+  const handleEnviarCalificacion = () => {
     if (!data.submission) return;
     onUpdateGrade({
       submissionId: data.submission.id,
-      gradeValue,
+      gradeValue: valorCalificacion,
       maxScore: data.maxPoints.toString(),
-      feedback,
+      feedback: retroalimentacion,
     });
   };
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
+  const formatearFecha = (fechaString: string) =>
+    new Date(fechaString).toLocaleDateString("es-ES", {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -98,16 +98,16 @@ export function SubmissionDetailView({
       minute: "2-digit",
     });
 
-  const formatShortDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
+  const formatearFechaCorta = (fechaString: string) =>
+    new Date(fechaString).toLocaleDateString("es-ES", {
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
+  const obtenerVarianteEstado = (estado: string) => {
+    switch (estado) {
       case "GRADED": return "default";
       case "SUBMITTED": return "secondary";
       case "LATE_SUBMITTED": return "destructive";
@@ -116,298 +116,299 @@ export function SubmissionDetailView({
     }
   };
 
-  const formatStatusText = (status: string) =>
-    status.replace("_", " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+  const formatearTextoEstado = (estado: string) =>
+    estado.replace("_", " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
 
-  /* ─── AI Analysis Modal ─── */
-  const AIAnalysisModal = () => {
-    const analysis = data.submission?.aiAnalysis;
-    if (!analysis) return null;
+  /* ─── Modal de Análisis IA ─── */
+  const ModalAnalisisIA = () => {
+    const analisis = data.submission?.aiAnalysis;
+    if (!analisis) return null;
 
-    const isAI = analysis.isLikelyAI;
-    const aiSegments = analysis.segments?.filter((s) => s.isLikelyAI) ?? [];
-    const humanSegments = analysis.segments?.filter((s) => !s.isLikelyAI) ?? [];
-    const totalSegments = analysis.segments?.length ?? 0;
+    const esIA = analisis.isLikelyAI;
+    const segmentosIA = analisis.segments?.filter((s) => s.isLikelyAI) ?? [];
+    const segmentosHumanos = analisis.segments?.filter((s) => !s.isLikelyAI) ?? [];
+    const totalSegmentos = analisis.segments?.length ?? 0;
 
-    const avgProbability =
-      totalSegments > 0
+    const probabilidadPromedio =
+      totalSegmentos > 0
         ? (
-            (analysis.segments!.reduce(
+            (analisis.segments!.reduce(
               (sum, seg) => sum + parseFloat(seg.probability || "0"),
               0
             ) /
-              totalSegments) *
+              totalSegmentos) *
             100
           ).toFixed(1)
         : "N/A";
 
-    return (
-      <Dialog open={showAIAnalysisModal} onOpenChange={setShowAIAnalysisModal}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-0 shadow-2xl">
-          {/* Modal Header */}
-          <div
-            className={`px-8 py-6 rounded-t-2xl ${
-              isAI
-                ? "bg-gradient-to-r from-rose-600 to-red-500"
-                : "bg-gradient-to-r from-emerald-600 to-teal-500"
-            }`}
-          >
-            <DialogHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-2.5 bg-white/20 rounded-xl">
-                    {isAI ? (
-                      <Cpu className="h-6 w-6 text-white" />
-                    ) : (
-                      <CheckCircle2 className="h-6 w-6 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <DialogTitle className="text-white text-xl font-bold">
-                      {isAI ? "AI-Generated Content Detected" : "Human-Written Content Confirmed"}
-                    </DialogTitle>
-                    <DialogDescription className="text-white/75 text-sm mt-0.5">
-                      Analyzed on {formatDate(analysis.analyzedAt)}
-                    </DialogDescription>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowAIAnalysisModal(false)}
-                  className="text-white hover:bg-white/20 rounded-lg h-8 w-8 flex-shrink-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-          </div>
 
-          <div className="px-8 py-6 space-y-6 bg-white">
-            {/* Key Metrics */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                {
-                  icon: <Activity className="h-4 w-4 text-blue-500" />,
-                  label: "AI Probability",
-                  value: analysis.probability,
-                  bg: "bg-blue-50",
-                },
-                {
-                  icon: <BarChart3 className="h-4 w-4 text-violet-500" />,
-                  label: "Confidence",
-                  value: `${analysis.percentage}%`,
-                  bg: "bg-violet-50",
-                },
-                {
-                  icon: <Shield className="h-4 w-4 text-amber-500" />,
-                  label: "Level",
-                  value: analysis.confidenceLevel,
-                  bg: "bg-amber-50",
-                  capitalize: true,
-                },
-                {
-                  icon: <Cpu className="h-4 w-4 text-slate-500" />,
-                  label: "Model",
-                  value: analysis.modelUsed,
-                  bg: "bg-slate-50",
-                },
-              ].map((metric, i) => (
+return (
+  <Dialog open={mostrarModalAnalisisIA} onOpenChange={setMostrarModalAnalisisIA}>
+    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-0 shadow-2xl">
+      {/* Encabezado del Modal */}
+      <div
+        className={`px-6 sm:px-8 py-6 rounded-t-2xl ${
+          esIA
+            ? "bg-gradient-to-r from-destructive/90 to-destructive"
+            : "bg-gradient-to-r from-primary to-primary/80"
+        }`}
+      >
+        <DialogHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="p-2.5 bg-white/20 rounded-xl flex-shrink-0">
+                {esIA ? (
+                  <Cpu className="h-6 w-6 text-white" />
+                ) : (
+                  <CheckCircle2 className="h-6 w-6 text-white" />
+                )}
+              </div>
+              <div>
+                <DialogTitle className="text-white text-lg sm:text-xl font-bold leading-tight">
+                  {esIA ? "Contenido Generado por IA Detectado" : "Contenido Escrito por Humano Confirmado"}
+                </DialogTitle>
+                <DialogDescription className="text-white/75 text-sm mt-0.5">
+                  Analizado el {formatearFecha(analisis.analyzedAt)}
+                </DialogDescription>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMostrarModalAnalisisIA(false)}
+              className="text-white hover:bg-white/20 rounded-lg h-8 w-8 flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+      </div>
+
+      <div className="px-6 sm:px-8 py-6 space-y-6 bg-card">
+        {/* Métricas Clave */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            {
+              icon: <Activity className="h-4 w-4 text-primary" />,
+              label: "Probabilidad IA",
+              value: analisis.probability,
+              bg: "bg-primary/10",
+            },
+            {
+              icon: <BarChart3 className="h-4 w-4 text-accent" />,
+              label: "Confianza",
+              value: `${analisis.percentage}%`,
+              bg: "bg-accent/10",
+            },
+            {
+              icon: <Shield className="h-4 w-4 text-accent" />,
+              label: "Nivel",
+              value: analisis.confidenceLevel,
+              bg: "bg-accent/10",
+              capitalizar: true,
+            },
+            {
+              icon: <Cpu className="h-4 w-4 text-muted-foreground" />,
+              label: "Modelo",
+              value: analisis.modelUsed,
+              bg: "bg-muted",
+            },
+          ].map((metrica, i) => (
+            <div
+              key={i}
+              className={`${metrica.bg} rounded-xl p-4 flex flex-col gap-2 border border-border/50`}
+            >
+              <div className="flex items-center gap-1.5">
+                {metrica.icon}
+                <span className="text-xs font-medium text-muted-foreground">
+                  {metrica.label}
+                </span>
+              </div>
+              <span
+                className={`text-lg font-bold leading-none text-foreground ${
+                  metrica.capitalizar ? "capitalize" : ""
+                }`}
+              >
+                {metrica.value}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Resumen de Segmentos — solo si existen segmentos */}
+        {totalSegmentos > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            <div className="border border-border rounded-xl p-4 text-center bg-secondary/50">
+              <p className="text-2xl font-bold text-foreground">{totalSegmentos}</p>
+              <p className="text-xs text-muted-foreground mt-1">Segmentos Totales</p>
+            </div>
+            <div className="border border-destructive/30 bg-destructive/10 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-destructive">{segmentosIA.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">Generados por IA</p>
+            </div>
+            <div className="border border-primary/30 bg-primary/10 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-primary">{segmentosHumanos.length}</p>
+              <p className="text-xs text-muted-foreground mt-1">Escritos por Humano</p>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de Detalle de Segmentos */}
+        {totalSegmentos > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Desglose de Segmentos
+              </h4>
+              <Badge variant="outline" className="text-xs">
+                {totalSegmentos} segmentos
+              </Badge>
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {analisis.segments!.map((segmento, indice) => (
                 <div
-                  key={i}
-                  className={`${metric.bg} rounded-xl p-4 flex flex-col gap-2`}
+                  key={indice}
+                  className={`rounded-xl border p-4 ${
+                    segmento.isLikelyAI
+                      ? "bg-destructive/10 border-destructive/30"
+                      : "bg-primary/10 border-primary/30"
+                  }`}
                 >
-                  <div className="flex items-center gap-1.5">
-                    {metric.icon}
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {metric.label}
-                    </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {segmento.isLikelyAI ? (
+                        <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
+                      )}
+                      <span className="text-sm font-semibold text-foreground">
+                        Segmento {indice + 1}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>
+                        IA:{" "}
+                        <strong>
+                          {(
+                            parseFloat(segmento.aiProbability || "0") * 100
+                          ).toFixed(1)}
+                          %
+                        </strong>
+                      </span>
+                      <span>
+                        Pos: {segmento.startIndex}–{segmento.endIndex}
+                      </span>
+                    </div>
                   </div>
-                  <span
-                    className={`text-lg font-bold leading-none ${
-                      metric.capitalize ? "capitalize" : ""
-                    }`}
-                  >
-                    {metric.value}
-                  </span>
+                  <p className="text-sm text-muted-foreground leading-relaxed bg-card/60 rounded-lg px-3 py-2 italic">
+                    "{segmento.text}"
+                  </p>
+                  {segmento.reasoning && (
+                    <p className="text-xs text-muted-foreground mt-2 pl-1">
+                      💡 {segmento.reasoning}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
-
-            {/* Segment Summary — only if segments exist */}
-            {totalSegments > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                <div className="border rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-slate-800">{totalSegments}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Total Segments</p>
-                </div>
-                <div className="border border-red-100 bg-red-50 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-red-600">{aiSegments.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">AI-Generated</p>
-                </div>
-                <div className="border border-emerald-100 bg-emerald-50 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-emerald-600">{humanSegments.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Human-Written</p>
-                </div>
-              </div>
-            )}
-
-            {/* Segment Detail List */}
-            {totalSegments > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold text-sm text-slate-700 flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Segment Breakdown
-                  </h4>
-                  <Badge variant="outline" className="text-xs">
-                    {totalSegments} segments
-                  </Badge>
-                </div>
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {analysis.segments!.map((segment, index) => (
-                    <div
-                      key={index}
-                      className={`rounded-xl border p-4 ${
-                        segment.isLikelyAI
-                          ? "bg-red-50 border-red-200"
-                          : "bg-emerald-50 border-emerald-200"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {segment.isLikelyAI ? (
-                            <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
-                          ) : (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                          )}
-                          <span className="text-sm font-semibold text-slate-700">
-                            Segment {index + 1}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>
-                            AI:{" "}
-                            <strong>
-                              {(
-                                parseFloat(segment.aiProbability || "0") * 100
-                              ).toFixed(1)}
-                              %
-                            </strong>
-                          </span>
-                          <span>
-                            Pos: {segment.startIndex}–{segment.endIndex}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-600 leading-relaxed bg-white/60 rounded-lg px-3 py-2 italic">
-                        "{segment.text}"
-                      </p>
-                      {segment.reasoning && (
-                        <p className="text-xs text-slate-500 mt-2 pl-1">
-                          💡 {segment.reasoning}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Analysis Reference */}
-            <div className="bg-slate-50 rounded-xl p-4">
-              <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
-                <Hash className="h-3.5 w-3.5" /> Analysis Reference ID
-              </p>
-              <code className="text-xs font-mono text-slate-600 break-all">
-                {analysis.analysisId}
-              </code>
-            </div>
-
-            {/* Disclaimer */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                <div className="space-y-1 text-sm text-amber-800">
-                  <p className="font-semibold">Important Considerations</p>
-                  <ul className="space-y-1 text-xs text-amber-700 list-disc list-inside">
-                    <li>AI detection tools may produce false positives or negatives.</li>
-                    <li>Human content following predictable patterns may be flagged.</li>
-                    <li>Use this as one signal — not the sole basis for decisions.</li>
-                    <li>Compare with the student's prior writing style and submissions.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Close */}
-            <div className="flex justify-end pt-2 border-t">
-              <Button
-                variant="outline"
-                onClick={() => setShowAIAnalysisModal(false)}
-                className="rounded-lg"
-              >
-                Close Report
-              </Button>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
+        )}
 
-  /* ─── Main View ─── */
-  return (
-    <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Submissions
-          </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {data.name} — Submission Review
-          </h1>
-          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span>Student: {data.studentName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Hash className="h-4 w-4" />
-              <span>Task ID: {data.id}</span>
+        {/* Referencia de Análisis */}
+        <div className="bg-muted/50 rounded-xl p-4 border border-border">
+          <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+            <Hash className="h-3.5 w-3.5" /> ID de Referencia de Análisis
+          </p>
+          <code className="text-xs font-mono text-foreground/70 break-all">
+            {analisis.analysisId}
+          </code>
+        </div>
+
+        {/* Descargo de Responsabilidad */}
+        <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+            <div className="space-y-1 text-sm text-accent-foreground">
+              <p className="font-semibold">Consideraciones Importantes</p>
+              <ul className="space-y-1 text-xs text-accent-foreground/80 list-disc list-inside">
+                <li>Las herramientas de detección de IA pueden producir falsos positivos o negativos.</li>
+                <li>El contenido humano que sigue patrones predecibles puede ser marcado.</li>
+                <li>Use esto como una señal — no como la única base para decisiones.</li>
+                <li>Compare con el estilo de escritura previo del estudiante y otras entregas.</li>
+              </ul>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
-            <Award className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium">Max: {data.maxPoints} pts</span>
+        {/* Cerrar */}
+        <div className="flex justify-end pt-2 border-t border-border">
+          <Button
+            variant="outline"
+            onClick={() => setMostrarModalAnalisisIA(false)}
+            className="rounded-lg"
+          >
+            Cerrar Informe
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+};
+
+  /* ─── Vista Principal ─── */
+  return (
+    <div className="p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Encabezado */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
+            <ArrowLeft className="h-4 w-4" />
+            Volver a Entregas
+          </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            {data.name} — Revisión de Entrega
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span>Estudiante: {data.studentName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Hash className="h-4 w-4" />
+              <span>ID de Tarea: {data.id}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg">
-            <Calendar className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium">
-              Deadline: {formatShortDate(data.deadline)}
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 rounded-lg">
+            <Award className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Máx: {data.maxPoints} pts</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 rounded-lg">
+            <Calendar className="h-4 w-4 text-accent" />
+            <span className="text-sm font-medium text-accent-foreground">
+              Fecha Límite: {formatearFechaCorta(data.deadline)}
             </span>
           </div>
           <Badge
-            variant={getStatusBadgeVariant(data.submission?.status || "NOT_SUBMITTED")}
+            variant={obtenerVarianteEstado(data.submission?.status || "NOT_SUBMITTED")}
             className="px-3 py-2"
           >
-            {formatStatusText(data.submission?.status || "Not Submitted")}
+            {formatearTextoEstado(data.submission?.status || "Not Submitted")}
           </Badge>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left / Main */}
+        {/* Izquierda / Principal */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Task Overview */}
+          {/* Resumen de la Tarea */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Task Overview</h2>
+              <h2 className="text-xl font-bold text-foreground">Resumen de la Tarea</h2>
               <Badge variant="outline" className="capitalize">
                 {data.deliveryMode}
               </Badge>
@@ -416,19 +417,19 @@ export function SubmissionDetailView({
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Hash className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="font-semibold">Unit Information</h3>
+                  <h3 className="font-semibold text-foreground">Información de la Unidad</h3>
                 </div>
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <p className="font-medium">{data.unit}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Associated Unit</p>
+                <div className="p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <p className="font-medium text-foreground">{data.unit}</p>
+                  <p className="text-sm text-muted-foreground mt-1">Unidad Asociada</p>
                 </div>
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="font-semibold">Instructions</h3>
+                  <h3 className="font-semibold text-foreground">Instrucciones</h3>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="p-4 bg-muted/30 rounded-lg border border-border/50">
                   <p className="whitespace-pre-wrap text-muted-foreground">
                     {data.instructions}
                   </p>
@@ -436,25 +437,25 @@ export function SubmissionDetailView({
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: "Max Points", value: data.maxPoints },
-                  { label: "Delivery Mode", value: data.deliveryMode, capitalize: true },
+                  { label: "Puntos Máximos", value: data.maxPoints },
+                  { label: "Modo de Entrega", value: data.deliveryMode, capitalizar: true },
                   {
-                    label: "Deadline",
+                    label: "Fecha Límite",
                     value: new Date(data.deadline).toLocaleDateString(),
                   },
                   {
-                    label: "Status",
+                    label: "Estado",
                     value: (
                       <Badge variant={data.isOverdue ? "destructive" : "default"}>
-                        {data.isOverdue ? "Overdue" : "Active"}
+                        {data.isOverdue ? "Vencido" : "Activo"}
                       </Badge>
                     ),
                   },
                 ].map((item, i) => (
-                  <div key={i} className="p-3 bg-muted/30 rounded-lg">
+                  <div key={i} className="p-3 bg-muted/30 rounded-lg border border-border/50">
                     <p className="text-sm text-muted-foreground">{item.label}</p>
                     {typeof item.value === "string" || typeof item.value === "number" ? (
-                      <p className={`text-lg font-bold ${item.capitalize ? "capitalize" : ""}`}>
+                      <p className={`text-lg font-bold text-foreground ${item.capitalizar ? "capitalize" : ""}`}>
                         {item.value}
                       </p>
                     ) : (
@@ -466,72 +467,72 @@ export function SubmissionDetailView({
             </div>
           </Card>
 
-          {/* Student Submission */}
+          {/* Entrega del Estudiante */}
           {data.submission && (
             <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Student Submission</h2>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h2 className="text-xl font-bold text-foreground">Entrega del Estudiante</h2>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    <span>Submitted: {formatShortDate(data.submission.submittedAt)}</span>
+                    <span>Entregado: {formatearFechaCorta(data.submission.submittedAt)}</span>
                   </div>
-                  <Badge variant={getStatusBadgeVariant(data.submission.status)}>
-                    {formatStatusText(data.submission.status)}
+                  <Badge variant={obtenerVarianteEstado(data.submission.status)}>
+                    {formatearTextoEstado(data.submission.status)}
                   </Badge>
                 </div>
               </div>
               <div className="space-y-6">
                 {data.submission.isTeamSubmission && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-blue-600" />
-                      <span className="font-medium text-blue-800">
-                        Team Submission: {data.submission.teamName}
+                      <Users className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">
+                        Entrega en Equipo: {data.submission.teamName}
                       </span>
                     </div>
                   </div>
                 )}
                 <div>
-                  <h3 className="font-semibold mb-3">Submission Content</h3>
-                  <div className="p-4 bg-muted/50 rounded-lg border">
-                    <p className="whitespace-pre-wrap">
-                      {data.submission.content || "No content provided"}
+                  <h3 className="font-semibold mb-3 text-foreground">Contenido de la Entrega</h3>
+                  <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                    <p className="whitespace-pre-wrap text-foreground">
+                      {data.submission.content || "No se proporcionó contenido"}
                     </p>
                   </div>
                 </div>
                 {data.submission.attachments.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold">Attachments</h3>
+                      <h3 className="font-semibold text-foreground">Adjuntos</h3>
                       <span className="text-sm text-muted-foreground">
-                        {data.submission.attachments.length} file(s)
+                        {data.submission.attachments.length} archivo(s)
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {data.submission.attachments.map((attachment, index) => (
+                      {data.submission.attachments.map((adjunto, indice) => (
                         <div
-                          key={index}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors"
+                          key={indice}
+                          className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <FileText className="h-4 w-4 text-blue-500" />
+                            <FileText className="h-4 w-4 text-primary" />
                             <div>
-                              <p className="font-medium">{attachment.name}</p>
+                              <p className="font-medium text-foreground">{adjunto.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                {attachment.storagePath}
+                                {adjunto.storagePath}
                               </p>
                             </div>
                           </div>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onDownloadAttachment(attachment)}
+                            onClick={() => onDownloadAttachment(adjunto)}
                             disabled={isDownloadingAttachment}
                             className="gap-2"
                           >
                             <Download className="h-4 w-4" />
-                            {isDownloadingAttachment ? "Downloading..." : "Download"}
+                            {isDownloadingAttachment ? "Descargando..." : "Descargar"}
                           </Button>
                         </div>
                       ))}
@@ -539,28 +540,28 @@ export function SubmissionDetailView({
                   </div>
                 )}
                 {data.submission.grade && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
                     <div className="flex items-center gap-2 mb-3">
-                      <Award className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold text-blue-800">Current Grade</h3>
+                      <Award className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-foreground">Calificación Actual</h3>
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-2xl font-bold text-blue-800">
+                        <p className="text-2xl font-bold text-foreground">
                           {data.submission.grade.value} / {data.maxPoints}
                         </p>
-                        <p className="text-sm text-blue-600">
-                          {percentage.toFixed(1)}% achieved
+                        <p className="text-sm text-muted-foreground">
+                          {porcentaje.toFixed(1)}% alcanzado
                         </p>
                       </div>
-                      <Badge variant={percentage >= 70 ? "default" : "secondary"}>
-                        {percentage >= 70 ? "Passing" : "Needs Improvement"}
+                      <Badge variant={porcentaje >= 70 ? "default" : "secondary"}>
+                        {porcentaje >= 70 ? "Aprobado" : "Necesita Mejorar"}
                       </Badge>
                     </div>
                     {data.submission.teacherFeedback && (
-                      <div className="mt-3 pt-3 border-t border-blue-200">
-                        <p className="text-sm font-medium text-blue-800 mb-1">Feedback:</p>
-                        <p className="text-sm text-blue-700">{data.submission.teacherFeedback}</p>
+                      <div className="mt-3 pt-3 border-t border-primary/20">
+                        <p className="text-sm font-medium text-foreground mb-1">Retroalimentación:</p>
+                        <p className="text-sm text-muted-foreground">{data.submission.teacherFeedback}</p>
                       </div>
                     )}
                   </div>
@@ -570,19 +571,19 @@ export function SubmissionDetailView({
           )}
         </div>
 
-        {/* Right Sidebar */}
+        {/* Barra Lateral Derecha */}
         <div className="space-y-6">
-          {/* Grading */}
+          {/* Calificación */}
           <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Grade Submission</h2>
+            <h2 className="text-xl font-bold mb-4 text-foreground">Calificar Entrega</h2>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Enter Grade</label>
+                <label className="text-sm font-medium mb-2 block text-foreground">Ingresar Calificación</label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
-                    value={gradeValue}
-                    onChange={(e) => setGradeValue(e.target.value)}
+                    value={valorCalificacion}
+                    onChange={(e) => setValorCalificacion(e.target.value)}
                     placeholder="0"
                     className="flex-1"
                     min="0"
@@ -592,73 +593,73 @@ export function SubmissionDetailView({
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Calculated Percentage</label>
+                <label className="text-sm font-medium mb-2 block text-foreground">Porcentaje Calculado</label>
                 <div className="flex items-center gap-2">
                   <Input
                     type="text"
-                    value={percentage.toFixed(1)}
+                    value={porcentaje.toFixed(1)}
                     readOnly
                     className="flex-1 bg-muted"
                   />
-                  <span>%</span>
+                  <span className="text-foreground">%</span>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Feedback for Student</label>
+                <label className="text-sm font-medium mb-2 block text-foreground">Retroalimentación para el Estudiante</label>
                 <Textarea
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Provide constructive feedback to help the student improve..."
+                  value={retroalimentacion}
+                  onChange={(e) => setRetroalimentacion(e.target.value)}
+                  placeholder="Proporcione retroalimentación constructiva para ayudar al estudiante a mejorar..."
                   rows={6}
                   className="resize-none"
                 />
               </div>
               <Button
-                onClick={handleSubmitGrade}
-                disabled={isUpdatingGrade || !gradeValue}
+                onClick={handleEnviarCalificacion}
+                disabled={isUpdatingGrade || !valorCalificacion}
                 className="w-full gap-2"
               >
                 {isUpdatingGrade ? (
                   <>
                     <Clock className="h-4 w-4 animate-spin" />
-                    Updating Grade...
+                    Actualizando Calificación...
                   </>
                 ) : (
                   <>
                     <Award className="h-4 w-4" />
-                    {data.submission?.grade ? "Update Grade" : "Submit Grade"}
+                    {data.submission?.grade ? "Actualizar Calificación" : "Enviar Calificación"}
                   </>
                 )}
               </Button>
             </div>
           </Card>
 
-          {/* AI Analysis Card */}
+          {/* Tarjeta de Análisis IA */}
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Brain className="h-5 w-5 text-purple-600" />
-              <h2 className="text-xl font-bold">AI Content Analysis</h2>
+              <Brain className="h-5 w-5 text-accent" />
+              <h2 className="text-xl font-bold text-foreground">Análisis de Contenido IA</h2>
             </div>
             {data.submission?.aiAnalysis ? (
               <div className="space-y-4">
                 <div
                   className={`p-4 rounded-xl border ${
                     data.submission.aiAnalysis.isLikelyAI
-                      ? "bg-red-50 border-red-200"
-                      : "bg-emerald-50 border-emerald-200"
+                      ? "bg-destructive/10 border-destructive/30"
+                      : "bg-primary/10 border-primary/30"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       {data.submission.aiAnalysis.isLikelyAI ? (
-                        <XCircle className="h-4 w-4 text-red-500" />
+                        <XCircle className="h-4 w-4 text-destructive" />
                       ) : (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
                       )}
-                      <p className="text-sm font-semibold">
+                      <p className="text-sm font-semibold text-foreground">
                         {data.submission.aiAnalysis.isLikelyAI
-                          ? "AI Content Detected"
-                          : "Human Content Confirmed"}
+                          ? "Contenido IA Detectado"
+                          : "Contenido Humano Confirmado"}
                       </p>
                     </div>
                     <Badge
@@ -671,89 +672,87 @@ export function SubmissionDetailView({
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Analyzed: {formatShortDate(data.submission.aiAnalysis.analyzedAt)}
+                    Analizado: {formatearFechaCorta(data.submission.aiAnalysis.analyzedAt)}
                   </p>
                 </div>
                 <Button
-                  onClick={() => setShowAIAnalysisModal(true)}
+                  onClick={() => setMostrarModalAnalisisIA(true)}
                   variant="outline"
                   className="w-full gap-2"
                 >
                   <Eye className="h-4 w-4" />
-                  View Full Analysis
+                  Ver Análisis Completo
                 </Button>
               </div>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  No AI analysis has been performed on this submission.
+                  No se ha realizado ningún análisis de IA en esta entrega.
                 </p>
-                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <p className="text-sm text-yellow-700">
-                    AI analysis can help detect AI-generated content. This feature requires
-                    manual activation.
+                <div className="p-3 bg-accent/10 rounded-lg border border-accent/30">
+                  <p className="text-sm text-accent-foreground">
+                    El análisis de IA puede ayudar a detectar contenido generado por IA. Esta función requiere
+                    activación manual.
                   </p>
                 </div>
               </div>
             )}
           </Card>
 
-          {/* Submission Details */}
+          {/* Detalles de la Entrega */}
           <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Submission Details</h2>
+            <h2 className="text-xl font-bold mb-4 text-foreground">Detalles de la Entrega</h2>
             <div className="space-y-3">
               {[
-                { icon: <User />, label: "Student", value: data.studentName },
-                { icon: <Hash />, label: "Task ID", value: data.id, small: true },
+                { icon: <User />, label: "Estudiante", value: data.studentName },
+                { icon: <Hash />, label: "ID de Tarea", value: data.id, pequeno: true },
                 {
                   icon: <Calendar />,
-                  label: "Deadline",
+                  label: "Fecha Límite",
                   value: new Date(data.deadline).toLocaleDateString(),
                 },
                 {
                   icon: <File />,
-                  label: "Delivery Mode",
+                  label: "Modo de Entrega",
                   value: (
                     <Badge variant="outline" className="capitalize">
                       {data.deliveryMode}
                     </Badge>
                   ),
                 },
-                { icon: <BarChart3 />, label: "Max Points", value: data.maxPoints },
+                { icon: <BarChart3 />, label: "Puntos Máximos", value: data.maxPoints },
                 {
                   icon: <Clock />,
-                  label: "Submission Status",
+                  label: "Estado de Entrega",
                   value: (
                     <Badge
-                      variant={getStatusBadgeVariant(
+                      variant={obtenerVarianteEstado(
                         data.submission?.status || "NOT_SUBMITTED"
                       )}
                     >
-                      {formatStatusText(data.submission?.status || "Not Submitted")}
+                      {formatearTextoEstado(data.submission?.status || "Not Submitted")}
                     </Badge>
                   ),
                 },
                 {
                   icon: <Users />,
-                  label: "Task Status",
+                  label: "Estado de Tarea",
                   value: (
                     <Badge variant={data.isOverdue ? "destructive" : "default"}>
-                      {data.isOverdue ? "Overdue" : "Active"}
+                      {data.isOverdue ? "Vencido" : "Activo"}
                     </Badge>
                   ),
                 },
               ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
+                <div key={i} className="flex items-center justify-between py-1 border-b border-border/40 last:border-0">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    {React.cloneElement(item.icon as React.ReactElement, {
-                      className: "h-4 w-4",
-                    })}
+                    {React.cloneElement(item.icon as React.ReactElement<any>, {
+                        className: "h-4 w-4",
+                      })}
                     <span className="text-sm">{item.label}</span>
                   </div>
                   {typeof item.value === "string" || typeof item.value === "number" ? (
-                    <span
-                      className={`font-medium ${item.small ? "text-xs" : ""}`}
-                    >
+                    <span className={`font-medium text-foreground ${item.pequeno ? "text-xs" : ""}`}>
                       {item.value}
                     </span>
                   ) : (
@@ -766,7 +765,7 @@ export function SubmissionDetailView({
         </div>
       </div>
 
-      <AIAnalysisModal />
+      <ModalAnalisisIA />
     </div>
   );
 }

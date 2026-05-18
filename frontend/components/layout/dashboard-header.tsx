@@ -34,7 +34,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
       await new Promise(resolve => setTimeout(resolve, 100))
       window.location.href = '/auth/login'
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error('Error al cerrar sesión:', error)
       window.location.href = '/auth/login'
     }
   }
@@ -49,31 +49,31 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
           <div className="flex-1">
             <h1 className="text-lg md:text-xl font-semibold text-foreground">
-              Welcome back, <span className="text-primary">{user?.name || 'User'}</span>
+              Bienvenido de nuevo, <span className="text-primary">{user?.name || 'Usuario'}</span>
             </h1>
             <p className="text-sm text-muted-foreground hidden md:block">
               {user?.role === 'teacher'
-                ? "Here's what's happening with your courses today"
-                : "Here's your learning progress for today"
+                ? "Esto es lo que está pasando con tus cursos hoy"
+                : "Este es tu progreso de aprendizaje de hoy"
               }
             </p>
           </div>
 
           <div className="flex items-center gap-2">
 
-            {/* Dark / Light toggle */}
+            {/* Cambiar tema Oscuro/Claro */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              title="Toggle theme"
+              title="Cambiar tema"
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
+              <span className="sr-only">Cambiar tema</span>
             </Button>
 
-            {/* Notifications */}
+            {/* Notificaciones */}
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-destructive-foreground text-xs">
@@ -81,7 +81,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
               </Badge>
             </Button>
 
-            {/* Messages */}
+            {/* Mensajes */}
             <Button variant="ghost" size="icon" className="relative">
               <MessageSquare className="h-5 w-5" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary text-primary-foreground text-xs">
@@ -89,17 +89,17 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
               </Badge>
             </Button>
 
-            {/* Settings */}
+            {/* Configuración */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setShowProfileModal(true)}
-              title="Profile Settings"
+              title="Configuración del Perfil"
             >
               <Settings className="h-5 w-5" />
             </Button>
 
-            {/* Profile Dropdown */}
+            {/* Menú desplegable del Perfil */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
@@ -116,7 +116,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user?.name}</p>
                     <p className="text-xs leading-none text-muted-foreground capitalize">
-                      {user?.role}
+                      {user?.role === 'teacher' ? 'Profesor' : user?.role === 'admin' ? 'Administrador' : 'Estudiante'}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user?.email}
@@ -126,7 +126,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowProfileModal(true)}>
                   <User className="h-4 w-4 mr-2" />
-                  Profile Settings
+                  Configuración del Perfil
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -134,7 +134,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                   className="text-destructive focus:text-destructive"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Log out
+                  Cerrar Sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

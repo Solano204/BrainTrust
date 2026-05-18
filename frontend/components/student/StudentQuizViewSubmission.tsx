@@ -78,7 +78,7 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         <div className="flex items-center gap-4">
           <Button onClick={onExit} variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Tasks
+            Volver a Tareas
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{quiz.title}</h1>
@@ -86,9 +86,9 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         </div>
         <Card className="text-center p-8">
           <HelpCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-semibold mb-2">No Quiz Submission Found</h2>
-          <p className="text-muted-foreground mb-4">You haven't taken this quiz yet.</p>
-          <Button onClick={onExit}>Back to Tasks</Button>
+          <h2 className="text-xl font-semibold mb-2">No se encontró envío del cuestionario</h2>
+          <p className="text-muted-foreground mb-4">Aún no has realizado este cuestionario.</p>
+          <Button onClick={onExit}>Volver a Tareas</Button>
         </Card>
       </div>
     )
@@ -100,11 +100,11 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
         <div className="max-w-4xl mx-auto">
           <Button onClick={onExit} variant="ghost" size="sm" className="gap-2 mb-6">
-            <ArrowLeft className="h-4 w-4" />Back to Tasks
+            <ArrowLeft className="h-4 w-4" />Volver a Tareas
           </Button>
           <Card className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading quiz results...</p>
+            <p className="text-muted-foreground">Cargando resultados del cuestionario...</p>
           </Card>
         </div>
       </div>
@@ -117,13 +117,13 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
         <div className="max-w-4xl mx-auto">
           <Button onClick={onExit} variant="ghost" size="sm" className="gap-2 mb-6">
-            <ArrowLeft className="h-4 w-4" />Back to Tasks
+            <ArrowLeft className="h-4 w-4" />Volver a Tareas
           </Button>
           <Card className="p-8 text-center">
             <XCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <h3 className="text-lg font-semibold mb-2 text-red-600">Error Loading Submission</h3>
-            <p className="text-muted-foreground mb-4">Unable to load quiz details</p>
-            <Button onClick={onExit}>Back to Tasks</Button>
+            <h3 className="text-lg font-semibold mb-2 text-red-600">Error al cargar el envío</h3>
+            <p className="text-muted-foreground mb-4">No se pudieron cargar los detalles del cuestionario</p>
+            <Button onClick={onExit}>Volver a Tareas</Button>
           </Card>
         </div>
       </div>
@@ -155,10 +155,10 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
   // ── Student answer display ─────────────────────────────────────────────────
   const formatStudentAnswer = (question: any, answer: any): string => {
     const raw = answer?.studentAnswer
-    if (raw === undefined || raw === null || raw === '') return 'No answer provided'
+    if (raw === undefined || raw === null || raw === '') return 'No se proporcionó respuesta'
     if (question.type === 'multiple-choice') {
       const idx = Number(raw)
-      return question.options?.[idx] ?? `Option ${idx + 1}`
+      return question.options?.[idx] ?? `Opción ${idx + 1}`
     }
     return String(raw)
   }
@@ -194,7 +194,7 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
       // Fall back to quiz question correctAnswer (numeric index)
       if (question.correctAnswer !== undefined) {
         const idx = Number(question.correctAnswer)
-        return { text: question.options?.[idx] ?? `Option ${idx + 1}`, optionIndex: idx }
+        return { text: question.options?.[idx] ?? `Opción ${idx + 1}`, optionIndex: idx }
       }
       return { text: '' }
     }
@@ -210,400 +210,420 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
-      <div className="max-w-4xl mx-auto">
+  <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+    <div className="max-w-4xl mx-auto space-y-5">
 
-        <div className="mb-6">
-          <Button onClick={onExit} variant="outline" size="sm" className="gap-2 mb-4">
-            <ArrowLeft className="h-4 w-4" />Back to Tasks
-          </Button>
+      {/* ── Botón de regreso ── */}
+      <button
+        onClick={onExit}
+        className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Volver a Tareas
+      </button>
+
+      {/* ── Encabezado de resultados ── */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8 text-center space-y-4">
+        <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${
+          passed ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
+        }`}>
+          {passed
+            ? <CheckCircle className="w-8 h-8" />
+            : <HelpCircle className="w-8 h-8" />}
         </div>
 
-        {/* ── Results Header ── */}
-        <Card className="shadow-lg mb-6 text-center">
-          <CardContent className="p-8">
-            <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
-              passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-            }`}>
-              {passed ? <CheckCircle className="h-10 w-10" /> : <HelpCircle className="h-10 w-10" />}
-            </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            {passed ? '¡Cuestionario Completado!' : 'Cuestionario Finalizado'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{quiz.title}</p>
+        </div>
 
-            <h1 className="text-3xl font-bold mb-2">{passed ? 'Quiz Completed!' : 'Quiz Finished'}</h1>
-            <p className="text-lg text-muted-foreground mb-2">{quiz.title}</p>
+        <span className={`inline-flex px-3 py-1 rounded-xl text-xs font-bold ${
+          submission.status === 'GRADED'
+            ? 'bg-primary/10 text-primary'
+            : submission.status === 'LATE_SUBMITTED'
+            ? 'bg-accent/20 text-accent-foreground'
+            : 'bg-muted text-muted-foreground'
+        }`}>
+          {submission.status === 'GRADED' ? '✓ Calificado' :
+           submission.status === 'LATE_SUBMITTED' ? '⏰ Envío Tardío' : '⏳ Enviado'}
+        </span>
 
-            <Badge className={getStatusColor(submission.status)}>
-              {submission.status === 'GRADED' ? '✓ Graded' :
-               submission.status === 'LATE_SUBMITTED' ? '⏰ Late Submission' : '⏳ Submitted'}
-            </Badge>
-
-            {/* canViewResults indicator */}
-            {!canViewResults && (
-              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full text-sm text-amber-800">
-                <EyeOff className="h-4 w-4" />
-                Correct answers are not available for this quiz
-              </div>
-            )}
-
-            <div className="flex items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <User className="h-4 w-4" />{user?.name || 'Student'}
-              </span>
-              <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />{new Date(submission.submittedAt).toLocaleDateString()}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />{new Date(submission.submittedAt).toLocaleTimeString()}
-              </span>
-            </div>
-
-            {submission.teacherFeedback && (
-              <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg max-w-2xl mx-auto">
-                <div className="flex items-start gap-2">
-                  <Award className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-left">
-                    <p className="font-semibold mb-2">Teacher Feedback:</p>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {submission.teacherFeedback}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* ── Performance Summary ── */}
-        {quizAnswers.length > 0 && (
-          <Card className="shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Performance Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p className="text-2xl font-bold">{totalQuestions}</p>
-                  <p className="text-sm text-muted-foreground">Total Questions</p>
-                </div>
-                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">{correctAnswers}</p>
-                  <p className="text-sm text-muted-foreground">Correct</p>
-                </div>
-                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-red-600">{incorrectAnswers}</p>
-                  <p className="text-sm text-muted-foreground">Incorrect</p>
-                </div>
-                <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-yellow-600">{pendingReview}</p>
-                  <p className="text-sm text-muted-foreground">Pending Review</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {!canViewResults && (
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/30 rounded-xl text-xs font-semibold text-accent-foreground">
+            <EyeOff className="w-3.5 h-3.5" />
+            Las respuestas correctas no están disponibles para este cuestionario
+          </div>
         )}
 
-        {/* ── Question Review ── */}
-        {quizDetail?.questions && quizDetail.questions.length > 0 && (
-          <Card className="shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Question Review
-                <Badge variant="outline" className="ml-auto">
-                  {correctAnswers} / {totalQuestions} Correct
-                </Badge>
-                {!canViewResults && (
-                  <span className="text-sm font-normal text-muted-foreground flex items-center gap-1">
-                    <EyeOff className="h-4 w-4" />
-                    Answers hidden
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {quizDetail.questions.map((question: any, index: number) => {
-                const detailedAnswer = quizAnswers.find((a: any) => a.questionId === question.id)
-                if (!detailedAnswer) return null
+        <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <User className="w-3.5 h-3.5" />{user?.name || 'Estudiante'}
+          </span>
+          <span className="flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5" />
+            {new Date(submission.submittedAt).toLocaleDateString()}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {new Date(submission.submittedAt).toLocaleTimeString()}
+          </span>
+        </div>
 
-                const studentAnswerText = formatStudentAnswer(question, detailedAnswer)
-                const { text: correctAnswerText, optionIndex: correctOptionIndex } =
-                  resolveCorrectAnswer(question, detailedAnswer)
+        {submission.teacherFeedback && (
+          <div className="p-4 bg-accent/10 border border-accent/30 rounded-2xl max-w-2xl mx-auto text-left">
+            <div className="flex items-start gap-2">
+              <Award className="w-4 h-4 text-accent-foreground flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-1">Retroalimentación del Profesor:</p>
+                <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                  {submission.teacherFeedback}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
-                const isOpenEnded = question.type !== 'multiple-choice'
-                const needsReview = detailedAnswer.isCorrect === undefined
-                const isCorrect = detailedAnswer.isCorrect
+      {/* ── Resumen de rendimiento ── */}
+      {quizAnswers.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 sm:px-6 border-b border-border">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-4 h-4 text-primary" />
+              </span>
+              <h2 className="text-base font-bold text-foreground">Resumen de Rendimiento</h2>
+            </div>
+          </div>
+          <div className="px-5 py-5 sm:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-muted/30 rounded-xl border border-border p-3 text-center">
+                <p className="text-2xl font-bold text-foreground">{totalQuestions}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Total Preguntas</p>
+              </div>
+              <div className="bg-primary/5 rounded-xl border border-primary/20 p-3 text-center">
+                <p className="text-2xl font-bold text-primary">{correctAnswers}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Correctas</p>
+              </div>
+              <div className="bg-destructive/5 rounded-xl border border-destructive/20 p-3 text-center">
+                <p className="text-2xl font-bold text-destructive">{incorrectAnswers}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Incorrectas</p>
+              </div>
+              <div className="bg-accent/10 rounded-xl border border-accent/20 p-3 text-center">
+                <p className="text-2xl font-bold text-accent-foreground">{pendingReview}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Pendientes de Revisión</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-                return (
-                  <div
-                    key={question.id}
-                    className={`border rounded-lg p-6 ${
-                      needsReview
-                        ? 'border-l-4 border-yellow-500'
+      {/* ── Revisión de preguntas ── */}
+      {quizDetail?.questions && quizDetail.questions.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="px-5 py-4 sm:px-6 border-b border-border">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Target className="w-4 h-4 text-primary" />
+              </span>
+              <h2 className="text-base font-bold text-foreground">Revisión de Preguntas</h2>
+              <span className="ml-auto px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">
+                {correctAnswers} / {totalQuestions} Correctas
+              </span>
+              {!canViewResults && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <EyeOff className="w-3.5 h-3.5" />Respuestas ocultas
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="px-5 py-5 sm:px-6 space-y-5">
+            {quizDetail.questions.map((question: any, index: number) => {
+              const detailedAnswer = quizAnswers.find((a: any) => a.questionId === question.id)
+              if (!detailedAnswer) return null
+
+              const studentAnswerText = formatStudentAnswer(question, detailedAnswer)
+              const { text: correctAnswerText, optionIndex: correctOptionIndex } =
+                resolveCorrectAnswer(question, detailedAnswer)
+
+              const isOpenEnded  = question.type !== 'multiple-choice'
+              const needsReview  = detailedAnswer.isCorrect === undefined
+              const isCorrect    = detailedAnswer.isCorrect
+
+              return (
+                <div
+                  key={question.id}
+                  className={`rounded-2xl border-l-4 border-t border-r border-b border-border p-5 ${
+                    needsReview ? 'border-l-accent'      :
+                    isCorrect   ? 'border-l-primary'     :
+                    'border-l-destructive'
+                  }`}
+                >
+                  {/* Encabezado de la pregunta */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0 min-w-[56px]">
+                      <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                        {index + 1}
+                      </div>
+                      {needsReview
+                        ? <HelpCircle className="w-4 h-4 text-accent-foreground" />
                         : isCorrect
-                        ? 'border-l-4 border-green-500'
-                        : 'border-l-4 border-red-500'
-                    }`}
-                  >
-                    {/* Question header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="flex flex-col items-center gap-2 min-w-[70px]">
-                          <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold">
-                            {index + 1}
-                          </div>
-                          {needsReview ? (
-                            <HelpCircle className="h-5 w-5 text-yellow-500" />
-                          ) : isCorrect ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-red-500" />
-                          )}
-                          <div className="text-center">
-                            <div className="text-sm font-bold">
-                              {detailedAnswer.points}/{detailedAnswer.maxPoints}
-                            </div>
-                            <div className="text-xs text-muted-foreground">points</div>
-                          </div>
-                        </div>
-
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-2">{question.question}</h3>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="outline">
-                              {question.type === 'multiple-choice' ? 'Multiple Choice' : 'Open Ended'}
-                            </Badge>
-                            <Badge variant="secondary">
-                              {detailedAnswer.maxPoints} {detailedAnswer.maxPoints === 1 ? 'point' : 'points'}
-                            </Badge>
-                            {needsReview ? (
-                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                                Pending Review
-                              </Badge>
-                            ) : (
-                              <Badge variant={isCorrect ? 'default' : 'destructive'}>
-                                {isCorrect ? '✓ Correct' : '✗ Incorrect'}
-                              </Badge>
-                            )}
-                            {detailedAnswer.feedback && (
-                              <Badge variant="outline" className="text-xs">Teacher Reviewed</Badge>
-                            )}
-                          </div>
-                        </div>
+                        ? <CheckCircle className="w-4 h-4 text-primary" />
+                        : <XCircle className="w-4 h-4 text-destructive" />}
+                      <div className="text-center">
+                        <p className="text-xs font-bold text-foreground tabular-nums">
+                          {detailedAnswer.points}/{detailedAnswer.maxPoints}
+                        </p>
+                        <p className="text-xs text-muted-foreground">pts</p>
                       </div>
                     </div>
 
-                    <div className="space-y-4 ml-[86px]">
-                      {/* ── Student's answer ── */}
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Your Answer:
-                        </Label>
-                        <div className={`p-4 rounded-lg border-2 ${
-                          needsReview
-                            ? 'bg-yellow-50 border-yellow-300 dark:bg-yellow-900/20 dark:border-yellow-700'
-                            : isCorrect
-                            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
-                            : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
-                        }`}>
-                          <p className="font-medium whitespace-pre-wrap">{studentAnswerText}</p>
-                          {question.type === 'multiple-choice' && detailedAnswer.studentAnswer !== undefined && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Selected option {Number(detailedAnswer.studentAnswer) + 1}
-                            </p>
-                          )}
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground mb-2">{question.question}</h3>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                          {question.type === 'multiple-choice' ? 'Opción Múltiple' : 'Respuesta Abierta'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-semibold">
+                          {detailedAnswer.maxPoints} {detailedAnswer.maxPoints === 1 ? 'punto' : 'puntos'}
+                        </span>
+                        {needsReview ? (
+                          <span className="px-2 py-0.5 rounded-md bg-accent/20 text-accent-foreground text-xs font-semibold">
+                            Pendiente de Revisión
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
+                            isCorrect
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-destructive/10 text-destructive'
+                          }`}>
+                            {isCorrect ? '✓ Correcta' : '✗ Incorrecta'}
+                          </span>
+                        )}
+                        {detailedAnswer.feedback && (
+                          <span className="px-2 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                            Revisado por Profesor
+                          </span>
+                        )}
                       </div>
+                    </div>
+                  </div>
 
-                      {/* ── Pending review notice ── */}
-                      {needsReview && (
-                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-300">
-                          <div className="flex items-start gap-2">
-                            <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
-                                This answer is pending teacher review
-                              </p>
-                              <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
-                                Your answer may be correct but uses different wording. Your teacher will review it and assign the appropriate grade.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                  <div className="space-y-3 sm:ml-16">
 
-                      {/* ── Expected answer — only when canViewResults=true ── */}
-                      {!needsReview && canViewResults && (
+                    {/* Respuesta del estudiante */}
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                        Tu Respuesta:
+                      </p>
+                      <div className={`p-4 rounded-xl border-2 ${
+                        needsReview
+                          ? 'bg-accent/10 border-accent/30'
+                          : isCorrect
+                          ? 'bg-primary/5 border-primary/30'
+                          : 'bg-destructive/5 border-destructive/20'
+                      }`}>
+                        <p className="text-sm font-medium text-foreground whitespace-pre-wrap">
+                          {studentAnswerText}
+                        </p>
+                        {question.type === 'multiple-choice' && detailedAnswer.studentAnswer !== undefined && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Opción seleccionada {Number(detailedAnswer.studentAnswer) + 1}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Aviso de revisión pendiente */}
+                    {needsReview && (
+                      <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-accent-foreground flex-shrink-0 mt-0.5" />
                         <div>
-                          <Label className="text-sm font-medium text-muted-foreground mb-2 block">
-                            {question.type === 'multiple-choice' ? 'Correct Answer:' : 'Model Answer:'}
-                          </Label>
-                          {isOpenEnded ? (
-                            correctAnswerText ? (
-                              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 rounded-lg">
-                                <p className="font-medium text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
-                                  {correctAnswerText}
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
-                                <p className="text-sm text-muted-foreground italic">
-                                  No reference answer provided for this question.
-                                </p>
-                              </div>
-                            )
-                          ) : (
-                            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 rounded-lg">
-                              <p className="font-medium text-blue-800 dark:text-blue-200">
-                                {correctAnswerText}
-                              </p>
-                              {correctOptionIndex !== undefined && (
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                                  Option {correctOptionIndex + 1}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* ── Answers hidden message — when canViewResults=false ── */}
-                      {!needsReview && !canViewResults && (
-                        <div className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50 flex items-center gap-2">
-                          <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          <p className="text-sm text-muted-foreground italic">
-                            Correct answer is not available for this quiz.
+                          <p className="text-xs font-semibold text-foreground">
+                            Esta respuesta está pendiente de revisión del profesor
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Tu respuesta puede ser correcta pero utiliza una redacción diferente. Tu profesor la revisará y asignará la calificación correspondiente.
                           </p>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* ── Multiple choice: all options ── */}
-                      {question.type === 'multiple-choice' && question.options && question.options.length > 0 && (
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground mb-2 block">
-                            All Options:
-                          </Label>
-                          <div className="space-y-2">
-                            {question.options.map((option: string, optIndex: number) => {
-                              const isStudentChoice = Number(detailedAnswer.studentAnswer) === optIndex
-                              // Only highlight correct option when canViewResults=true
-                              const isCorrectOption =
-                                canViewResults &&
-                                (correctOptionIndex === optIndex || correctAnswerText === option)
-
-                              return (
-                                <div
-                                  key={optIndex}
-                                  className={`p-3 rounded-lg border text-sm ${
-                                    isStudentChoice && isCorrectOption
-                                      ? 'bg-green-100 border-green-300 dark:bg-green-900/30 dark:border-green-700'
-                                      : isStudentChoice
-                                      ? 'bg-red-100 border-red-300 dark:bg-red-900/30 dark:border-red-700'
-                                      : isCorrectOption
-                                      ? 'bg-blue-100 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
-                                      : 'bg-gray-100 dark:bg-gray-800 border-gray-200'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
-                                      {String.fromCharCode(65 + optIndex)}
-                                    </span>
-                                    <span className="flex-1">{option}</span>
-                                    <div className="flex gap-1">
-                                      {isStudentChoice && (
-                                        <Badge variant="outline" className="text-xs">Your choice</Badge>
-                                      )}
-                                      {isCorrectOption && (
-                                        <Badge variant="default" className="text-xs">Correct</Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ── Teacher feedback ── */}
-                      {detailedAnswer.feedback && (
-                        <div>
-                          <Label className="text-sm font-medium text-muted-foreground mb-2 block">
-                            Teacher Feedback:
-                          </Label>
-                          <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-200 rounded-lg">
-                            <p className="text-sm text-purple-800 dark:text-purple-200 whitespace-pre-wrap">
-                              {detailedAnswer.feedback}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ── Bottom status row ── */}
-                      <div className="flex items-center justify-between pt-3 border-t">
-                        <div className="flex items-center gap-2">
-                          {needsReview ? (
-                            <div className="flex items-center gap-2 text-yellow-600">
-                              <HelpCircle className="h-5 w-5" />
-                              <span className="font-semibold">Awaiting Review</span>
-                            </div>
-                          ) : isCorrect ? (
-                            <div className="flex items-center gap-2 text-green-600">
-                              <CheckCircle className="h-5 w-5" />
-                              <span className="font-semibold">Correct Answer!</span>
+                    {/* Respuesta correcta / modelo */}
+                    {!needsReview && canViewResults && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                          {question.type === 'multiple-choice' ? 'Respuesta Correcta:' : 'Respuesta Modelo:'}
+                        </p>
+                        {isOpenEnded ? (
+                          correctAnswerText ? (
+                            <div className="p-4 bg-primary/5 border-2 border-primary/30 rounded-xl">
+                              <p className="text-sm font-medium text-foreground whitespace-pre-wrap">
+                                {correctAnswerText}
+                              </p>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 text-red-600">
-                              <XCircle className="h-5 w-5" />
-                              <span className="font-semibold">Incorrect Answer</span>
+                            <div className="p-4 bg-muted/30 border-2 border-border rounded-xl">
+                              <p className="text-xs text-muted-foreground italic">
+                                No se proporcionó respuesta de referencia para esta pregunta.
+                              </p>
                             </div>
-                          )}
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          Earned {detailedAnswer.points} out of {detailedAnswer.maxPoints} points
-                        </span>
+                          )
+                        ) : (
+                          <div className="p-4 bg-primary/5 border-2 border-primary/30 rounded-xl">
+                            <p className="text-sm font-medium text-foreground">{correctAnswerText}</p>
+                            {correctOptionIndex !== undefined && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Opción {correctOptionIndex + 1}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
+                    )}
+
+                    {/* Respuestas ocultas */}
+                    {!needsReview && !canViewResults && (
+                      <div className="p-3 bg-muted/30 border-2 border-border rounded-xl flex items-center gap-2">
+                        <EyeOff className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <p className="text-xs text-muted-foreground italic">
+                          La respuesta correcta no está disponible para este cuestionario.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Todas las opciones */}
+                    {question.type === 'multiple-choice' && question.options?.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                          Todas las Opciones:
+                        </p>
+                        <div className="space-y-1.5">
+                          {question.options.map((option: string, optIndex: number) => {
+                            const isStudentChoice = Number(detailedAnswer.studentAnswer) === optIndex
+                            const isCorrectOption =
+                              canViewResults &&
+                              (correctOptionIndex === optIndex || correctAnswerText === option)
+
+                            return (
+                              <div
+                                key={optIndex}
+                                className={`p-3 rounded-xl border text-sm ${
+                                  isStudentChoice && isCorrectOption
+                                    ? 'bg-primary/10 border-primary/30'
+                                    : isStudentChoice
+                                    ? 'bg-destructive/10 border-destructive/20'
+                                    : isCorrectOption
+                                    ? 'bg-primary/5 border-primary/20'
+                                    : 'bg-muted/20 border-border'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded-md text-foreground flex-shrink-0">
+                                    {String.fromCharCode(65 + optIndex)}
+                                  </span>
+                                  <span className="flex-1 text-sm text-foreground">{option}</span>
+                                  <div className="flex gap-1 flex-shrink-0">
+                                    {isStudentChoice && (
+                                      <span className="px-1.5 py-0.5 rounded-md border border-border text-xs text-muted-foreground">
+                                        Tu elección
+                                      </span>
+                                    )}
+                                    {isCorrectOption && (
+                                      <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                                        Correcta
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Retroalimentación del profesor */}
+                    {detailedAnswer.feedback && (
+                      <div className="space-y-1.5">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                          Retroalimentación del Profesor:
+                        </p>
+                        <div className="p-4 bg-accent/10 border-2 border-accent/30 rounded-xl">
+                          <p className="text-xs text-foreground whitespace-pre-wrap">
+                            {detailedAnswer.feedback}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Fila de estado inferior */}
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <div className={`flex items-center gap-1.5 text-xs font-semibold ${
+                        needsReview ? 'text-accent-foreground' :
+                        isCorrect   ? 'text-primary'           :
+                        'text-destructive'
+                      }`}>
+                        {needsReview
+                          ? <><HelpCircle className="w-4 h-4" />Esperando Revisión</>
+                          : isCorrect
+                          ? <><CheckCircle className="w-4 h-4" />¡Respuesta Correcta!</>
+                          : <><XCircle className="w-4 h-4" />Respuesta Incorrecta</>}
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        Obtuviste <span className="font-semibold text-foreground">{detailedAnswer.points}</span> de{' '}
+                        <span className="font-semibold text-foreground">{detailedAnswer.maxPoints}</span> pts
+                      </span>
                     </div>
+
                   </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Final Grade ── */}
-        <Card className="shadow-lg mb-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-3">
-              <Award className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-lg text-blue-900 dark:text-blue-100 mb-2">
-                  Final Grade
-                </h3>
-                <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
-                  Your final grade for this quiz is{' '}
-                  <strong>{finalScore} / {maxScore}</strong> ({Math.round(percentage)}%).
-                  {pendingReview > 0 && (
-                    <> Some answers are pending teacher review and your grade may be updated once reviewed.</>
-                  )}
-                </p>
-                {submission.status === 'GRADED' && (
-                  <Badge variant="default" className="bg-blue-600">Graded by Teacher</Badge>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="text-center">
-          <Button onClick={onExit} size="lg" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Return to Course
-          </Button>
+                </div>
+              )
+            })}
+          </div>
         </div>
+      )}
 
+      {/* ── Calificación final ── */}
+      <div className="bg-primary/5 rounded-2xl border border-primary/20 shadow-sm p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <span className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Award className="w-4 h-4 text-primary" />
+          </span>
+          <div className="space-y-1">
+            <h3 className="font-bold text-base text-foreground">Calificación Final</h3>
+            <p className="text-sm text-muted-foreground">
+              Tu calificación final para este cuestionario es{' '}
+              <span className="font-bold text-foreground">{finalScore} / {maxScore}</span>
+              {' '}({Math.round(percentage)}%).
+              {pendingReview > 0 && (
+                <> Algunas respuestas están pendientes de revisión del profesor y tu calificación podría actualizarse una vez revisadas.</>
+              )}
+            </p>
+            {submission.status === 'GRADED' && (
+              <span className="inline-flex px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">
+                ✓ Calificado por el Profesor
+              </span>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* ── Botón de regreso ── */}
+      <div className="text-center pb-4">
+        <button
+          onClick={onExit}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Regresar al Curso
+        </button>
+      </div>
+
     </div>
-  )
-}
+  </div>
+)
+};

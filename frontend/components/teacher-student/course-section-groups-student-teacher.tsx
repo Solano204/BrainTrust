@@ -23,207 +23,206 @@ import {
   useTeamsByCourse 
 } from "./hooks/team-hooks"
 
-interface CourseGroupsProps {
+interface PropsGruposCurso {
   courseId: CourseId
 }
 
-interface User {
+interface Usuario {
   id: UserId
   name: string
   email: string
 }
 
-export function CourseGroups({ courseId }: CourseGroupsProps) {
-  const { user: currentUser } = useAuth();
-  const isTeacher = currentUser?.role === 'teacher';
+export function CourseGroups({ courseId }: PropsGruposCurso) {
+  const { user: usuarioActual } = useAuth();
+  const esProfesor = usuarioActual?.role === 'teacher';
   
   const {
-    data: teamsData, 
-    isLoading: isLoadingTeams,
-    error: teamsError,
-    refetch: refetchTeams 
+    data: datosEquipos, 
+    isLoading: cargandoEquipos,
+    error: errorEquipos,
+    refetch: recargarEquipos 
   } = useTeamsByCourse(courseId);
   
-  const teams = teamsData?.teams || [];
+  const equipos = datosEquipos?.teams || [];
   
   const { 
-    data: availableUsersData, 
-    isLoading: isLoadingUsers,
-    error: usersError 
+    data: datosUsuariosDisponibles, 
+    isLoading: cargandoUsuarios,
+    error: errorUsuarios 
   } = useAvailableUsers(courseId);
 
-  const availableUsers = availableUsersData?.users || [];
+  const usuariosDisponibles = datosUsuariosDisponibles?.users || [];
 
   const {
-    createTeam, 
-    deleteTeam,
-    addMembers,
-    removeMember,
-    updateTeamInfo
+    createTeam: crearEquipo, 
+    deleteTeam: eliminarEquipo,
+    addMembers: agregarMiembros,
+    removeMember: eliminarMiembro,
+    updateTeamInfo: actualizarInfoEquipo
   } = useTeamMutations();
 
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showAddMemberModal, setShowAddMemberModal] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
-  const [newTeamName, setNewTeamName] = useState("")
-  const [newTeamDescription, setNewTeamDescription] = useState("")
-  const [selectedMembers, setSelectedMembers] = useState<UserId[]>([])
-  const [memberSearchQuery, setMemberSearchQuery] = useState("")
-  const [deleteConfirmTeam, setDeleteConfirmTeam] = useState<string | null>(null)
-  const [showTeamDetail, setShowTeamDetail] = useState(false)
+  const [mostrarModalCrear, setMostrarModalCrear] = useState(false)
+  const [mostrarModalEditar, setMostrarModalEditar] = useState(false)
+  const [mostrarModalAgregarMiembro, setMostrarModalAgregarMiembro] = useState(false)
+  const [equipoSeleccionado, setEquipoSeleccionado] = useState<Team | null>(null)
+  const [nombreNuevoEquipo, setNombreNuevoEquipo] = useState("")
+  const [descripcionNuevoEquipo, setDescripcionNuevoEquipo] = useState("")
+  const [miembrosSeleccionados, setMiembrosSeleccionados] = useState<UserId[]>([])
+  const [consultaBusquedaMiembro, setConsultaBusquedaMiembro] = useState("")
+  const [confirmacionEliminarEquipo, setConfirmacionEliminarEquipo] = useState<string | null>(null)
+  const [mostrarDetalleEquipo, setMostrarDetalleEquipo] = useState(false)
 
-  const handleCreateTeam = async () => {
-    if (!isTeacher) return;
+  const handleCrearEquipo = async () => {
+    if (!esProfesor) return;
     
-const newTeamData: TeamWithIds = {
+const nuevosDatosEquipo: TeamWithIds = {
   courseId,
   createdAt: new Date(),
   teamId: "",
-  name: newTeamName,
-  description: newTeamDescription,
-  members: new Set(selectedMembers),
+  name: nombreNuevoEquipo,
+  description: descripcionNuevoEquipo,
+  members: new Set(miembrosSeleccionados),
   active: true,
 };
 
-    createTeam.mutate(newTeamData, {
+    crearEquipo.mutate(nuevosDatosEquipo, {
       onSuccess: () => {
-        setShowCreateModal(false);
-        setNewTeamName("");
-        setNewTeamDescription("");
-        setSelectedMembers([]);
+        setMostrarModalCrear(false);
+        setNombreNuevoEquipo("");
+        setDescripcionNuevoEquipo("");
+        setMiembrosSeleccionados([]);
       }
     });
   };
 
-  const handleUpdateTeam = async () => {
-    if (!isTeacher || !selectedTeam) return;
+  const handleActualizarEquipo = async () => {
+    if (!esProfesor || !equipoSeleccionado) return;
     
-    updateTeamInfo.mutate({
+    actualizarInfoEquipo.mutate({
       courseId,
-      teamId: selectedTeam.teamId,
+      teamId: equipoSeleccionado.teamId,
       updates: {
-        name: newTeamName,
-        description: newTeamDescription
+        name: nombreNuevoEquipo,
+        description: descripcionNuevoEquipo
       }
     }, {
       onSuccess: () => {
-        setShowEditModal(false);
-        setSelectedTeam(null);
-        setNewTeamName("");
-        setNewTeamDescription("");
+        setMostrarModalEditar(false);
+        setEquipoSeleccionado(null);
+        setNombreNuevoEquipo("");
+        setDescripcionNuevoEquipo("");
       }
     });
   };
 
-  const handleDeleteTeam = async (teamId: string) => {
-    if (!isTeacher) return;
+  const handleEliminarEquipo = async (equipoId: string) => {
+    if (!esProfesor) return;
     
-    deleteTeam.mutate({ courseId, teamId }, {
+    eliminarEquipo.mutate({ courseId, teamId: equipoId }, {
       onSuccess: () => {
-        setDeleteConfirmTeam(null);
+        setConfirmacionEliminarEquipo(null);
       }
     });
   };
 
-  const handleAddMember = async () => {
-    if (!isTeacher || !selectedTeam) return;
+  const handleAgregarMiembro = async () => {
+    if (!esProfesor || !equipoSeleccionado) return;
     
-    if (selectedMembers.length > 0) {
-      addMembers.mutate({ 
+    if (miembrosSeleccionados.length > 0) {
+      agregarMiembros.mutate({ 
         courseId, 
-        teamId: selectedTeam.teamId, 
-        memberIds: selectedMembers 
+        teamId: equipoSeleccionado.teamId, 
+        memberIds: miembrosSeleccionados 
       }, {
         onSuccess: () => {
-          setShowAddMemberModal(false);
-          setSelectedMembers([]);
-          setSelectedTeam(null);
-          setMemberSearchQuery("");
+          setMostrarModalAgregarMiembro(false);
+          setMiembrosSeleccionados([]);
+          setEquipoSeleccionado(null);
+          setConsultaBusquedaMiembro("");
         }
       });
     }
   };
 
-  const handleRemoveMember = async (teamId: string, memberId: UserId) => {
-    if (!isTeacher) return;
-    removeMember.mutate({ courseId, teamId, memberId });
+  const handleEliminarMiembro = async (equipoId: string, miembroId: UserId) => {
+    if (!esProfesor) return;
+    eliminarMiembro.mutate({ courseId, teamId: equipoId, memberId: miembroId });
   };
 
-  const getUserById = (userId: UserId): User | undefined => {
-    return availableUsers.find(user => user.id === userId)
+  const obtenerUsuarioPorId = (usuarioId: UserId): Usuario | undefined => {
+    return usuariosDisponibles.find(usuario => usuario.id === usuarioId)
   }
 
-  const getTeamMemberIds = (team: Team): UserId[] => {
-    return Array.from(team.members).map(member => member.userId)
+  const obtenerIdsMiembrosEquipo = (equipo: Team): UserId[] => {
+    return Array.from(equipo.members).map(miembro => miembro.userId)
   }
 
-  const filteredAvailableUsers = useMemo(() => {
-    const usersInOtherTeams = new Set<UserId>();
-    teams.forEach(team => {
-      if (!selectedTeam || team.teamId !== selectedTeam.teamId) {
-        team.members.forEach(member => usersInOtherTeams.add(member.userId));
+  const usuariosDisponiblesFiltrados = useMemo(() => {
+    const usuariosEnOtrosEquipos = new Set<UserId>();
+    equipos.forEach(equipo => {
+      if (!equipoSeleccionado || equipo.teamId !== equipoSeleccionado.teamId) {
+        equipo.members.forEach(miembro => usuariosEnOtrosEquipos.add(miembro.userId));
       }
     });
     
-    return availableUsers.filter(user =>
-      !usersInOtherTeams.has(user.id) && 
-      user.name.toLowerCase().includes(memberSearchQuery.toLowerCase())
+    return usuariosDisponibles.filter(usuario =>
+      !usuariosEnOtrosEquipos.has(usuario.id) && 
+      usuario.name.toLowerCase().includes(consultaBusquedaMiembro.toLowerCase())
     );
-  }, [availableUsers, teams, selectedTeam, memberSearchQuery]);
-
-  if (!isTeacher) {
+  }, [usuariosDisponibles, equipos, equipoSeleccionado, consultaBusquedaMiembro]);
+if (!esProfesor) {
     return (
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
-        {/* Header */}
+        {/* Encabezado */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Class Groups</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Grupos de Clase</h1>
         </div>
 
-        {isLoadingTeams ? (
+        {cargandoEquipos ? (
           <div className="text-center text-muted-foreground py-12">
             <Loader2 className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-            Loading groups...
+            Cargando grupos...
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {teams.map((team) => (
-              <TeamCardReadOnly
-                key={team.teamId}
-                team={team}
-                availableUsers={availableUsers}
-                getUserById={getUserById}
-                onViewDetails={(team) => {
-                  setSelectedTeam(team);
-                  setShowTeamDetail(true);
+            {equipos.map((equipo) => (
+              <TarjetaEquipoSoloLectura
+                key={equipo.teamId}
+                equipo={equipo}
+                usuariosDisponibles={usuariosDisponibles}
+                obtenerUsuarioPorId={obtenerUsuarioPorId}
+                onViewDetails={(equipo) => {
+                  setEquipoSeleccionado(equipo);
+                  setMostrarDetalleEquipo(true);
                 }}
               />
             ))}
           </div>
         )}
 
-        {teams.length === 0 && !isLoadingTeams && (
-          <Card className="text-center p-12 border-2 border-dashed">
+        {equipos.length === 0 && !cargandoEquipos && (
+          <Card className="text-center p-12 border-2 border-dashed border-border">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-muted-foreground mb-2">No groups yet</h3>
-            <p className="text-muted-foreground mb-4">No groups have been created for this course.</p>
+            <h3 className="text-lg font-semibold text-muted-foreground mb-2">Aún no hay grupos</h3>
+            <p className="text-muted-foreground mb-4">No se han creado grupos para este curso.</p>
           </Card>
         )}
 
-        <Dialog open={showTeamDetail} onOpenChange={setShowTeamDetail}>
+        <Dialog open={mostrarDetalleEquipo} onOpenChange={setMostrarDetalleEquipo}>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Group Details</DialogTitle>
+              <DialogTitle className="text-foreground">Detalles del Grupo</DialogTitle>
             </DialogHeader>
-            {selectedTeam && (
-              <TeamDetailView 
-                team={selectedTeam} 
-                getUserById={getUserById} 
+            {equipoSeleccionado && (
+              <VistaDetalleEquipo
+                equipo={equipoSeleccionado}
+                obtenerUsuarioPorId={obtenerUsuarioPorId}
               />
             )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowTeamDetail(false)}>
-                Close
+              <Button variant="outline" onClick={() => setMostrarDetalleEquipo(false)}>
+                Cerrar
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -232,131 +231,135 @@ const newTeamData: TeamWithIds = {
     );
   }
 
-  if (isLoadingTeams) {
+  if (cargandoEquipos) {
     return (
       <div className="p-8 text-center text-muted-foreground">
         <Loader2 className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-        Loading teams...
+        Cargando equipos...
       </div>
-    )
+    );
   }
 
-  if (teamsError) {
+  if (errorEquipos) {
     return (
       <div className="p-8 text-center text-destructive">
         <div className="h-8 w-8 mx-auto mb-4">⚠️</div>
-        Error loading teams. Please try again.
-        <Button onClick={() => refetchTeams()} className="mt-4">
-          Retry
+        Error al cargar los equipos. Por favor, intente de nuevo.
+        <Button onClick={() => recargarEquipos()} className="mt-4">
+          Reintentar
         </Button>
       </div>
-    )
+    );
   }
 
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Team Management</h1>
-        <Button 
-          onClick={() => setShowCreateModal(true)} 
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Gestión de Equipos</h1>
+        <Button
+          onClick={() => setMostrarModalCrear(true)}
           className="gap-2 w-full sm:w-auto"
-          disabled={createTeam.isPending}
+          disabled={crearEquipo.isPending}
         >
           <Plus className="h-4 w-4" />
-          {createTeam.isPending ? "Creating..." : "Create Team"}
+          {crearEquipo.isPending ? "Creando..." : "Crear Equipo"}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {teams.map((team) => (
-          <TeamCard
-            key={team.teamId}
-            team={team}
-            availableUsers={availableUsers}
-            getUserById={getUserById}
-            getTeamMemberIds={getTeamMemberIds}
-            onEdit={(team) => {
-              setSelectedTeam(team);
-              setNewTeamName(team.name);
-              setNewTeamDescription(team.description);
-              setShowEditModal(true);
+        {equipos.map((equipo) => (
+          <TarjetaEquipo
+            key={equipo.teamId}
+            equipo={equipo}
+            usuariosDisponibles={usuariosDisponibles}
+            obtenerUsuarioPorId={obtenerUsuarioPorId}
+            obtenerIdsMiembrosEquipo={obtenerIdsMiembrosEquipo}
+            onEdit={(equipo) => {
+              setEquipoSeleccionado(equipo);
+              setNombreNuevoEquipo(equipo.name);
+              setDescripcionNuevoEquipo(equipo.description);
+              setMostrarModalEditar(true);
             }}
-            onAddMember={(team) => {
-              setSelectedTeam(team);
-              setShowAddMemberModal(true);
+            onAddMember={(equipo) => {
+              setEquipoSeleccionado(equipo);
+              setMostrarModalAgregarMiembro(true);
             }}
-            onRemoveMember={handleRemoveMember}
-            onDeleteTeam={handleDeleteTeam}
-            deleteConfirmTeam={deleteConfirmTeam}
-            setDeleteConfirmTeam={setDeleteConfirmTeam}
-            isDeleting={deleteTeam.isPending}
-            isUpdating={removeMember.isPending}
-            isTeacher={isTeacher}
+            onRemoveMember={handleEliminarMiembro}
+            onDeleteTeam={handleEliminarEquipo}
+            deleteConfirmTeam={confirmacionEliminarEquipo}
+            setDeleteConfirmTeam={setConfirmacionEliminarEquipo}
+            isDeleting={eliminarEquipo.isPending}
+            isUpdating={eliminarMiembro.isPending}
+            isTeacher={esProfesor}
           />
         ))}
       </div>
 
-      {teams.length === 0 && !isLoadingTeams && (
-        <Card className="text-center p-12 border-2 border-dashed">
+      {equipos.length === 0 && !cargandoEquipos && (
+        <Card className="text-center p-12 border-2 border-dashed border-border">
           <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-muted-foreground mb-2">No teams yet</h3>
-          <p className="text-muted-foreground mb-4">Create your first team to get started</p>
-          <Button onClick={() => setShowCreateModal(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Create Team
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2">Aún no hay equipos</h3>
+          <p className="text-muted-foreground mb-4">Cree su primer equipo para comenzar</p>
+          <Button onClick={() => setMostrarModalCrear(true)} className="gap-2">
+            <Plus className="h-4 w-4" /> Crear Equipo
           </Button>
         </Card>
       )}
 
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+      {/* Modal de Crear Equipo */}
+      <Dialog open={mostrarModalCrear} onOpenChange={setMostrarModalCrear}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Team</DialogTitle>
+            <DialogTitle className="text-foreground">Crear Nuevo Equipo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="name">Team Name</Label>
+              <Label htmlFor="name" className="text-foreground font-semibold">Nombre del Equipo</Label>
               <Input
                 id="name"
-                value={newTeamName}
-                onChange={(e) => setNewTeamName(e.target.value)}
-                placeholder="Enter team name"
+                value={nombreNuevoEquipo}
+                onChange={(e) => setNombreNuevoEquipo(e.target.value)}
+                placeholder="Ingrese el nombre del equipo"
+                className="mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description" className="text-foreground font-semibold">Descripción</Label>
               <Textarea
                 id="description"
-                value={newTeamDescription}
-                onChange={(e) => setNewTeamDescription(e.target.value)}
-                placeholder="Enter team description"
+                value={descripcionNuevoEquipo}
+                onChange={(e) => setDescripcionNuevoEquipo(e.target.value)}
+                placeholder="Ingrese la descripción del equipo"
+                className="mt-1"
               />
             </div>
             <div>
-              <Label>Members (Optional)</Label>
-              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
-                {availableUsers.length === 0 ? (
+              <Label className="text-foreground font-semibold">Miembros (Opcional)</Label>
+              <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-border rounded-md p-2">
+                {usuariosDisponibles.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-2">
-                    No available users
+                    No hay usuarios disponibles
                   </p>
                 ) : (
-                  availableUsers.map((user) => (
+                  usuariosDisponibles.map((usuario) => (
                     <label
-                      key={user.id}
+                      key={usuario.id}
                       className="flex items-center gap-3 p-2 bg-muted/30 rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
                     >
                       <input
                         type="checkbox"
-                        checked={selectedMembers.includes(user.id)}
+                        checked={miembrosSeleccionados.includes(usuario.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedMembers([...selectedMembers, user.id])
+                            setMiembrosSeleccionados([...miembrosSeleccionados, usuario.id]);
                           } else {
-                            setSelectedMembers(selectedMembers.filter((id) => id !== user.id))
+                            setMiembrosSeleccionados(miembrosSeleccionados.filter((id) => id !== usuario.id));
                           }
                         }}
+                        className="accent-primary rounded"
                       />
-                      <span className="text-sm">
-                        {user.name} ({user.email})
+                      <span className="text-sm text-foreground">
+                        {usuario.name} ({usuario.email})
                       </span>
                     </label>
                   ))
@@ -365,111 +368,116 @@ const newTeamData: TeamWithIds = {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
-                setShowCreateModal(false);
-                setNewTeamName("");
-                setNewTeamDescription("");
-                setSelectedMembers([]);
+                setMostrarModalCrear(false);
+                setNombreNuevoEquipo("");
+                setDescripcionNuevoEquipo("");
+                setMiembrosSeleccionados([]);
               }}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button 
-              onClick={handleCreateTeam}
-              disabled={!newTeamName || createTeam.isPending}
+            <Button
+              onClick={handleCrearEquipo}
+              disabled={!nombreNuevoEquipo || crearEquipo.isPending}
             >
-              {createTeam.isPending ? "Creating..." : "Create Team"}
+              {crearEquipo.isPending ? "Creando..." : "Crear Equipo"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+      {/* Modal de Editar Equipo */}
+      <Dialog open={mostrarModalEditar} onOpenChange={setMostrarModalEditar}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Team</DialogTitle>
+            <DialogTitle className="text-foreground">Editar Equipo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="edit-name">Team Name</Label>
+              <Label htmlFor="edit-name" className="text-foreground font-semibold">Nombre del Equipo</Label>
               <Input
                 id="edit-name"
-                value={newTeamName}
-                onChange={(e) => setNewTeamName(e.target.value)}
-                placeholder="Enter team name"
+                value={nombreNuevoEquipo}
+                onChange={(e) => setNombreNuevoEquipo(e.target.value)}
+                placeholder="Ingrese el nombre del equipo"
+                className="mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description" className="text-foreground font-semibold">Descripción</Label>
               <Textarea
                 id="edit-description"
-                value={newTeamDescription}
-                onChange={(e) => setNewTeamDescription(e.target.value)}
-                placeholder="Enter team description"
+                value={descripcionNuevoEquipo}
+                onChange={(e) => setDescripcionNuevoEquipo(e.target.value)}
+                placeholder="Ingrese la descripción del equipo"
+                className="mt-1"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
-                setShowEditModal(false);
-                setSelectedTeam(null);
-                setNewTeamName("");
-                setNewTeamDescription("");
+                setMostrarModalEditar(false);
+                setEquipoSeleccionado(null);
+                setNombreNuevoEquipo("");
+                setDescripcionNuevoEquipo("");
               }}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button 
-              onClick={handleUpdateTeam}
-              disabled={!newTeamName || updateTeamInfo.isPending}
+            <Button
+              onClick={handleActualizarEquipo}
+              disabled={!nombreNuevoEquipo || actualizarInfoEquipo.isPending}
             >
-              {updateTeamInfo.isPending ? "Updating..." : "Update Team"}
+              {actualizarInfoEquipo.isPending ? "Actualizando..." : "Actualizar Equipo"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAddMemberModal} onOpenChange={setShowAddMemberModal}>
+      {/* Modal de Agregar Miembro */}
+      <Dialog open={mostrarModalAgregarMiembro} onOpenChange={setMostrarModalAgregarMiembro}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Members to {selectedTeam?.name}</DialogTitle>
+            <DialogTitle className="text-foreground">Agregar Miembros a {equipoSeleccionado?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search students by name..."
-                value={memberSearchQuery}
-                onChange={(e) => setMemberSearchQuery(e.target.value)}
+                placeholder="Buscar estudiantes por nombre..."
+                value={consultaBusquedaMiembro}
+                onChange={(e) => setConsultaBusquedaMiembro(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {filteredAvailableUsers.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No students found</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto border border-border rounded-md p-2">
+              {usuariosDisponiblesFiltrados.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">No se encontraron estudiantes</p>
               ) : (
-                filteredAvailableUsers.map((user) => (
+                usuariosDisponiblesFiltrados.map((usuario) => (
                   <label
-                    key={user.id}
+                    key={usuario.id}
                     className="flex items-center gap-3 p-3 bg-muted/30 rounded-md cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     <input
                       type="checkbox"
-                      checked={selectedMembers.includes(user.id)}
+                      checked={miembrosSeleccionados.includes(usuario.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedMembers([...selectedMembers, user.id])
+                          setMiembrosSeleccionados([...miembrosSeleccionados, usuario.id]);
                         } else {
-                          setSelectedMembers(selectedMembers.filter((id) => id !== user.id))
+                          setMiembrosSeleccionados(miembrosSeleccionados.filter((id) => id !== usuario.id));
                         }
                       }}
+                      className="accent-primary rounded"
                     />
-                    <span>
-                      {user.name} ({user.email})
+                    <span className="text-sm text-foreground">
+                      {usuario.name} ({usuario.email})
                     </span>
                   </label>
                 ))
@@ -477,37 +485,37 @@ const newTeamData: TeamWithIds = {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
-                setShowAddMemberModal(false);
-                setSelectedMembers([]);
-                setSelectedTeam(null);
-                setMemberSearchQuery("");
+                setMostrarModalAgregarMiembro(false);
+                setMiembrosSeleccionados([]);
+                setEquipoSeleccionado(null);
+                setConsultaBusquedaMiembro("");
               }}
             >
-              Cancel
+              Cancelar
             </Button>
-            <Button 
-              onClick={handleAddMember} 
-              disabled={selectedMembers.length === 0 || addMembers.isPending}
+            <Button
+              onClick={handleAgregarMiembro}
+              disabled={miembrosSeleccionados.length === 0 || agregarMiembros.isPending}
             >
-              {addMembers.isPending ? "Adding..." : "Add Members"}
+              {agregarMiembros.isPending ? "Agregando..." : "Agregar Miembros"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
-interface TeamCardProps {
-  team: Team;
-  availableUsers: User[];
-  getUserById: (userId: UserId) => User | undefined;
-  getTeamMemberIds: (team: Team) => UserId[];
-  onEdit: (team: Team) => void;
-  onAddMember: (team: Team) => void;
+interface PropsTarjetaEquipo {
+  equipo: Team;
+  usuariosDisponibles: Usuario[];
+  obtenerUsuarioPorId: (userId: UserId) => Usuario | undefined;
+  obtenerIdsMiembrosEquipo: (equipo: Team) => UserId[];
+  onEdit: (equipo: Team) => void;
+  onAddMember: (equipo: Team) => void;
   onRemoveMember: (teamId: string, memberId: UserId) => void;
   onDeleteTeam: (teamId: string) => void;
   deleteConfirmTeam: string | null;
@@ -517,11 +525,11 @@ interface TeamCardProps {
   isTeacher: boolean;
 }
 
-const TeamCard: React.FC<TeamCardProps> = ({
-  team,
-  availableUsers,
-  getUserById,
-  getTeamMemberIds,
+const TarjetaEquipo: React.FC<PropsTarjetaEquipo> = ({
+  equipo,
+  usuariosDisponibles,
+  obtenerUsuarioPorId,
+  obtenerIdsMiembrosEquipo,
   onEdit,
   onAddMember,
   onRemoveMember,
@@ -532,25 +540,24 @@ const TeamCard: React.FC<TeamCardProps> = ({
   isUpdating,
   isTeacher
 }) => {
-  const isPendingDelete = deleteConfirmTeam === team.teamId;
-
-  return (
+  const pendienteEliminacion = deleteConfirmTeam === equipo.teamId;
+return (
     <Card className="hover:shadow-xl transition-all duration-300">
       <div className="p-6 space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Users className="h-6 w-6 text-white" />
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0">
+              <Users className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">{team.name}</h3>
+              <h3 className="font-bold text-lg text-foreground">{equipo.name}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary" className="text-xs">
-                  {team.members.size} members
+                  {equipo.members.size} miembros
                 </Badge>
-                {!team.active && (
+                {!equipo.active && (
                   <Badge variant="outline" className="text-xs">
-                    Inactive
+                    Inactivo
                   </Badge>
                 )}
               </div>
@@ -564,62 +571,64 @@ const TeamCard: React.FC<TeamCardProps> = ({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(team)}>
+                <DropdownMenuItem onClick={() => onEdit(equipo)}>
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Team
+                  Editar Equipo
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onAddMember(team)}>
+                <DropdownMenuItem onClick={() => onAddMember(equipo)}>
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add Members
+                  Agregar Miembros
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setDeleteConfirmTeam(team.teamId)}
-                  className="text-red-600"
+                <DropdownMenuItem
+                  onClick={() => setDeleteConfirmTeam(equipo.teamId)}
+                  className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Team
+                  Eliminar Equipo
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
 
-        {team.description && <p className="text-sm text-muted-foreground">{team.description}</p>}
+        {equipo.description && (
+          <p className="text-sm text-muted-foreground">{equipo.description}</p>
+        )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Team Members:</span>
+            <span className="text-sm font-medium text-foreground">Miembros del Equipo:</span>
             {isTeacher && (
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => onAddMember(team)}
+                onClick={() => onAddMember(equipo)}
                 className="gap-1 h-7 text-xs"
               >
                 <UserPlus className="h-3 w-3" />
-                Add
+                Agregar
               </Button>
             )}
           </div>
           <div className="space-y-1 max-h-40 overflow-y-auto">
-            {team.members.size === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-2">No members yet</p>
+            {equipo.members.size === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-2">Aún no hay miembros</p>
             ) : (
-              Array.from(team.members).map((member) => {
-                const user = getUserById(member.userId)
-                return user ? (
+              Array.from(equipo.members).map((miembro) => {
+                const usuario = obtenerUsuarioPorId(miembro.userId);
+                return usuario ? (
                   <div
-                    key={member.userId}
-                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
+                    key={miembro.userId}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm border border-border/40"
                   >
                     <div className="flex items-center gap-2">
-                      <span>{user.name}</span>
+                      <span className="text-foreground">{usuario.name}</span>
                     </div>
                     {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(team.teamId, member.userId)}
+                        onClick={() => onRemoveMember(equipo.teamId, miembro.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
-                        title="Remove Member"
+                        title="Eliminar Miembro"
                         disabled={isUpdating}
                       >
                         <X className="h-3 w-3" />
@@ -628,36 +637,36 @@ const TeamCard: React.FC<TeamCardProps> = ({
                   </div>
                 ) : (
                   <div
-                    key={member.userId}
-                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm"
+                    key={miembro.userId}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-md text-sm border border-border/40"
                   >
                     <div className="flex items-center gap-2">
-                      <span>{member.fullName}</span>
+                      <span className="text-foreground">{miembro.fullName}</span>
                     </div>
                     {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(team.teamId, member.userId)}
+                        onClick={() => onRemoveMember(equipo.teamId, miembro.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
-                        title="Remove Member"
+                        title="Eliminar Miembro"
                         disabled={isUpdating}
                       >
                         <X className="h-3 w-3" />
                       </button>
                     )}
                   </div>
-                )
+                );
               })
             )}
           </div>
         </div>
 
-        {isTeacher && isPendingDelete && (
+        {isTeacher && pendienteEliminacion && (
           <div className="flex gap-2 pt-2 border-t border-border">
-            <Button 
-              variant="destructive" 
-              size="sm" 
+            <Button
+              variant="destructive"
+              size="sm"
               className="flex-1 gap-2"
-              onClick={() => onDeleteTeam(team.teamId)}
+              onClick={() => onDeleteTeam(equipo.teamId)}
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -665,52 +674,51 @@ const TeamCard: React.FC<TeamCardProps> = ({
               ) : (
                 <Trash2 className="h-3 w-3" />
               )}
-              {isDeleting ? "Deleting..." : "Confirm"}
+              {isDeleting ? "Eliminando..." : "Confirmar"}
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setDeleteConfirmTeam(null)}
               disabled={isDeleting}
             >
-              Cancel
+              Cancelar
             </Button>
           </div>
         )}
 
-        {team.createdAt && (
+        {equipo.createdAt && (
           <div className="text-xs text-muted-foreground">
-            Created: {team.createdAt.toLocaleDateString()}
+            Creado: {equipo.createdAt.toLocaleDateString()}
           </div>
         )}
       </div>
     </Card>
   );
 };
-
-const TeamCardReadOnly: React.FC<{
-  team: Team;
-  availableUsers: User[];
-  getUserById: (userId: UserId) => User | undefined;
-  onViewDetails: (team: Team) => void;
-}> = ({ team, availableUsers, getUserById, onViewDetails }) => {
+const TarjetaEquipoSoloLectura: React.FC<{
+  equipo: Team;
+  usuariosDisponibles: Usuario[];
+  obtenerUsuarioPorId: (userId: UserId) => Usuario | undefined;
+  onViewDetails: (equipo: Team) => void;
+}> = ({ equipo, usuariosDisponibles, obtenerUsuarioPorId, onViewDetails }) => {
   return (
-    <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => onViewDetails(team)}>
+    <Card className="hover:shadow-xl transition-all duration-300 cursor-pointer" onClick={() => onViewDetails(equipo)}>
       <div className="p-6 space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-              <Users className="h-6 w-6 text-white" />
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0">
+              <Users className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">{team.name}</h3>
+              <h3 className="font-bold text-lg text-foreground">{equipo.name}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary" className="text-xs">
-                  {team.members.size} members
+                  {equipo.members.size} miembros
                 </Badge>
-                {!team.active && (
+                {!equipo.active && (
                   <Badge variant="outline" className="text-xs">
-                    Inactive
+                    Inactivo
                   </Badge>
                 )}
               </div>
@@ -719,114 +727,116 @@ const TeamCardReadOnly: React.FC<{
           <Eye className="h-4 w-4 text-muted-foreground" />
         </div>
 
-        {team.description && <p className="text-sm text-muted-foreground">{team.description}</p>}
+        {equipo.description && (
+          <p className="text-sm text-muted-foreground">{equipo.description}</p>
+        )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Team Members:</span>
+            <span className="text-sm font-medium text-foreground">Miembros del Equipo:</span>
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
-            {Array.from(team.members).slice(0, 5).map((member) => {
-              const user = getUserById(member.userId)
-              return user ? (
+            {Array.from(equipo.members).slice(0, 5).map((miembro) => {
+              const usuario = obtenerUsuarioPorId(miembro.userId);
+              return usuario ? (
                 <div
-                  key={member.userId}
-                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm"
+                  key={miembro.userId}
+                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm border border-border/40"
                 >
-                  <span>{user.name}</span>
+                  <span className="text-foreground">{usuario.name}</span>
                 </div>
               ) : (
                 <div
-                  key={member.userId}
-                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm"
+                  key={miembro.userId}
+                  className="flex items-center gap-2 p-2 bg-muted/50 rounded-md text-sm border border-border/40"
                 >
-                  <span>{member.fullName}</span>
+                  <span className="text-foreground">{miembro.fullName}</span>
                 </div>
-              )
+              );
             })}
-            {team.members.size > 5 && (
+            {equipo.members.size > 5 && (
               <div className="text-xs text-muted-foreground text-center">
-                +{team.members.size - 5} more members
+                +{equipo.members.size - 5} miembros más
               </div>
             )}
           </div>
         </div>
 
         <div className="text-xs text-muted-foreground">
-          Click to view details
+          Haga clic para ver detalles
         </div>
       </div>
     </Card>
   );
 };
 
-const TeamDetailView: React.FC<{
-  team: Team;
-  getUserById: (userId: UserId) => User | undefined;
-}> = ({ team, getUserById }) => {
+const VistaDetalleEquipo: React.FC<{
+  equipo: Team;
+  obtenerUsuarioPorId: (userId: UserId) => Usuario | undefined;
+}> = ({ equipo, obtenerUsuarioPorId }) => {
   return (
     <div className="space-y-6 py-4">
-      {/* Header */}
+      {/* Encabezado */}
       <div className="flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-          <Users className="h-8 w-8 text-white" />
+        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0">
+          <Users className="h-8 w-8 text-primary-foreground" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold">{team.name}</h2>
+          <h2 className="text-2xl font-bold text-foreground">{equipo.name}</h2>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="secondary">
-              {team.members.size} members
+              {equipo.members.size} miembros
             </Badge>
-            {!team.active && (
+            {!equipo.active && (
               <Badge variant="outline" className="text-xs">
-                Inactive
+                Inactivo
               </Badge>
             )}
           </div>
         </div>
       </div>
 
-      {team.description && (
+      {equipo.description && (
         <div>
-          <h3 className="font-semibold text-lg mb-2">Description</h3>
-          <p className="text-muted-foreground">{team.description}</p>
+          <h3 className="font-semibold text-lg mb-2 text-foreground">Descripción</h3>
+          <p className="text-muted-foreground">{equipo.description}</p>
         </div>
       )}
 
       <div>
-        <h3 className="font-semibold text-lg mb-3">Team Members</h3>
+        <h3 className="font-semibold text-lg mb-3 text-foreground">Miembros del Equipo</h3>
         <div className="space-y-2">
-          {team.members.size === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No members yet</p>
+          {equipo.members.size === 0 ? (
+            <p className="text-muted-foreground text-center py-4">Aún no hay miembros</p>
           ) : (
-            Array.from(team.members).map((member) => {
-              const user = getUserById(member.userId)
+            Array.from(equipo.members).map((miembro) => {
+              const usuario = obtenerUsuarioPorId(miembro.userId);
               return (
                 <div
-                  key={member.userId}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
+                  key={miembro.userId}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-md border border-border/40"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      {member.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-semibold flex-shrink-0">
+                      {miembro.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </div>
                     <div>
-                      <div className="font-medium">{member.fullName}</div>
-                      {user && (
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      <div className="font-medium text-foreground">{miembro.fullName}</div>
+                      {usuario && (
+                        <div className="text-sm text-muted-foreground">{usuario.email}</div>
                       )}
                     </div>
                   </div>
                 </div>
-              )
+              );
             })
           )}
         </div>
       </div>
 
-      {team.createdAt && (
+      {equipo.createdAt && (
         <div className="text-sm text-muted-foreground">
-          Created: {team.createdAt.toLocaleDateString()}
+          Creado: {equipo.createdAt.toLocaleDateString()}
         </div>
       )}
     </div>

@@ -45,8 +45,10 @@ export const PERMISSIONS = {
   SYSTEM_SETTINGS: 'admin:settings',
   COURSE_MANAGEMENT: 'admin:courses',
   CATALOG_MANAGEMENT: 'admin:catalogs',
+  STADISTICS: 'admin:statistics',
   PERSONAL_DATA_MANAGEMENT: 'admin:personal',
   ACTIVITIES: 'admin:activities',
+  
   
   TEACHER_DASHBOARD: 'teacher:dashboard',
   MANAGE_CLASSES: 'teacher:classes',

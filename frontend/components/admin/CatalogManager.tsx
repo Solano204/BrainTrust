@@ -39,13 +39,13 @@ function useToasts() {
 
 // ─── Catalog Section Config (role-activities removed) ─────────────
 const CATALOG_SECTIONS = [
-  { key: 'first-names',    label: 'First Names',    icon: User,      color: '#6366f1' },
-  { key: 'last-names',     label: 'Last Names',     icon: User,      color: '#8b5cf6' },
-  { key: 'states',         label: 'States',         icon: MapPin,    color: '#0ea5e9' },
-  { key: 'municipalities', label: 'Municipalities', icon: Building2, color: '#10b981' },
-  { key: 'colonies',       label: 'Colonies',       icon: TreePine,  color: '#f59e0b' },
-  { key: 'streets',        label: 'Streets',        icon: RouteIcon, color: '#ef4444' },
-  { key: 'postal-codes',   label: 'Postal Codes',   icon: Hash,      color: '#ec4899' },
+  { key: 'first-names',    label: 'Nombres',    icon: User,      color: '#6366f1' },
+  { key: 'last-names',     label: 'Apellidos',     icon: User,      color: '#8b5cf6' },
+  { key: 'states',         label: 'Estados',         icon: MapPin,    color: '#0ea5e9' },
+  { key: 'municipalities', label: 'Municipios', icon: Building2, color: '#10b981' },
+  { key: 'colonies',       label: 'Colonias',       icon: TreePine,  color: '#f59e0b' },
+  { key: 'streets',        label: 'Calles',        icon: RouteIcon, color: '#ef4444' },
+  { key: 'postal-codes',   label: 'Códigos Postales',   icon: Hash,      color: '#ec4899' },
   { key: 'roles',          label: 'Roles',          icon: ShieldCheck, color: '#14b8a6' },
 ] as const;
 
@@ -62,56 +62,63 @@ interface PaginationBarProps {
 }
 function PaginationBar({ page, totalPages, totalElements, onPage, accentColor }: PaginationBarProps) {
   if (totalPages <= 1) return (
-    <p className="text-xs text-gray-400 text-right">{totalElements} entries</p>
-  );
-  return (
-    <div className="flex items-center justify-between">
-      <p className="text-xs text-gray-400">{totalElements} total entries</p>
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onPage(page - 1)}
-          disabled={page === 0}
-          className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-        </button>
-        {Array.from({ length: totalPages }, (_, i) => i)
-          .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1)
-          .reduce<(number | '...')[]>((acc, cur, idx, arr) => {
-            if (idx > 0 && (cur as number) - (arr[idx - 1] as number) > 1) acc.push('...');
-            acc.push(cur);
-            return acc;
-          }, [])
-          .map((item, idx) =>
-            item === '...' ? (
-              <span key={`dots-${idx}`} className="px-2 text-gray-400 text-xs">…</span>
-            ) : (
-              <button
-                key={item}
-                onClick={() => onPage(item as number)}
-                className="w-7 h-7 rounded-lg text-xs font-medium transition-all"
-                style={
-                  item === page
-                    ? { background: accentColor, color: 'white' }
-                    : { background: 'transparent', color: '#6b7280' }
-                }
-              >
-                {(item as number) + 1}
-              </button>
-            )
-          )}
-        <button
-          onClick={() => onPage(page + 1)}
-          disabled={page >= totalPages - 1}
-          className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
+    <p className="text-xs text-gray-400 text-right">{totalElements} entradas</p>
+  );return (
+  <div className="flex items-center justify-between">
 
+    <p className="text-xs text-muted-foreground">
+      <span className="font-medium text-foreground">{totalElements}</span> entradas totales
+    </p>
+
+    <div className="flex items-center gap-1">
+
+      <button
+        onClick={() => onPage(page - 1)}
+        disabled={page === 0}
+        className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+      >
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </button>
+
+      {Array.from({ length: totalPages }, (_, i) => i)
+        .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1)
+        .reduce<(number | '...')[]>((acc, cur, idx, arr) => {
+          if (idx > 0 && (cur as number) - (arr[idx - 1] as number) > 1) acc.push('...');
+          acc.push(cur);
+          return acc;
+        }, [])
+        .map((item, idx) =>
+          item === '...' ? (
+            <span key={`dots-${idx}`} className="px-2 text-muted-foreground text-xs select-none">
+              …
+            </span>
+          ) : (
+            <button
+              key={item}
+              onClick={() => onPage(item as number)}
+              className={`w-7 h-7 rounded-xl text-xs font-semibold transition-all ${
+                item === page
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              }`}
+            >
+              {(item as number) + 1}
+            </button>
+          )
+        )}
+
+      <button
+        onClick={() => onPage(page + 1)}
+        disabled={page >= totalPages - 1}
+        className="p-1.5 rounded-xl border border-border text-muted-foreground hover:bg-muted/50 hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+      >
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+
+    </div>
+  </div>
+);
+}
 // ─── Inline Edit Row ─────────────────────────────────────────────
 interface EditRowProps { value: string; onSave: (v: string) => Promise<void>; onCancel: () => void; loading?: boolean }
 function EditRow({ value, onSave, onCancel, loading }: EditRowProps) {
@@ -179,117 +186,154 @@ function CatalogTable({
     try { await onDelete(id); }
     finally { setDeleting(null); }
   };
+return (
+  <div className="flex flex-col gap-4">
 
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Search + Add */}
-      <div className="flex gap-3 items-center">
-        {!hideSearch && (
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              value={search} onChange={e => { onSearch(e.target.value); onPage(0); }}
-              placeholder="Search..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 backdrop-blur text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 placeholder:text-gray-400 text-gray-700"
-            />
-          </div>
-        )}
-        <button
-          onClick={() => setShowAdd(v => !v)}
-          style={{ background: accentColor }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium shadow-sm hover:opacity-90 transition-all active:scale-95 whitespace-nowrap"
-        >
-          <Plus className="w-4 h-4" />{addLabel}
-        </button>
-      </div>
-
-      {/* Add Form */}
-      {showAdd && (
-        <div className="p-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/80 flex flex-col gap-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">New entry</p>
+    {/* ── Search + Add ── */}
+    <div className="flex gap-3 items-center">
+      {!hideSearch && (
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
-            autoFocus value={newValue} onChange={e => setNewValue(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setShowAdd(false); setNewValue(''); } }}
-            placeholder={addPlaceholder}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 text-gray-800"
+            value={search}
+            onChange={e => { onSearch(e.target.value); onPage(0); }}
+            placeholder="Buscar..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 placeholder:text-muted-foreground transition-all"
           />
-          {addExtra}
-          <div className="flex gap-2">
-            <button onClick={handleAdd} disabled={addingLoading || !newValue.trim()} style={{ background: accentColor }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-all">
-              {addingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Add
-            </button>
-            <button onClick={() => { setShowAdd(false); setNewValue(''); }}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-100 transition-all">
-              Cancel
-            </button>
-          </div>
         </div>
       )}
+      <button
+        onClick={() => setShowAdd(v => !v)}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:opacity-90 active:scale-95 transition-all whitespace-nowrap"
+      >
+        <Plus className="w-4 h-4" />
+        {addLabel}
+      </button>
+    </div>
 
-      {/* Table */}
-      <div className="rounded-2xl border border-gray-100 overflow-hidden bg-white shadow-sm">
-        {loading ? (
-          <div className="flex items-center justify-center py-12 gap-3 text-gray-400">
-            <Loader2 className="w-5 h-5 animate-spin" /><span className="text-sm">Loading...</span>
-          </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            {search ? 'No results found.' : 'No entries yet.'}
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-16">ID</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Value</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {items.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50/60 transition-colors group">
-                  <td className="px-5 py-3">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-xs font-mono">#{item.id}</span>
-                  </td>
-                  <td className="px-5 py-3">
-                    {editingId === item.id ? (
-                      <EditRow value={item.displayValue} onSave={v => handleUpdate(item.id, v)} onCancel={() => setEditingId(null)} loading={editLoading} />
-                    ) : (
-                      <span className="text-gray-800 font-medium">{item.displayValue}</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3">
-                    {editingId !== item.id && (
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditingId(item.id)} className="p-1.5 rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 transition-all" title="Edit">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all disabled:opacity-40" title="Delete">
-                          {deleting === item.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {!loading && pagedData && (
-        <PaginationBar
-          page={pagedData.page} totalPages={pagedData.totalPages}
-          totalElements={pagedData.totalElements} onPage={onPage} accentColor={accentColor}
+    {/* ── Add Form ── */}
+    {showAdd && (
+      <div className="p-5 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex flex-col gap-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          Nueva entrada
+        </p>
+        <input
+          autoFocus
+          value={newValue}
+          onChange={e => setNewValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setShowAdd(false); setNewValue(''); } }}
+          placeholder={addPlaceholder}
+          className="px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
         />
+        {addExtra}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleAdd}
+            disabled={addingLoading || !newValue.trim()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 active:scale-95 transition-all"
+          >
+            {addingLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Agregar
+          </button>
+          <button
+            onClick={() => { setShowAdd(false); setNewValue(''); }}
+            className="px-4 py-2 rounded-xl border border-border text-muted-foreground text-sm hover:bg-muted/50 hover:text-foreground transition-all"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* ── Table ── */}
+    <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
+      {loading ? (
+        <div className="flex items-center justify-center py-14 gap-3 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Cargando...</span>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-14 text-muted-foreground text-sm">
+          {search ? 'No se encontraron resultados.' : 'Aún no hay entradas.'}
+        </div>
+      ) : (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
+              <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">ID</th>
+              <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
+              <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-28">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/50">
+            {items.map(item => (
+              <tr key={item.id} className="hover:bg-muted/30 transition-colors group">
+
+                {/* ID */}
+                <td className="px-5 py-3.5">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-mono">
+                    #{item.id}
+                  </span>
+                </td>
+
+                {/* Value */}
+                <td className="px-5 py-3.5">
+                  {editingId === item.id ? (
+                    <EditRow
+                      value={item.displayValue}
+                      onSave={v => handleUpdate(item.id, v)}
+                      onCancel={() => setEditingId(null)}
+                      loading={editLoading}
+                    />
+                  ) : (
+                    <span className="font-medium text-foreground">{item.displayValue}</span>
+                  )}
+                </td>
+
+                {/* Actions */}
+                <td className="px-5 py-3.5">
+                  {editingId !== item.id && (
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => setEditingId(item.id)}
+                        className="p-1.5 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                        title="Editar"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deleting === item.id}
+                        className="p-1.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all disabled:opacity-40"
+                        title="Eliminar"
+                      >
+                        {deleting === item.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  )}
+                </td>
+
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
-  );
-}
 
+    {/* ── Pagination ── */}
+    {!loading && pagedData && (
+      <PaginationBar
+        page={pagedData.page}
+        totalPages={pagedData.totalPages}
+        totalElements={pagedData.totalElements}
+        onPage={onPage} accentColor={''}      />
+    )}
+
+  </div>
+);
+}
 // ─────────────────────────────────────────────────────────────────
 // PANEL HELPERS
 // ─────────────────────────────────────────────────────────────────
@@ -305,7 +349,7 @@ async function handleMutation<T>(
     await fn();
     push('success', successMsg);
   } catch (e: any) {
-    const msg = e?.response?.data?.message || e?.message || 'Operation failed';
+    const msg = e?.response?.data?.message || e?.message || 'Operación fallida';
     if (e?.response?.status === 409) {
       onConflict ? onConflict(msg) : push('warning', msg);
     } else {
@@ -339,10 +383,10 @@ function SimpleValuePanel({ accentColor, push, useItems, useAdd, useUpdate, useD
     <CatalogTable
       pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
       search={search} onSearch={v => { setSearch(v); setPage(0); }}
-      onAdd={async v => handleMutation(() => add.mutateAsync({ value: v }), push, `${addLabel} added!`)}
-      onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, 'Updated!', m => push('warning', m))}
-      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m))}
-      addLabel={`Add ${addLabel}`} addPlaceholder={addPlaceholder} accentColor={accentColor}
+      onAdd={async v => handleMutation(() => add.mutateAsync({ value: v }), push, `¡${addLabel} agregado!`)}
+      onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
+      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      addLabel={`Agregar ${addLabel}`} addPlaceholder={addPlaceholder} accentColor={accentColor}
     />
   );
 }
@@ -367,41 +411,53 @@ function MunicipalitiesPanel({ accentColor, push }: { accentColor: string; push:
   const add = useAddMunicipality();
   const upd = useUpdateMunicipality();
   const del = useDeleteMunicipality();
+return (
+  <div className="flex flex-col gap-4">
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">State:</label>
-        <select value={filterState ?? ''} onChange={e => { setFilterState(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-gray-700">
-          <option value="">All states</option>
+    {/* ── State filter ── */}
+    <div className="flex items-center gap-3">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+        Estado:
+      </label>
+      <select
+        value={filterState ?? ''}
+        onChange={e => { setFilterState(e.target.value ? Number(e.target.value) : null); setPage(0); }}
+        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+      >
+        <option value="">Todos los estados</option>
+        {allStates.map(s => <option key={s.id} value={s.id}>{s.value}</option>)}
+      </select>
+    </div>
+
+    <CatalogTable
+      pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
+      search={search} onSearch={v => { setSearch(v); setPage(0); }}
+      onAdd={async (v) => {
+        const sid = newStateId ? Number(newStateId) : filterState;
+        if (!sid) return push('error', 'Selecciona un estado primero');
+        handleMutation(() => add.mutateAsync({ stateId: sid, municipalityName: v }), push, '¡Municipio agregado!');
+        setNewStateId('');
+      }}
+      onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
+      onDelete={async (id) => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      addLabel="Agregar Municipio"
+      addPlaceholder="ej. Comitán"
+      addExtra={!filterState ? (
+        <select
+          value={newStateId}
+          onChange={e => setNewStateId(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+        >
+          <option value="">Selecciona estado *</option>
           {allStates.map(s => <option key={s.id} value={s.id}>{s.value}</option>)}
         </select>
-      </div>
-      <CatalogTable
-        pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-        search={search} onSearch={v => { setSearch(v); setPage(0); }}
-        onAdd={async v => {
-          const sid = newStateId ? Number(newStateId) : filterState;
-          if (!sid) return push('error', 'Select a state first');
-          handleMutation(() => add.mutateAsync({ stateId: sid, municipalityName: v }), push, 'Municipality added!');
-          setNewStateId('');
-        }}
-        onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, 'Updated!', m => push('warning', m))}
-        onDelete={async id => handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m))}
-        addLabel="Add Municipality" addPlaceholder="e.g. Comitán" accentColor={accentColor}
-        addExtra={!filterState ? (
-          <select value={newStateId} onChange={e => setNewStateId(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 text-gray-700">
-            <option value="">Select state *</option>
-            {allStates.map(s => <option key={s.id} value={s.id}>{s.value}</option>)}
-          </select>
-        ) : null}
-      />
-    </div>
-  );
-}
+      ) : null}
+      accentColor={''}
+    />
 
+  </div>
+);
+}
 // ─── Colonies Panel ───────────────────────────────────────────────
 function ColoniesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]         = useState('');
@@ -422,41 +478,52 @@ function ColoniesPanel({ accentColor, push }: { accentColor: string; push: PushF
   const add = useAddColony();
   const upd = useUpdateColony();
   const del = useDeleteColony();
+return (
+  <div className="flex flex-col gap-4">
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Municipality:</label>
-        <select value={filterMuni ?? ''} onChange={e => { setFilterMuni(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 text-gray-700">
-          <option value="">All municipalities</option>
+    {/* ── Municipality filter ── */}
+    <div className="flex items-center gap-3">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+        Municipio:
+      </label>
+      <select
+        value={filterMuni ?? ''}
+        onChange={e => { setFilterMuni(e.target.value ? Number(e.target.value) : null); setPage(0); }}
+        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+      >
+        <option value="">Todos los municipios</option>
+        {allMunis.map(m => <option key={m.id} value={m.id}>{m.municipalityName}</option>)}
+      </select>
+    </div>
+
+    <CatalogTable
+      pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
+      search={search} onSearch={v => { setSearch(v); setPage(0); }}
+      onAdd={async v => {
+        const mid = newMuniId ? Number(newMuniId) : filterMuni;
+        if (!mid) return push('error', 'Selecciona un municipio primero');
+        handleMutation(() => add.mutateAsync({ municipalityId: mid, colonyName: v }), push, '¡Colonia agregada!');
+        setNewMuniId('');
+      }}
+      onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
+      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      addLabel="Agregar Colonia"
+      addPlaceholder="ej. Centro"
+      addExtra={!filterMuni ? (
+        <select
+          value={newMuniId}
+          onChange={e => setNewMuniId(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
+        >
+          <option value="">Selecciona municipio *</option>
           {allMunis.map(m => <option key={m.id} value={m.id}>{m.municipalityName}</option>)}
         </select>
-      </div>
-      <CatalogTable
-        pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-        search={search} onSearch={v => { setSearch(v); setPage(0); }}
-        onAdd={async v => {
-          const mid = newMuniId ? Number(newMuniId) : filterMuni;
-          if (!mid) return push('error', 'Select a municipality first');
-          handleMutation(() => add.mutateAsync({ municipalityId: mid, colonyName: v }), push, 'Colony added!');
-          setNewMuniId('');
-        }}
-        onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, 'Updated!', m => push('warning', m))}
-        onDelete={async id => handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m))}
-        addLabel="Add Colony" addPlaceholder="e.g. Centro" accentColor={accentColor}
-        addExtra={!filterMuni ? (
-          <select value={newMuniId} onChange={e => setNewMuniId(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 text-gray-700">
-            <option value="">Select municipality *</option>
-            {allMunis.map(m => <option key={m.id} value={m.id}>{m.municipalityName}</option>)}
-          </select>
-        ) : null}
-      />
-    </div>
-  );
-}
+      ) : null}
+    />
 
+  </div>
+);
+}
 // ─── Streets Panel ────────────────────────────────────────────────
 function StreetsPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]             = useState('');
@@ -477,41 +544,51 @@ function StreetsPanel({ accentColor, push }: { accentColor: string; push: PushFn
   const add = useAddStreet();
   const upd = useUpdateStreet();
   const del = useDeleteStreet();
+return (
+  <div className="flex flex-col gap-4">
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Colony:</label>
-        <select value={filterColony ?? ''} onChange={e => { setFilterColony(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-300 text-gray-700">
-          <option value="">All colonies</option>
+    {/* ── Colony filter ── */}
+    <div className="flex items-center gap-3">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+        Colonia:
+      </label>
+      <select
+        value={filterColony ?? ''}
+        onChange={e => { setFilterColony(e.target.value ? Number(e.target.value) : null); setPage(0); }}
+        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      >
+        <option value="">Todas las colonias</option>
+        {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
+      </select>
+    </div>
+
+    <CatalogTable
+      pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
+      search={search} onSearch={v => { setSearch(v); setPage(0); }}
+      onAdd={async v => {
+        const cid = newColonyId ? Number(newColonyId) : filterColony;
+        if (!cid) return push('error', 'Selecciona una colonia primero');
+        handleMutation(() => add.mutateAsync({ colonyId: cid, streetName: v }), push, '¡Calle agregada!');
+        setNewColonyId('');
+      }}
+      onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
+      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      addLabel="Agregar Calle"
+      addPlaceholder="ej. Av. Central"
+      addExtra={!filterColony ? (
+        <select
+          value={newColonyId}
+          onChange={e => setNewColonyId(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+        >
+          <option value="">Selecciona colonia *</option>
           {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
         </select>
-      </div>
-      <CatalogTable
-        pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-        search={search} onSearch={v => { setSearch(v); setPage(0); }}
-        onAdd={async v => {
-          const cid = newColonyId ? Number(newColonyId) : filterColony;
-          if (!cid) return push('error', 'Select a colony first');
-          handleMutation(() => add.mutateAsync({ colonyId: cid, streetName: v }), push, 'Street added!');
-          setNewColonyId('');
-        }}
-        onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, 'Updated!', m => push('warning', m))}
-        onDelete={async id => handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m))}
-        addLabel="Add Street" addPlaceholder="e.g. Av. Central" accentColor={accentColor}
-        addExtra={!filterColony ? (
-          <select value={newColonyId} onChange={e => setNewColonyId(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-300 text-gray-700">
-            <option value="">Select colony *</option>
-            {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
-          </select>
-        ) : null}
-      />
-    </div>
-  );
-}
+      ) : null}
+    />
 
+  </div>
+);}
 // ─── Postal Codes Panel ───────────────────────────────────────────
 function PostalCodesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]             = useState('');
@@ -532,40 +609,51 @@ function PostalCodesPanel({ accentColor, push }: { accentColor: string; push: Pu
   const add = useAddPostalCode();
   const upd = useUpdatePostalCode();
   const del = useDeletePostalCode();
+return (
+  <div className="flex flex-col gap-4">
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Colony:</label>
-        <select value={filterColony ?? ''} onChange={e => { setFilterColony(e.target.value ? Number(e.target.value) : null); setPage(0); }}
-          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700">
-          <option value="">All colonies</option>
+    {/* ── Colony filter ── */}
+    <div className="flex items-center gap-3">
+      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+        Colonia:
+      </label>
+      <select
+        value={filterColony ?? ''}
+        onChange={e => { setFilterColony(e.target.value ? Number(e.target.value) : null); setPage(0); }}
+        className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+      >
+        <option value="">Todas las colonias</option>
+        {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
+      </select>
+    </div>
+
+    <CatalogTable
+      pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
+      search={search} onSearch={v => { setSearch(v); setPage(0); }}
+      onAdd={async v => {
+        const cid = newColonyId ? Number(newColonyId) : filterColony;
+        if (!cid) return push('error', 'Selecciona una colonia primero');
+        handleMutation(() => add.mutateAsync({ colonyId: cid, postalCode: v }), push, '¡Código postal agregado!');
+        setNewColonyId('');
+      }}
+      onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, '¡Actualizado!', m => push('warning', m))}
+      onDelete={async id => handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m))}
+      addLabel="Agregar Código"
+      addPlaceholder="ej. 29000"
+      addExtra={!filterColony ? (
+        <select
+          value={newColonyId}
+          onChange={e => setNewColonyId(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+        >
+          <option value="">Selecciona colonia *</option>
           {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
         </select>
-      </div>
-      <CatalogTable
-        pagedData={mapped} loading={isLoading} page={page} onPage={setPage}
-        search={search} onSearch={v => { setSearch(v); setPage(0); }}
-        onAdd={async v => {
-          const cid = newColonyId ? Number(newColonyId) : filterColony;
-          if (!cid) return push('error', 'Select a colony first');
-          handleMutation(() => add.mutateAsync({ colonyId: cid, postalCode: v }), push, 'Postal code added!');
-          setNewColonyId('');
-        }}
-        onUpdate={async (id, v) => handleMutation(() => upd.mutateAsync({ id, req: { value: v } }), push, 'Updated!', m => push('warning', m))}
-        onDelete={async id => handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m))}
-        addLabel="Add Code" addPlaceholder="e.g. 29000" accentColor={accentColor}
-        addExtra={!filterColony ? (
-          <select value={newColonyId} onChange={e => setNewColonyId(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700">
-            <option value="">Select colony *</option>
-            {allColonies.map(c => <option key={c.id} value={c.id}>{c.colonyName}</option>)}
-          </select>
-        ) : null}
-      />
-    </div>
-  );
-}
+      ) : null}
+    />
+
+  </div>
+);}
 
 // ─── Roles Panel ─────────────────────────────────────────────────
 function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
@@ -592,7 +680,7 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
     if (!newCode.trim()) return;
     setAddLoading(true);
     try {
-      await handleMutation(() => create.mutateAsync({ code: newCode.trim(), description: newDesc.trim() }), push, 'Role created!', m => push('warning', m));
+      await handleMutation(() => create.mutateAsync({ code: newCode.trim(), description: newDesc.trim() }), push, '¡Rol creado!', m => push('warning', m));
       setNewCode(''); setNewDesc(''); setShowAdd(false);
     } finally { setAddLoading(false); }
   };
@@ -610,7 +698,7 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
     try {
       await handleMutation(
         () => update.mutateAsync({ id: editingId, req: { code: editCode.trim(), description: editDesc.trim() } }),
-        push, 'Role updated!', m => push('warning', m)
+        push, '¡Rol actualizado!', m => push('warning', m)
       );
       setEditingId(null);
     } finally { setEditLoading(false); }
@@ -618,156 +706,208 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
 
   const handleDelete = async (id: number) => {
     setDeleting(id);
-    try { await handleMutation(() => del.mutateAsync(id), push, 'Role deleted!', m => push('warning', m)); }
+    try { await handleMutation(() => del.mutateAsync(id), push, '¡Rol eliminado!', m => push('warning', m)); }
     finally { setDeleting(null); }
   };
 
   const toggleExpand = (id: number) => setExpandedId(prev => prev === id ? null : id);
+return (
+  <div className="flex flex-col gap-4">
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <button onClick={() => setShowAdd(v => !v)} style={{ background: accentColor }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-medium shadow-sm hover:opacity-90 transition-all active:scale-95">
-          <Plus className="w-4 h-4" />Add Role
-        </button>
+    {/* ── Add button ── */}
+    <div className="flex justify-end">
+      <button
+        onClick={() => setShowAdd(v => !v)}
+        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:opacity-90 active:scale-95 transition-all"
+      >
+        <Plus className="w-4 h-4" />
+        Agregar Rol
+      </button>
+    </div>
+
+    {/* ── Add form ── */}
+    {showAdd && (
+      <div className="p-5 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex flex-col gap-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nuevo Rol</p>
+        <input
+          autoFocus value={newCode} onChange={e => setNewCode(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setShowAdd(false); setNewCode(''); setNewDesc(''); } }}
+          placeholder="Código del rol (ej. ADMIN)"
+          className="px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+        />
+        <input
+          value={newDesc} onChange={e => setNewDesc(e.target.value)}
+          placeholder="Descripción (opcional)"
+          className="px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+        />
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={handleAdd} disabled={addLoading || !newCode.trim()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 hover:opacity-90 active:scale-95 transition-all"
+          >
+            {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Crear
+          </button>
+          <button
+            onClick={() => { setShowAdd(false); setNewCode(''); setNewDesc(''); }}
+            className="px-4 py-2 rounded-xl border border-border text-muted-foreground text-sm hover:bg-muted/50 hover:text-foreground transition-all"
+          >
+            Cancelar
+          </button>
+        </div>
       </div>
+    )}
 
-      {showAdd && (
-        <div className="p-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50/80 flex flex-col gap-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">New Role</p>
-          <input autoFocus value={newCode} onChange={e => setNewCode(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') { setShowAdd(false); setNewCode(''); setNewDesc(''); }}}
-            placeholder="Role code (e.g. ADMIN)"
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 text-gray-800" />
-          <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Description (optional)"
-            className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 text-gray-800" />
-          <div className="flex gap-2">
-            <button onClick={handleAdd} disabled={addLoading || !newCode.trim()} style={{ background: accentColor }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium disabled:opacity-40 hover:opacity-90 transition-all">
-              {addLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}Create
-            </button>
-            <button onClick={() => { setShowAdd(false); setNewCode(''); setNewDesc(''); }}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-100 transition-all">Cancel</button>
-          </div>
-        </div>
-      )}
+    {/* ── List ── */}
+    {isLoading ? (
+      <div className="flex items-center justify-center py-14 gap-3 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin" />
+        <span className="text-sm">Cargando...</span>
+      </div>
+    ) : items.length === 0 ? (
+      <div className="text-center py-14 text-muted-foreground text-sm bg-card rounded-2xl border border-border">
+        Aún no hay roles.
+      </div>
+    ) : (
+      <div className="flex flex-col gap-2">
+        {items.map(role => {
+          const isExpanded = expandedId === role.id;
+          const isEditing  = editingId  === role.id;
+          return (
+            <div key={role.id} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all">
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12 gap-3 text-gray-400">
-          <Loader2 className="w-5 h-5 animate-spin" /><span className="text-sm">Loading...</span>
-        </div>
-      ) : items.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 text-sm bg-white rounded-2xl border border-gray-100">No roles yet.</div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {items.map(role => {
-            const isExpanded = expandedId === role.id;
-            const isEditing  = editingId  === role.id;
-            return (
-              <div key={role.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all">
-                <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-gray-50/60 transition-colors">
-                  <button onClick={() => toggleExpand(role.id)}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all flex-shrink-0">
-                    <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
-                  </button>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-xs font-mono flex-shrink-0">
-                    #{role.id}
-                  </span>
-                  <div className="w-36 flex-shrink-0">
-                    {isEditing ? (
-                      <input autoFocus value={editCode} onChange={e => setEditCode(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleUpdate(); if (e.key === 'Escape') setEditingId(null); }}
-                        className="w-full px-2.5 py-1 text-sm rounded-lg border border-teal-300 bg-teal-50/50 focus:outline-none focus:ring-2 focus:ring-teal-400 text-gray-800" />
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                        style={{ background: accentColor + '18', color: accentColor }}>
-                        {role.code}
-                      </span>
-                    )}
-                  </div>
-                  {/* {isEditing ? (
-                    <input value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                      placeholder="Description"
-                      className="flex-1 px-2.5 py-1 text-sm rounded-lg border border-teal-300 bg-teal-50/50 focus:outline-none focus:ring-2 focus:ring-teal-400 text-gray-600" />
+              {/* ── Row ── */}
+              <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-muted/30 transition-colors">
+
+                {/* Expand toggle */}
+                <button
+                  onClick={() => toggleExpand(role.id)}
+                  className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex-shrink-0"
+                >
+                  <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+                </button>
+
+                {/* ID */}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-mono flex-shrink-0">
+                  #{role.id}
+                </span>
+
+                {/* Code / edit input */}
+                <div className="w-36 flex-shrink-0">
+                  {isEditing ? (
+                    <input
+                      autoFocus value={editCode} onChange={e => setEditCode(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleUpdate(); if (e.key === 'Escape') setEditingId(null); }}
+                      className="w-full px-2.5 py-1 text-sm rounded-lg border border-primary/40 bg-primary/5 focus:outline-none focus:ring-2 focus:ring-ring/50 text-foreground transition-all"
+                    />
                   ) : (
-                    <span className="flex-1 text-sm text-gray-500 truncate">{role.description}</span>
-                  )} */}
-                  {!isEditing && (
-                    <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 flex-shrink-0">
-                      <Activity className="w-3 h-3" />
-                      {role.activities?.length ?? 0}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                      {role.code}
                     </span>
                   )}
-                  <div className={`flex items-center gap-1 flex-shrink-0 transition-opacity ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                    {isEditing ? (
-                      <>
-                        <button onClick={handleUpdate} disabled={editLoading || !editCode.trim()}
-                          className="p-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 disabled:opacity-40 transition-all">
-                          {editLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                        </button>
-                        <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-all">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={() => startEdit(role)} className="p-1.5 rounded-lg hover:bg-teal-50 text-gray-400 hover:text-teal-600 transition-all" title="Edit">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(role.id)} disabled={deleting === role.id}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all disabled:opacity-40" title="Delete">
-                          {deleting === role.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                        </button>
-                      </>
-                    )}
-                  </div>
                 </div>
 
-                {isExpanded && (
-                  <div className="border-t border-gray-100 bg-gray-50/50">
-                    {!role.activities || role.activities.length === 0 ? (
-                      <p className="px-12 py-4 text-xs text-gray-400 italic">No activities assigned to this role.</p>
-                    ) : (
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="border-b border-gray-100">
-                            <th className="text-left px-12 py-2 text-gray-400 font-semibold uppercase tracking-wider w-16">ID</th>
-                            <th className="text-left px-3 py-2 text-gray-400 font-semibold uppercase tracking-wider w-32">Code</th>
-                            <th className="text-left px-3 py-2 text-gray-400 font-semibold uppercase tracking-wider w-40">Activity</th>
-                            <th className="text-left px-3 py-2 text-gray-400 font-semibold uppercase tracking-wider">Description</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {role.activities.map(act => (
-                            <tr key={act.id} className="hover:bg-white/80 transition-colors">
-                              <td className="px-12 py-2.5"><span className="font-mono text-gray-400">#{act.id}</span></td>
-                              <td className="px-3 py-2.5">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold"
-                                  style={{ background: accentColor + '12', color: accentColor }}>{act.code}</span>
-                              </td>
-                              <td className="px-3 py-2.5 font-medium text-gray-700">{act.activity}</td>
-                              <td className="px-3 py-2.5 text-gray-500">{act.description || <span className="text-gray-300 italic">—</span>}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
+                {/* Activity count */}
+                {!isEditing && (
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground flex-shrink-0">
+                    <Activity className="w-3 h-3" />
+                    {role.activities?.length ?? 0}
+                  </span>
                 )}
+
+                {/* Action buttons */}
+                <div className={`flex items-center gap-1 flex-shrink-0 ml-auto transition-opacity ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={handleUpdate} disabled={editLoading || !editCode.trim()}
+                        className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-40 transition-all"
+                      >
+                        {editLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEdit(role)}
+                        className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                        title="Editar"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(role.id)} disabled={deleting === role.id}
+                        className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all disabled:opacity-40"
+                        title="Eliminar"
+                      >
+                        {deleting === role.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            );
-          })}
-        </div>
-      )}
 
-      {!isLoading && data && (
-        <PaginationBar page={data.page} totalPages={data.totalPages} totalElements={data.totalElements} onPage={setPage} accentColor={accentColor} />
-      )}
-    </div>
-  );
-}
+              {/* ── Expanded activities ── */}
+              {isExpanded && (
+                <div className="border-t border-border bg-muted/20">
+                  {!role.activities || role.activities.length === 0 ? (
+                    <p className="px-12 py-4 text-xs text-muted-foreground italic">
+                      No hay actividades asignadas a este rol.
+                    </p>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left px-12 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider w-16">ID</th>
+                          <th className="text-left px-3 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider w-32">Código</th>
+                          <th className="text-left px-3 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider w-40">Actividad</th>
+                          <th className="text-left px-3 py-2.5 text-muted-foreground font-semibold uppercase tracking-wider">Descripción</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/50">
+                        {role.activities.map(act => (
+                          <tr key={act.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-12 py-2.5">
+                              <span className="font-mono text-muted-foreground">#{act.id}</span>
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-primary/10 text-primary">
+                                {act.code}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 font-medium text-foreground">{act.activity}</td>
+                            <td className="px-3 py-2.5 text-muted-foreground">
+                              {act.description || <span className="opacity-40 italic">—</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
 
+            </div>
+          );
+        })}
+      </div>
+    )}
+
+    {/* ── Pagination ── */}
+    {!isLoading && data && (
+      <PaginationBar
+        page={data.page} totalPages={data.totalPages}
+        totalElements={data.totalElements} onPage={setPage} accentColor={''}      />
+    )}
+
+  </div>
+);}
 // ─── Toast Container ──────────────────────────────────────────────
 function ToastContainer({ toasts }: { toasts: Toast[] }) {
   const cfg = {
@@ -800,9 +940,9 @@ export function CatalogManager() {
   const renderPanel = () => {
     const props = { accentColor: active.color, push };
     switch (activeSection) {
-      case 'first-names':    return <SimpleValuePanel {...props} useItems={useFirstNames} useAdd={useAddFirstName} useUpdate={useUpdateFirstName} useDelete={useDeleteFirstName} addLabel="First Name" addPlaceholder="e.g. Carlos" />;
-      case 'last-names':     return <SimpleValuePanel {...props} useItems={useLastNames}  useAdd={useAddLastName}  useUpdate={useUpdateLastName}  useDelete={useDeleteLastName}  addLabel="Last Name"  addPlaceholder="e.g. González" />;
-      case 'states':         return <SimpleValuePanel {...props} useItems={useStates}     useAdd={useAddState}     useUpdate={useUpdateState}     useDelete={useDeleteState}     addLabel="State"      addPlaceholder="e.g. Chiapas" />;
+      case 'first-names':    return <SimpleValuePanel {...props} useItems={useFirstNames} useAdd={useAddFirstName} useUpdate={useUpdateFirstName} useDelete={useDeleteFirstName} addLabel="Nombre" addPlaceholder="ej. Carlos" />;
+      case 'last-names':     return <SimpleValuePanel {...props} useItems={useLastNames}  useAdd={useAddLastName}  useUpdate={useUpdateLastName}  useDelete={useDeleteLastName}  addLabel="Apellido"  addPlaceholder="ej. González" />;
+      case 'states':         return <SimpleValuePanel {...props} useItems={useStates}     useAdd={useAddState}     useUpdate={useUpdateState}     useDelete={useDeleteState}     addLabel="Estado"      addPlaceholder="ej. Chiapas" />;
       case 'municipalities': return <MunicipalitiesPanel {...props} />;
       case 'colonies':       return <ColoniesPanel {...props} />;
       case 'streets':        return <StreetsPanel {...props} />;
@@ -810,68 +950,111 @@ export function CatalogManager() {
       case 'roles':          return <RolesPanel {...props} />;
     }
   };
+return (
+  <>
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 font-sans">
 
-  return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 p-6 font-sans">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Catalog Management</h1>
-          <p className="text-gray-500 mt-1 text-sm">Manage system catalogs — names, addresses and roles</p>
+      {/* ── Header ── */}
+      <div className="mb-8 max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 mb-1">
+          <span className="w-10 h-10 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <active.icon className="w-5 h-5 text-primary" />
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+            Gestión de Catálogos
+          </h1>
         </div>
-
-        <div className="flex gap-6 max-w-6xl mx-auto">
-          {/* Sidebar */}
-          <aside className="w-56 flex-shrink-0">
-            <nav className="flex flex-col gap-1">
-              {CATALOG_SECTIONS.map(section => {
-                const Icon    = section.icon;
-                const isActive= activeSection === section.key;
-                return (
-                  <button key={section.key} onClick={() => setActiveSection(section.key)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left group ${isActive ? 'bg-white shadow-md text-gray-900' : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'}`}>
-                    <span className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
-                      style={{ background: isActive ? section.color + '18' : 'transparent' }}>
-                      <Icon className="w-4 h-4 transition-colors" style={{ color: isActive ? section.color : undefined }} />
-                    </span>
-                    <span className="flex-1">{section.label}</span>
-                    {isActive && <ChevronRight className="w-4 h-4" style={{ color: section.color }} />}
-                  </button>
-                );
-              })}
-            </nav>
-          </aside>
-
-          {/* Content */}
-          <main className="flex-1 min-w-0">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-100 shadow-sm p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <span className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: active.color + '18' }}>
-                  <active.icon className="w-5 h-5" style={{ color: active.color }} />
-                </span>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">{active.label}</h2>
-                  <p className="text-xs text-gray-400">Server-side pagination · 409 Conflict returns warnings</p>
-                </div>
-                <div className="ml-auto px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: active.color + '15', color: active.color }}>
-                  /api/catalogs/{active.key}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 mb-5 text-xs text-amber-700">
-                <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span><strong>Note:</strong> Update/Delete return <code className="font-mono bg-amber-100 px-1 rounded">409 Conflict</code> when the entry is in use or has dependent records.</span>
-              </div>
-
-              {renderPanel()}
-            </div>
-          </main>
-        </div>
+        <p className="text-muted-foreground text-sm ml-[52px]">
+          Gestiona los catálogos del sistema — nombres, direcciones y roles
+        </p>
       </div>
 
-      <ToastContainer toasts={toasts} />
-    </>
-  );
+      <div className="flex gap-6 max-w-6xl mx-auto">
+
+        {/* ── Sidebar ── */}
+        <aside className="w-56 flex-shrink-0 hidden sm:block">
+          <nav className="flex flex-col gap-1">
+            {CATALOG_SECTIONS.map(section => {
+              const Icon     = section.icon;
+              const isActive = activeSection === section.key;
+              return (
+                <button
+                  key={section.key}
+                  onClick={() => setActiveSection(section.key)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all text-left group ${
+                    isActive
+                      ? 'bg-card shadow-md text-foreground border border-border'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <span className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                    isActive ? 'bg-primary/10' : 'bg-transparent'
+                  }`}>
+                    <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                  </span>
+                  <span className="flex-1">{section.label}</span>
+                  {isActive && <ChevronRight className="w-4 h-4 text-primary" />}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* ── Mobile section picker ── */}
+        <div className="sm:hidden w-full mb-2">
+          <select
+            value={activeSection}
+            onChange={e => setActiveSection(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+          >
+            {CATALOG_SECTIONS.map(s => (
+              <option key={s.key} value={s.key}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* ── Content ── */}
+        <main className="flex-1 min-w-0">
+          <div className="bg-card/80 backdrop-blur-sm rounded-3xl border border-border shadow-sm p-4 sm:p-6">
+
+            {/* Section header */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+                  <active.icon className="w-5 h-5 text-primary" />
+                </span>
+                <div>
+                  <h2 className="text-base font-bold text-foreground">{active.label}</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Paginación del lado del servidor · Conflictos 409 muestran advertencias
+                  </p>
+                </div>
+              </div>
+              <div className="sm:ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap self-start sm:self-auto">
+                /api/catalogs/{active.key}
+              </div>
+            </div>
+
+            {/* Conflict notice */}
+            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-accent/10 border border-accent/30 mb-5 text-xs text-accent-foreground">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>
+                <strong>Nota:</strong> Actualizar/Eliminar devuelve{' '}
+                <code className="font-mono bg-accent/20 px-1.5 py-0.5 rounded-md">409 Conflict</code>{' '}
+                cuando la entrada está en uso o tiene registros dependientes.
+              </span>
+            </div>
+
+            {renderPanel()}
+          </div>
+        </main>
+
+      </div>
+    </div>
+
+    <ToastContainer toasts={toasts} />
+  </>
+);
 }
 
 export default CatalogManager;

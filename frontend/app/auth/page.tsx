@@ -53,7 +53,7 @@ import { useAuth } from '../context/AuthContext';
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium">
-          Password
+          Contraseña
         </label>
         <input
           id="password"
@@ -71,15 +71,10 @@ import { useAuth } from '../context/AuthContext';
         disabled={isLoading}
         className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
       >
-        {isLoading ? 'Signing in...' : 'Sign In'}
+          {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
       </button>
 
-      <div className="text-sm text-gray-600 mt-4">
-        <p><strong>Test Accounts:</strong></p>
-        <p>Admin: admin@school.com / admin123</p>
-        <p>Teacher: teacher@school.com / teacher123</p>
-        <p>User: user@school.com / user123</p>
-      </div>
+      
     </form>
   );
 };

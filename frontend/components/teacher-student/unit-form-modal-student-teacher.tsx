@@ -13,35 +13,35 @@ import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const unitFormSchema = z.object({
+const esquemaFormularioUnidad = z.object({
   name: z.string()
-    .min(3, "Unit name must be at least 3 characters")
-    .max(150, "Unit name must not exceed 150 characters")
+    .min(3, "El nombre de la unidad debe tener al menos 3 caracteres")
+    .max(150, "El nombre de la unidad no debe exceder los 150 caracteres")
     .trim(),
   description: z.string()
-    .min(10, "Description must be at least 10 characters")
-    .max(1000, "Description must not exceed 1000 characters")
+    .min(10, "La descripción debe tener al menos 10 caracteres")
+    .max(1000, "La descripción no debe exceder los 1000 caracteres")
     .trim(),
   numUnity: z.number()
-    .min(1, "Unit number must be at least 1")
-    .max(100, "Unit number cannot exceed 100")
-    .int("Unit number must be a whole number"),
+    .min(1, "El número de unidad debe ser al menos 1")
+    .max(100, "El número de unidad no puede exceder 100")
+    .int("El número de unidad debe ser un número entero"),
   urlImage: z.string().optional(),
 });
 
-type UnitFormData = z.infer<typeof unitFormSchema>;
+type DatosFormularioUnidad = z.infer<typeof esquemaFormularioUnidad>;
 
-interface UnitFormModalProps {
+interface PropsModalFormularioUnidad {
   open: boolean;
   onClose: () => void;
   initialData?: CourseUnit;
-  onSave: (unitData: Omit<CourseUnit, "id" | "courseId" | "resources">, unitId?: string, imageFile?: File | null) => void;
+  onSave: (datosUnidad: Omit<CourseUnit, "id" | "courseId" | "resources">, unitId?: string, imageFile?: File | null) => void;
   isSaving: boolean;
 }
 
-export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: UnitFormModalProps) {
-  const [imageFile, setImageFile] = React.useState<File | null>(null);
-  const [imagePreview, setImagePreview] = React.useState<string>(initialData?.urlImage || "");
+export function ModalFormularioUnidad({ open, onClose, initialData, onSave, isSaving }: PropsModalFormularioUnidad) {
+  const [archivoImagen, setArchivoImagen] = React.useState<File | null>(null);
+  const [vistaPreviaImagen, setVistaPreviaImagen] = React.useState<string>(initialData?.urlImage || "");
 
   const {
     control,
@@ -49,8 +49,8 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
     formState: { errors, isValid },
     reset,
     setValue
-  } = useForm<UnitFormData>({
-    resolver: zodResolver(unitFormSchema),
+  } = useForm<DatosFormularioUnidad>({
+    resolver: zodResolver(esquemaFormularioUnidad),
     mode: "onChange",
     defaultValues: {
       name: initialData?.name || "",
@@ -69,8 +69,8 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
           numUnity: initialData.numUnity,
           urlImage: initialData.urlImage || "",
         });
-        setImagePreview(initialData.urlImage || "");
-        setImageFile(null);
+        setVistaPreviaImagen(initialData.urlImage || "");
+        setArchivoImagen(null);
       } else {
         reset({
           name: "",
@@ -78,151 +78,158 @@ export function UnitFormModal({ open, onClose, initialData, onSave, isSaving }: 
           numUnity: 1,
           urlImage: "",
         });
-        setImagePreview("");
-        setImageFile(null);
+        setVistaPreviaImagen("");
+        setArchivoImagen(null);
       }
     }
   }, [initialData, open, reset]);
 
-  const handleImageChange = (imageData: { file: File; previewUrl: string; validationType: string } | null) => {
-    if (imageData) {
-      setImageFile(imageData.file);
-      setImagePreview(imageData.previewUrl);
-      setValue("urlImage", imageData.previewUrl, { shouldValidate: true });
+  const handleCambioImagen = (datosImagen: { file: File; previewUrl: string; validationType: string } | null) => {
+    if (datosImagen) {
+      setArchivoImagen(datosImagen.file);
+      setVistaPreviaImagen(datosImagen.previewUrl);
+      setValue("urlImage", datosImagen.previewUrl, { shouldValidate: true });
     } else {
-      setImageFile(null);
-      setImagePreview("");
+      setArchivoImagen(null);
+      setVistaPreviaImagen("");
       setValue("urlImage", "", { shouldValidate: true });
     }
   };
 
-  const onSubmit = (data: UnitFormData) => {
-    const unitData = {
+  const alEnviar = (data: DatosFormularioUnidad) => {
+    const datosUnidad = {
       name: data.name,
       description: data.description,
       numUnity: data.numUnity,
       urlImage: data.urlImage || "",
     };
 
-    onSave(unitData, initialData?.id, imageFile);
+    onSave(datosUnidad, initialData?.id, archivoImagen);
   };
+return (
+  <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+      <DialogHeader>
+        <DialogTitle className="text-foreground">
+          {initialData ? "Editar Unidad" : "Crear Nueva Unidad"}
+        </DialogTitle>
+        <DialogDescription className="text-muted-foreground">
+          {initialData
+            ? "Actualice la información de la unidad a continuación."
+            : "Complete los detalles para crear una nueva unidad para este curso."}
+        </DialogDescription>
+      </DialogHeader>
 
-  return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {initialData ? "Edit Unit" : "Create New Unit"}
-          </DialogTitle>
-          <DialogDescription>
-            {initialData 
-              ? "Update the unit information below." 
-              : "Fill in the details to create a new unit for this course."
-            }
-          </DialogDescription>
-        </DialogHeader>
+      <form onSubmit={handleSubmit(alEnviar)} className="space-y-6 mt-4">
+        {/* Nombre de la Unidad */}
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-foreground">Nombre de la Unidad *</Label>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="name"
+                placeholder="ej., Módulo 1: Introducción a JavaScript"
+                disabled={isSaving}
+                className={`border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-accent ${
+                  errors.name ? "border-destructive focus-visible:ring-destructive" : ""
+                }`}
+              />
+            )}
+          />
+          {errors.name && (
+            <p className="text-sm text-destructive">{errors.name.message}</p>
+          )}
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-4">
-          {/* Unit Name */}
+        {/* Descripción */}
+        <div className="space-y-2">
+          <Label htmlFor="description" className="text-foreground">Descripción *</Label>
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                id="description"
+                placeholder="Describa lo que los estudiantes aprenderán en esta unidad..."
+                rows={4}
+                disabled={isSaving}
+                className={`border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-accent ${
+                  errors.description ? "border-destructive focus-visible:ring-destructive" : ""
+                }`}
+              />
+            )}
+          />
+          {errors.description && (
+            <p className="text-sm text-destructive">{errors.description.message}</p>
+          )}
+        </div>
+
+        {/* Número de Unidad (solo en modo edición) */}
+        {initialData && (
           <div className="space-y-2">
-            <Label htmlFor="name">Unit Name *</Label>
+            <Label htmlFor="numUnity" className="text-foreground">Número de Unidad</Label>
             <Controller
-              name="name"
+              name="numUnity"
               control={control}
               render={({ field }) => (
                 <Input
                   {...field}
-                  id="name"
-                  placeholder="e.g., Module 1: Introduction to JavaScript"
+                  id="numUnity"
+                  type="number"
+                  value={field.value || ""}
+                  onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                  min={1}
                   disabled={isSaving}
-                  className={errors.name ? "border-red-500" : ""}
+                  className={`border-border bg-background text-foreground focus-visible:ring-accent ${
+                    errors.numUnity ? "border-destructive focus-visible:ring-destructive" : ""
+                  }`}
                 />
               )}
             />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
+            {errors.numUnity && (
+              <p className="text-sm text-destructive">{errors.numUnity.message}</p>
             )}
           </div>
+        )}
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <Textarea
-                  {...field}
-                  id="description"
-                  placeholder="Describe what students will learn in this unit..."
-                  rows={4}
-                  disabled={isSaving}
-                  className={errors.description ? "border-red-500" : ""}
-                />
-              )}
-            />
-            {errors.description && (
-              <p className="text-sm text-red-500">{errors.description.message}</p>
+        <ImageUploadWithValidation
+          currentImageUrl={vistaPreviaImagen}
+          onImageChange={handleCambioImagen}
+          label="Imagen de Portada de la Unidad"
+          disabled={isSaving}
+        />
+
+        <div className="flex gap-3 pt-4 border-t border-border">
+          <Button
+            type="submit"
+            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={isSaving || !isValid}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {initialData ? "Actualizando..." : "Creando..."}
+              </>
+            ) : (
+              initialData ? "Actualizar Unidad" : "Crear Unidad"
             )}
-          </div>
-
-          {initialData && (
-            <div className="space-y-2">
-              <Label htmlFor="numUnity">Unit Number</Label>
-              <Controller
-                name="numUnity"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    id="numUnity"
-                    type="number"
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                    min={1}
-                    disabled={isSaving}
-                    className={errors.numUnity ? "border-red-500" : ""}
-                  />
-                )}
-              />
-              {errors.numUnity && (
-                <p className="text-sm text-red-500">{errors.numUnity.message}</p>
-              )}
-            </div>
-          )}
-
-          <ImageUploadWithValidation
-            currentImageUrl={imagePreview}
-            onImageChange={handleImageChange}
-            label="Unit Cover Image"
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
             disabled={isSaving}
-          />
-
-          <div className="flex gap-3 pt-4 border-t">
-            <Button
-              type="submit"
-              className="flex-1"
-              disabled={isSaving || !isValid}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {initialData ? "Updating..." : "Creating..."}
-                </>
-              ) : (
-                initialData ? "Update Unit" : "Create Unit"
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+            className="border-border hover:bg-secondary"
+          >
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+);
 }
