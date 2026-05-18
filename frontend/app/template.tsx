@@ -1,3 +1,4 @@
+"use client"
 import { RouteGuard } from "./auth/RouteGuard";
 
 export default function Template({ children }: { children: React.ReactNode }) {
