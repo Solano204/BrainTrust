@@ -1,23 +1,23 @@
 
 'use client';
 
-export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
+ 
+ 
 import { useState } from 'react';
-export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
+ 
+ 
 import { AdminCoursesList } from '@/components/admin/AdminCoursesList';
-export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
+ 
+ 
 import { CreateEditCourseModal } from '@/components/admin/CreateEditCourseModal';
-export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
+ 
+ 
 import { ManageEnrollments } from '@/components/admin/ManageEnrollments';
-export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
+ 
+ 
 import { ManageGrades } from '@/components/admin/ManageGrades';
-export const dynamic = 'force-dynamic';
-export const dynamic = 'force-dynamic';
+ 
+ 
 import { AdminCourse } from '@/app/shared/models/admin-course.model';
 
 export default function AdminCoursesPage() {
