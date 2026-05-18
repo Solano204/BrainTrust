@@ -1,0 +1,51 @@
+# Build artifacts
+**/target/
+**/build/
+
+# Version control
+**/.git
+**/.github
+**/.gitignore
+
+# IDE files
+**/.idea
+**/.vscode
+**/*.iml
+**/*.swp
+**/*.swo
+*~
+
+# Dependencies
+**/node_modules
+**/.mvn/
+
+# Scripts
+**/mvnw
+**/mvnw.cmd
+
+# Docker files
+Dockerfile
+.dockerignore
+**/docker-compose*.yml
+
+# Logs
+**/logs/
+**/*.log
+
+# Test files
+**/test-results/
+**/coverage/
+
+# Environment files (CRITICAL - Never include in image)
+**/.env
+**/.env.*
+!**/.env.example
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Temporary files
+**/tmp/
+**/temp/
+**/*.tmp

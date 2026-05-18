@@ -1,0 +1,25 @@
+###############################################################################
+# BrainTrust — Example tfvars
+# COPY this file to terraform.tfvars and fill in your real values.
+# NEVER commit terraform.tfvars to Git (it contains secrets).
+###############################################################################
+
+aws_region        = "us-east-1"
+project           = "braintrust"
+environment       = "prod"
+availability_zone = "us-east-1a"
+
+# EC2
+instance_type = "t3.micro"          # Free Tier eligible
+key_pair_name = "braintrust-key"    # Must already exist in AWS Console → EC2 → Key Pairs
+
+# Your current public IP for SSH (run: curl -s ifconfig.me)
+my_ip_cidr = "YOUR_IP_HERE/32"
+
+# Database credentials (used in Docker Compose .env on EC2)
+db_name     = "braintrust_db"
+db_username = "braintrust_user"
+db_password = "CHANGE_ME_STRONG_PASSWORD"
+
+# JWT secret — min 32 characters
+jwt_secret = "CHANGE_ME_256BIT_SECRET_AT_LEAST_32_CHARS"

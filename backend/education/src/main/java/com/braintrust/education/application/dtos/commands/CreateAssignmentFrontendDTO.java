@@ -1,0 +1,39 @@
+package com.braintrust.education.application.dtos.commands;
+
+import com.braintrust.aidetectition.application.dtos.commands.FrontendDocumentDTO;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
+
+public record CreateAssignmentFrontendDTO(
+        @NotBlank(message = "Course ID is required")
+        String courseId,
+
+        @NotBlank(message = "Unit ID is required")
+        String unitId,
+
+        @NotBlank(message = "Title is required")
+        @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
+        String title,
+
+        @NotBlank(message = "Description is required")
+        @Size(min = 10, max = 1000, message = "Description must be between 10 and 1000 characters")
+        String description,
+
+        @NotBlank(message = "Due date is required")
+        String dueDate,
+
+        @Min(value = 1, message = "Max points must be at least 1")
+        int maxPoints,
+
+        @NotBlank(message = "Instructions are required")
+        @Size(min = 10, message = "Instructions must be at least 10 characters")
+        String instructions,
+
+        List<FrontendDocumentDTO> attachments,
+        List<String> links,
+        String targetType,
+        String submissionFormat
+) {}
