@@ -12,9 +12,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 interface CourseUnitDTO {
   id: string;
   courseId: string;
-  name: string;cd ~/Music/BrainTrust/frontend
-find . -name "*global-error*" -not -path "./node_modules/*"
-
+  name: string;
   urlImage: string;
   numUnity: number;
   description: string;
