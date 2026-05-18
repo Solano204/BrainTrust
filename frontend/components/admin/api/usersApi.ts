@@ -1,3 +1,5 @@
+'use client';
+
 "use server";
 
 import { apiClient } from "@/app/shared/api/http";

@@ -1,3 +1,5 @@
+'use client';
+
 //DARK
 "use client";
 

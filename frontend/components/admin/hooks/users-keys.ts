@@ -1,3 +1,5 @@
+'use client';
+
 
 import { PaginationParams, UserRole } from "../api/usersApi";
 

@@ -1,3 +1,5 @@
+'use client';
+
 //DARK DUDOSO
 "use client";
 
