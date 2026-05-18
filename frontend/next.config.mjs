@@ -8,7 +8,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  output: 'standalone',
   images: {
     unoptimized: true,
   },
@@ -18,7 +17,6 @@ const nextConfig = {
     },
     missingSuspenseWithCSRBailout: false,
   },
-  turbopack: {},
 }
 
 export default withBundleAnalyzer({
