@@ -16,6 +16,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '50mb',
     },
+    missingSuspenseWithCSRBailout: false,
   },
   turbopack: {},
 }
