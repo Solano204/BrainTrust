@@ -54,7 +54,7 @@ spring:
 google:
   ai:
     # Uses env var GOOGLE_AI_API_KEY, defaults to empty if not set
-    api-key: ${GOOGLE_AI_API_KEY:AIzaSyD1gDiGxPEf9nux1AGjDF6XxsygbzyiEBw}
+    api-key: ${GOOGLE_AI_API_KEY:AIzaSyDg7nKIoxf7EtCTWA9dqUESHgtHUCgpCdM}
     # Model for text extraction (PDF processing)
     extraction-model: ${GOOGLE_AI_EXTRACTION_MODEL:gemini-2.5-flash}
     # Model for AI detection analysis

@@ -5,44 +5,40 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/catalog/RoleActivityDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/UnitGradeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/course/UnitGradeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/course/UnitGradeController.class" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/target/classes/com/braintrust/containerapp/rest/course/UnitGradeController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/UnitGradeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/UnitGradeService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/UnitGradeApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/UnitGradeApplicationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/model/Gradebook.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/ports/in/UnitGradeService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/ports/in/UnitGradeService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/UnitGradeApplicationService.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/application/service/UnitGradeApplicationService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Gradebook.class" beforeDir="false" afterPath="$PROJECT_DIR$/education/target/classes/com/braintrust/education/domain/model/Gradebook.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/Maps/EntityMaps.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/Maps/EntityMaps.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/UserDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/dtos/dtos/UserDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserDtoMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserDtoMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/Maps/EntityMaps.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/Maps/EntityMaps.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/commands/AssignFinalGradeCommand.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/dtos/UserDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/dtos/dtos/UserDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserDtoMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserDtoMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserQueryHelper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/application/helpers/user/UserQueryHelper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/Mapper/UserEntityMapper.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/UserJpaEntity.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/CatRoleActivityJpaRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/identity/target/classes/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/UserJpaRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/admin/users/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/admin/users/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/auth/types/authentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/auth/types/authentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/app/types/authentication.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/app/types/authentication.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/AdminResetPasswordModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/AdminResetPasswordModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/AdminUsersModule.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/AdminUsersModule.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/admin/CatalogManager.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/admin/CatalogManager.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/layout/dashboard-sidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/layout/dashboard-sidebar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/components/student/api/student-gradebooks.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/components/student/api/student-gradebooks.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/proxy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/proxy.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/braintrust-terraform/modules/security/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/braintrust-terraform/modules/security/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/admin/AdminStatsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/rest/admin/AdminStatsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/container-app/src/main/resources/application-prod.yml" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/resources/application-prod.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AIAnalysisStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AIAnalysisStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AIAssignmentPageDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AIAssignmentPageDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AIStatsBreakdownDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AIStatsBreakdownDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AdminStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AdminStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AssignmentByUnitDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AssignmentByUnitDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AssignmentDetailDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AssignmentDetailDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AssignmentStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/AssignmentStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/CourseAIStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/CourseAIStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/DeadlineStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/DeadlineStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/LateSubmissionDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/LateSubmissionDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/OverallStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/OverallStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/OverdueAssignmentDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/OverdueAssignmentDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/PaginatedStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/PaginatedStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/QuizTopDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/QuizTopDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/StudentCountDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/StudentCountDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/TeacherAssignmentStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/TeacherAssignmentStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/TeacherCountDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/TeacherCountDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/UserCountDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/UserCountDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/UserStatsDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/dtos/dtos/admin/UserStatsDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/AssignmentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/AssignmentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/QuizRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/QuizRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/AdminStatsAnalysisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/service/AdminStatsAnalysisService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaAssignmentRepositoryAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaAssignmentRepositoryAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaQuizRepositoryAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/infraestructure/repositoriesPersistence/sql/repositories/JpaQuizRepositoryAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/entities/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/next-env.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/next-env.d.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,6 +67,11 @@
     &quot;accountId&quot;: &quot;62ea8eb5-8a2c-4977-aba3-8c60187324e8&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40-sources.jar!/lombok/RequiredArgsConstructor.java" root0="FORCE_HIGHLIGHTING" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40-sources.jar!/lombok/extern/slf4j/Slf4j.java" root0="FORCE_HIGHLIGHTING" />
+    <setting file="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar!/lombok/RequiredArgsConstructor.class" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="MavenImportPreferences">
     <option name="importingSettings">
       <MavenImportingSettings>
@@ -136,19 +137,19 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;Spring Boot.BrainTrustApplication.executor&quot;: &quot;Run&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/adding-new-catalogos&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/PROYECTO/BrainTrust/backend&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/GAMER/Music/BrainTrust/backend&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.runner&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.annotationProcessors&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
@@ -390,11 +391,6 @@
           <option name="timeStamp" value="44" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/QuizRepository.java</url>
-          <line>15</line>
-          <option name="timeStamp" value="49" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/PageService.java</url>
           <line>14</line>
           <option name="timeStamp" value="54" />
@@ -459,14 +455,45 @@
           <line>148</line>
           <option name="timeStamp" value="79" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-method">
-          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/QuizRepository.java</url>
-          <line>19</line>
-          <properties class="com.braintrust.education.application.ports.out.QuizRepository" method="findBasicQuizzesByCourseId">
-            <option name="EMULATED" value="true" />
-            <option name="WATCH_EXIT" value="false" />
-          </properties>
-          <option name="timeStamp" value="16" />
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/repositories/GoogleGeminiAIProvider.java</url>
+          <line>111</line>
+          <option name="timeStamp" value="86" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/course/CourseEnrollmentHelper.java</url>
+          <line>186</line>
+          <option name="timeStamp" value="87" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/course/CourseEnrollmentHelper.java</url>
+          <line>180</line>
+          <option name="timeStamp" value="90" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/course/CourseEnrollmentHelper.java</url>
+          <line>188</line>
+          <option name="timeStamp" value="91" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java</url>
+          <line>279</line>
+          <option name="timeStamp" value="93" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java</url>
+          <line>374</line>
+          <option name="timeStamp" value="94" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/helpers/user/UserQueryHelper.java</url>
+          <line>275</line>
+          <option name="timeStamp" value="98" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/infraestructure/repositoriesPersistence/sql/repositories/JpaUserRepositoryAdapter.java</url>
+          <line>112</line>
+          <option name="timeStamp" value="99" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/SubmissionRepository.java</url>
@@ -507,7 +534,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/out/PersonRepository.java</url>
           <line>17</line>
-          <properties class="com.braintrust.identity.application.ports.out.PersonRepository">
+          <properties class="com.braintrust.identity.application.ports.out.PersonRepository" method="findById">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -534,7 +561,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/QuizSubmissionService.java</url>
           <line>18</line>
-          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService" method="getSubmissionDetailById">
+          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -543,7 +570,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/StudentGroupService.java</url>
           <line>13</line>
-          <properties class="com.braintrust.education.application.ports.in.StudentGroupService" method="createGroup">
+          <properties class="com.braintrust.education.application.ports.in.StudentGroupService">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -552,7 +579,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/in/QuizSubmissionService.java</url>
           <line>19</line>
-          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService" method="getSubmissionsByCourse">
+          <properties class="com.braintrust.education.application.ports.in.QuizSubmissionService">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -561,7 +588,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/ports/out/UnitGradeRepository.java</url>
           <line>18</line>
-          <properties class="com.braintrust.education.application.ports.out.UnitGradeRepository" method="findByCourseAndStudent">
+          <properties class="com.braintrust.education.application.ports.out.UnitGradeRepository">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>
@@ -570,7 +597,7 @@
         <line-breakpoint enabled="true" type="java-method">
           <url>file://$PROJECT_DIR$/identity/src/main/java/com/braintrust/identity/application/ports/in/UserService.java</url>
           <line>26</line>
-          <properties class="com.braintrust.identity.application.ports.in.UserService" method="deleteUser">
+          <properties class="com.braintrust.identity.application.ports.in.UserService">
             <option name="EMULATED" value="true" />
             <option name="WATCH_EXIT" value="false" />
           </properties>

@@ -3,9 +3,8 @@ package com.braintrust.identity.infraestructure.repositoriesPersistence.sql.enti
 
 public enum Role {
 
-    STUDENT,
-    TEACHER,
     ADMIN,
-
+    TEACHER,
+    STUDENT,
     SYS_MANAGER
 }

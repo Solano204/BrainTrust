@@ -1,4 +1,11 @@
 package com.braintrust.education.application.dtos.dtos.admin;
 
-public class StudentCountDTO {
-}
+import java.math.BigDecimal;
+
+// StudentCountDTO.java
+public record StudentCountDTO(
+        String studentId,
+        String studentName,
+        long submissionCount,
+        BigDecimal averageGrade
+) {}

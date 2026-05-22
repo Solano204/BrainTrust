@@ -1,4 +1,12 @@
 package com.braintrust.education.application.dtos.dtos.admin;
 
-public class DeadlineStatsDTO {
-}
+
+import java.util.List;
+
+// DeadlineStatsDTO.java
+public record DeadlineStatsDTO(
+        long overdue,
+        long dueSoon,
+        long upcoming,
+        List<OverdueAssignmentDTO> overdueAssignments
+) {}

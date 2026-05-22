@@ -36,7 +36,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
         log.info("Initialized JpaAssignmentRepositoryAdapter.");
     }
 
-    // JpaAssignmentRepositoryAdapter.java
     @Override
     @Transactional
     public Assignment save(Assignment assignment) {
@@ -49,7 +48,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
 
         mapper.updateEntity(entity, assignment);
 
-        // Build desired docs ONLY from what the domain says — after removal
         List<String[]> desiredDocs = assignment.getAttachments().stream()
                 .map(d -> new String[]{d.getName(), d.getStoragePath()})
                 .toList();
@@ -58,7 +56,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
         List<String> desiredLinks = new ArrayList<>(assignment.getLinks());
         entity.syncLinks(desiredLinks);
 
-        // saveAndFlush forces Hibernate to immediately fire DELETE for orphans
         AssignmentJpaEntity savedEntity = jpaRepository.saveAndFlush(entity);
         log.info("Assignment saved/updated. Mapping entity back to domain model.");
         return mapper.toDomain(savedEntity);
@@ -74,15 +71,35 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     @Override
     public Optional<Assignment> findById(AssignmentId assignmentId) {
         log.info("Querying database for Assignment ID: {}", assignmentId.getValue());
-
         return jpaRepository.findByIdWithDocumentsAndLinks(assignmentId.getValue())
                 .map(mapper::toDomain);
     }
 
+    // ── NEW ───────────────────────────────────────────────────────────────────
+
+    @Override
+    public List<Assignment> findAll() {
+        log.info("Fetching ALL assignments from database.");
+        return jpaRepository.findAll()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Assignment> findByTeacherId(UserId teacherId) {
+        log.info("Fetching assignments for Teacher ID: {}", teacherId.getValue());
+        return jpaRepository.findByTeacherId(teacherId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     @Override
     public List<Assignment> findByCourseId(CourseId courseId) {
         log.info("Fetching all assignments for Course ID: {}", courseId.getValue());
-
         return jpaRepository.findByCourseIdWithDocumentsAndLinks(courseId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -93,7 +110,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findByCourseIdAndUnitId(CourseId courseId, UnitId unitId) {
         log.info("Fetching assignments for Course ID: {} and Unit ID: {}",
                 courseId.getValue(), unitId.getValue());
-
         return jpaRepository.findByCourseIdAndUnitId(courseId.getValue(), unitId.getValue())
                 .stream()
                 .map(mapper::toDomain)
@@ -104,7 +120,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findByStudentCourseUnit(UserId studentId, CourseId courseId, UnitId unitId) {
         log.info("Fetching assignments for Student {} in Course {} Unit {}",
                 studentId.getValue(), courseId.getValue(), unitId.getValue());
-
         return jpaRepository.findByStudentCourseUnit(
                         studentId.getValue(),
                         courseId.getValue(),
@@ -137,7 +152,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByStudentForWeek(UserId studentId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Student ID {} for week {} to {}",
                 studentId.getValue(), weekStart, weekEnd);
-
         return jpaRepository.findAssignmentsByStudentForWeek(
                         studentId.getValue(),
                         weekStart,
@@ -152,7 +166,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByTeacherForWeek(UserId teacherId, LocalDateTime weekStart, LocalDateTime weekEnd) {
         log.info("Fetching assignments for Teacher ID {} for week {} to {}",
                 teacherId.getValue(), weekStart, weekEnd);
-
         return jpaRepository.findAssignmentsByTeacherForWeek(
                         teacherId.getValue(),
                         weekStart,
@@ -167,7 +180,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByStudentForMonth(UserId studentId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Fetching assignments for Student ID {} for month {} to {}",
                 studentId.getValue(), monthStart, monthEnd);
-
         return jpaRepository.findAssignmentsByStudentForMonth(
                         studentId.getValue(),
                         monthStart,
@@ -182,7 +194,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
     public List<Assignment> findAssignmentsByTeacherForMonth(UserId teacherId, LocalDateTime monthStart, LocalDateTime monthEnd) {
         log.info("Fetching assignments for Teacher ID {} for month {} to {}",
                 teacherId.getValue(), monthStart, monthEnd);
-
         return jpaRepository.findAssignmentsByTeacherForMonth(
                         teacherId.getValue(),
                         monthStart,

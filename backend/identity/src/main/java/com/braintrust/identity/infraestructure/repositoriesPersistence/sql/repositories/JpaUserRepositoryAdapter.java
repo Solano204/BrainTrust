@@ -44,9 +44,9 @@ public class JpaUserRepositoryAdapter implements UserRepository {
     // Helper: convert Role enum → role_id integer
     private Integer toRoleId(Role role) {
         return switch (role) {
-            case STUDENT     -> 1;
+            case STUDENT     -> 3;
             case TEACHER     -> 2;
-            case ADMIN       -> 3;
+            case ADMIN       -> 1;
             case SYS_MANAGER -> 4;
         };
     }

@@ -15,6 +15,15 @@ public interface AssignmentRepository {
     Assignment save(Assignment assignment);
     void delete(Assignment assignment);
     Optional<Assignment> findById(AssignmentId assignmentId);
+
+    // ── NEW (required by AdminStatsAnalysisService) ───────────────────────────
+    /** Returns every assignment in the system — used by admin stats only. */
+    List<Assignment> findAll();
+
+    /** Returns all assignments created by a given teacher — used by admin stats. */
+    List<Assignment> findByTeacherId(UserId teacherId);
+    // ─────────────────────────────────────────────────────────────────────────
+
     List<Assignment> findByCourseId(CourseId courseId);
     List<Assignment> findByCourseIdAndUnitId(CourseId courseId, UnitId unitId);
     List<Assignment> findByStudentCourseUnit(UserId studentId, CourseId courseId, UnitId unitId);

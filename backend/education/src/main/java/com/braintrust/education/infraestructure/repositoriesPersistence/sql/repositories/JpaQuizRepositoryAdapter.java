@@ -140,6 +140,17 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }/**
+     * NEW — returns every quiz in the system.
+     * Used by AdminStatsAnalysisService.getTopQuizzesByGrade().
+     */
+    @Override
+    public List<Quiz> findAll() {
+        log.debug("Finding all quizzes");
+        return jpaRepository.findAll()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
