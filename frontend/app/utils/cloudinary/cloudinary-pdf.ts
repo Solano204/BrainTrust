@@ -4,7 +4,7 @@ export async function uploadDocumentFile(
 ): Promise<{ url: string; publicId: string; format: string }> {
   try {
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const uploadPreset = "";
 
     if (!cloudName) {
       throw new Error("Cloudinary cloud name not configured");
