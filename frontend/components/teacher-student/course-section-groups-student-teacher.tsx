@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
@@ -102,7 +102,7 @@ const nuevosDatosEquipo: TeamWithIds = {
     
     actualizarInfoEquipo.mutate({
       courseId,
-      teamId :   String(equipoSeleccionado.teamId),
+      teamId :   equipoSeleccionado.teamId.id,
       updates: {
         name: nombreNuevoEquipo,
         description: descripcionNuevoEquipo
@@ -133,7 +133,7 @@ const nuevosDatosEquipo: TeamWithIds = {
     if (miembrosSeleccionados.length > 0) {
       agregarMiembros.mutate({ 
         courseId, 
-        teamId : String(equipoSeleccionado.teamId), 
+        teamId : equipoSeleccionado.teamId.id, 
         memberIds: miembrosSeleccionados 
       }, {
         onSuccess: () => {
@@ -162,7 +162,7 @@ const nuevosDatosEquipo: TeamWithIds = {
   const usuariosDisponiblesFiltrados = useMemo(() => {
     const usuariosEnOtrosEquipos = new Set<UserId>();
     equipos.forEach(equipo => {
-      if (!equipoSeleccionado || equipo.teamId !== equipoSeleccionado.teamId) {
+      if (!equipoSeleccionado || equipo.teamId.id !== equipoSeleccionado.teamId.id) {
         equipo.members.forEach(miembro => usuariosEnOtrosEquipos.add(miembro.userId));
       }
     });
@@ -175,7 +175,6 @@ const nuevosDatosEquipo: TeamWithIds = {
 if (!esProfesor) {
     return (
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
-        {/* Encabezado */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Grupos de Clase</h1>
         </div>
@@ -189,7 +188,7 @@ if (!esProfesor) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {equipos.map((equipo) => (
               <TarjetaEquipoSoloLectura
-                key={String(equipo.teamId)}
+                key={equipo.teamId.id}
                 equipo={equipo}
                 usuariosDisponibles={usuariosDisponibles}
                 obtenerUsuarioPorId={obtenerUsuarioPorId}
@@ -270,7 +269,7 @@ if (!esProfesor) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {equipos.map((equipo) => (
           <TarjetaEquipo
-            key={String(equipo.teamId)}
+            key={equipo.teamId.id}
             equipo={equipo}
             usuariosDisponibles={usuariosDisponibles}
             obtenerUsuarioPorId={obtenerUsuarioPorId}
@@ -307,7 +306,6 @@ if (!esProfesor) {
         </Card>
       )}
 
-      {/* Modal de Crear Equipo */}
       <Dialog open={mostrarModalCrear} onOpenChange={setMostrarModalCrear}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
@@ -390,7 +388,6 @@ if (!esProfesor) {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Editar Equipo */}
       <Dialog open={mostrarModalEditar} onOpenChange={setMostrarModalEditar}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
@@ -440,7 +437,6 @@ if (!esProfesor) {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Agregar Miembro */}
       <Dialog open={mostrarModalAgregarMiembro} onOpenChange={setMostrarModalAgregarMiembro}>
         <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -541,7 +537,7 @@ const TarjetaEquipo: React.FC<PropsTarjetaEquipo> = ({
   isUpdating,
   isTeacher
 }) => {
-  const pendienteEliminacion = deleteConfirmTeam === String(equipo.teamId);
+  const pendienteEliminacion = deleteConfirmTeam === equipo.teamId.id;
 return (
     <Card className="hover:shadow-xl transition-all duration-300">
       <div className="p-6 space-y-4">
@@ -581,7 +577,7 @@ return (
                   Agregar Miembros
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setDeleteConfirmTeam(String(equipo.teamId))}
+                  onClick={() => setDeleteConfirmTeam(equipo.teamId.id)}
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -627,7 +623,7 @@ return (
                     </div>
                     {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(String(equipo.teamId), miembro.userId)}
+                        onClick={() => onRemoveMember(equipo.teamId.id, miembro.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                         title="Eliminar Miembro"
                         disabled={isUpdating}
@@ -646,7 +642,7 @@ return (
                     </div>
                     {isTeacher && (
                       <button
-                        onClick={() => onRemoveMember(String(equipo.teamId), miembro.userId)}
+                        onClick={() => onRemoveMember(equipo.teamId.id, miembro.userId)}
                         className="text-muted-foreground hover:text-destructive transition-colors"
                         title="Eliminar Miembro"
                         disabled={isUpdating}
@@ -667,7 +663,7 @@ return (
               variant="destructive"
               size="sm"
               className="flex-1 gap-2"
-              onClick={() => onDeleteTeam(String(equipo.teamId))}
+              onClick={() => onDeleteTeam(equipo.teamId.id)}
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -777,7 +773,6 @@ const VistaDetalleEquipo: React.FC<{
 }> = ({ equipo, obtenerUsuarioPorId }) => {
   return (
     <div className="space-y-6 py-4">
-      {/* Encabezado */}
       <div className="flex items-center gap-4">
         <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center flex-shrink-0">
           <Users className="h-8 w-8 text-primary-foreground" />

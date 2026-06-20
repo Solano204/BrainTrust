@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { apiClient } from "@/app/shared/api/http";
 import { handleApiError } from "@/app/shared/utils/api-error";
@@ -68,7 +68,6 @@ function mapCreateQuizToBackendCommand(
     const question: QuizQuestionData = {
       questionText: q.question,
       questionType: q.type === "multiple-choice" ? "MULTIPLE_CHOICE" : "OPEN_ENDED",
-      // q.points is already computed as (percentage/100 * maxGrade) by the form's onSubmit
       points: q.points ?? 0,
       options: [],
       correctAnswer,
@@ -99,10 +98,8 @@ function mapCreateQuizToBackendCommand(
     timeLimitMinutes: quizData.timeLimit || 0,
     availableFrom: formatDate(quizData.dueDate),
     availableUntil: formatDate(quizData.dueDate),
-    // ── NEW fields ────────────────────────────────────────────────────────────
     allowSeeResults: (quizData as any).allowSeeResults ?? false,
     totalScore: (quizData as any).totalScore ?? quizData.maxGrade ?? 100,
-    // ─────────────────────────────────────────────────────────────────────────
     questions,
   };
 }
@@ -184,16 +181,9 @@ export async function createQuiz(
 
     const quiz = data.data;
 
-    // if (!quizId) {
-    //   throw new Error("Quiz ID not returned from backend");
-    // }
 
-    // console.log("🔄 Fetching quiz detail for ID:", quizId);
 
-    // // Pequeña pausa para asegurar que el backend procesó todo
-    // await new Promise(resolve => setTimeout(resolve, 500));
 
-    // const quiz = await fetchQuizDetail(quizId);
 
     console.log("✨ Quiz fetched successfully:", quiz);
 
@@ -217,7 +207,6 @@ export async function updateQuiz(
 
     await apiClient.put(`/api/quizzes/${quizId}`, command);
 
-    // Pequeña pausa para asegurar que el backend procesó todo
     await new Promise(resolve => setTimeout(resolve, 300));
 
     const quiz = await fetchQuizDetail(quizId);
@@ -665,12 +654,9 @@ export async function gradeQuizSubmission(
   }
 ): Promise<QuizSubmissionDetail> {
   try {
-    // Sum of raw question points (used only if no overallGrade supplied)
     const rawEarned = grades.reduce((sum, g) => sum + g.earnedPoints, 0);
     const rawMax = grades.reduce((sum, g) => sum + g.maxPoints, 0);
 
-    // If an overallGrade is provided (weighted, scaled to totalScore), use it.
-    // Otherwise fall back to raw sum.
     const finalEarned = overallGrade?.earnedPoints ?? rawEarned;
     const finalTotal  = overallGrade?.totalPoints  ?? rawMax;
 

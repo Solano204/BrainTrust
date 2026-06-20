@@ -1,5 +1,4 @@
-//DARK
-
+﻿
 "use client"
 
 import { Card } from "@/components/ui/card"
@@ -100,7 +99,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
   return (
   <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
 
-    {/* ── Encabezado ── */}
     <div className="mb-6">
       <h2 className="text-xl font-bold text-foreground tracking-tight">Mis Cursos</h2>
       <p className="text-xs text-muted-foreground mt-0.5">Activos este semestre</p>
@@ -116,10 +114,8 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
       </div>
     </div>
 
-    {/* ── Carrusel ── */}
     <div className="relative">
 
-      {/* Flecha arriba */}
       {!showAllCourses && (
         <button
           onClick={scrollUp}
@@ -153,10 +149,8 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
                   className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/40 hover:bg-muted/10 hover:shadow-md transition-all cursor-pointer overflow-hidden"
                   style={{ minHeight: '10rem' }}
                 >
-                  {/* Franja izquierda coloreada */}
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${palette.bg}`} />
 
-                  {/* Insignia de archivado */}
                   {!course.active && (
                     <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-semibold">
                       Archivado
@@ -164,7 +158,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
                   )}
 
                   <div className="flex items-start gap-4">
-                    {/* Icono del curso */}
                     <div className={`w-12 h-12 rounded-xl ${palette.bg} flex items-center justify-center flex-shrink-0`}>
                       <BookOpen className={`w-5 h-5 ${palette.text}`} />
                     </div>
@@ -212,7 +205,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
         </div>
       </div>
 
-      {/* Flecha abajo */}
       {!showAllCourses && (
         <button
           onClick={scrollDown}
@@ -228,7 +220,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
         </button>
       )}
 
-      {/* Puntos de paginación */}
       {!showAllCourses && courses.length > initialItemsPerView && (
         <div className="flex justify-center gap-1.5 mt-6">
           {courses.map((_, index) => (
@@ -247,7 +238,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
       )}
     </div>
 
-    {/* ── Ver todos / mostrar menos ── */}
     {courses.length > initialItemsPerView && (
       <button
         onClick={handleViewAllClick}

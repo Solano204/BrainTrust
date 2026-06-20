@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -289,7 +289,6 @@ return (
   <div className="min-h-screen bg-background p-4 md:p-6">
     <div className="max-w-6xl mx-auto">
 
-      {/* Navegación superior */}
       <div className="mb-6">
         <Button
           variant="ghost"
@@ -372,10 +371,8 @@ return (
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Columna de Contenido Principal (2/3) */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Tarjeta de Contenido */}
           <Card className="border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-foreground">
@@ -401,7 +398,6 @@ return (
             </CardContent>
           </Card>
 
-          {/* Tarjeta de Adjuntos */}
           <Card className="border-border shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -447,7 +443,6 @@ return (
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Interfaz de Subida de Múltiples Archivos */}
               {esProfesor && agregandoArchivos && (
                 <div className="border-2 border-dashed border-border rounded-lg p-4 space-y-4 bg-secondary/30">
                   <div>
@@ -572,7 +567,6 @@ return (
             </CardContent>
           </Card>
 
-          {/* Tarjeta de Enlaces de Referencia */}
           <Card className="border-border shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -623,7 +617,6 @@ return (
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Interfaz de URL Única */}
               {esProfesor && agregandoUrl && (
                 <div className="flex gap-2 p-4 bg-secondary/30 rounded-lg border border-border">
                   <Input
@@ -657,7 +650,6 @@ return (
                 </div>
               )}
 
-              {/* Interfaz de Múltiples URLs */}
               {esProfesor && agregandoMultiplesUrls && (
                 <div className="border-2 border-dashed border-border rounded-lg p-4 space-y-4 bg-secondary/30">
                   <div className="flex gap-2">
@@ -723,7 +715,6 @@ return (
                 </div>
               )}
 
-              {/* Lista de URLs */}
               {!pagina.urlsSupport || pagina.urlsSupport.length === 0 ? (
                 <div className="text-center py-12 border-2 border-dashed border-border rounded-lg bg-secondary/20">
                   <LinkIcon className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
@@ -783,7 +774,6 @@ return (
           </Card>
         </div>
 
-        {/* Barra Lateral */}
         <div className="space-y-6">
           <Card className="border-border shadow-sm">
             <CardHeader>
@@ -869,7 +859,6 @@ return (
         </div>
       </div>
 
-      {/* Pie de página */}
       <div className="mt-8 pt-6 border-t border-border">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">

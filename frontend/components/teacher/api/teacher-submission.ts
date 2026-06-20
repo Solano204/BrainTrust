@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
@@ -239,7 +239,6 @@ const MOCK_ASSIGNMENTS = [
   },
 ];
 
-// Mock task inventory data
 const MOCK_TASK_INVENTORY: TaskInventoryItem[] = [
   {
     id: "SUB-TASK-101-001",
@@ -298,7 +297,6 @@ const MOCK_TASK_INVENTORY: TaskInventoryItem[] = [
   },
 ];
 
-// Mock submission details
 const MOCK_SUBMISSION_DETAILS: { [key: string]: SubmissionDetailData } = {
   "SUB-TASK-101-001": {
     submission: {

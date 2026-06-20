@@ -1,5 +1,4 @@
-//DARK
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -468,7 +467,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
                   onClick={() => handleVerDetalles(item)}
                 >
                   <div className="flex items-start gap-4">
-                    {/* Icono */}
                     <div
                       className={cn(
                         "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
@@ -484,7 +482,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
                       {React.createElement(IconoItem, { className: "h-5 w-5" })}
                     </div>
 
-                    {/* Contenido */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <h3
@@ -520,7 +517,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
                       </p>
                       <p className="text-xs text-muted-foreground mt-2"></p>
 
-                      {/* Fecha de entrega */}
                       {"dueDate" in item && item.dueDate && (
                         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
@@ -536,7 +532,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
                       )}
                     </div>
 
-                    {/* Botón Descartar */}
                     <div
                       className="flex items-center gap-2"
                       onClick={(e) => e.stopPropagation()}
@@ -580,7 +575,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
         )}
       </Card>
 
-      {/* Modal de Detalle */}
       {renderizarVistaDetalle()}
     </>
   );

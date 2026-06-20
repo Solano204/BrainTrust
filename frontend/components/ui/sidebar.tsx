@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
@@ -214,7 +214,6 @@ function Sidebar({
       data-side={side}
       data-slot="sidebar"
     >
-      {/* This is what handles the sidebar gap on desktop */}
       <div
         data-slot="sidebar-gap"
         className={cn(

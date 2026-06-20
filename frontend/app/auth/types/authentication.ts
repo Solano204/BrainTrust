@@ -1,4 +1,4 @@
-
+﻿
 export type UserRole = 'admin' | 'teacher' | 'student' | 'guest';
 
 export interface UserSession {
@@ -128,7 +128,6 @@ export const PERMISSIONS = {
   TAKE_QUIZZES: 'student:quizzes',
 } as const;
 
-// PERMISSION IN THE INIT OF THE LOGIN 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   admin: Object.values(PERMISSIONS),
   teacher: [

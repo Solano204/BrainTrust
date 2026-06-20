@@ -1,9 +1,6 @@
-
+﻿
 "use server";
 
-// ============================================================
-// FILE 2: api/catalogApi.ts
-// ============================================================
 
 import { apiClient } from "@/app/shared/api/http";
 import { handleApiError } from "@/app/shared/utils/api-error";
@@ -29,7 +26,6 @@ import type {
 
 const BASE = "/api/catalogs";
 
-// ─── Helper: build query string ───────────────────────────────────
 function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
   const q = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
@@ -38,7 +34,6 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
   return q.toString() ? `?${q.toString()}` : '';
 }
 
-// ==================== FIRST NAMES ====================
 
 export async function fetchAllFirstNames(params: PageParams = {}): Promise<PagedResponse<CatalogItem>> {
   try {
@@ -70,7 +65,6 @@ export async function deleteFirstName(id: number): Promise<CatalogSuccessRespons
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== LAST NAMES ====================
 
 export async function fetchAllLastNames(params: PageParams = {}): Promise<PagedResponse<CatalogItem>> {
   try {
@@ -102,7 +96,6 @@ export async function deleteLastName(id: number): Promise<CatalogSuccessResponse
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== STATES ====================
 
 export async function fetchAllStates(params: PageParams = {}): Promise<PagedResponse<CatalogItem>> {
   try {
@@ -134,7 +127,6 @@ export async function deleteState(id: number): Promise<CatalogSuccessResponse> {
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== MUNICIPALITIES ====================
 
 export async function fetchAllMunicipalities(params: PageParams = {}): Promise<PagedResponse<CatalogMunicipality>> {
   try {
@@ -175,7 +167,6 @@ export async function deleteMunicipality(id: number): Promise<CatalogSuccessResp
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== COLONIES ====================
 
 export async function fetchAllColonies(params: PageParams = {}): Promise<PagedResponse<CatalogColony>> {
   try {
@@ -216,7 +207,6 @@ export async function deleteColony(id: number): Promise<CatalogSuccessResponse> 
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== STREETS ====================
 
 export async function fetchAllStreets(params: PageParams = {}): Promise<PagedResponse<CatalogStreet>> {
   try {
@@ -257,7 +247,6 @@ export async function deleteStreet(id: number): Promise<CatalogSuccessResponse> 
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== POSTAL CODES ====================
 
 export async function fetchAllPostalCodes(params: PageParams = {}): Promise<PagedResponse<CatalogPostalCode>> {
   try {
@@ -298,7 +287,6 @@ export async function deletePostalCode(id: number): Promise<CatalogSuccessRespon
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== ROLES ====================
 
 export async function fetchAllRoles(params: Omit<PageParams, 'search'> = {}): Promise<PagedResponse<CatRole>> {
   try {
@@ -344,7 +332,6 @@ export async function deleteRole(id: number): Promise<CatalogSuccessResponse> {
   } catch (error) { return handleApiError(error); }
 }
 
-// ==================== ROLE ACTIVITIES ====================
 
 export async function fetchAllRoleActivities(params: Omit<PageParams, 'search'> = {}): Promise<PagedResponse<CatalogRoleActivity>> {
   try {

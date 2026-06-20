@@ -1,6 +1,5 @@
-'use client';
+﻿'use client';
 
-//DARK
 
 import { useState, useEffect } from "react";
 import {
@@ -123,7 +122,6 @@ export function AdminCoursesList({
 
   return (
     <div className="space-y-6">
-      {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -142,7 +140,6 @@ export function AdminCoursesList({
         </button>
       </div>
 
-      {/* ── Search & Filters ── */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -195,7 +192,6 @@ export function AdminCoursesList({
         </div>
       </div>
 
-      {/* ── Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
@@ -216,7 +212,6 @@ export function AdminCoursesList({
         </div>
       </div>
 
-      {/* ── Sort buttons ── */}
       <div className="flex gap-2 text-sm">
         <button
           onClick={() => handleSortChange("name")}
@@ -241,7 +236,6 @@ export function AdminCoursesList({
         </button>
       </div>
 
-      {/* ── Course Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {courses.map((course) => (
           <div
@@ -250,7 +244,6 @@ export function AdminCoursesList({
               course.active ? "border-border" : "border-border opacity-60"
             }`}
           >
-            {/* Banner */}
             <div className="h-40 bg-gradient-to-br from-primary to-primary/50 relative">
               {course.urlImage ? (
                 <img
@@ -276,7 +269,6 @@ export function AdminCoursesList({
               </div>
             </div>
 
-            {/* Body */}
             <div className="p-4">
               <div className="mb-3">
                 <h3 className="font-bold text-base text-foreground line-clamp-1">
@@ -320,7 +312,6 @@ export function AdminCoursesList({
                 </div>
               </div>
 
-              {/* Primary actions */}
               <div className="flex gap-2">
                 <button
                   onClick={() => onEditCourse?.(course)}
@@ -351,7 +342,6 @@ export function AdminCoursesList({
                 </button>
               </div>
 
-              {/* Secondary actions */}
               <div className="mt-3 pt-3 border-t border-border flex gap-2">
                 <button
                   onClick={() => onManageEnrollments?.(course)}
@@ -373,7 +363,6 @@ export function AdminCoursesList({
         ))}
       </div>
 
-      {/* ── Pagination ── */}
       {totalPages > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t border-border">
           <p className="text-xs text-muted-foreground">
@@ -452,14 +441,12 @@ export function AdminCoursesList({
         </div>
       )}
 
-      {/* ── Empty state ── */}
       {courses.length === 0 && !isLoading && (
         <div className="text-center py-16 text-muted-foreground text-sm">
           No se encontraron cursos para los criterios de búsqueda y filtro seleccionados.
         </div>
       )}
 
-      {/* ── Loading more ── */}
       {isLoading && page > 0 && (
         <div className="flex justify-center py-4">
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />

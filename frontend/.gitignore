@@ -25,3 +25,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts.next
+
+# Claude Code
+.claude/logs/
+.claude/settings.local.json
+fornt.pem

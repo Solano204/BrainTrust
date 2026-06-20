@@ -1,4 +1,4 @@
- "use server";
+﻿ "use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
@@ -69,7 +69,6 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
       "https://www.nngroup.com/articles/wireframing/"
     ],
     deliveryMode: "INDIVIDUAL",
-    // Original: 2024-03-15 -> Updated: 2025-11-14 (Upcoming)
     dueDate: "2025-11-26T23:59:00Z", 
     maxScore: { value: 100, maxPoints: 100 },
     instructions: "Design wireframes for 5 key screens: login, dashboard, account overview, money transfer, and settings.",
@@ -99,7 +98,6 @@ const MOCK_TIMELINE_RESOURCES: (Assignment | Quiz)[] = [
       "https://math.mit.edu/linearalgebra/"
     ],
     deliveryMode: "INDIVIDUAL",
-    // Original: 2024-03-18 -> Updated: 2025-11-17 (Upcoming)
     dueDate: "2025-11-27T23:59:00Z",
     maxScore: { value: 100, maxPoints: 100 },
     instructions: "Complete all 10 problems from the attached PDF. Show all your work and reasoning.",

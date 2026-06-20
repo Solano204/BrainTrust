@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,15 +63,10 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
   const isLoading = isQuizLoading || isSubmissionLoading
   const error = quizError || submissionError
 
-  // ── canViewResults gate ────────────────────────────────────────────────────
-  // quizDetail.allowSeeResults  → teacher's setting on the quiz
-  // quizSubmissionDetail.canViewResults → backend runtime decision per submission
-  // Both must be true for the student to see correct answers
   const canViewResults: boolean =
     (quizDetail?.allowSeeResults ?? false) &&
     (quizSubmissionDetail?.canViewResults ?? false)
 
-  // ── No submission yet ──────────────────────────────────────────────────────
   if (!quiz.submission) {
     return (
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
@@ -94,7 +89,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     )
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
@@ -111,7 +105,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     )
   }
 
-  // ── Error ──────────────────────────────────────────────────────────────────
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 dark:from-gray-900 dark:to-green-900 p-4">
@@ -130,7 +123,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     )
   }
 
-  // ── Data ───────────────────────────────────────────────────────────────────
   const submission = quiz.submission
   const finalScore = quizSubmissionDetail?.grade?.value ?? 0
   const maxScore = submission.grade?.maxScore ?? quiz.maxGrade
@@ -152,7 +144,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     }
   }
 
-  // ── Student answer display ─────────────────────────────────────────────────
   const formatStudentAnswer = (question: any, answer: any): string => {
     const raw = answer?.studentAnswer
     if (raw === undefined || raw === null || raw === '') return 'No se proporcionó respuesta'
@@ -163,17 +154,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     return String(raw)
   }
 
-  // ── Correct answer resolution ──────────────────────────────────────────────
-  // For MULTIPLE CHOICE:
-  //   detailedAnswer.correctAnswer may be the option TEXT (from backend
-  //   GradedQuestionResponseDTO) or a numeric index string. We try both.
-  //
-  // For OPEN ENDED:
-  //   detailedAnswer.correctAnswer is the expected answer text from the backend.
-  //   fetchQuizDetail strips expectedAnswer for students, so the submission
-  //   response is the only reliable source.
-  //
-  // Returns { text, optionIndex? }
   const resolveCorrectAnswer = (
     question: any,
     detailedAnswer: any
@@ -182,16 +162,13 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
       if (detailedAnswer?.correctAnswer !== undefined && detailedAnswer.correctAnswer !== null) {
         const asText = String(detailedAnswer.correctAnswer)
         const asNumber = Number(asText)
-        // Try as numeric index
         if (!isNaN(asNumber) && question.options?.[asNumber] !== undefined) {
           return { text: question.options[asNumber], optionIndex: asNumber }
         }
-        // Try as option text match
         const matchIdx = question.options?.findIndex((o: string) => o === asText) ?? -1
         if (matchIdx >= 0) return { text: asText, optionIndex: matchIdx }
         return { text: asText }
       }
-      // Fall back to quiz question correctAnswer (numeric index)
       if (question.correctAnswer !== undefined) {
         const idx = Number(question.correctAnswer)
         return { text: question.options?.[idx] ?? `Opción ${idx + 1}`, optionIndex: idx }
@@ -199,7 +176,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
       return { text: '' }
     }
 
-    // Open-ended ─────────────────────────────────────────────────────────────
     if (detailedAnswer?.correctAnswer) return { text: detailedAnswer.correctAnswer }
     if (question.expectedAnswer) return { text: question.expectedAnswer }
     if (question.correctAnswer && typeof question.correctAnswer === 'string') {
@@ -208,12 +184,10 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
     return { text: '' }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
   <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
     <div className="max-w-4xl mx-auto space-y-5">
 
-      {/* ── Botón de regreso ── */}
       <button
         onClick={onExit}
         className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
@@ -222,7 +196,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         Volver a Tareas
       </button>
 
-      {/* ── Encabezado de resultados ── */}
       <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8 text-center space-y-4">
         <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${
           passed ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
@@ -286,7 +259,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         )}
       </div>
 
-      {/* ── Resumen de rendimiento ── */}
       {quizAnswers.length > 0 && (
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="px-5 py-4 sm:px-6 border-b border-border">
@@ -320,7 +292,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         </div>
       )}
 
-      {/* ── Revisión de preguntas ── */}
       {quizDetail?.questions && quizDetail.questions.length > 0 && (
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="px-5 py-4 sm:px-6 border-b border-border">
@@ -362,7 +333,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                     'border-l-destructive'
                   }`}
                 >
-                  {/* Encabezado de la pregunta */}
                   <div className="flex items-start gap-4 mb-4">
                     <div className="flex flex-col items-center gap-1.5 flex-shrink-0 min-w-[56px]">
                       <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
@@ -414,9 +384,8 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
 
                   <div className="space-y-3 sm:ml-16">
 
-                    {/* Respuesta del estudiante */}
                     <div className="space-y-1.5">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                      <p className="section-label">
                         Tu Respuesta:
                       </p>
                       <div className={`p-4 rounded-xl border-2 ${
@@ -437,7 +406,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                       </div>
                     </div>
 
-                    {/* Aviso de revisión pendiente */}
                     {needsReview && (
                       <div className="p-3 bg-accent/10 border border-accent/30 rounded-xl flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-accent-foreground flex-shrink-0 mt-0.5" />
@@ -452,10 +420,9 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                       </div>
                     )}
 
-                    {/* Respuesta correcta / modelo */}
                     {!needsReview && canViewResults && (
                       <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                        <p className="section-label">
                           {question.type === 'multiple-choice' ? 'Respuesta Correcta:' : 'Respuesta Modelo:'}
                         </p>
                         {isOpenEnded ? (
@@ -485,7 +452,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                       </div>
                     )}
 
-                    {/* Respuestas ocultas */}
                     {!needsReview && !canViewResults && (
                       <div className="p-3 bg-muted/30 border-2 border-border rounded-xl flex items-center gap-2">
                         <EyeOff className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -495,10 +461,9 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                       </div>
                     )}
 
-                    {/* Todas las opciones */}
                     {question.type === 'multiple-choice' && question.options?.length > 0 && (
                       <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                        <p className="section-label">
                           Todas las Opciones:
                         </p>
                         <div className="space-y-1.5">
@@ -546,10 +511,9 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                       </div>
                     )}
 
-                    {/* Retroalimentación del profesor */}
                     {detailedAnswer.feedback && (
                       <div className="space-y-1.5">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                        <p className="section-label">
                           Retroalimentación del Profesor:
                         </p>
                         <div className="p-4 bg-accent/10 border-2 border-accent/30 rounded-xl">
@@ -560,7 +524,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
                       </div>
                     )}
 
-                    {/* Fila de estado inferior */}
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <div className={`flex items-center gap-1.5 text-xs font-semibold ${
                         needsReview ? 'text-accent-foreground' :
@@ -587,7 +550,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         </div>
       )}
 
-      {/* ── Calificación final ── */}
       <div className="bg-primary/5 rounded-2xl border border-primary/20 shadow-sm p-5 sm:p-6">
         <div className="flex items-start gap-3">
           <span className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -612,7 +574,6 @@ export function StudentQuizView({ quiz, onExit }: StudentQuizViewProps) {
         </div>
       </div>
 
-      {/* ── Botón de regreso ── */}
       <div className="text-center pb-4">
         <button
           onClick={onExit}

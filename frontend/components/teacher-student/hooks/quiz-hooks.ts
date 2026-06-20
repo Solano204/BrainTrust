@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { quizKeys } from "@/app/infraestructure/api/course/units/resources/quiz-keys";
@@ -38,7 +38,6 @@ function redistributePoints(questions: Question[], newTotalScore: number): Recor
   const pointUpdates: Record<string, number> = {};
 
   if (currentTotal === 0) {
-    // Distribute evenly when there are no existing points
     const even = +(newTotalScore / questions.length).toFixed(2);
     questions.forEach((q) => { pointUpdates[q.id] = even; });
     return pointUpdates;
@@ -86,44 +85,37 @@ export function useQuizMutations() {
       console.log("🎉 [Hook] onSuccess triggered with quiz:", createdQuiz);
 
       try {
-        // 1. Invalidar el cache de la lista
         console.log("🔄 [Hook] Invalidating list queries...");
         await queryClient.invalidateQueries({
           queryKey: quizKeys.list(variables.courseId, variables.unitId),
           refetchType: 'active'
         });
 
-        // 2. Invalidar todas las listas
         await queryClient.invalidateQueries({
           queryKey: quizKeys.lists(),
           refetchType: 'active'
         });
 
-        // 3. Si tenemos el quiz con ID, añadirlo al cache y refrescar
         if (createdQuiz?.id) {
           console.log("📝 [Hook] Setting quiz in cache:", createdQuiz.id);
 
-          // Setear el quiz en el cache directamente
           queryClient.setQueryData(
             quizKeys.detail(createdQuiz.id),
             createdQuiz
           );
 
-          // Invalidar el detail también
           await queryClient.invalidateQueries({
             queryKey: quizKeys.detail(createdQuiz.id),
             refetchType: 'active'
           });
         }
 
-        // 4. Forzar refetch INMEDIATO de la lista
         console.log("🔄 [Hook] Force refetching list...");
         await queryClient.refetchQueries({
           queryKey: quizKeys.list(variables.courseId, variables.unitId),
           type: 'active'
         });
 
-        // 5. Pequeña espera y otro refetch para asegurar
         await new Promise(resolve => setTimeout(resolve, 500));
 
         await queryClient.refetchQueries({
@@ -142,14 +134,12 @@ export function useQuizMutations() {
     onSettled: async (data, error, variables) => {
       console.log("🏁 [Hook] Mutation settled");
 
-      // Un último refetch por si acaso
       await queryClient.refetchQueries({
         queryKey: quizKeys.list(variables.courseId, variables.unitId),
         type: 'active'
       });
     }
   });
- // ── UPDATE ────────────────────────────────────────────────────────────────
   /**
    * After updating quiz settings, if `totalScore` changed we automatically
    * redistribute question points proportionally.
@@ -170,15 +160,12 @@ export function useQuizMutations() {
     onSuccess: async (updatedQuiz, variables) => {
       console.log("🎉 [Hook] Update success");
 
-      // Cache the freshly updated quiz
       if (updatedQuiz?.id) {
         queryClient.setQueryData(quizKeys.detail(updatedQuiz.id), updatedQuiz);
       }
 
-      // ── Redistribute points when totalScore changed ───────────────────────
       const newTotalScore = variables.quizData.totalScore;
       if (newTotalScore !== undefined && updatedQuiz?.questions?.length > 0) {
-        // Only redistribute existing (non-temp) questions
         const existingQuestions = updatedQuiz.questions.filter((q) => !q.id.startsWith("temp_"));
 
         if (existingQuestions.length > 0) {
@@ -194,7 +181,6 @@ export function useQuizMutations() {
         }
       }
 
-      // Invalidate & refetch
       await queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId), refetchType: "active" });
       await queryClient.invalidateQueries({ queryKey: quizKeys.lists(), refetchType: "active" });
       await queryClient.refetchQueries({ queryKey: quizKeys.detail(variables.quizId), type: "active" });
@@ -202,7 +188,6 @@ export function useQuizMutations() {
     onError: (error) => { console.error("❌ [Hook] Error updating quiz:", error); },
   });
 
-  // ── DELETE ────────────────────────────────────────────────────────────────
   const deleteQuizMutation = useMutation({
     mutationFn: async (quizId: string) => {
       await deleteQuiz(quizId);
@@ -216,7 +201,6 @@ export function useQuizMutations() {
     onError: (error) => { console.error("❌ [Hook] Error deleting quiz:", error); },
   });
 
-  // ── QUESTIONS ─────────────────────────────────────────────────────────────
   const addQuestionMutation = useMutation({
     mutationFn: ({ quizId, question }: { quizId: string; question: Omit<Question, "id" | "text" | "maxPoints"> }) =>
       addQuizQuestion(quizId, question),

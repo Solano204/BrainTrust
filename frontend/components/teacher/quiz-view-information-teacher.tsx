@@ -1,5 +1,4 @@
-//DARK
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -20,9 +19,6 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useQuizDetail, useQuizMutations } from "../teacher-student/hooks/quiz-hooks";
 import { Quiz } from "@/app/domain/entities/CourseEntities";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tipos
-// ─────────────────────────────────────────────────────────────────────────────
 
 interface DatosEdicion {
   title: string;
@@ -40,9 +36,6 @@ interface PropsVistaQuiz {
   onClose: () => void;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Ayudante de previsualización de redistribución
-// ─────────────────────────────────────────────────────────────────────────────
 
 function calcularRedistribucionPuntos(
   preguntas: Question[],
@@ -63,9 +56,6 @@ function calcularRedistribucionPuntos(
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Componente
-// ─────────────────────────────────────────────────────────────────────────────
 
 
 export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
@@ -132,7 +122,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   }
 }, [quiz]);
 
-  // ── Valores calculados ──────────────────────────────────────────────────────
   const puntosTotales = preguntasEdicion.reduce((sum, q) => sum + (q.points ?? 0), 0);
   const cantidadOpcionMultiple = preguntasEdicion.filter((q) => q.type === "multiple-choice").length;
   const cantidadRespuestaAbierta = preguntasEdicion.filter((q) => q.type === "open-ended").length;
@@ -146,7 +135,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   const puntuacionTotalCambio =
     datosEdicion.totalScore !== (datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100);
 
-  // ── Indicador de carga ─────────────────────────────────────────────────────────
   const cargando =
     cargandoQuiz ||
     updateQuiz.isPending ||
@@ -159,7 +147,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
     updateQuestionsTypesBulk.isPending ||
     deleteQuestionsBulk.isPending;
 
-  // ── Manejadores ─────────────────────────────────────────────────────────────
   const handleGuardarConfiguracion = async () => {
     try {
       await updateQuiz.mutateAsync({
@@ -329,7 +316,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
       })
     );
 
-  // ── Ayudantes de fecha ─────────────────────────────────────────────────────────
   const formatearFecha = (d: string | null | undefined) => {
     if (!d) return "Sin fecha establecida";
     return new Date(d).toLocaleDateString("es-ES", {
@@ -360,9 +346,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
   const tiempoRestante = obtenerTiempoRestante(datosQuiz.dueDate);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Estados de carga / error
-  // ─────────────────────────────────────────────────────────────────────────
   if (cargandoQuiz) {
     return (
       <div className="min-h-screen bg-background p-4 md:p-6 flex items-center justify-center">
@@ -400,14 +383,10 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Renderizado principal
-  // ─────────────────────────────────────────────────────────────────────────
   return (
   <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
     <div className="max-w-6xl mx-auto space-y-8">
 
-      {/* ── Encabezado ── */}
       <div className="space-y-4">
         <button
           onClick={onClose}
@@ -504,13 +483,10 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
         </div>
       </div>
 
-      {/* ── Cuerpo ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* ── Columna izquierda ── */}
         <div className="lg:col-span-2 space-y-5">
 
-          {/* Descripción */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="px-5 py-4 sm:px-6 border-b border-border">
               <div className="flex items-center gap-2">
@@ -536,7 +512,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
             </div>
           </div>
 
-          {/* Preguntas */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="px-5 py-4 sm:px-6 border-b border-border">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -595,7 +570,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
               {preguntasEdicion.length > 0 ? (
                 <div className="space-y-6">
 
-                  {/* Indicador de puntos totales */}
                   {editandoPreguntas && (
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${
                       puntosTotales === datosEdicion.totalScore
@@ -636,7 +610,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
                                   value={pregunta.question}
                                   onChange={(e) => actualizarPreguntaEdicion(pregunta.id, { question: e.target.value })}
                                   placeholder="Ingrese su pregunta"
-                                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                                  className="input-field"
                                 />
                               </div>
                             </div>
@@ -658,7 +632,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
                             </div>
                           </div>
 
-                          {/* Opciones de opción múltiple */}
                           {pregunta.type === "multiple-choice" && pregunta.options && (
                             <div className="space-y-2 sm:ml-7">
                               <div className="flex items-center justify-between">
@@ -701,7 +674,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
                             </div>
                           )}
 
-                          {/* Respuesta abierta */}
                           {pregunta.type === "open-ended" && (
                             <div className="sm:ml-7 space-y-1.5">
                               <label className="text-xs font-semibold text-primary">
@@ -810,19 +782,16 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
           </div>
         </div>
 
-        {/* ── Barra lateral ── */}
         <div className="space-y-4">
 
-          {/* Detalles del quiz */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-border">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              <h3 className="section-label">
                 Detalles del Quiz
               </h3>
             </div>
             <div className="px-4 py-4 space-y-4">
 
-              {/* Fecha de entrega */}
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3 h-3" /> Fecha de Entrega
@@ -848,7 +817,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
               <div className="border-t border-border/50" />
 
-              {/* Límite de tiempo */}
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3 h-3" /> Límite de Tiempo
@@ -870,7 +838,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
               <div className="border-t border-border/50" />
 
-              {/* Puntos y calificación */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                   <Award className="w-3 h-3" /> Puntos y Calificación
@@ -901,7 +868,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
               <div className="border-t border-border/50" />
 
-              {/* Puntuación total */}
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
                   <Award className="w-3 h-3" /> Puntuación Total
@@ -933,10 +899,9 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
                 )}
               </div>
 
-              {/* Previsualización de redistribución */}
               {modoEdicion && mostrarPrevisualizacionRedistribucion && previsualizacionRedistribucion.length > 0 && (
                 <div className="rounded-xl border border-border overflow-hidden">
-                  <div className="bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  <div className="bg-muted/40 px-3 py-2 section-label">
                     Previsualización de Redistribución de Puntos
                   </div>
                   <div className="divide-y divide-border/50">
@@ -964,7 +929,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
               <div className="border-t border-border/50" />
 
-              {/* Entregas tardías */}
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground">Entregas Tardías</p>
                 {modoEdicion ? (
@@ -988,7 +952,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
               <div className="border-t border-border/50" />
 
-              {/* Visibilidad de resultados */}
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground">Visibilidad de Resultados para Estudiantes</p>
                 {modoEdicion ? (
@@ -1012,7 +975,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
 
               <div className="border-t border-border/50" />
 
-              {/* Información de creación */}
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground">Información de Creación</p>
                 {[
@@ -1029,10 +991,9 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
             </div>
           </div>
 
-          {/* Alternativa de visibilidad de respuestas */}
           {tipoUsuario === "teacher" && !editandoPreguntas && preguntasEdicion.some((q) => q.type === "multiple-choice") && (
             <div className="bg-card rounded-2xl border border-border shadow-sm p-4 space-y-3">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              <h3 className="section-label">
                 Visibilidad de Respuestas
               </h3>
               <div className="flex items-center justify-between">
@@ -1048,7 +1009,6 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
         </div>
       </div>
 
-      {/* ── Pie de página ── */}
       <div className="pt-6 border-t border-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-xs text-muted-foreground">

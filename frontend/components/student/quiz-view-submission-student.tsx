@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -317,7 +317,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
  return (
   <>
-    {/* ══ Diálogo de Inicio ══ */}
     <Dialog
       open={showStartDialog}
       onOpenChange={(isOpen) => {
@@ -329,7 +328,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
         className="sm:max-w-md bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden"
         onInteractOutside={(e) => e.preventDefault()}
       >
-        {/* Encabezado */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -345,7 +343,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
         </DialogHeader>
 
         <div className="px-6 py-5 space-y-4">
-          {/* Detalles del cuestionario */}
           <div className="bg-muted/30 rounded-2xl border border-border divide-y divide-border/50">
             {[
               { icon: Timer,        label: 'Duración',   value: `${quiz.timeLimit} minutos` },
@@ -364,7 +361,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
             ))}
           </div>
 
-          {/* Advertencia de no disponible */}
           {isStartDisabled && (
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
               <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
@@ -375,7 +371,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
             </div>
           )}
 
-          {/* Instrucciones */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-foreground flex items-center gap-2">
               <AlertCircle className="w-3.5 h-3.5 text-accent-foreground" />
@@ -397,7 +392,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
           </div>
         </div>
 
-        {/* Pie de página */}
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row gap-2">
           <button
             type="button"
@@ -418,11 +412,9 @@ export const QuizView: React.FC<QuizViewProps> = ({
       </DialogContent>
     </Dialog>
 
-    {/* ══ Interfaz Principal del Cuestionario ══ */}
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-5xl mx-auto space-y-5">
 
-        {/* ── Tarjeta de encabezado del cuestionario ── */}
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="border-l-4 border-primary p-5 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -439,7 +431,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                {/* Temporizador */}
                 <div className={`flex items-center gap-2 px-3 py-2 rounded-xl font-mono text-base font-bold ${
                   timeRemaining < 300
                     ? "bg-destructive/10 text-destructive border border-destructive/20"
@@ -449,7 +440,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
                   {formatTime(timeRemaining)}
                 </div>
 
-                {/* Progreso */}
                 <div className="text-center min-w-[8rem]">
                   <p className="text-xs text-muted-foreground mb-1">
                     Pregunta {currentQuestionIndex + 1} de {quiz.questions.length}
@@ -462,7 +452,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </div>
             </div>
 
-            {/* Barra de información */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-border">
               {[
                 { label: 'Tiempo Límite', value: `${quiz.timeLimit} min` },
@@ -481,10 +470,9 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
 
-          {/* ── Navegador de preguntas ── */}
           <div className="lg:col-span-1">
             <div className="bg-card rounded-2xl border border-border shadow-sm p-4 sticky top-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-3">
+              <p className="section-label flex items-center gap-2 mb-3">
                 <Eye className="w-3.5 h-3.5" />
                 Preguntas
               </p>
@@ -521,7 +509,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
                 })}
               </div>
 
-              {/* Leyenda */}
               <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
                 {[
                   { color: 'bg-primary',      label: 'Actual'    },
@@ -539,7 +526,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
                 </div>
               </div>
 
-              {/* Estadísticas rápidas */}
               <div className="mt-4 pt-4 border-t border-border space-y-2">
                 {[
                   { label: 'Respondidas', value: `${answeredCount}/${quiz.questions.length}` },
@@ -554,11 +540,9 @@ export const QuizView: React.FC<QuizViewProps> = ({
             </div>
           </div>
 
-          {/* ── Contenido de la pregunta ── */}
           <div className="lg:col-span-3 space-y-4">
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
 
-              {/* Encabezado de la pregunta */}
               <div className="flex items-start justify-between gap-3 mb-6">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -591,7 +575,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
                 </button>
               </div>
 
-              {/* Área de respuesta */}
               {currentQuestion.type === 'multiple-choice' ? (
                 <RadioGroup
                   value={answers[currentQuestion.id]?.studentAnswer?.toString() || ''}
@@ -638,7 +621,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
               )}
             </div>
 
-            {/* Navegación */}
             <div className="flex items-center justify-between gap-3">
               <button
                 onClick={goToPreviousQuestion}
@@ -683,7 +665,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
               </div>
             </div>
 
-            {/* Advertencia de tiempo */}
             {timeRemaining < 300 && timeRemaining > 0 && (
               <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 border-l-4 border-l-destructive">
                 <Clock className="w-5 h-5 text-destructive animate-pulse flex-shrink-0" />
@@ -703,7 +684,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
       </div>
     </div>
 
-    {/* ══ Confirmación de Salida ══ */}
     <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
       <AlertDialogContent className="bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden">
         <AlertDialogHeader className="px-6 pt-6 pb-4">
@@ -734,7 +714,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
       </AlertDialogContent>
     </AlertDialog>
 
-    {/* ══ Confirmación de Envío ══ */}
     <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
       <AlertDialogContent className="bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden">
         <AlertDialogHeader className="px-6 pt-6 pb-4">
@@ -776,7 +755,6 @@ export const QuizView: React.FC<QuizViewProps> = ({
       </AlertDialogContent>
     </AlertDialog>
 
-    {/* ══ Diálogo de Tiempo Agotado ══ */}
     <Dialog open={showTimeUpDialog} onOpenChange={setShowTimeUpDialog}>
       <DialogContent className="sm:max-w-md bg-card rounded-3xl border border-border shadow-2xl p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
@@ -827,14 +805,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   const quizAnswers = submission.quizData?.answers ?? [];
 
 
-  // ── canViewResults: quiz.allowSeeResults is set by the teacher when creating/editing
-  // the quiz. submission.canViewResults is the runtime flag from the backend
-  // (QuizSubmissionDetailDTO.canViewResults). Both must be true to show answers.
 
   const canViewResults: boolean =
     (quiz.allowSeeResults ?? false);
 
-  // ── Score calculation ──────────────────────────────────────────────────────
   const totalMaxScore = quiz.questions.reduce((total, q) => total + q.points, 0);
 
   const calculatedScore = quizAnswers.reduce((total, answer) => {
@@ -854,7 +828,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   const incorrectCount = quizAnswers.filter((a) => a.isCorrect === false).length;
   const pendingCount = quizAnswers.filter((a) => a.isCorrect === undefined).length;
 
-  // ── Student answer display ─────────────────────────────────────────────────
   const formatStudentAnswer = (question: any, answer: any): string => {
     const raw = answer?.studentAnswer;
     if (raw === undefined || raw === null || raw === "") return "No se proporcionó respuesta";
@@ -865,36 +838,22 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     return String(raw);
   };
 
-  // ── Correct answer resolution ──────────────────────────────────────────────
-  // For MULTIPLE CHOICE: detailedAnswer.correctAnswer comes from the backend as
-  // the option TEXT string (GradedQuestionResponseDTO.correctAnswer), so we find
-  // the matching index in question.options.
-  //
-  // For OPEN ENDED: detailedAnswer.correctAnswer is the expected answer text
-  // directly from the backend. The quiz question's expectedAnswer is stripped
-  // for students in fetchQuizDetail, so the submission response is the only
-  // reliable source.
   const resolveCorrectAnswer = (
     question: any,
     detailedAnswer: any
   ): { text: string; optionIndex?: number } => {
     if (question.type === "multiple-choice") {
-      // detailedAnswer.correctAnswer may be option TEXT or a numeric index string
       if (detailedAnswer?.correctAnswer !== undefined && detailedAnswer.correctAnswer !== null) {
         const asText = String(detailedAnswer.correctAnswer);
         const asNumber = Number(asText);
 
-        // Try numeric index first
         if (!isNaN(asNumber) && question.options?.[asNumber] !== undefined) {
           return { text: question.options[asNumber], optionIndex: asNumber };
         }
-        // Try exact text match
         const matchIdx = question.options?.findIndex((o: string) => o === asText) ?? -1;
         if (matchIdx >= 0) return { text: asText, optionIndex: matchIdx };
-        // Return as-is (unknown format)
         return { text: asText };
       }
-      // Fall back to question.correctAnswer (numeric index)
       if (question.correctAnswer !== undefined) {
         const idx = Number(question.correctAnswer);
         return {
@@ -905,10 +864,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       return { text: "No disponible" };
     }
 
-    // Open-ended ─────────────────────────────────────────────────────────────
-    // Priority: submission response correctAnswer (most reliable, comes from backend)
     if (detailedAnswer?.correctAnswer) return { text: detailedAnswer.correctAnswer };
-    // Fallback: quiz question expectedAnswer (only present if not stripped)
     if (question.expectedAnswer) return { text: question.expectedAnswer };
     if (question.correctAnswer && typeof question.correctAnswer === "string") {
       return { text: question.correctAnswer };
@@ -919,7 +875,6 @@ return (
   <div className="min-h-screen bg-background p-4">
     <div className="max-w-4xl mx-auto space-y-5">
 
-      {/* ── Encabezado de Resultados ── */}
       <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8 text-center">
         <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
           passed ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
@@ -934,7 +889,6 @@ return (
         </h1>
         <p className="text-sm text-muted-foreground mb-5">{quiz.title}</p>
 
-        {/* Aviso de respuestas ocultas */}
         {!canViewResults && (
           <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 bg-accent/10 border border-accent/30 rounded-xl text-xs font-semibold text-accent-foreground">
             <EyeOff className="w-3.5 h-3.5" />
@@ -942,7 +896,6 @@ return (
           </div>
         )}
 
-        {/* Cuadrícula de puntuación */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
             <p className="text-2xl font-bold text-primary">{Math.round(finalScore * 100) / 100}</p>
@@ -966,7 +919,6 @@ return (
           )}
         </div>
 
-        {/* Retroalimentación del profesor */}
         {submission.teacherFeedback && (
           <div className="mt-5 p-4 bg-accent/10 border border-accent/30 rounded-2xl max-w-lg mx-auto text-left">
             <p className="text-xs font-semibold text-foreground mb-1">Retroalimentación del Profesor</p>
@@ -975,10 +927,9 @@ return (
         )}
       </div>
 
-      {/* ── Revisión de Preguntas ── */}
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="px-5 py-4 sm:px-6 border-b border-border flex items-center justify-between">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+          <h2 className="section-label">
             Revisión de Preguntas
           </h2>
           {!canViewResults && (
@@ -1005,10 +956,9 @@ return (
             return (
               <div key={question.id} className="bg-muted/20 rounded-2xl border border-border p-4 sm:p-5 space-y-4">
 
-                {/* Encabezado de la pregunta */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                    <p className="section-label mb-1">
                       Pregunta {index + 1}
                     </p>
                     <p className="text-sm font-semibold text-foreground">{question.question}</p>
@@ -1046,7 +996,6 @@ return (
                   </div>
                 </div>
 
-                {/* Respuesta del estudiante */}
                 <div>
                   <p className="text-xs font-semibold text-foreground mb-1.5">Tu respuesta:</p>
                   <div className={`p-3 rounded-xl border text-sm font-medium ${
@@ -1065,7 +1014,6 @@ return (
                   </div>
                 </div>
 
-                {/* Aviso de revisión pendiente */}
                 {needsReview && (
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/10 border border-accent/30">
                     <AlertCircle className="w-4 h-4 text-accent-foreground flex-shrink-0 mt-0.5" />
@@ -1078,7 +1026,6 @@ return (
                   </div>
                 )}
 
-                {/* Respuesta esperada */}
                 {!needsReview && canViewResults && (
                   <div>
                     <p className="text-xs font-semibold text-foreground mb-1.5">Respuesta esperada:</p>
@@ -1103,7 +1050,6 @@ return (
                   </div>
                 )}
 
-                {/* Respuestas ocultas */}
                 {!needsReview && !canViewResults && (
                   <div className="flex items-center gap-2 p-3 rounded-xl border border-border bg-muted/30">
                     <EyeOff className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -1111,7 +1057,6 @@ return (
                   </div>
                 )}
 
-                {/* Todas las opciones de MC */}
                 {question.type === "multiple-choice" && question.options && question.options.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-foreground mb-1.5">Todas las opciones:</p>
@@ -1156,7 +1101,6 @@ return (
                   </div>
                 )}
 
-                {/* Retroalimentación del profesor por pregunta */}
                 {detailedAnswer?.feedback && (
                   <div>
                     <p className="text-xs font-semibold text-foreground mb-1.5">Retroalimentación del Profesor:</p>
@@ -1171,10 +1115,9 @@ return (
         </div>
       </div>
 
-      {/* ── Resumen de Rendimiento ── */}
       {hasDetailedData && (
         <div className="bg-card rounded-2xl border border-border shadow-sm p-5 sm:p-6">
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+          <h2 className="section-label mb-4">
             Resumen de Rendimiento
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1193,7 +1136,6 @@ return (
         </div>
       )}
 
-      {/* ── Aviso de Calificación Final ── */}
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 sm:p-6 flex items-start gap-4">
         <span className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
           <Award className="w-5 h-5 text-primary" />
@@ -1220,7 +1162,6 @@ return (
         </div>
       </div>
 
-      {/* ── Botón de regreso ── */}
       <div className="text-center pb-4">
         <button
           onClick={onExit}

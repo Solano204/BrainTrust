@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
@@ -57,7 +57,6 @@ export function useGradebook(courseId: string) {
   ) => {
     if (!isTeacher) return;
 
-    // DEBUG — remove once confirmed working
     console.log('[useGradebook] handleAssignUnitFinalGrade called with:', {
       unitId,
       studentId,
@@ -67,8 +66,6 @@ export function useGradebook(courseId: string) {
       hookCourseId: courseId,
     });
 
-    // Use the hook's own courseId (closure from page.tsx useParams) as source
-    // of truth; fall back to incomingCourseId if somehow the closure is stale.
     const resolvedCourseId = courseId || incomingCourseId;
 
     console.log('[useGradebook] resolvedCourseId:', resolvedCourseId);
@@ -104,7 +101,6 @@ export function useGradebook(courseId: string) {
   }
 };
 
-// In the return object, rename for clarity:
 return {
   gradebook,
   courseGradebooks,

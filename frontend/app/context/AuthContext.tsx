@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
@@ -13,7 +13,7 @@ import { authService } from '@/app/domain/services/authService';
 import { JWTUtils } from '@/app/utils/jwt';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: string }>;
   register: (userData: { email: string; password: string; name: string; role: UserRole }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshTokens: () => Promise<boolean>;
@@ -59,16 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const initializeAuth = useCallback(async () => {
 
-    // if (isMockActive) {
-    //   setAuthState({
-    //     user: createMockUser(mockUser),
-    //     isAuthenticated: true,
-    //     isLoading: false,
-    //     accessToken: MOCK_TOKENS.accessToken,
-    //     refreshToken: MOCK_TOKENS.refreshToken,
-    //   });
-    //   return;
-    // }
 
     try {
       const response = await fetch('/api/auth/initialize', {
@@ -127,16 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
 
-    // if (isMockActive) {
-    //   setAuthState({
-    //     user: createMockUser({ ...mockUser, email, name: email.split('@')[0] }),
-    //     isAuthenticated: true,
-    //     isLoading: false,
-    //     accessToken: MOCK_TOKENS.accessToken,
-    //     refreshToken: MOCK_TOKENS.refreshToken,
-    //   });
-    //   return { success: true };
-    // }
 
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -162,28 +142,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         refreshToken: tokenResponse.refreshToken,
       });
 
-      return { success: true };
+      return { success: true, role: tokenResponse.user.role };
     } catch (error: any) {
       setAuthState(prev => ({ ...prev, isLoading: false }));
-      return { 
-        success: false, 
-        error: error.message || 'Login failed' 
+      return {
+        success: false,
+        error: error.message || 'Correo o contraseña incorrectos'
       };
     }
   };
 
   const register = async (userData: { email: string; password: string; name: string; role: UserRole }) => {
 
-    // if (isMockActive) {
-    //   setAuthState({
-    //     user: createMockUser({ ...mockUser, ...userData }),
-    //     isAuthenticated: true,
-    //     isLoading: false,
-    //     accessToken: MOCK_TOKENS.accessToken,
-    //     refreshToken: MOCK_TOKENS.refreshToken,
-    //   });
-    //   return { success: true };
-    // }
 
     try {
       setAuthState(prev => ({ ...prev, isLoading: true }));
@@ -251,14 +221,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshTokens = async (): Promise<boolean> => {
 
-    // if (isMockActive) {
-    //   setAuthState(prev => ({
-    //     ...prev,
-    //     accessToken: MOCK_TOKENS.accessToken,
-    //     refreshToken: MOCK_TOKENS.refreshToken,
-    //   }));
-    //   return true;
-    // }
 
     if (!authState.refreshToken) return false;
 
@@ -334,7 +296,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshTokens,
     hasPermission,
     hasRole,
-    // Mock controls
     enableMock,
     disableMock,
     isMockActive,

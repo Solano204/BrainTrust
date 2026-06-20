@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
@@ -23,7 +23,6 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   useTaskInventoryManagement,
   useTaskInventoryMutations,
-  // useTaskInventoryMutations,
 } from "@/app/presentation/hooks/task/task-inventory-hooks";
 import { useQuizzesByCourseWithoutDetails } from "@/components/teacher/hooks/quiz-hooks";
 import { useCourseAllUnits } from "@/components/teacher/hooks/courses-hooks";
@@ -285,7 +284,6 @@ export function CourseTaskOverviewTeacher({
     const gradeValue = submission.grade.value;
     const maxScore = maxPoints || submission.grade.maxScore || 1;
     
-    // Manejar valores de calificación tanto en string como en número
     const numericValue = typeof gradeValue === 'string' ? parseFloat(gradeValue) : gradeValue;
     const percentage = (numericValue / maxScore) * 100;
     
@@ -365,7 +363,6 @@ export function CourseTaskOverviewTeacher({
   if (!selectedUnitId) {
     return (
       <div className="p-4 md:p-6 lg:p-8 space-y-6">
-        {/* Encabezado */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
@@ -377,7 +374,6 @@ export function CourseTaskOverviewTeacher({
           </div>
         </div>
 
-        {/* Cuadrícula de Unidades */}
         {isLoadingUnits ? (
           <Card className="p-8 text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
@@ -408,7 +404,6 @@ export function CourseTaskOverviewTeacher({
                 onClick={() => handleSelectUnit(unit.id)}
               >
                 <div className="space-y-4">
-                  {/* Número de Unidad */}
                   <div className="flex items-center justify-between">
                     <Badge variant="secondary" className="text-sm">
                       Unidad {unit.numUnity}
@@ -418,7 +413,6 @@ export function CourseTaskOverviewTeacher({
                     </div>
                   </div>
 
-                  {/* Nombre y Descripción de la Unidad */}
                   <div>
                     <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
                       {unit.name}
@@ -428,7 +422,6 @@ export function CourseTaskOverviewTeacher({
                     </p>
                   </div>
 
-                  {/* Botón de Acción */}
                   <Button className="w-full gap-2" variant="default">
                     <Eye className="h-4 w-4" />
                     Ver Tareas y Cuestionarios
@@ -472,9 +465,8 @@ export function CourseTaskOverviewTeacher({
   const selectedUnit = courseUnits.find((unit) => unit.id === selectedUnitId);
 
  return (
-  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+  <div className="page-container">
 
-    {/* ── Encabezado de página ── */}
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
       <div className="flex items-start gap-3">
         <button
@@ -507,7 +499,6 @@ export function CourseTaskOverviewTeacher({
       </div>
     </div>
 
-    {/* ── Búsqueda ── */}
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <input
@@ -518,7 +509,6 @@ export function CourseTaskOverviewTeacher({
       />
     </div>
 
-    {/* ── Error ── */}
     {tasksError && (
       <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 border border-destructive/20">
         <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
@@ -529,7 +519,6 @@ export function CourseTaskOverviewTeacher({
       </div>
     )}
 
-    {/* ── Pestañas ── */}
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
       <TabsList className="w-full grid grid-cols-3 rounded-2xl bg-muted/50 p-1 h-auto">
         {[
@@ -551,7 +540,6 @@ export function CourseTaskOverviewTeacher({
 
       <TabsContent value={activeTab} className="space-y-4">
 
-        {/* Cargando */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -573,7 +561,6 @@ export function CourseTaskOverviewTeacher({
 
         ) : (
           <>
-            {/* ── Tabla de escritorio ── */}
             <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -664,7 +651,6 @@ export function CourseTaskOverviewTeacher({
               </div>
             </div>
 
-            {/* ── Tarjetas móviles ── */}
             <div className="space-y-3 lg:hidden">
               {filteredItems.map((item) => {
                 const displayProps = getDisplayProperties(item);
@@ -673,7 +659,6 @@ export function CourseTaskOverviewTeacher({
                     key={item.uniqueKey}
                     className="bg-card rounded-2xl border border-border p-4 space-y-3 hover:bg-muted/10 transition-colors"
                   >
-                    {/* Título + tipo */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-sm text-foreground truncate mb-0.5">
@@ -689,7 +674,6 @@ export function CourseTaskOverviewTeacher({
                       </span>
                     </div>
 
-                    {/* Fecha Límite + Estado */}
                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Fecha Límite</p>
@@ -704,7 +688,6 @@ export function CourseTaskOverviewTeacher({
                       </div>
                     </div>
 
-                    {/* Calificación */}
                     {displayProps.submission?.grade && (
                       <div className="pt-2 border-t border-border">
                         <p className="text-xs text-muted-foreground mb-1">Calificación</p>
@@ -727,7 +710,6 @@ export function CourseTaskOverviewTeacher({
                       </div>
                     )}
 
-                    {/* Acciones */}
                     <div className="flex gap-2 pt-2">
                       {getActionButtonMobile(item)}
                     </div>

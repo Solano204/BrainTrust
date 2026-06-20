@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -145,7 +145,6 @@ export function SubmissionDetailView({
 return (
   <Dialog open={mostrarModalAnalisisIA} onOpenChange={setMostrarModalAnalisisIA}>
     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-0 shadow-2xl">
-      {/* Encabezado del Modal */}
       <div
         className={`px-6 sm:px-8 py-6 rounded-t-2xl ${
           esIA
@@ -185,7 +184,6 @@ return (
       </div>
 
       <div className="px-6 sm:px-8 py-6 space-y-6 bg-card">
-        {/* Métricas Clave */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             {
@@ -235,7 +233,6 @@ return (
           ))}
         </div>
 
-        {/* Resumen de Segmentos — solo si existen segmentos */}
         {totalSegmentos > 0 && (
           <div className="grid grid-cols-3 gap-3">
             <div className="border border-border rounded-xl p-4 text-center bg-secondary/50">
@@ -253,7 +250,6 @@ return (
           </div>
         )}
 
-        {/* Lista de Detalle de Segmentos */}
         {totalSegmentos > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -315,7 +311,6 @@ return (
           </div>
         )}
 
-        {/* Referencia de Análisis */}
         <div className="bg-muted/50 rounded-xl p-4 border border-border">
           <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
             <Hash className="h-3.5 w-3.5" /> ID de Referencia de Análisis
@@ -325,7 +320,6 @@ return (
           </code>
         </div>
 
-        {/* Descargo de Responsabilidad */}
         <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
@@ -341,7 +335,6 @@ return (
           </div>
         </div>
 
-        {/* Cerrar */}
         <div className="flex justify-end pt-2 border-t border-border">
           <Button
             variant="outline"
@@ -360,7 +353,6 @@ return (
   /* ─── Vista Principal ─── */
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Encabezado */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
@@ -403,9 +395,7 @@ return (
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Izquierda / Principal */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Resumen de la Tarea */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">Resumen de la Tarea</h2>
@@ -467,7 +457,6 @@ return (
             </div>
           </Card>
 
-          {/* Entrega del Estudiante */}
           {data.submission && (
             <Card className="p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -571,9 +560,7 @@ return (
           )}
         </div>
 
-        {/* Barra Lateral Derecha */}
         <div className="space-y-6">
-          {/* Calificación */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4 text-foreground">Calificar Entrega</h2>
             <div className="space-y-4">
@@ -634,7 +621,6 @@ return (
             </div>
           </Card>
 
-          {/* Tarjeta de Análisis IA */}
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <Brain className="h-5 w-5 text-accent" />
@@ -699,7 +685,6 @@ return (
             )}
           </Card>
 
-          {/* Detalles de la Entrega */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4 text-foreground">Detalles de la Entrega</h2>
             <div className="space-y-3">

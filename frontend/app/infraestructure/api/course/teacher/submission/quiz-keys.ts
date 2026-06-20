@@ -1,4 +1,4 @@
-export const quizKeys = {
+﻿export const quizKeys = {
   all: ['quizzes'] as const,
   lists: () => [...quizKeys.all, 'list'] as const,
   list: (courseId: string) => [...quizKeys.lists(), courseId] as const,
@@ -7,7 +7,6 @@ export const quizKeys = {
   submissions: () => [...quizKeys.all, 'submissions'] as const,
   quizSubmissions: (quizId: string) => [...quizKeys.submissions(), quizId] as const,
   
-  // SUBMISSIONQUIZ KEYS
   submissionQuizzes: (quizId: string) => [...quizKeys.all, 'submission-quizzes', quizId] as const,
   submissionQuizzesByCourse: (courseId: string) => [...quizKeys.all, 'submission-quizzes-by-course', courseId] as const,
   submissionQuizByStudentAndQuiz: (quizId: string, studentId: string) => 

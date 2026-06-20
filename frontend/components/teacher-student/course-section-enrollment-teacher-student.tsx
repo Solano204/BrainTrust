@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { useState, useMemo } from "react";
@@ -275,7 +275,6 @@ if (!esProfesor) {
         </Card>
       )}
 
-      {/* Modal de Inscripción */}
       <Dialog open={mostrarModalInscripcion} onOpenChange={setMostrarModalInscripcion}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -390,7 +389,6 @@ if (!esProfesor) {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Eliminación */}
       <Dialog open={mostrarModalEliminar} onOpenChange={setMostrarModalEliminar}>
         <DialogContent>
           <DialogHeader>

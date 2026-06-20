@@ -1,4 +1,4 @@
-
+﻿
 'use client';
 
 import { useEffect } from 'react';
@@ -49,7 +49,6 @@ export default function ProtectedRoute({
     }
   }, [isAuthenticated, isLoading, user, requiredRole, requiredPermissions, router, redirectTo, hasRole, hasPermission]);
 
-  // Show loading while checking auth
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -58,12 +57,10 @@ export default function ProtectedRoute({
     );
   }
 
-  // Don't render children if not authenticated (will redirect)
   if (!isAuthenticated) {
     return null;
   }
 
-  // Check permissions if user exists
   if (user) {
     if (requiredRole && !hasRole(requiredRole)) {
       return null; // Will redirect in useEffect

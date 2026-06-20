@@ -12,7 +12,6 @@ export function Providers({ children }: { children: ReactNode }) {
         attribute="class"
         defaultTheme="system"
         enableSystem
-        disableTransitionOnChange
       >
         <AuthProvider>{children}</AuthProvider>
       </ThemeProvider>

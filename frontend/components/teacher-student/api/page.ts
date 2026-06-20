@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
@@ -831,7 +831,6 @@ export async function replaceAllPageAttachments(
   }
 }
 
-// Lo añadi por que me marcaba un error.
 function clearAllAttachmentsFromPage(pageId: string) {
   throw new Error("Function not implemented.");
 }

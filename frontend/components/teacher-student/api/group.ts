@@ -261,6 +261,8 @@ export async function removeTeamMember(
   memberId: UserId
 ): Promise<TeamResponse> {
   try {
+    console.log(` URL PA 
+      /api/groups/${teamId}/members/${memberId}`);
     await apiClient.delete(`/api/groups/${teamId}/members/${memberId}`);
     
     const updatedTeam = await fetchTeamById(teamId);

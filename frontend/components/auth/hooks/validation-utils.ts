@@ -1,4 +1,4 @@
-import { ZodError } from "zod"
+﻿import { ZodError } from "zod"
 
 export function formatZodErrors(error: ZodError): Record<string, string> {
   const errors: Record<string, string> = {}
@@ -68,7 +68,6 @@ export function getPasswordStrength(password: string): {
   if (/[0-9]/.test(password)) score++
   if (/[@$!%*?&]/.test(password)) score++
 
-  // Multiple special chars or numbers
   if ((password.match(/[0-9]/g) || []).length >= 2) score++
   if ((password.match(/[@$!%*?&]/g) || []).length >= 2) score++
 

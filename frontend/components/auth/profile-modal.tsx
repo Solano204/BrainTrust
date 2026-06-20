@@ -141,9 +141,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       reader.readAsDataURL(file)
     } catch (error) {
       if (error instanceof ZodError) {
-        setImageError(error.errors[0]?.message || "Invalid image file")
+        setImageError(error.errors[0]?.message || "Archivo de imagen no válido")
       } else {
-        setImageError("Failed to upload image")
+        setImageError("Error al subir la imagen")
       }
     } finally {
       setIsUploading(false)
@@ -223,7 +223,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A"
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      return new Date(dateString).toLocaleDateString('es-MX', {
         year: 'numeric', month: 'long', day: 'numeric'
       })
     } catch { return dateString }
@@ -232,7 +232,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-            <DialogTitle>User Profile</DialogTitle>
+        <DialogTitle className="sr-only">Perfil de usuario</DialogTitle>
 
         {isLoadingProfile ? (
           <div className="flex items-center justify-center py-24">
@@ -240,10 +240,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </div>
         ) : profile ? (
           <>
-            {/* ── Header ── */}
             <div className="relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-6 pt-6 pb-4 shrink-0">
               <div className="flex items-center gap-4">
-                {/* Avatar */}
                 <div className="relative group shrink-0">
                   <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
                     <AvatarImage
@@ -271,7 +269,6 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   )}
                 </div>
 
-                {/* Name + badges */}
                 <div className="min-w-0">
                   <h2 className="text-xl font-bold text-white truncate">{profile.fullName}</h2>
                   <p className="text-white/70 text-sm truncate mb-2">{profile.email}</p>
@@ -282,16 +279,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     {profile.active ? (
                       <Badge className="bg-green-500/20 text-green-300 border-green-500/30 hover:bg-green-500/30 text-xs">
                         <Check className="h-3 w-3 mr-1" />
-                        Active
+                        Activo
                       </Badge>
                     ) : (
-                      <Badge variant="destructive" className="text-xs">Inactive</Badge>
+                      <Badge variant="destructive" className="text-xs">Inactivo</Badge>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Image upload error */}
               {imageError && (
                 <Alert variant="destructive" className="mt-3">
                   <AlertCircle className="h-4 w-4" />
@@ -300,62 +296,58 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               )}
             </div>
 
-            {/* ── Scrollable body ── */}
             <div className="flex-1 overflow-y-auto px-6 py-5">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-5">
                   <TabsTrigger value="personal" className="gap-2 text-sm">
                     <User className="h-4 w-4" />
-                    Personal Info
+                    Información Personal
                   </TabsTrigger>
                   <TabsTrigger value="address" className="gap-2 text-sm">
                     <MapPin className="h-4 w-4" />
-                    Address
+                    Dirección
                   </TabsTrigger>
                   <TabsTrigger value="security" className="gap-2 text-sm">
                     <Lock className="h-4 w-4" />
-                    Security
+                    Seguridad
                   </TabsTrigger>
                 </TabsList>
 
-                {/* ── Personal Info Tab ── */}
                 <TabsContent value="personal" className="space-y-4 mt-0">
-                  {/* Quick info row */}
                   <div className="grid grid-cols-3 gap-3 p-4 rounded-lg border bg-card">
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                         <Mail className="h-3.5 w-3.5" />
-                        <span>Email</span>
+                        <span>Correo</span>
                       </div>
                       <p className="font-medium text-sm truncate">{profile.email}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                         <Phone className="h-3.5 w-3.5" />
-                        <span>Phone</span>
+                        <span>Teléfono</span>
                       </div>
-                      <p className="font-medium text-sm">{profile.phone || 'Not provided'}</p>
+                      <p className="font-medium text-sm">{profile.phone || 'No proporcionado'}</p>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                         <Calendar className="h-3.5 w-3.5" />
-                        <span>Member Since</span>
+                        <span>Miembro desde</span>
                       </div>
                       <p className="font-medium text-sm">{formatDate(profile.createdAt)}</p>
                     </div>
                   </div>
 
-                  {/* Edit form */}
                   <div className="space-y-4 p-4 rounded-lg border bg-card">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-semibold">Update Personal Details</h3>
+                      <h3 className="text-base font-semibold">Actualizar datos personales</h3>
                       <Edit2 className="h-4 w-4 text-muted-foreground" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="firstName" className="text-sm font-medium">
-                          First Name <span className="text-destructive">*</span>
+                          Nombre <span className="text-destructive">*</span>
                         </Label>
                         <Input
                           id="firstName"
@@ -378,7 +370,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                       <div className="space-y-1.5">
                         <Label htmlFor="lastName" className="text-sm font-medium">
-                          Last Name <span className="text-destructive">*</span>
+                          Apellido <span className="text-destructive">*</span>
                         </Label>
                         <Input
                           id="lastName"
@@ -403,7 +395,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="gender" className="text-sm font-medium">
-                          Gender <span className="text-destructive">*</span>
+                          Género <span className="text-destructive">*</span>
                         </Label>
                         <Select
                           value={personalInfo.gender}
@@ -416,12 +408,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                           disabled={isLoading}
                         >
                           <SelectTrigger className={`h-9 ${personalInfoErrors.gender ? 'border-destructive' : ''}`}>
-                            <SelectValue placeholder="Select gender" />
+                            <SelectValue placeholder="Seleccionar género" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="MALE">Male</SelectItem>
-                            <SelectItem value="FEMALE">Female</SelectItem>
-                            <SelectItem value="OTHER">Other</SelectItem>
+                            <SelectItem value="MALE">Masculino</SelectItem>
+                            <SelectItem value="FEMALE">Femenino</SelectItem>
+                            <SelectItem value="OTHER">Otro</SelectItem>
                           </SelectContent>
                         </Select>
                         {personalInfoErrors.gender && (
@@ -432,7 +424,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                        <Label htmlFor="phone" className="text-sm font-medium">Número de teléfono</Label>
                         <Input
                           id="phone"
                           value={personalInfo.phone}
@@ -442,7 +434,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                               setPersonalInfoErrors(prev => { const n = { ...prev }; delete n.phone; return n })
                             }
                           }}
-                          placeholder="+1 234 567 8900"
+                          placeholder="+52 55 1234 5678"
                           disabled={isLoading}
                           className={`h-9 ${personalInfoErrors.phone ? 'border-destructive' : ''}`}
                         />
@@ -462,25 +454,24 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         size="sm"
                       >
                         {updatePersonalInfoMutation.isPending ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Saving...</>
+                          <><Loader2 className="h-4 w-4 animate-spin" />Guardando...</>
                         ) : (
-                          <><Save className="h-4 w-4" />Save Changes</>
+                          <><Save className="h-4 w-4" />Guardar cambios</>
                         )}
                       </Button>
                     </div>
                   </div>
                 </TabsContent>
 
-                {/* ── Address Tab ── */}
                 <TabsContent value="address" className="mt-0">
                   <div className="space-y-4 p-4 rounded-lg border bg-card">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-semibold">Update Address</h3>
+                      <h3 className="text-base font-semibold">Actualizar dirección</h3>
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="street" className="text-sm font-medium">Street Address</Label>
+                      <Label htmlFor="street" className="text-sm font-medium">Calle</Label>
                       <Input
                         id="street"
                         value={address.street}
@@ -502,7 +493,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="colony" className="text-sm font-medium">Colony / Neighborhood</Label>
+                        <Label htmlFor="colony" className="text-sm font-medium">Colonia / Barrio</Label>
                         <Input
                           id="colony"
                           value={address.colony}
@@ -523,7 +514,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="municipality" className="text-sm font-medium">Municipality</Label>
+                        <Label htmlFor="municipality" className="text-sm font-medium">Municipio</Label>
                         <Input
                           id="municipality"
                           value={address.municipality}
@@ -546,7 +537,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="state" className="text-sm font-medium">State / Province</Label>
+                        <Label htmlFor="state" className="text-sm font-medium">Estado / Provincia</Label>
                         <Input
                           id="state"
                           value={address.state}
@@ -567,7 +558,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="postalCode" className="text-sm font-medium">Postal Code</Label>
+                        <Label htmlFor="postalCode" className="text-sm font-medium">Código postal</Label>
                         <Input
                           id="postalCode"
                           value={address.postalCode}
@@ -596,26 +587,25 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         size="sm"
                       >
                         {updateAddressMutation.isPending ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Saving...</>
+                          <><Loader2 className="h-4 w-4 animate-spin" />Guardando...</>
                         ) : (
-                          <><Save className="h-4 w-4" />Save Address</>
+                          <><Save className="h-4 w-4" />Guardar dirección</>
                         )}
                       </Button>
                     </div>
                   </div>
                 </TabsContent>
 
-                {/* ── Security Tab ── */}
                 <TabsContent value="security" className="mt-0">
                   <div className="space-y-4 p-4 rounded-lg border bg-card">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-semibold">Change Password</h3>
+                      <h3 className="text-base font-semibold">Cambiar contraseña</h3>
                       <Shield className="h-4 w-4 text-muted-foreground" />
                     </div>
 
                     <div className="space-y-1.5">
                       <Label htmlFor="currentPassword" className="text-sm font-medium">
-                        Current Password <span className="text-destructive">*</span>
+                        Contraseña actual <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="currentPassword"
@@ -639,7 +629,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="newPassword" className="text-sm font-medium">
-                        New Password <span className="text-destructive">*</span>
+                        Nueva contraseña <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="newPassword"
@@ -663,7 +653,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                        Confirm New Password <span className="text-destructive">*</span>
+                        Confirmar nueva contraseña <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="confirmPassword"
@@ -686,19 +676,19 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     </div>
 
                     <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                      <p className="font-medium mb-1.5 text-sm">Password requirements:</p>
+                      <p className="font-medium mb-1.5 text-sm">Requisitos de contraseña:</p>
                       <ul className="space-y-1 text-muted-foreground text-xs">
                         <li className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                          At least 8 characters
+                          Mínimo 8 caracteres
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                          One uppercase and one lowercase letter
+                          Una letra mayúscula y una minúscula
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                          One number and one special character (@$!%*?&)
+                          Un número y un carácter especial (@$!%*?&)
                         </li>
                       </ul>
                     </div>
@@ -711,9 +701,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         size="sm"
                       >
                         {changePasswordMutation.isPending ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Updating...</>
+                          <><Loader2 className="h-4 w-4 animate-spin" />Actualizando...</>
                         ) : (
-                          <><Lock className="h-4 w-4" />Change Password</>
+                          <><Lock className="h-4 w-4" />Cambiar contraseña</>
                         )}
                       </Button>
                     </div>
@@ -724,7 +714,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            Unable to load profile information
+            No se pudo cargar la información del perfil
           </div>
         )}
       </DialogContent>

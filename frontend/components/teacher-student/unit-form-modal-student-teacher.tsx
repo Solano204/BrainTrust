@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -121,7 +121,6 @@ return (
       </DialogHeader>
 
       <form onSubmit={handleSubmit(alEnviar)} className="space-y-6 mt-4">
-        {/* Nombre de la Unidad */}
         <div className="space-y-2">
           <Label htmlFor="name" className="text-foreground">Nombre de la Unidad *</Label>
           <Controller
@@ -144,7 +143,6 @@ return (
           )}
         </div>
 
-        {/* Descripción */}
         <div className="space-y-2">
           <Label htmlFor="description" className="text-foreground">Descripción *</Label>
           <Controller
@@ -168,7 +166,6 @@ return (
           )}
         </div>
 
-        {/* Número de Unidad (solo en modo edición) */}
         {initialData && (
           <div className="space-y-2">
             <Label htmlFor="numUnity" className="text-foreground">Número de Unidad</Label>

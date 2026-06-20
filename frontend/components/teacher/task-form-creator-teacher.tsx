@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type React from "react"
 import { useState, useRef } from "react"
@@ -613,7 +613,6 @@ return (
             )}
           </div>
 
-          {/* URLs */}
           <div>
             <Label className="text-xs sm:text-sm mb-2 block">Agregar URLs</Label>
             <div className="flex flex-col sm:flex-row gap-2 mb-2">

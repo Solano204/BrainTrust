@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card"
+﻿import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function TimelineSectionSkeleton() {
@@ -19,7 +19,6 @@ export function TimelineSectionSkeleton() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div key={index} className="p-4 rounded-lg border">
             <div className="flex items-start gap-4">
-              {/* Icon Skeleton */}
               <Skeleton className="h-10 w-10 rounded-lg" />
               
               <div className="flex-1 space-y-3">

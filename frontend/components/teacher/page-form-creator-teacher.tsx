@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type React from "react";
 import { useState } from "react";
@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -325,26 +326,23 @@ export function PageCreator({
   <Dialog open={open} onOpenChange={handleClose}>
     <DialogContent className="bg-card rounded-3xl border border-border shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 sm:max-w-[95vw] md:max-w-6xl">
 
-      {/* ── Encabezado ── */}
       <div className="flex items-center gap-3 px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
-        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+        <span className="icon-badge">
           <FileText className="w-4 h-4 text-primary" />
         </span>
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+          <DialogTitle className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
             Crear Página de Información
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground mt-0.5">
             Construye una página de contenido estructurada para tus estudiantes
-          </p>
+          </DialogDescription>
         </div>
       </div>
 
-      {/* ── Formulario ── */}
       <form onSubmit={handleSubmit(handleSave)} className="flex-1 overflow-y-auto flex flex-col">
         <div className="px-5 py-6 sm:px-7 space-y-6 flex-1">
 
-          {/* Título de la página */}
           <div className="space-y-1.5">
             <label htmlFor="page-title" className="text-xs font-semibold text-foreground">
               Título de la Página *
@@ -371,7 +369,6 @@ export function PageCreator({
             </p>
           </div>
 
-          {/* Tarjeta de vista previa */}
           <div className="p-5 rounded-2xl border-l-4 border-l-primary border-t border-r border-b border-border bg-primary/5">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -390,7 +387,7 @@ export function PageCreator({
               {((watchedValues.attachments?.length || 0) > 0 ||
                 (watchedValues.urlsSupport?.length || 0) > 0) && (
                 <div className="pt-4 border-t border-border space-y-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                  <p className="section-label">
                     Vista Previa de Materiales de Apoyo:
                   </p>
 
@@ -436,7 +433,6 @@ export function PageCreator({
             </div>
           </div>
 
-          {/* Sección de contenido */}
           <div className="space-y-4 border-t border-border pt-6">
             <div className="flex items-center justify-between">
               <label htmlFor="section-content" className="text-xs font-semibold text-foreground">
@@ -486,10 +482,9 @@ export function PageCreator({
             )}
           </div>
 
-          {/* Materiales de apoyo */}
           <div className="space-y-6 border-t border-border pt-6">
             <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+              <h3 className="section-label mb-1">
                 Materiales de Apoyo
               </h3>
               <p className="text-xs text-muted-foreground">
@@ -497,7 +492,6 @@ export function PageCreator({
               </p>
             </div>
 
-            {/* Archivos */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-foreground">
@@ -550,7 +544,6 @@ export function PageCreator({
                 </div>
               )}
 
-              {/* Zona de subida de archivos */}
               <label htmlFor="file-upload" className="cursor-pointer block">
                 <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/40 hover:bg-primary/5 transition-all">
                   <Upload className="w-7 h-7 mx-auto mb-2 text-muted-foreground" />
@@ -570,7 +563,6 @@ export function PageCreator({
               />
             </div>
 
-            {/* URLs */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-foreground">
@@ -597,7 +589,6 @@ export function PageCreator({
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <LinkIcon className="w-4 h-4 text-primary flex-shrink-0" />
           
-          {/* CORREGIDO: Etiqueta <a> añadida aquí */}
           <a
             href={url}
             target="_blank"
@@ -620,7 +611,6 @@ export function PageCreator({
   </div>
 )}
 
-              {/* Input de URL */}
               <div className="space-y-1.5">
                 <label htmlFor="new-url" className="text-xs font-semibold text-foreground">
                   Agregar un enlace
@@ -659,7 +649,6 @@ export function PageCreator({
 
         </div>
 
-        {/* ── Pie de página ── */}
         <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button

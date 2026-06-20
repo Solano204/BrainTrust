@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { useState } from "react";
@@ -27,9 +27,6 @@ import {
 
 import type { AIInsight, InsightCategory } from "@/components/admin/api/aiinsightsApi";
 
-// ═══════════════════════════════════════════════════════════════
-// COLORS
-// ═══════════════════════════════════════════════════════════════
 const C = {
   blue: "#3b82f6", emerald: "#10b981", amber: "#f59e0b", red: "#ef4444",
   violet: "#8b5cf6", rose: "#f43f5e", cyan: "#06b6d4", slate: "#64748b",
@@ -37,17 +34,10 @@ const C = {
 };
 const AI_SLICE_COLORS = [C.red, C.amber, C.cyan, C.emerald];
 
-// ═══════════════════════════════════════════════════════════════
-// HELPER - Clean unit names (remove IDs)
-// ═══════════════════════════════════════════════════════════════
 function isUnitIdPattern(unitName: string): boolean {
-  // Detecta si es un patrón de ID: UNIT-xxx, unit_xxx, etc.
   return /^(UNIT|unit|Unit)[-_]/i.test(unitName) || /^[A-Z0-9\-_]+$/.test(unitName);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HELPERS - Month generation
-// ═══════════════════════════════════════════════════════════════
 function getMonthOptions() {
   const months = [];
   const now = new Date();
@@ -60,9 +50,6 @@ function getMonthOptions() {
   return months;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CUSTOM TOOLTIPS
-// ═══════════════════════════════════════════════════════════════
 function CustomBarTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
@@ -98,9 +85,6 @@ function CustomPieTooltip({ active, payload }: any) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PIE LABEL
-// ═══════════════════════════════════════════════════════════════
 const RADIAN = Math.PI / 180;
 function renderOuterLabel({ cx, cy, midAngle, outerRadius, name, pct, value }: any) {
   if (pct !== undefined && Number(pct) < 2 && value < 1) return null;
@@ -115,9 +99,6 @@ function renderOuterLabel({ cx, cy, midAngle, outerRadius, name, pct, value }: a
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DESCRIPTION TOOLTIP
-// ═══════════════════════════════════════════════════════════════
 function DescriptionTooltip({ text }: { text: string }) {
   const [show, setShow] = React.useState(false);
   return (
@@ -139,9 +120,6 @@ function DescriptionTooltip({ text }: { text: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// INSIGHT BANNER
-// ═══════════════════════════════════════════════════════════════
 function InsightBanner({ insight, isLoading }: { insight?: AIInsight; isLoading?: boolean }) {
   if (isLoading) {
     return (
@@ -181,9 +159,6 @@ function InsightBanner({ insight, isLoading }: { insight?: AIInsight; isLoading?
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CHART CARD
-// ═══════════════════════════════════════════════════════════════
 interface ChartCardProps {
   title: string;
   description: string; // ← NOW REQUIRED
@@ -234,9 +209,6 @@ function MiniPaginator({ page, totalPages, totalElements, pageSize, onPageChange
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════
 export function StatisticsPanel() {
   const [courseSort, setCourseSort] = useState<"asc" | "desc">("desc");
   const [courseRankBy, setCourseRankBy] = useState<"ai" | "late">("ai");
@@ -265,7 +237,6 @@ export function StatisticsPanel() {
   const courses = courseRankBy === "ai" ? coursesByAI.data : coursesByLate.data;
   const coursesLoading = courseRankBy === "ai" ? coursesByAI.isLoading : coursesByLate.isLoading;
 
-  // Derived data
   const aiPieData = breakdown ? [
     { name: "100% IA", value: breakdown.countFullAI, pct: breakdown.percentageFullAI },
     { name: "50-99% IA", value: breakdown.countHighAI, pct: breakdown.percentageHighAI },
@@ -283,19 +254,14 @@ export function StatisticsPanel() {
     name: t.teacherName, tareas: t.totalAssignments, iaDetectadas: t.aiDetectedCount, promedioIA: Number((t.averageAIProbability ?? 0).toFixed(1)),
   }));
 
-  // ← FIXED: Remove IDs completely - show ONLY course names or clean names
   const unitBarData = (stats?.assignmentStats.assignmentsByUnit ?? [])
     .filter(u => u.unitName && u.unitName.trim())
     .map((u) => {
-      // Si unitName es un ID pattern (UNIT-xxx, etc), muestra solo el courseName
-      // Si unitName es un nombre real, muestra "unitName (courseName)"
       let displayName = u.unitName;
       
       if (isUnitIdPattern(u.unitName)) {
-        // Es un ID, mostrar solo el courseName
         displayName = u.courseName || u.unitName;
       } else if (u.courseName) {
-        // Es un nombre real, combinar con courseName
         displayName = `${u.unitName} (${u.courseName})`;
       }
       
@@ -348,7 +314,6 @@ export function StatisticsPanel() {
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-      {/* HEADER */}
       <div className="mb-8 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -379,11 +344,7 @@ export function StatisticsPanel() {
 
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* ═══════════════════════════════════════════════════════ */}
-        {/* SECTION 1: IA ANALYTICS */}
-        {/* ═══════════════════════════════════════════════════════ */}
 
-        {/* ROW 1: AI Breakdown + Deadlines */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartCard 
             title="Desglose de IA en Entregas" 
@@ -422,7 +383,6 @@ export function StatisticsPanel() {
           </ChartCard>
         </div>
 
-        {/* ROW 2: AI Assignments + Late Submissions (with month filter) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartCard 
             title="Entregas Detectadas con IA" 
@@ -501,7 +461,6 @@ export function StatisticsPanel() {
           </ChartCard>
         </div>
 
-        {/* ROW 3: Courses + Teachers */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartCard 
             title="Cursos — IA y Entregas Tardías" 
@@ -556,33 +515,8 @@ export function StatisticsPanel() {
           </ChartCard>
         </div>
 
-        {/* ROW 4: Units - COMMENTED OUT TEMPORARILY */}
-        {/* <ChartCard 
-          title="Tareas por Unidad" 
-          description="Muestra la distribución de tareas entre diferentes unidades temáticas y el promedio de IA por unidad. Identifica si ciertas unidades son más susceptibles al uso de IA."
-          insight={getInsight("units")} 
-          insightLoading={iLoading}
-        >
-          {unitBarData.length === 0 ? <p className="text-sm text-muted-foreground text-center py-12">Sin datos</p> : (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={unitBarData} margin={{ bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border, #e5e7eb)" opacity={0.5} />
-                <XAxis dataKey="name" stroke="var(--muted-foreground, #6b7280)" tick={{ fontSize: 9 }} interval={0} angle={-20} textAnchor="end" height={60} />
-                <YAxis stroke="var(--muted-foreground, #6b7280)" />
-                <Tooltip content={<CustomBarTooltip />} />
-                <Legend />
-                <Bar dataKey="tareas" fill={C.violet} name="Tareas" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="promedioIA" fill={C.amber} name="% IA Promedio" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard> */}
 
-        {/* ═══════════════════════════════════════════════════════ */}
-        {/* SECTION 2: ACCOUNT & PERFORMANCE */}
-        {/* ═══════════════════════════════════════════════════════ */}
 
-        {/* ROW 5: Quizzes */}
         <ChartCard 
           title="Mejores Calificaciones en Quizzes" 
           description="Muestra a los estudiantes con las mejores puntuaciones en quizzes. Los quizzes son confiables para validar aprendizaje real ya que se realizan en condiciones controladas."
@@ -604,7 +538,6 @@ export function StatisticsPanel() {
           )}
         </ChartCard>
 
-        {/* ROW 6: Overall + Types + Users */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <ChartCard 
             title="Estado General del Sistema" 

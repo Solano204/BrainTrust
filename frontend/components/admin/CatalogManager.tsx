@@ -1,10 +1,5 @@
 'use client';
 
-// ============================================================
-// FILE 4: components/CatalogManager.tsx
-// (role-activities section removed — now lives in ActivityManager)
-// ============================================================
-
 import { useState, useCallback } from 'react';
 import {
   useFirstNames, useAddFirstName, useUpdateFirstName, useDeleteFirstName,
@@ -23,7 +18,6 @@ import {
   RouteIcon, Hash, ShieldCheck, Activity,
 } from 'lucide-react';
 
-// ─── Toast ───────────────────────────────────────────────────────
 type ToastType = 'success' | 'error' | 'warning';
 interface Toast { id: number; type: ToastType; message: string }
 
@@ -37,7 +31,6 @@ function useToasts() {
   return { toasts, push };
 }
 
-// ─── Catalog Section Config (role-activities removed) ─────────────
 const CATALOG_SECTIONS = [
   { key: 'first-names',    label: 'Nombres',    icon: User,      color: '#6366f1' },
   { key: 'last-names',     label: 'Apellidos',     icon: User,      color: '#8b5cf6' },
@@ -49,10 +42,8 @@ const CATALOG_SECTIONS = [
   { key: 'roles',          label: 'Roles',          icon: ShieldCheck, color: '#14b8a6' },
 ] as const;
 
-// Narrow the key type to only what's in this component
 type CatalogSectionKeyLocal = typeof CATALOG_SECTIONS[number]['key'];
 
-// ─── Pagination Bar ───────────────────────────────────────────────
 interface PaginationBarProps {
   page: number;
   totalPages: number;
@@ -119,7 +110,6 @@ function PaginationBar({ page, totalPages, totalElements, onPage, accentColor }:
   </div>
 );
 }
-// ─── Inline Edit Row ─────────────────────────────────────────────
 interface EditRowProps { value: string; onSave: (v: string) => Promise<void>; onCancel: () => void; loading?: boolean }
 function EditRow({ value, onSave, onCancel, loading }: EditRowProps) {
   const [val, setVal] = useState(value);
@@ -138,7 +128,6 @@ function EditRow({ value, onSave, onCancel, loading }: EditRowProps) {
   );
 }
 
-// ─── Generic Catalog Table ────────────────────────────────────────
 interface CatalogTableProps {
   pagedData: PagedResponse<{ id: number; displayValue: string }> | undefined;
   loading: boolean;
@@ -189,7 +178,6 @@ function CatalogTable({
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── Search + Add ── */}
     <div className="flex gap-3 items-center">
       {!hideSearch && (
         <div className="relative flex-1">
@@ -211,7 +199,6 @@ return (
       </button>
     </div>
 
-    {/* ── Add Form ── */}
     {showAdd && (
       <div className="p-5 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex flex-col gap-3">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -245,7 +232,6 @@ return (
       </div>
     )}
 
-    {/* ── Table ── */}
     <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
       {loading ? (
         <div className="flex items-center justify-center py-14 gap-3 text-muted-foreground">
@@ -269,14 +255,12 @@ return (
             {items.map(item => (
               <tr key={item.id} className="hover:bg-muted/30 transition-colors group">
 
-                {/* ID */}
                 <td className="px-5 py-3.5">
                   <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-mono">
                     #{item.id}
                   </span>
                 </td>
 
-                {/* Value */}
                 <td className="px-5 py-3.5">
                   {editingId === item.id ? (
                     <EditRow
@@ -290,7 +274,6 @@ return (
                   )}
                 </td>
 
-                {/* Actions */}
                 <td className="px-5 py-3.5">
                   {editingId !== item.id && (
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -322,7 +305,6 @@ return (
       )}
     </div>
 
-    {/* ── Pagination ── */}
     {!loading && pagedData && (
       <PaginationBar
         page={pagedData.page}
@@ -334,9 +316,6 @@ return (
   </div>
 );
 }
-// ─────────────────────────────────────────────────────────────────
-// PANEL HELPERS
-// ─────────────────────────────────────────────────────────────────
 type PushFn = (t: ToastType, m: string) => void;
 
 async function handleMutation<T>(
@@ -358,7 +337,6 @@ async function handleMutation<T>(
   }
 }
 
-// ─── Simple Value Panel (first-names, last-names, states) ─────────
 interface SimpleValuePanelProps {
   accentColor: string;
   push: PushFn;
@@ -391,7 +369,6 @@ function SimpleValuePanel({ accentColor, push, useItems, useAdd, useUpdate, useD
   );
 }
 
-// ─── Municipalities Panel ─────────────────────────────────────────
 function MunicipalitiesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]           = useState('');
   const [page, setPage]               = useState(0);
@@ -414,7 +391,6 @@ function MunicipalitiesPanel({ accentColor, push }: { accentColor: string; push:
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── State filter ── */}
     <div className="flex items-center gap-3">
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
         Estado:
@@ -458,7 +434,6 @@ return (
   </div>
 );
 }
-// ─── Colonies Panel ───────────────────────────────────────────────
 function ColoniesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]         = useState('');
   const [page, setPage]             = useState(0);
@@ -481,7 +456,6 @@ function ColoniesPanel({ accentColor, push }: { accentColor: string; push: PushF
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── Municipality filter ── */}
     <div className="flex items-center gap-3">
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
         Municipio:
@@ -523,7 +497,6 @@ return (
   </div>
 );
 }
-// ─── Streets Panel ────────────────────────────────────────────────
 function StreetsPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]             = useState('');
   const [page, setPage]                 = useState(0);
@@ -546,7 +519,6 @@ function StreetsPanel({ accentColor, push }: { accentColor: string; push: PushFn
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── Colony filter ── */}
     <div className="flex items-center gap-3">
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
         Colonia:
@@ -587,7 +559,6 @@ return (
 
   </div>
 );}
-// ─── Postal Codes Panel ───────────────────────────────────────────
 function PostalCodesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [search, setSearch]             = useState('');
   const [page, setPage]                 = useState(0);
@@ -610,7 +581,6 @@ function PostalCodesPanel({ accentColor, push }: { accentColor: string; push: Pu
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── Colony filter ── */}
     <div className="flex items-center gap-3">
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
         Colonia:
@@ -652,7 +622,6 @@ return (
   </div>
 );}
 
-// ─── Roles Panel ─────────────────────────────────────────────────
 function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }) {
   const [page, setPage]               = useState(0);
   const [expandedId, setExpandedId]   = useState<number | null>(null);
@@ -711,7 +680,6 @@ function RolesPanel({ accentColor, push }: { accentColor: string; push: PushFn }
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── Add button ── */}
     <div className="flex justify-end">
       <button
         onClick={() => setShowAdd(v => !v)}
@@ -722,7 +690,6 @@ return (
       </button>
     </div>
 
-    {/* ── Add form ── */}
     {showAdd && (
       <div className="p-5 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex flex-col gap-3">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nuevo Rol</p>
@@ -755,7 +722,6 @@ return (
       </div>
     )}
 
-    {/* ── List ── */}
     {isLoading ? (
       <div className="flex items-center justify-center py-14 gap-3 text-muted-foreground">
         <Loader2 className="w-5 h-5 animate-spin" />
@@ -773,10 +739,8 @@ return (
           return (
             <div key={role.id} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all">
 
-              {/* ── Row ── */}
               <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-muted/30 transition-colors">
 
-                {/* Expand toggle */}
                 <button
                   onClick={() => toggleExpand(role.id)}
                   className="w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all flex-shrink-0"
@@ -784,12 +748,10 @@ return (
                   <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
                 </button>
 
-                {/* ID */}
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-mono flex-shrink-0">
                   #{role.id}
                 </span>
 
-                {/* Code / edit input */}
                 <div className="w-36 flex-shrink-0">
                   {isEditing ? (
                     <input
@@ -804,7 +766,6 @@ return (
                   )}
                 </div>
 
-                {/* Activity count */}
                 {!isEditing && (
                   <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground flex-shrink-0">
                     <Activity className="w-3 h-3" />
@@ -812,7 +773,6 @@ return (
                   </span>
                 )}
 
-                {/* Action buttons */}
                 <div className={`flex items-center gap-1 flex-shrink-0 ml-auto transition-opacity ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                   {isEditing ? (
                     <>
@@ -850,7 +810,6 @@ return (
                 </div>
               </div>
 
-              {/* ── Expanded activities ── */}
               {isExpanded && (
                 <div className="border-t border-border bg-muted/20">
                   {!role.activities || role.activities.length === 0 ? (
@@ -896,7 +855,6 @@ return (
       </div>
     )}
 
-    {/* ── Pagination ── */}
     {!isLoading && data && (
       <PaginationBar
         page={data.page} totalPages={data.totalPages}
@@ -905,7 +863,6 @@ return (
 
   </div>
 );}
-// ─── Toast Container ──────────────────────────────────────────────
 function ToastContainer({ toasts }: { toasts: Toast[] }) {
   const cfg = {
     success: { Icon: Check,         classes: 'bg-emerald-50 border-emerald-200 text-emerald-800', ic: 'text-emerald-500' },
@@ -927,7 +884,6 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────
 export function CatalogManager() {
   const [activeSection, setActiveSection] = useState<CatalogSectionKeyLocal>('first-names');
   const { toasts, push } = useToasts();
@@ -951,7 +907,6 @@ return (
   <>
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 font-sans">
 
-      {/* ── Header ── */}
       <div className="mb-8 max-w-6xl mx-auto">
         <div className="flex items-center gap-3 mb-1">
           <span className="w-10 h-10 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
@@ -968,7 +923,6 @@ return (
 
       <div className="flex gap-6 max-w-6xl mx-auto">
 
-        {/* ── Sidebar ── */}
         <aside className="w-56 flex-shrink-0 hidden sm:block">
           <nav className="flex flex-col gap-1">
             {CATALOG_SECTIONS.map(section => {
@@ -997,7 +951,6 @@ return (
           </nav>
         </aside>
 
-        {/* ── Mobile section picker ── */}
         <div className="sm:hidden w-full mb-2">
           <select
             value={activeSection}
@@ -1010,11 +963,9 @@ return (
           </select>
         </div>
 
-        {/* ── Content ── */}
         <main className="flex-1 min-w-0">
           <div className="bg-card/80 backdrop-blur-sm rounded-3xl border border-border shadow-sm p-4 sm:p-6">
 
-            {/* Section header */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
               <div className="flex items-center gap-3">
                 <span className="w-10 h-10 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
@@ -1032,7 +983,6 @@ return (
               </div>
             </div>
 
-            {/* Conflict notice */}
             <div className="flex items-start gap-3 p-3.5 rounded-xl bg-accent/10 border border-accent/30 mb-5 text-xs text-accent-foreground">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>

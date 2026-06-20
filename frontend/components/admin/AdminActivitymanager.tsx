@@ -1,4 +1,3 @@
-//DARK
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -16,7 +15,6 @@ import {
   ChevronLeft, ChevronRight, Activity,
 } from 'lucide-react';
 
-// ─── Toast ───────────────────────────────────────────────────────
 type ToastType = 'success' | 'error' | 'warning';
 interface Toast { id: number; type: ToastType; message: string }
 
@@ -30,7 +28,6 @@ function useToasts() {
   return { toasts, push };
 }
 
-// ─── Mutation helper ──────────────────────────────────────────────
 type PushFn = (t: ToastType, m: string) => void;
 
 async function handleMutation<T>(
@@ -43,7 +40,7 @@ async function handleMutation<T>(
     await fn();
     push('success', successMsg);
   } catch (e: any) {
-    const msg = e?.response?.data?.message || e?.message || 'Operation failed';
+    const msg = e?.response?.data?.message || e?.message || 'Operación fallida';
     if (e?.response?.status === 409) {
       onConflict ? onConflict(msg) : push('warning', msg);
     } else {
@@ -52,7 +49,6 @@ async function handleMutation<T>(
   }
 }
 
-// ─── Pagination Bar ───────────────────────────────────────────────
 interface PaginationBarProps {
   page: number;
   totalPages: number;
@@ -62,17 +58,16 @@ interface PaginationBarProps {
 function PaginationBar({ page, totalPages, totalElements, onPage }: PaginationBarProps) {
  if (totalPages <= 1)
   return (
-    <p className="text-xs text-muted-foreground text-right">{totalElements} entries</p>
+    <p className="text-xs text-muted-foreground text-right">{totalElements} entradas</p>
   );
 
 return (
   <div className="flex items-center justify-between">
 
-    <p className="text-xs text-muted-foreground">{totalElements} total entries</p>
+    <p className="text-xs text-muted-foreground">{totalElements} entradas totales</p>
 
     <div className="flex items-center gap-1">
 
-      {/* Prev */}
       <button
         onClick={() => onPage(page - 1)}
         disabled={page === 0}
@@ -81,7 +76,6 @@ return (
         <ChevronLeft className="w-3.5 h-3.5" />
       </button>
 
-      {/* Page numbers */}
       {Array.from({ length: totalPages }, (_, i) => i)
         .filter(i => i === 0 || i === totalPages - 1 || Math.abs(i - page) <= 1)
         .reduce<(number | "...")[]>((acc, cur, idx, arr) => {
@@ -112,7 +106,6 @@ return (
           )
         )}
 
-      {/* Next */}
       <button
         onClick={() => onPage(page + 1)}
         disabled={page >= totalPages - 1}
@@ -125,10 +118,7 @@ return (
   </div>
 );
 }
-// ─── Toast Container ──────────────────────────────────────────────
 function ToastContainer({ toasts }: { toasts: Toast[] }) {
-  // ✅ was: hardcoded emerald/red/amber Tailwind classes
-  // → success=primary, error=destructive, warning=accent
   const cfg = {
     success: { Icon: Check,         classes: 'bg-primary/10 border-primary/30 text-primary',             ic: 'text-primary' },
     error:   { Icon: X,             classes: 'bg-destructive/10 border-destructive/30 text-destructive', ic: 'text-destructive' },
@@ -148,9 +138,6 @@ function ToastContainer({ toasts }: { toasts: Toast[] }) {
     </div>
   );
 }
-
-// ─── Role Activities Panel ────────────────────────────────────────
-// ✅ was: const ACCENT = '#f97316' (hardcoded orange hex) → removed entirely, use CSS vars throughout
 
 function RoleActivitiesPanel({ push }: { push: PushFn }) {
   const [page, setPage]               = useState(0);
@@ -184,13 +171,13 @@ function RoleActivitiesPanel({ push }: { push: PushFn }) {
 
   const handleAdd = async () => {
     const rid = newRoleId ? Number(newRoleId) : filterRole;
-    if (!rid) return push('error', 'Select a role first');
-    if (!newCode.trim() || !newActivity.trim()) return push('error', 'Code and Activity are required');
+    if (!rid) return push('error', 'Selecciona un rol primero');
+    if (!newCode.trim() || !newActivity.trim()) return push('error', 'El código y la actividad son requeridos');
     setAddLoading(true);
     try {
       await handleMutation(
         () => create.mutateAsync({ roleId: rid, code: newCode.trim(), activity: newActivity.trim(), description: newDesc.trim() }),
-        push, 'Activity created!', m => push('warning', m)
+        push, '¡Actividad creada!', m => push('warning', m)
       );
       setNewRoleId(''); setNewCode(''); setNewActivity(''); setNewDesc(''); setShowAdd(false);
     } finally { setAddLoading(false); }
@@ -209,7 +196,7 @@ function RoleActivitiesPanel({ push }: { push: PushFn }) {
     try {
       await handleMutation(
         () => update.mutateAsync({ id: editingId, req: { roleId: 0, code: editCode.trim(), activity: editActivity.trim(), description: editDesc.trim() } }),
-        push, 'Activity updated!', m => push('warning', m)
+        push, '¡Actividad actualizada!', m => push('warning', m)
       );
       setEditingId(null);
     } finally { setEditLoading(false); }
@@ -217,13 +204,12 @@ function RoleActivitiesPanel({ push }: { push: PushFn }) {
 
   const handleDelete = async (id: number) => {
     setDeleting(id);
-    try { await handleMutation(() => del.mutateAsync(id), push, 'Deleted!', m => push('warning', m)); }
+    try { await handleMutation(() => del.mutateAsync(id), push, '¡Eliminado!', m => push('warning', m)); }
     finally { setDeleting(null); }
   };
 return (
   <div className="flex flex-col gap-4">
 
-    {/* ── Toolbar ── */}
     <div className="flex items-center gap-3 flex-wrap">
       <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
         Filtrar por rol
@@ -233,7 +219,7 @@ return (
         onChange={e => { setFilterRole(e.target.value ? Number(e.target.value) : null); setPage(0); }}
         className="flex-1 min-w-[180px] px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 text-foreground transition-all"
       >
-        <option value="">All roles</option>
+        <option value="">Todos los roles</option>
         {allRoles.map(r => <option key={r.id} value={r.id}>{r.code} — {r.description}</option>)}
       </select>
 
@@ -246,7 +232,6 @@ return (
       </button>
     </div>
 
-    {/* ── Add form ── */}
     {showAdd && (
       <div className="p-5 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex flex-col gap-3">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -268,19 +253,19 @@ return (
           <input
             autoFocus value={newCode} onChange={e => setNewCode(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') handleAdd(); if (e.key === 'Escape') setShowAdd(false); }}
-            placeholder="Code *"
+            placeholder="Código *"
             className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 text-foreground transition-all"
           />
           <input
             value={newActivity} onChange={e => setNewActivity(e.target.value)}
-            placeholder="Activity *"
+            placeholder="Actividad *"
             className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 text-foreground transition-all"
           />
         </div>
 
         <input
           value={newDesc} onChange={e => setNewDesc(e.target.value)}
-          placeholder="Description (optional)"
+          placeholder="Descripción (opcional)"
           className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 text-foreground transition-all"
         />
 
@@ -303,38 +288,35 @@ return (
       </div>
     )}
 
-    {/* ── Table ── */}
     <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
       {isLoading ? (
         <div className="flex items-center justify-center py-14 gap-3 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">Loading...</span>
+          <span className="text-sm">Cargando...</span>
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-14 text-muted-foreground text-sm">
-          {filterRole ? 'No activities for this role.' : 'No activities yet.'}
+          {filterRole ? 'No hay actividades para este rol.' : 'Aún no hay actividades.'}
         </div>
       ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/40">
               <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-14">ID</th>
-              <th className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-32">Code</th>
-              <th className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-40">Activity</th>
-              <th className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</th>
-              <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-24">Actions</th>
+              <th className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-32">Código</th>
+              <th className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-40">Actividad</th>
+              <th className="text-left px-3 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Descripción</th>
+              <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-24">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
             {items.map(act => (
               <tr key={act.id} className="hover:bg-muted/30 transition-colors group">
 
-                {/* ID */}
                 <td className="px-5 py-3.5">
                   <span className="font-mono text-xs text-muted-foreground">#{act.id}</span>
                 </td>
 
-                {/* Code */}
                 <td className="px-3 py-3.5">
                   {editingId === act.id ? (
                     <input
@@ -348,7 +330,6 @@ return (
                   )}
                 </td>
 
-                {/* Activity */}
                 <td className="px-3 py-3.5">
                   {editingId === act.id ? (
                     <input
@@ -360,7 +341,6 @@ return (
                   )}
                 </td>
 
-                {/* Description */}
                 <td className="px-3 py-3.5">
                   {editingId === act.id ? (
                     <input
@@ -375,7 +355,6 @@ return (
                   )}
                 </td>
 
-                {/* Actions */}
                 <td className="px-5 py-3.5">
                   <div className={`flex items-center justify-end gap-1 transition-opacity ${editingId === act.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                     {editingId === act.id ? (
@@ -384,14 +363,14 @@ return (
                           onClick={handleUpdate}
                           disabled={editLoading || !editCode.trim() || !editActivity.trim()}
                           className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-40 transition-all"
-                          title="Save"
+                          title="Guardar"
                         >
                           {editLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
                           className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-all"
-                          title="Cancel"
+                          title="Cancelar"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -401,7 +380,7 @@ return (
                         <button
                           onClick={() => startEdit(act)}
                           className="p-1.5 rounded-lg hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
-                          title="Edit"
+                          title="Editar"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -409,7 +388,7 @@ return (
                           onClick={() => handleDelete(act.id)}
                           disabled={deleting === act.id}
                           className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all disabled:opacity-40"
-                          title="Delete"
+                          title="Eliminar"
                         >
                           {deleting === act.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                         </button>
@@ -425,7 +404,6 @@ return (
       )}
     </div>
 
-    {/* ── Pagination ── */}
     {!isLoading && raw && (
       <PaginationBar
         page={raw.page} totalPages={raw.totalPages}
@@ -436,14 +414,12 @@ return (
   </div>
 );
 }
-// ─── Main exported component ──────────────────────────────────────
 export function ActivityManager() {
   const { toasts, push } = useToasts();
 return (
   <>
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 font-sans">
 
-      {/* ── Header ── */}
       <div className="mb-8 max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-1">
           <span className="w-10 h-10 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
@@ -458,27 +434,24 @@ return (
         </p>
       </div>
 
-      {/* ── Card ── */}
       <div className="max-w-5xl mx-auto">
         <div className="bg-card/80 backdrop-blur-sm rounded-3xl border border-border shadow-sm p-4 sm:p-6">
 
-          {/* Sub-header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <p className="text-xs text-muted-foreground">
-              Server-side pagination · 409 Conflict returns warnings
+              Paginación del lado del servidor · Los conflictos 409 muestran advertencias
             </p>
             <div className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap self-start sm:self-auto">
               /api/catalogs/role-activities
             </div>
           </div>
 
-          {/* Conflict notice */}
           <div className="flex items-start gap-3 p-3.5 rounded-xl bg-accent/10 border border-accent/30 mb-5 text-xs text-accent-foreground">
             <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>
-              <strong>Note:</strong> Delete returns{' '}
+              <strong>Nota:</strong> Eliminar devuelve{' '}
               <code className="font-mono bg-accent/20 px-1.5 py-0.5 rounded-md">409 Conflict</code>{' '}
-              when the activity is currently assigned to users.
+              cuando la actividad está asignada actualmente a usuarios.
             </span>
           </div>
 

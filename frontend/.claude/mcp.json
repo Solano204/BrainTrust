@@ -1,0 +1,66 @@
+{
+  "_README": [
+    "MCP (Model Context Protocol) servers extend Claude Code with external capabilities.",
+    "To activate these, copy the mcpServers block into your settings.json or settings.local.json.",
+    "Install each server with the command shown, then add your API keys.",
+    "",
+    "Reference: https://docs.anthropic.com/en/docs/claude-code/mcp"
+  ],
+
+  "mcpServers": {
+
+    "filesystem": {
+      "_description": "Gives Claude direct filesystem access to the project. Already built-in to Claude Code — this is just for reference.",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\GAMER\\Music\\BrainTrust\\frontend"
+      ]
+    },
+
+    "brave-search": {
+      "_description": "Web search. Useful for looking up Next.js docs, Tailwind v4 syntax, shadcn/ui API, etc. Get API key at https://brave.com/search/api/",
+      "_install": "No install needed — uses npx automatically",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE"
+      }
+    },
+
+    "github": {
+      "_description": "Access GitHub repos, issues, PRs for BrainTrust. Lets Claude create PRs, comment on issues, read repo info.",
+      "_install": "npx -y @modelcontextprotocol/server-github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE"
+      }
+    },
+
+    "sequential-thinking": {
+      "_description": "Gives Claude a scratchpad for step-by-step reasoning. Useful for complex debugging or architecture decisions.",
+      "_install": "npx -y @modelcontextprotocol/server-sequential-thinking",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+
+    "memory": {
+      "_description": "Persistent memory across sessions using a local knowledge graph. Claude can store and recall facts between conversations.",
+      "_install": "npx -y @modelcontextprotocol/server-memory",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "C:\\Users\\GAMER\\.claude\\projects\\braintrust\\mcp-memory.json"
+      }
+    },
+
+    "puppeteer": {
+      "_description": "Browser automation. Claude can open a browser, navigate to localhost:3000, screenshot, and check the UI visually.",
+      "_install": "npx -y @modelcontextprotocol/server-puppeteer",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    }
+  }
+}

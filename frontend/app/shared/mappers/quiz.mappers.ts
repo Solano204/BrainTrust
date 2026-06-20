@@ -1,4 +1,4 @@
-import {
+﻿import {
     QuizDTO,
     CompleteQuizDTO,
     SubmissionQuizDTO,
@@ -277,7 +277,6 @@ export function mapQuizSubmissionFromBackendNew(
       qr.questionType === "MULTIPLE_CHOICE"
         ? (qr.selectedOptions?.[0] ?? -1)
         : qr.textAnswer || "",
-    // ✅ correctAnswer from submission — used for open-ended expected answer
     correctAnswer: qr.correctAnswer,
     points: qr.earnedPoints,
     maxPoints: qr.maxPoints,
@@ -298,7 +297,6 @@ export function mapQuizSubmissionFromBackendNew(
     
     submittedAt: dto.submittedAt,
     status: dto.status,
-    // ✅ canViewResults carried from backend into the model
     canViewResults: dto.canViewResults ?? false,
     grade: dto.grade
       ? {

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import {
@@ -104,10 +104,9 @@ return (
       onClick={(e) => e.stopPropagation()}
     >
 
-      {/* ── Header ── */}
       <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
         <div className="flex items-center gap-3">
-          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <span className="icon-badge">
             <UserPlus className="w-4 h-4 text-primary" />
           </span>
           <div>
@@ -119,16 +118,14 @@ return (
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          className="icon-btn transition-all"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* ── Body ── */}
       <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 space-y-5">
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
             <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
@@ -140,7 +137,6 @@ return (
           </div>
         </div>
 
-        {/* Add Students */}
         {!showAddStudents ? (
           <button
             onClick={() => setShowAddStudents(true)}
@@ -152,9 +148,8 @@ return (
         ) : (
           <div className="p-5 rounded-2xl border border-border bg-muted/20 space-y-4">
 
-            {/* Add students header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              <h3 className="section-label">
                 Agregar Estudiantes
               </h3>
               <button
@@ -165,14 +160,13 @@ return (
               </button>
             </div>
 
-            {/* Search */}
             <div className="relative">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar estudiantes por nombre o correo..."
-                className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                className="input-field pl-10"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 {searchingStudents ? (
@@ -183,7 +177,6 @@ return (
               </div>
             </div>
 
-            {/* Available students list */}
             {availableStudents && availableStudents.length > 0 ? (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {availableStudents.map((student) => (
@@ -222,7 +215,7 @@ return (
               <button
                 onClick={handleBulkEnroll}
                 disabled={bulkEnrollMutation.isPending}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all"
+                className="btn-primary w-full"
               >
                 {bulkEnrollMutation.isPending ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Inscribiendo...</>
@@ -234,10 +227,9 @@ return (
           </div>
         )}
 
-        {/* Enrolled students */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            <h3 className="section-label">
               Estudiantes Inscritos
             </h3>
             {enrolledSelectedStudents.length > 0 && (
@@ -324,11 +316,10 @@ return (
 
       </div>
 
-      {/* ── Footer ── */}
       <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
         <button
           onClick={onClose}
-          className="w-full flex items-center justify-center px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+          className="btn-ghost w-full"
         >
           Cerrar
         </button>

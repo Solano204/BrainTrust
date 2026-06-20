@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 /**
  * aiInsightsApi.ts
@@ -18,9 +18,6 @@ import type {
   CourseAIStatsDTO,
 } from "@/components/admin/api/adminStatsApi";
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
 
 export type InsightCategory =
   | "ai_breakdown"
@@ -49,9 +46,6 @@ export interface AIInsightsResponse {
   generatedAt: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Build data context
-// ─────────────────────────────────────────────────────────────
 
 function buildDataContext(
   stats: AdminStatsDTO,
@@ -127,9 +121,6 @@ ${units.map(u => `  - ${u.unitName}: ${u.count} tareas (${totalTasks > 0 ? ((u.c
   return s.join("\n\n");
 }
 
-// ─────────────────────────────────────────────────────────────
-// Gemini API
-// ─────────────────────────────────────────────────────────────
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
@@ -250,9 +241,6 @@ function cleanJson(s: string): string {
   return c.trim();
 }
 
-// ─────────────────────────────────────────────────────────────
-// Fallback — detailed rule-based insights
-// ─────────────────────────────────────────────────────────────
 
 function generateFallbackInsights(
   stats: AdminStatsDTO,
@@ -263,7 +251,6 @@ function generateFallbackInsights(
   const insights: AIInsight[] = [];
   let p = 1;
 
-  // overall
   const pctAnalyzed = Number(stats.overallStats.percentageAnalyzed ?? 0);
   insights.push({
     id: `fb_${p}`, priority: p++, category: "overall",
@@ -272,7 +259,6 @@ function generateFallbackInsights(
     text: `El sistema ha analizado ${stats.overallStats.totalAnalyzed} de ${stats.overallStats.totalAssignments} tareas totales, alcanzando una cobertura del ${pctAnalyzed.toFixed(0)}%. Actualmente hay ${stats.overallStats.totalPending} entregas pendientes de procesamiento por el motor de detección de IA. De las ${stats.assignmentStats.totalActive} tareas activas, ${stats.assignmentStats.totalGroupAssignments} son grupales y ${stats.assignmentStats.totalIndividualAssignments} individuales. ${stats.overallStats.totalPending > 10 ? "Se recomienda verificar el estado del servicio de análisis Gemini y revisar la cola de procesamiento para asegurar que no haya cuellos de botella." : "El sistema está procesando las entregas de manera eficiente; continúe monitoreando para mantener este nivel."}`,
   });
 
-  // users
   if (userCounts) {
     const inactStu = userCounts.totalStudents - userCounts.totalActiveStudents;
     const inactTea = userCounts.totalTeachers - userCounts.totalActiveTeachers;
@@ -288,7 +274,6 @@ function generateFallbackInsights(
     insights.push({ id: `fb_${p}`, priority: p++, category: "users", type: "recommendation", title: "Datos de Usuarios No Disponibles", text: "No se pudieron cargar los datos de conteo de usuarios. Verifique que el endpoint /api/admin/stats/user-counts esté respondiendo correctamente y que la base de datos sea accesible." });
   }
 
-  // ai_breakdown
   if (breakdown) {
     const avg = Number(breakdown.averageAIProbability);
     const totalWithAI = breakdown.countFullAI + breakdown.countHighAI + breakdown.countLowAI;
@@ -303,7 +288,6 @@ function generateFallbackInsights(
     insights.push({ id: `fb_${p}`, priority: p++, category: "ai_breakdown", type: "recommendation", title: "Sin Datos de Análisis IA", text: "El desglose de IA no está disponible. Esto puede deberse a que aún no se han procesado entregas o a que el servicio de detección está deshabilitado. Verifique la configuración del proveedor de IA en application.yml y asegúrese de que SUBMISSION_AI_ANALYSIS_ENABLED esté en true." });
   }
 
-  // deadlines
   const totalDeadline = stats.deadlineStats.overdue + stats.deadlineStats.dueSoon + stats.deadlineStats.upcoming;
   const overduePct = totalDeadline > 0 ? ((stats.deadlineStats.overdue / totalDeadline) * 100).toFixed(0) : "0";
   insights.push({
@@ -313,7 +297,6 @@ function generateFallbackInsights(
     text: `De ${totalDeadline} tareas con fechas asignadas, ${stats.deadlineStats.overdue} están vencidas (${overduePct}%), ${stats.deadlineStats.dueSoon} están por vencer próximamente y ${stats.deadlineStats.upcoming} están programadas a futuro. ${stats.deadlineStats.overdue > 0 ? `Las ${stats.deadlineStats.overdue} tareas vencidas representan entregas que los estudiantes no completaron a tiempo, lo que puede impactar calificaciones y progreso académico. Se recomienda que los profesores contacten directamente a los estudiantes con tareas vencidas, evalúen la posibilidad de extensiones de plazo y revisen si la carga de trabajo es apropiada.` : "No hay tareas vencidas, lo que indica buen cumplimiento de plazos."} ${stats.deadlineStats.dueSoon > 3 ? `Con ${stats.deadlineStats.dueSoon} tareas por vencer pronto, considere enviar recordatorios automatizados a los estudiantes para prevenir nuevas entregas tardías.` : ""}`,
   });
 
-  // teachers
   if (stats.teacherStats?.length > 0) {
     const sorted = [...stats.teacherStats].sort((a, b) => b.totalAssignments - a.totalAssignments);
     const top = sorted[0];
@@ -330,7 +313,6 @@ function generateFallbackInsights(
     insights.push({ id: `fb_${p}`, priority: p++, category: "teachers", type: "recommendation", title: "Sin Datos de Profesores", text: "No hay información disponible sobre el desempeño de profesores. Esto podría indicar que no se han asignado tareas aún o que los datos no están sincronizados correctamente con el módulo de estadísticas." });
   }
 
-  // units
   if (stats.assignmentStats.assignmentsByUnit?.length > 0) {
     const units = stats.assignmentStats.assignmentsByUnit;
     const sorted = [...units].sort((a, b) => b.count - a.count);
@@ -348,7 +330,6 @@ function generateFallbackInsights(
     insights.push({ id: `fb_${p}`, priority: p++, category: "units", type: "recommendation", title: "Sin Datos por Unidad", text: "No hay información de distribución por unidades. Las tareas podrían no estar organizadas por unidades temáticas o los datos no se están agrupando correctamente en el backend." });
   }
 
-  // courses
   if (coursesByAI?.length) {
     const worst = coursesByAI[0];
     const avgAI = coursesByAI.reduce((s, c) => s + Number(c.aiPercentage), 0) / coursesByAI.length;
@@ -364,14 +345,12 @@ function generateFallbackInsights(
     insights.push({ id: `fb_${p}`, priority: p++, category: "courses", type: "recommendation", title: "Sin Datos de Cursos", text: "No hay información de ranking de cursos. Verifique que los cursos tengan entregas registradas y que el endpoint /api/admin/stats/courses/by-ai esté funcionando." });
   }
 
-  // quizzes
   insights.push({
     id: `fb_${p}`, priority: p++, category: "quizzes", type: "recommendation",
     title: "Análisis de Rendimiento en Quizzes",
     text: `Los quizzes son una herramienta valiosa para evaluar comprensión real ya que se realizan bajo condiciones controladas. Analice las calificaciones más altas para identificar patrones: si los mismos estudiantes consistentemente obtienen las mejores notas, esto valida su aprendizaje. Compare el rendimiento en quizzes con las probabilidades de IA en tareas: estudiantes con alto uso de IA pero bajo rendimiento en quizzes podrían estar dependiendo de herramientas externas sin aprender realmente. Se recomienda implementar quizzes como complemento obligatorio para tareas con alta detección de IA.`,
   });
 
-  // late_submissions
   insights.push({
     id: `fb_${p}`, priority: p++, category: "late_submissions",
     type: stats.deadlineStats.overdue > 3 ? "warning" : "recommendation",
@@ -379,7 +358,6 @@ function generateFallbackInsights(
     text: `Las entregas tardías son un indicador importante de gestión del tiempo y carga académica. Analice la correlación entre minutos de retraso y probabilidad de IA: si las entregas más tardías también tienen alto porcentaje de IA, podría indicar que los estudiantes recurren a herramientas de IA como solución de último momento cuando se les acaba el tiempo. Se recomienda identificar a los estudiantes con entregas tardías recurrentes, contactarlos para entender las causas (sobrecarga, dificultad del contenido, problemas personales) y considerar ajustar plazos o implementar entregas parciales progresivas.`,
   });
 
-  // ai_assignments
   if (breakdown) {
     const critical = breakdown.countFullAI + breakdown.countHighAI;
     insights.push({

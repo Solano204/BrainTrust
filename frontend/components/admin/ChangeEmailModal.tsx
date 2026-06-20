@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,9 +73,8 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
   <Dialog open={open} onOpenChange={handleClose}>
     <DialogContent className="rounded-3xl border-border bg-card p-0 overflow-hidden max-w-md">
 
-      {/* ── Header ── */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+        <span className="icon-badge">
           <Mail className="h-4 w-4 text-primary" />
         </span>
         <div>
@@ -91,10 +90,8 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
         </div>
       </div>
 
-      {/* ── Form ── */}
       <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
 
-        {/* Current email (read-only) */}
         <div className="space-y-1.5">
           <Label htmlFor="currentEmail" className="text-xs font-semibold text-foreground">
             Correo Actual
@@ -107,7 +104,6 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
           />
         </div>
 
-        {/* New email */}
         <div className="space-y-1.5">
           <Label htmlFor="newEmail" className="text-xs font-semibold text-foreground">
             Nuevo Correo
@@ -128,7 +124,6 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
           )}
         </div>
 
-        {/* Confirm email */}
         <div className="space-y-1.5">
           <Label htmlFor="confirmEmail" className="text-xs font-semibold text-foreground">
             Confirmar Nuevo Correo
@@ -149,7 +144,6 @@ export function ChangeEmailModal({ user, open, onClose }: ChangeEmailModalProps)
           )}
         </div>
 
-        {/* ── Footer ── */}
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border mt-2">
           <button
             type="button"

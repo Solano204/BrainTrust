@@ -3,9 +3,8 @@ import "./globals.css";
 import { Providers } from "./api/providers/Providers";
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "BrainTrust LMS",
+  description: "Plataforma de aprendizaje en línea",
 };
 
 export default function RootLayout({
@@ -14,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+    <html lang="es" suppressHydrationWarning>
+      <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         <Providers>{children}</Providers>
       </body>
     </html>

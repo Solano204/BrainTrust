@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -136,15 +136,14 @@ return (
   <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
     <DialogContent className="bg-card rounded-3xl border border-border shadow-2xl max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
 
-      {/* ── Encabezado ── */}
       <div className="flex items-center gap-3 px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
-        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+        <span className="icon-badge">
           <BookOpen className="w-4 h-4 text-primary" />
         </span>
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+          <DialogTitle className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
             {initialData ? "Editar Curso" : "Crear Nuevo Curso"}
-          </h2>
+          </DialogTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
             {initialData
               ? "Actualiza la información del curso a continuación."
@@ -153,14 +152,12 @@ return (
         </div>
       </div>
 
-      {/* ── Formulario ── */}
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex-1 overflow-y-auto flex flex-col"
       >
         <div className="px-5 py-6 sm:px-7 space-y-5 flex-1">
 
-          {/* Nombre del Curso */}
           <div className="space-y-1.5">
             <label htmlFor="name" className="text-xs font-semibold text-foreground">
               Nombre del Curso *
@@ -179,7 +176,6 @@ return (
             )}
           </div>
 
-          {/* Código del Curso */}
           <div className="space-y-1.5">
             <label htmlFor="code" className="text-xs font-semibold text-foreground">
               Código del Curso *
@@ -198,7 +194,6 @@ return (
             )}
           </div>
 
-          {/* Descripción */}
           <div className="space-y-1.5">
             <label htmlFor="description" className="text-xs font-semibold text-foreground">
               Descripción *
@@ -218,7 +213,6 @@ return (
             )}
           </div>
 
-          {/* Nivel + Grupo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="grade" className="text-xs font-semibold text-foreground">
@@ -257,7 +251,6 @@ return (
             </div>
           </div>
 
-          {/* Subida de imagen */}
           <ImageUploadWithValidation
             currentImageUrl={imagePreview}
             onImageChange={handleImageChange}
@@ -267,7 +260,6 @@ return (
 
         </div>
 
-        {/* ── Pie de página ── */}
         <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button

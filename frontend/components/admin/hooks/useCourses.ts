@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -33,7 +33,6 @@ import {
 } from '@/components/admin/api/coursesApi';
 import { uploadImageFile } from '@/app/utils/cloudinary/cloudinary';
 
-// Importar tipos desde sus ubicaciones correctas
 import type { AdminCourse } from '@/app/shared/models/admin-course.model';
 import type {
   CreateCourseCommand,

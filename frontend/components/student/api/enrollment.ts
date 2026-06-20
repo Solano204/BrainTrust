@@ -1,5 +1,4 @@
-// File: src/app/features/courses/api/student-api.ts
-"use server";
+﻿"use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
@@ -121,7 +120,6 @@ export interface User {
     imagePath: string;
     address: null;
   };
-  // Additional fields from search result
   studentRefId: string;
   isAlreadyEnrolled: boolean;
   enrollmentId: string | null;

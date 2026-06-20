@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -179,7 +179,6 @@ if (error) {
 
 return (
   <div className="space-y-6">
-    {/* Encabezado */}
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="flex items-center gap-4">
         <Button variant="outline" onClick={onBack} className="border-border hover:bg-secondary shrink-0">
@@ -204,7 +203,6 @@ return (
       </Button>
     </div>
 
-    {/* Tarjeta principal de calificaciones */}
     <Card className="border-border shadow-sm">
       <CardHeader className="pb-4">
         <CardTitle className="text-foreground">{isTeacher ? 'Calificaciones de Estudiantes' : 'Tus Calificaciones'}</CardTitle>
@@ -375,7 +373,6 @@ return (
       </CardContent>
     </Card>
 
-    {/* Estadísticas de la unidad */}
     {isTeacher && estudiantes.length > 0 && (
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-4">
