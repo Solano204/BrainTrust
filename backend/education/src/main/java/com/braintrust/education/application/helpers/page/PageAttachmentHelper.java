@@ -33,7 +33,7 @@ public class PageAttachmentHelper {
     }
 
     public void addBulkAttachmentsJson(PageId pageId, List<FrontendDocumentDTO> attachments) {
-        log.info("📎 Adding {} attachments via JSON to Page ID: {}",
+        log.info("Adding {} attachments via JSON to Page ID: {}",
                 attachments != null ? attachments.size() : 0, pageId.getValue());
 
         try {
@@ -43,19 +43,19 @@ public class PageAttachmentHelper {
                 int processedCount = documentProcessor.processFrontendDocuments(page, attachments);
                 pageRepository.save(page);
 
-                log.info("✅ {} attachments added via JSON to Page {}",
+                log.info("{} attachments added via JSON to Page {}",
                         processedCount, pageId.getValue());
             }
 
         } catch (Exception e) {
-            log.error("❌ Failed to add bulk attachments via JSON to Page {}: {}",
+            log.error("Failed to add bulk attachments via JSON to Page {}: {}",
                     pageId.getValue(), e.getMessage(), e);
             throw e;
         }
     }
 
     public void addSingleAttachmentJson(PageId pageId, FrontendDocumentDTO attachment) {
-        log.info("📎 Adding single attachment via JSON to Page ID: {}", pageId.getValue());
+        log.info("Adding single attachment via JSON to Page ID: {}", pageId.getValue());
 
         try {
             if (attachment == null) {
@@ -67,12 +67,12 @@ public class PageAttachmentHelper {
             pageRepository.save(page);
 
             if (processedCount > 0) {
-                log.info("✅ Single attachment added via JSON to Page {}",
+                log.info("Single attachment added via JSON to Page {}",
                         pageId.getValue());
             }
 
         } catch (Exception e) {
-            log.error("❌ Failed to add single attachment via JSON to Page {}: {}",
+            log.error("Failed to add single attachment via JSON to Page {}: {}",
                     pageId.getValue(), e.getMessage(), e);
             throw e;
         }

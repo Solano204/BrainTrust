@@ -17,8 +17,8 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
     private QuizSubmissionStatus status;
     private final List<QuizAnswer> answers;
     private Grade grade;
-    private BigDecimal finalGrade;      // ✅ NEW — scaled value (e.g. 68.5 out of 75)
-    private boolean canViewResults;     // ✅ NEW — copied from quiz.allowSeeResults at submit time
+    private BigDecimal finalGrade;
+    private boolean canViewResults;
     private boolean autoGraded;
     private final Map<QuizQuestionId, QuestionGrade> questionGrades;
 
@@ -44,8 +44,8 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
                                               UserId studentId, int attemptNumber,
                                               LocalDateTime startedAt, LocalDateTime submittedAt,
                                               QuizSubmissionStatus status, List<QuizAnswer> answers,
-                                              Grade grade, BigDecimal finalGrade,  // ✅ NEW
-                                              boolean canViewResults,               // ✅ NEW
+                                              Grade grade, BigDecimal finalGrade,
+                                              boolean canViewResults,
                                               boolean autoGraded,
                                               Map<QuizQuestionId, QuestionGrade> questionGrades) {
         QuizSubmission submission = new QuizSubmission(id, quizId, studentId, attemptNumber);
@@ -76,7 +76,7 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         }
         this.submittedAt = LocalDateTime.now();
         this.status = QuizSubmissionStatus.SUBMITTED;
-        this.canViewResults = quiz.isAllowSeeResults(); // ✅ snapshot at submit time
+        this.canViewResults = quiz.isAllowSeeResults();
 
         if (canAutoGrade(quiz)) {
             autoGrade(quiz);
@@ -97,7 +97,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         this.status = QuizSubmissionStatus.GRADED;
         this.autoGraded = false;
 
-        // ✅ finalGrade must be set by caller who knows quiz.totalScore — see service
     }
 
     public void manualGrade(int earnedPoints, int totalPoints) {
@@ -111,7 +110,7 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
 
     /**
      * Calculates and stores the final grade scaled to the quiz's totalScore.
-     * Example: earned=3, max=5, totalScore=75 → finalGrade=45.00
+     * Example: earned=3, max=5, totalScore=75 -> finalGrade=45.00
      */
     public void computeFinalGrade(double quizTotalScore) {
         if (grade == null || grade.getMaxScore().compareTo(BigDecimal.ZERO) == 0) {
@@ -149,7 +148,6 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
         this.autoGraded = true;
         this.status = QuizSubmissionStatus.GRADED;
 
-        // ✅ auto-compute finalGrade right away
         computeFinalGrade(quiz.getTotalScore());
     }
 
@@ -180,7 +178,7 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
                 .findFirst().orElse(null);
     }
 
-    // ── Getters ──────────────────────────────────────────────────────────────
+    //  Getters 
     public QuizId getQuizId()                                      { return quizId; }
     public UserId getStudentId()                                   { return studentId; }
     public int getAttemptNumber()                                  { return attemptNumber; }
@@ -189,8 +187,8 @@ public class QuizSubmission extends AggregateRoot<QuizSubmissionId> {
     public QuizSubmissionStatus getStatus()                        { return status; }
     public List<QuizAnswer> getAnswers()                           { return List.copyOf(answers); }
     public Grade getGrade()                                        { return grade; }
-    public BigDecimal getFinalGrade()                              { return finalGrade; }   // ✅ NEW
-    public boolean isCanViewResults()                              { return canViewResults; }// ✅ NEW
+    public BigDecimal getFinalGrade()                              { return finalGrade; }
+    public boolean isCanViewResults()                              { return canViewResults; }
     public boolean isAutoGraded()                                  { return autoGraded; }
     public Map<QuizQuestionId, QuestionGrade> getQuestionGradesMap() { return Map.copyOf(questionGrades); }
     public Map<QuizQuestionId, QuestionGrade> getQuestionGrades()  { return Map.copyOf(questionGrades); }

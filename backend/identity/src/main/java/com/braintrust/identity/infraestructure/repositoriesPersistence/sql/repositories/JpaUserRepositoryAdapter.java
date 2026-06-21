@@ -41,7 +41,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
         this.mapper = mapper;
     }
 
-    // Helper: convert Role enum → role_id integer
+    // Helper: convert Role enum -> role_id integer
     private Integer toRoleId(Role role) {
         return switch (role) {
             case STUDENT     -> 3;
@@ -81,7 +81,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
             return entityPage.map(mapper::toDomain);
 
         } catch (Exception e) {
-            log.error("❌ Error in findByRole with sorting: {}", e.getMessage(), e);
+            log.error("Error in findByRole with sorting: {}", e.getMessage(), e);
             // Fallback: plain roleId query without sorting
             return jpaRepository.findByRoleId(roleId, pageable).map(mapper::toDomain);
         }
@@ -116,28 +116,28 @@ public class JpaUserRepositoryAdapter implements UserRepository {
                 .collect(Collectors.toList());
     }
 
-    // ── Everything below is unchanged ────────────────────────────────────────
+    //  Everything below is unchanged 
 
     @Override
     public void deleteById(UserId userId) {
-        log.warn("🗑️ Deleting User ID: {} with associated Person", userId.getValue());
+        log.warn("Deleting User ID: {} with associated Person", userId.getValue());
         try {
             UserJpaEntity userEntity = jpaRepository.findById(userId.getValue())
                     .orElseThrow(() -> {
-                        log.warn("❌ User not found for deletion: {}", userId.getValue());
+                        log.warn("User not found for deletion: {}", userId.getValue());
                         return new UserNotFoundException("User not found: " + userId.getValue());
                     });
 
             String personId = userEntity.getPersonId();
             jpaRepository.deleteById(userId.getValue());
             personJpaRepository.deleteById(personId);
-            log.info("✅ User ID {} and Person ID {} deleted successfully.",
+            log.info("User ID {} and Person ID {} deleted successfully.",
                     userId.getValue(), personId);
 
         } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to delete User {} with Person: {}",
+            log.error("Failed to delete User {} with Person: {}",
                     userId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to delete user with person", e);
         }
@@ -150,7 +150,7 @@ public class JpaUserRepositoryAdapter implements UserRepository {
             return jpaRepository.findByNameContainingWithPerson(name, pageable)
                     .map(mapper::toDomain);
         } catch (Exception e) {
-            log.error("❌ Error in findByNameContaining: {}", e.getMessage(), e);
+            log.error("Error in findByNameContaining: {}", e.getMessage(), e);
             Page<PersonJpaEntity> personPage = personJpaRepository
                     .findByFullNameContainingIgnoreCase(name, pageable);
 

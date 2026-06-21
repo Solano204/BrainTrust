@@ -24,8 +24,8 @@ public class QuizDtoMapper {
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
                 quiz.isShowCorrectAnswers(),
-                quiz.isAllowSeeResults(),   // ✅ NEW
-                quiz.getTotalScore(),       // ✅ NEW
+                quiz.isAllowSeeResults(),
+                quiz.getTotalScore(),
                 quiz.getTotalPoints(),
                 quiz.getQuestions().size(),
                 quiz.getCreatedAt().toString(),
@@ -61,8 +61,8 @@ public class QuizDtoMapper {
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
                 quiz.isShowCorrectAnswers(),
-                quiz.isAllowSeeResults(),   // ✅ NEW
-                quiz.getTotalScore(),       // ✅ NEW
+                quiz.isAllowSeeResults(),
+                quiz.getTotalScore(),
                 quiz.getTotalPoints(),
                 quiz.getQuestions().size(),
                 quiz.getCreatedAt().toString(),

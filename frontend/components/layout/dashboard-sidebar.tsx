@@ -3,11 +3,9 @@
 import {
   Home,
   Calendar,
-  Settings,
   BookOpen,
   X,
   Users,
-  BarChart3,
   TrendingUp,
   GraduationCap,
 } from "lucide-react"
@@ -26,19 +24,15 @@ function normalizeRole(role: string | undefined): string {
 
 const getNavigationItems = (role: string) => {
   const standard = [
-    { name: "Tablero",      icon: Home,     href: "/",         permission: null },
-    { name: "Calendario",   icon: Calendar, href: "/calendar", permission: null },
-    { name: "Cursos",       icon: BookOpen, href: "/courses",  permission: null },
-    { name: "Configuración",icon: Settings, href: "/settings", permission: null },
+    { name: "Tablero",    icon: Home,     href: "/",         permission: null },
+    { name: "Calendario", icon: Calendar, href: "/calendar", permission: null },
+    { name: "Cursos",     icon: BookOpen, href: "/courses",  permission: null },
   ]
   const admin = [
     { name: "Gestión de Cursos",          icon: BookOpen,    href: "/admin/courses",     permission: PERMISSIONS.COURSE_MANAGEMENT },
     { name: "Datos Personales",           icon: Users,       href: "/admin/personal",    permission: PERMISSIONS.PERSONAL_DATA_MANAGEMENT },
     { name: "Gestión de Usuarios",        icon: Users,       href: "/admin/users",       permission: PERMISSIONS.USER_MANAGEMENT },
-    { name: "Actividades",                icon: BookOpen,    href: "/admin/activities",  permission: PERMISSIONS.ACTIVITIES },
-    { name: "Catálogos",                  icon: BarChart3,   href: "/admin/catalogs",    permission: PERMISSIONS.CATALOG_MANAGEMENT },
     { name: "Gráficos y Estadísticas",    icon: TrendingUp,  href: "/admin/statistics",  permission: PERMISSIONS.CATALOG_MANAGEMENT },
-    { name: "Configuración",              icon: Settings,    href: "/settings",          permission: null },
   ]
   return role === 'admin' ? admin : standard
 }

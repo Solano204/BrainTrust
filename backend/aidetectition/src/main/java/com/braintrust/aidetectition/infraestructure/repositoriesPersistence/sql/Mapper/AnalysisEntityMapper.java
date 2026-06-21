@@ -8,7 +8,7 @@ import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -56,6 +56,7 @@ public class AnalysisEntityMapper {
                             map.put("endIndex", segment.getEndIndex());
                             map.put("aiProbability", segment.getAiProbability().toString());
                             map.put("reason", segment.getReason());
+                            map.put("segmentType", segment.getSegmentType().name());
                             return map;
                         })
                         .toList();
@@ -103,14 +104,20 @@ public class AnalysisEntityMapper {
                             new TypeReference<List<Map<String, Object>>>() {}
                     );
                     detectedSegments = segmentMaps.stream()
-                            .map(map -> new DetectedSegment(
-                                    (String) map.get("text"),
-                                    (Integer) map.get("startIndex"),
-                                    (Integer) map.get("endIndex"),
-                                    // Note: BigDecimal constructor from String is safer
-                                    new BigDecimal((String) map.get("aiProbability")),
-                                    (String) map.get("reason")
-                            ))
+                            .map(map -> {
+                                String typeStr = (String) map.get("segmentType");
+                                DetectedSegment.SegmentType segType = typeStr != null
+                                        ? DetectedSegment.SegmentType.valueOf(typeStr)
+                                        : DetectedSegment.SegmentType.AI;
+                                return new DetectedSegment(
+                                        (String) map.get("text"),
+                                        (Integer) map.get("startIndex"),
+                                        (Integer) map.get("endIndex"),
+                                        new BigDecimal((String) map.get("aiProbability")),
+                                        (String) map.get("reason"),
+                                        segType
+                                );
+                            })
                             .toList();
                 } catch (JsonProcessingException | ClassCastException e) {
                     log.error("Failed to deserialize detected segments for Analysis ID {}. Data integrity compromised.", analysisId.getValue(), e);

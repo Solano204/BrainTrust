@@ -26,7 +26,6 @@ public class CatalogController {
         this.catalogService = catalogService;
     }
 
-    // ==================== FIRST NAMES ====================
 
     @GetMapping("/first-names")
     @Operation(summary = "Get paginated first names (optional search)")
@@ -66,7 +65,6 @@ public class CatalogController {
         }
     }
 
-    // ==================== LAST NAMES ====================
 
     @GetMapping("/last-names")
     @Operation(summary = "Get paginated last names (optional search)")
@@ -106,7 +104,6 @@ public class CatalogController {
         }
     }
 
-    // ==================== STATES ====================
 
     @GetMapping("/states")
     @Operation(summary = "Get paginated states (optional search)")
@@ -146,7 +143,6 @@ public class CatalogController {
         }
     }
 
-    // ==================== MUNICIPALITIES ====================
 
     @GetMapping("/municipalities")
     @Operation(summary = "Get paginated municipalities (optional search)")
@@ -196,7 +192,6 @@ public class CatalogController {
         }
     }
 
-    // ==================== COLONIES ====================
 
     @GetMapping("/colonies")
     @Operation(summary = "Get paginated colonies (optional search)")
@@ -246,7 +241,6 @@ public class CatalogController {
         }
     }
 
-    // ==================== STREETS ====================
 
     @GetMapping("/streets")
     @Operation(summary = "Get paginated streets (optional search)")
@@ -296,7 +290,6 @@ public class CatalogController {
         }
     }
 
-    // ==================== POSTAL CODES ====================
 
     @GetMapping("/postal-codes")
     @Operation(summary = "Get paginated postal codes (optional search)")

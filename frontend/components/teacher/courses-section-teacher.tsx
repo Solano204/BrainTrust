@@ -2,8 +2,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { BookOpen, Users, Clock, ChevronUp, ChevronDown, Loader2 } from "lucide-react"
+import { BookOpen, Users, Clock, Loader2 } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
 import { Course } from "@/app/domain/entities/CourseEntities"
@@ -28,28 +27,16 @@ interface CoursesSectionProps {
 }
 
 export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const initialItemsPerView = 2;
   const [showAllCourses, setShowAllCourses] = useState(false);
 
   const { data: courses = [], isLoading, error } = useCoursesByTeacher(teacherId);
 
-  const itemsPerView = showAllCourses ? courses.length : initialItemsPerView;
-
-  const canScrollUp   = currentIndex > 0 && !showAllCourses;
-  const canScrollDown = currentIndex < courses.length - initialItemsPerView && !showAllCourses;
-
-  const scrollUp   = () => { if (canScrollUp)   setCurrentIndex(currentIndex - 1); };
-  const scrollDown = () => { if (canScrollDown) setCurrentIndex(currentIndex + 1); };
-
   const visibleCourses = showAllCourses
     ? courses
-    : courses.slice(currentIndex, currentIndex + initialItemsPerView);
+    : courses.slice(0, initialItemsPerView);
 
-  const handleViewAllClick = () => {
-    setShowAllCourses(prev => !prev);
-    if (!showAllCourses) setCurrentIndex(0);
-  };
+  const handleViewAllClick = () => setShowAllCourses(prev => !prev);
 
   if (isLoading) {
     return (
@@ -90,9 +77,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
     );
   }
 
-  const carouselHeight  = showAllCourses ? 'auto' : 'h-[20rem]';
-  const transformStyle  = showAllCourses ? 'none' : `translateY(-${currentIndex * (200 + 16)}px)`;
-
   const totalStudents = courses.reduce((total, course) => total + (course.enrollments?.length || 0), 0);
   const activeCourses = courses.filter(course => course.active).length;
 
@@ -114,30 +98,7 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
       </div>
     </div>
 
-    <div className="relative">
-
-      {!showAllCourses && (
-        <button
-          onClick={scrollUp}
-          disabled={!canScrollUp}
-          className={`absolute -top-2 left-1/2 -translate-x-1/2 z-10 w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center transition-all ${
-            canScrollUp
-              ? 'hover:bg-primary hover:text-primary-foreground cursor-pointer opacity-100'
-              : 'opacity-30 cursor-not-allowed'
-          }`}
-          aria-label="Desplazar hacia arriba"
-        >
-          <ChevronUp className="w-4 h-4" />
-        </button>
-      )}
-
-      <div className={`overflow-hidden ${carouselHeight}`}>
-        <div
-          className={`transition-transform duration-500 ease-out space-y-3 ${
-            showAllCourses ? 'grid grid-cols-1 sm:grid-cols-1 gap-3' : ''
-          }`}
-          style={{ transform: transformStyle }}
-        >
+    <div className="flex flex-col gap-3">
           {visibleCourses.map((course) => {
             const palette       = getCourseColor(course.id);
             const studentsCount = course.enrollments?.length || 0;
@@ -202,40 +163,6 @@ export function CoursesSectionTeacher({ teacherId }: CoursesSectionProps) {
               </Link>
             );
           })}
-        </div>
-      </div>
-
-      {!showAllCourses && (
-        <button
-          onClick={scrollDown}
-          disabled={!canScrollDown}
-          className={`absolute -bottom-2 left-1/2 -translate-x-1/2 z-10 w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center transition-all ${
-            canScrollDown
-              ? 'hover:bg-primary hover:text-primary-foreground cursor-pointer opacity-100'
-              : 'opacity-30 cursor-not-allowed'
-          }`}
-          aria-label="Desplazar hacia abajo"
-        >
-          <ChevronDown className="w-4 h-4" />
-        </button>
-      )}
-
-      {!showAllCourses && courses.length > initialItemsPerView && (
-        <div className="flex justify-center gap-1.5 mt-6">
-          {courses.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(Math.min(index, courses.length - initialItemsPerView))}
-              className={`h-1.5 rounded-full transition-all ${
-                index >= currentIndex && index < currentIndex + initialItemsPerView
-                  ? 'w-6 bg-primary'
-                  : 'w-1.5 bg-border hover:bg-primary/50'
-              }`}
-              aria-label={`Ir al curso ${index + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
 
     {courses.length > initialItemsPerView && (

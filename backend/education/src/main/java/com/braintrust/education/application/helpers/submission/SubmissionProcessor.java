@@ -70,7 +70,7 @@ public class SubmissionProcessor {
                             ))
                             .collect(Collectors.toList());
 
-                    log.info("📁 {} frontend documents stored for submission {}", documents.size(), targetId);
+                    log.info("{} frontend documents stored for submission {}", documents.size(), targetId);
 
                 } finally {
                     storageRateLimiter.release();
@@ -108,7 +108,7 @@ public class SubmissionProcessor {
             return "";
         }
 
-        log.info("📄 Extracting text from PDF: {} (size: {} bytes)",
+        log.info("Extracting text from PDF: {} (size: {} bytes)",
                 pdfFile.getOriginalFilename(), pdfFile.getSize());
 
         try {
@@ -119,7 +119,7 @@ public class SubmissionProcessor {
                 long duration = System.currentTimeMillis() - startTime;
 
                 int wordCount = extractedText.split("\\s+").length;
-                log.info("✅ Text extraction completed in {}ms. Words: {}", duration, wordCount);
+                log.info("Text extraction completed in {}ms. Words: {}", duration, wordCount);
 
                 return extractedText.trim();
 
@@ -127,7 +127,7 @@ public class SubmissionProcessor {
                 extractionRateLimiter.release();
             }
         } catch (Exception e) {
-            log.error("❌ Failed to extract text from PDF: {}", e.getMessage());
+            log.error("Failed to extract text from PDF: {}", e.getMessage());
             return "";
         }
     }
@@ -155,7 +155,7 @@ public class SubmissionProcessor {
         }
 
         String result = combinedText.toString().trim();
-        log.info("📝 Combined {} documents into {} characters of text",
+        log.info("Combined {} documents into {} characters of text",
                 frontendDocuments.size(), result.length());
 
         return result;

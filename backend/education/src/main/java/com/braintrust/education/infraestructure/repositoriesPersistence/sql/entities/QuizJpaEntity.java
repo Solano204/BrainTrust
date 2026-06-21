@@ -47,7 +47,7 @@ public class QuizJpaEntity {
     @Column(name = "show_correct_answers", nullable = false)
     private boolean showCorrectAnswers = true;
 
-    @Column(name = "allow_see_results", nullable = false)   // ✅ NEW
+    @Column(name = "allow_see_results", nullable = false)
     private boolean allowSeeResults = false;
 
     @Column(name = "total_score", nullable = false, columnDefinition = "NUMERIC(10,2)")
@@ -97,7 +97,7 @@ public class QuizJpaEntity {
         question.setQuiz(null);
     }
 
-    // ── Getters & Setters ────────────────────────────────────────────────────
+    //  Getters & Setters 
     public String getId()                          { return id; }
     public void setId(String id)                   { this.id = id; }
     public String getCourseId()                    { return courseId; }
@@ -120,10 +120,10 @@ public class QuizJpaEntity {
     public void setShuffleQuestions(boolean b)     { this.shuffleQuestions = b; }
     public boolean isShowCorrectAnswers()          { return showCorrectAnswers; }
     public void setShowCorrectAnswers(boolean b)   { this.showCorrectAnswers = b; }
-    public boolean isAllowSeeResults()             { return allowSeeResults; }   // ✅ NEW
-    public void setAllowSeeResults(boolean b)      { this.allowSeeResults = b; } // ✅ NEW
-    public double getTotalScore()                  { return totalScore; }         // ✅ NEW
-    public void setTotalScore(double s)            { this.totalScore = s; }       // ✅ NEW
+    public boolean isAllowSeeResults()             { return allowSeeResults; }
+    public void setAllowSeeResults(boolean b)      { this.allowSeeResults = b; }
+    public double getTotalScore()                  { return totalScore; }
+    public void setTotalScore(double s)            { this.totalScore = s; }
     public LocalDateTime getCreatedAt()            { return createdAt; }
     public void setCreatedAt(LocalDateTime t)      { this.createdAt = t; }
     public boolean isActive()                      { return active; }

@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Menu, LogOut, User, Settings, Sun, Moon, ChevronDown } from "lucide-react"
+import { Menu, LogOut, User, Settings, Sun, Moon, ChevronDown } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -75,11 +75,6 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </button>
-
-          <button className="icon-btn relative" aria-label="Notificaciones">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-card" />
           </button>
 
           <div className="w-px h-6 bg-border mx-1 hidden sm:block" />

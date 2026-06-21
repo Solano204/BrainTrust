@@ -56,7 +56,6 @@ export default function DashboardPage() {
                     userId={user?.id || "user-001"}
                     userType={user?.role === 'teacher' ? 'teacher' : 'student'}
                   />
-                  {user?.id}
                 </div>
                 <div className="lg:col-span-1">
                   {user?.role === 'teacher' ? (

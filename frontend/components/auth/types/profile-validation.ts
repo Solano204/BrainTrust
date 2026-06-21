@@ -95,7 +95,7 @@ export const passwordSchema = z.object({
 export const imageUploadSchema = z.object({
   file: z
     .instanceof(File)
-    .refine((file) => file.size <= 5 * 1024 * 1024, "Image must be less than 5MB")
+    .refine((file) => file.size <= 20 * 1024 * 1024, "Image must be less than 20MB")
     .refine(
       (file) => ["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type),
       "Only JPEG, PNG, GIF, and WebP images are allowed"

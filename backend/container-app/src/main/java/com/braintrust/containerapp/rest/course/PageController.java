@@ -43,11 +43,11 @@ public class PageController {
 
         try {
             PageDTO result = pageService.createPageFrontend(command);
-            log.info("✅ Page created with frontend extraction. ID: {}", result.id());
+            log.info("Page created with frontend extraction. ID: {}", result.id());
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
 
         } catch (Exception e) {
-            log.error("❌ Failed to create page with frontend extraction: {}", e.getMessage(), e);
+            log.error("Failed to create page with frontend extraction: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -93,7 +93,7 @@ public class PageController {
             @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments,
             @RequestParam(value = "publishImmediately", defaultValue = "false") boolean publishImmediately) {
 
-        log.info("🔄 Simple dynamic page creation - Title: '{}', Course: {}, Unit: {}, Links: {}, Files: {}",
+        log.info("Simple dynamic page creation - Title: '{}', Course: {}, Unit: {}, Links: {}, Files: {}",
                 title, courseId, unitId,
                 externalLinks != null ? externalLinks.size() : 0,
                 attachments != null ? attachments.size() : 0);
@@ -123,11 +123,11 @@ public class PageController {
             );
 
             PageDTO result = pageService.createPageWithFileAttachments(command);
-            log.info("✅ Page created successfully. ID: {}", result.id());
+            log.info("Page created successfully. ID: {}", result.id());
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
 
         } catch (Exception e) {
-            log.error("❌ Failed to create page: {}", e.getMessage(), e);
+            log.error("Failed to create page: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -363,7 +363,7 @@ public class PageController {
             @PathVariable String pageId,
             @RequestParam("files") List<MultipartFile> files) {
 
-        log.info("📎 Uploading {} files to page {}", files.size(), pageId);
+        log.info("Uploading {} files to page {}", files.size(), pageId);
 
         try {
             List<AddPageAttachmentCommand> attachmentCommands = files.stream()
@@ -376,11 +376,11 @@ public class PageController {
 
             pageService.addAttachmentsToPage(pageId, attachmentCommands);
 
-            log.info("✅ Successfully uploaded {} files to page {}", files.size(), pageId);
+            log.info("Successfully uploaded {} files to page {}", files.size(), pageId);
             return ResponseEntity.ok().build();
 
         } catch (Exception e) {
-            log.error("❌ Failed to upload files to page {}: {}", pageId, e.getMessage(), e);
+            log.error("Failed to upload files to page {}: {}", pageId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

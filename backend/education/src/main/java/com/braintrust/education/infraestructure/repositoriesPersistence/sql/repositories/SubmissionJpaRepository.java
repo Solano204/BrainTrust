@@ -81,6 +81,15 @@ public interface SubmissionJpaRepository extends JpaRepository<SubmissionJpaEnti
     List<SubmissionJpaEntity> findByTeamIdAndAssignmentId(String teamId, String assignmentId);
     boolean existsByAssignmentIdAndTeamId(String assignmentId, String teamId);
 
+    @Query("SELECT s FROM SubmissionJpaEntity s " +
+            "JOIN AssignmentJpaEntity a ON s.assignmentId = a.id " +
+            "LEFT JOIN CourseUnitJpaEntity u ON a.unit = u.id " +
+            "WHERE a.courseId = :courseId AND s.studentId = :studentId " +
+            "ORDER BY COALESCE(u.numUnity, 0) ASC, s.submittedAt ASC")
+    List<SubmissionJpaEntity> findByCourseAndStudentOrderedByUnit(
+            @Param("courseId") String courseId,
+            @Param("studentId") String studentId);
+
     @Query("SELECT DISTINCT s FROM SubmissionJpaEntity s " +
             "LEFT JOIN FETCH s.documents " +
             "WHERE s.teamId = :teamId")

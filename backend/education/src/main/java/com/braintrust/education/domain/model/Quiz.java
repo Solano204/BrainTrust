@@ -16,8 +16,8 @@ public class Quiz extends AggregateRoot<QuizId> {
     private UnitId unitId;
     private boolean shuffleQuestions;
     private boolean showCorrectAnswers;
-    private boolean allowSeeResults;   // ✅ NEW
-    private double totalScore;         // ✅ NEW
+    private boolean allowSeeResults;
+    private double totalScore;
     private LocalDateTime createdAt;
     private final List<QuizQuestion> questions;
     private boolean active;
@@ -38,7 +38,7 @@ public class Quiz extends AggregateRoot<QuizId> {
 
     public void update(String title, String description, LocalDateTime availableFrom,
                        LocalDateTime availableUntil, Integer timeLimitMinutes,
-                       boolean allowSeeResults, double totalScore) {  // ✅ NEW params
+                       boolean allowSeeResults, double totalScore) {
         this.title = validateTitle(title);
         this.description = description;
         this.availableFrom = availableFrom;
@@ -50,7 +50,7 @@ public class Quiz extends AggregateRoot<QuizId> {
 
     public static Quiz create(CourseId courseId, UnitId unitId, String title, String description,
                               LocalDateTime availableFrom, LocalDateTime availableUntil,
-                              Integer timeLimitMinutes, boolean allowSeeResults, double totalScore) { // ✅ NEW
+                              Integer timeLimitMinutes, boolean allowSeeResults, double totalScore) {
         QuizId id = QuizId.generate();
         Quiz quiz = new Quiz(id, courseId, title);
         quiz.unitId = unitId;
@@ -108,7 +108,7 @@ public class Quiz extends AggregateRoot<QuizId> {
     /**
      * Returns the points each question should carry if totalScore is
      * distributed evenly across all questions.
-     * e.g. totalScore=75, 5 questions → 15.0 per question
+     * e.g. totalScore=75, 5 questions -> 15.0 per question
      */
     public double getPointsPerQuestion() {
         if (questions.isEmpty()) return 0;
@@ -124,7 +124,7 @@ public class Quiz extends AggregateRoot<QuizId> {
         return title.trim();
     }
 
-    // ── Getters ──────────────────────────────────────────────────────────────
+    //  Getters 
     public UnitId getUnitId()                  { return unitId; }
     public CourseId getCourseId()              { return courseId; }
     public String getTitle()                   { return title; }
@@ -135,8 +135,8 @@ public class Quiz extends AggregateRoot<QuizId> {
     public int getMaxAttempts()                { return maxAttempts; }
     public boolean isShuffleQuestions()        { return shuffleQuestions; }
     public boolean isShowCorrectAnswers()      { return showCorrectAnswers; }
-    public boolean isAllowSeeResults()         { return allowSeeResults; }   // ✅ NEW
-    public double getTotalScore()              { return totalScore; }         // ✅ NEW
+    public boolean isAllowSeeResults()         { return allowSeeResults; }
+    public double getTotalScore()              { return totalScore; }
     public LocalDateTime getCreatedAt()        { return createdAt; }
     public List<QuizQuestion> getQuestions()   { return List.copyOf(questions); }
     public boolean isActive()                  { return active; }

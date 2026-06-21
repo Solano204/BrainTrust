@@ -18,5 +18,6 @@ public record AnalysisResultDTO(
         LocalDateTime analyzedAt,
         String errorMessage,
         List<DetectedSegmentDTO> detectedSegments,
-        Map<String, Object> metadata
+        Map<String, Object> metadata,
+        String contentToAnalyze
 ) {}

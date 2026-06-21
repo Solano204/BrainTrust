@@ -47,7 +47,7 @@ public class GradebookApplicationService implements GradebookService {
         this.gradeUpdateHelper = gradeUpdateHelper;
         this.gradeSyncHelper = gradeSyncHelper;
         this.teamGradeHelper = teamGradeHelper;
-        log.info("✅ GradebookApplicationService initialized with refactored helpers");
+        log.info("GradebookApplicationService initialized with refactored helpers");
     }
 
     @Override
@@ -102,12 +102,12 @@ public class GradebookApplicationService implements GradebookService {
                     assignFinalGrade(courseId, studentId, finalGrade, feedback);
                     successCount++;
 
-                    log.debug("✅ Updated course final grade for student {}: {}",
+                    log.debug("Updated course final grade for student {}: {}",
                             studentId.getValue(), finalGrade);
 
                 } catch (Exception e) {
                     failureCount++;
-                    log.error("❌ Failed to update final grade for student {} in course {}: {}",
+                    log.error("Failed to update final grade for student {} in course {}: {}",
                             gradeCommand.studentId(), courseId.getValue(), e.getMessage());
                 }
             }
@@ -133,7 +133,7 @@ public class GradebookApplicationService implements GradebookService {
         CourseId courseId = CourseId.fromString(command.courseId());
         UserId studentId = UserId.fromString(command.studentId());
 
-        log.info("🎯 BIDIRECTIONAL UPDATE: type={}, activity={}, student={}, score={}/{}",
+        log.info("BIDIRECTIONAL UPDATE: type={}, activity={}, student={}, score={}/{}",
                 command.activityType(), command.activityId(),
                 studentId.getValue(), command.earnedPoints(), command.maxPoints());
 
@@ -161,7 +161,7 @@ public class GradebookApplicationService implements GradebookService {
 
         gradebookRepository.save(gradebook);
 
-        log.info("✅ Bidirectional update completed successfully");
+        log.info("Bidirectional update completed successfully");
     }
 
     @Override
@@ -231,12 +231,12 @@ public class GradebookApplicationService implements GradebookService {
     private Gradebook getOrCreateGradebook(CourseId courseId, UserId studentId) {
         return gradebookRepository.findByCourseAndStudent(courseId, studentId)
                 .orElseGet(() -> {
-                    log.info("📚 Creating new gradebook for student {} in course {}",
+                    log.info("Creating new gradebook for student {} in course {}",
                             studentId.getValue(), courseId.getValue());
 
                     boolean isEnrolled = enrollmentRepository.existsByCourseAndStudent(courseId, studentId);
                     if (!isEnrolled) {
-                        log.warn("⚠️ Student {} is not enrolled in course {}, creating gradebook anyway",
+                        log.warn("Student {} is not enrolled in course {}, creating gradebook anyway",
                                 studentId.getValue(), courseId.getValue());
                     }
 
@@ -257,14 +257,14 @@ public class GradebookApplicationService implements GradebookService {
                 enrollment.complete(grade);
                 enrollmentRepository.save(enrollment);
 
-                log.info("✅ Enrollment final grade updated for student {} in course {}: {}",
+                log.info("Enrollment final grade updated for student {} in course {}: {}",
                         studentId.getValue(), courseId.getValue(), finalGrade);
             } else {
-                log.warn("⚠️ No enrollment found for student {} in course {}, cannot update enrollment final grade",
+                log.warn("No enrollment found for student {} in course {}, cannot update enrollment final grade",
                         studentId.getValue(), courseId.getValue());
             }
         } catch (Exception e) {
-            log.error("❌ Failed to update enrollment final grade for student {} in course {}: {}",
+            log.error("Failed to update enrollment final grade for student {} in course {}: {}",
                     studentId.getValue(), courseId.getValue(), e.getMessage(), e);
         }
     }

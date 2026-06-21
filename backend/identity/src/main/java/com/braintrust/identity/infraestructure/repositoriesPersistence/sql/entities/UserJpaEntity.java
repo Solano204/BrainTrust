@@ -23,8 +23,6 @@ public class UserJpaEntity {
     @Column(name = "password_hash", length = 255, nullable = false)
     private String passwordHash;
 
-    // ✅ NO @Column role_id here — it lives in user_roles junction table
-    // ✅ CORRECT — role_id is a direct column on the users table
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -56,13 +54,11 @@ public class UserJpaEntity {
         this.createdAt = createdAt;
     }
 
-    // ✅ Returns the infrastructure Role enum via CatRoleJpaEntity.code
     public Role getRole() {
         if (role == null) throw new IllegalStateException("User has no role assigned");
         return Role.valueOf(role.getCode());
     }
 
-    // ✅ getRoleId() derived from the relationship — used by existing queries
     public Integer getRoleId() {
         return role != null ? role.getId() : null;
     }

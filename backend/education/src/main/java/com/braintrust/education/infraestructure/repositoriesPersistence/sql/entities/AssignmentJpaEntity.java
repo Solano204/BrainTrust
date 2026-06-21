@@ -84,7 +84,7 @@ public class AssignmentJpaEntity {
         this.submissionFormat = submissionFormat != null ? submissionFormat : "DIGITAL";
     }
 
-    // ── Document helpers ──────────────────────────────────────────────────────
+    //  Document helpers 
 
     public void addDocument(DocumentJpaEntity document) {
         documents.add(document);
@@ -92,7 +92,7 @@ public class AssignmentJpaEntity {
     }
 
     public void removeDocument(DocumentJpaEntity document) {
-        // Set.remove() uses equals() which needs id — safer to match by name+path
+        // Set.remove() uses equals() which needs id  safer to match by name+path
         documents.removeIf(d ->
                 d.getName().equals(document.getName()) &&
                         d.getStoragePath().equals(document.getStoragePath())
@@ -103,15 +103,15 @@ public class AssignmentJpaEntity {
     public void removeAttachmentByName(String name) {
         this.documents.removeIf(d -> d.getName().equals(name));
     }
-    // AssignmentJpaEntity.java — replace syncDocuments
+    // AssignmentJpaEntity.java  replace syncDocuments
 
 
 
-    // AssignmentJpaEntity.java — replace syncDocuments entirely
+    // AssignmentJpaEntity.java  replace syncDocuments entirely
     public void syncDocuments(List<String[]> desiredNameAndPath) {
 
-        // Deduplicate by name — keep only first occurrence of each name
-        Map<String, String> desiredMap = new LinkedHashMap<>(); // name → storagePath
+        // Deduplicate by name  keep only first occurrence of each name
+        Map<String, String> desiredMap = new LinkedHashMap<>(); // name -> storagePath
         for (String[] pair : desiredNameAndPath) {
             desiredMap.putIfAbsent(pair[0], pair[1]); // pair[0]=name, pair[1]=path
         }
@@ -166,7 +166,7 @@ public class AssignmentJpaEntity {
         }
     }
 
-    // ── Legacy link helpers (kept for compatibility) ──────────────────────────
+    //  Legacy link helpers (kept for compatibility) 
 
     public void addLink(String linkUrl) {
         if (linkUrl != null && !linkUrl.trim().isEmpty()) {
@@ -196,7 +196,7 @@ public class AssignmentJpaEntity {
                 .collect(Collectors.toList());
     }
 
-    // ── Getters / Setters ─────────────────────────────────────────────────────
+    //  Getters / Setters 
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -233,12 +233,12 @@ public class AssignmentJpaEntity {
         this.submissionFormat = submissionFormat != null ? submissionFormat : "DIGITAL";
     }
 
-    // Getter returns List (converts Set → List)
+    // Getter returns List (converts Set -> List)
     public List<DocumentJpaEntity> getDocuments() {
         return new ArrayList<>(documents);
     }
 
-    // Setter accepts List (converts List → Set)
+    // Setter accepts List (converts List -> Set)
     public void setDocuments(List<DocumentJpaEntity> documents) {
         this.documents = documents != null
                 ? new LinkedHashSet<>(documents)

@@ -15,7 +15,6 @@ public final class EntityMaps {
 
     private EntityMaps() {}
 
-    // ✅ Full version: with Person + activities
     public static UserDTO toUserDTO(User user, Person person, List<RoleActivityDTO> activities) {
         if (user == null) return null;
 
@@ -33,12 +32,10 @@ public final class EntityMaps {
         );
     }
 
-    // ✅ With Person, no activities (empty list)
     public static UserDTO toUserDTO(User user, Person person) {
         return toUserDTO(user, person, List.of());
     }
 
-    // ✅ No Person, no activities
     public static UserDTO toUserDTO(User user) {
         return toUserDTO(user, null, List.of());
     }

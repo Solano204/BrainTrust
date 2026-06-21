@@ -2,3 +2,16 @@ backend/.env
 braintrust-terraform.zip
 backend/**/target/
 braintrust-terraform/
+
+# Claude Code — local-only overrides (contain secrets)
+backend/.claude/settings.local.json
+frontend/.claude/settings.local.json
+.claude/settings.local.json
+
+# Claude Code — hook logs (machine-specific)
+backend/.claude/logs/
+frontend/.claude/logs/
+backend/container-app/.env
+backend/logs/
+backend/sql/
+backend/storage/

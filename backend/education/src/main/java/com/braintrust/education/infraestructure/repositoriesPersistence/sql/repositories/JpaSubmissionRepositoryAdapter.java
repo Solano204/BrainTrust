@@ -119,4 +119,15 @@ public class JpaSubmissionRepositoryAdapter implements SubmissionRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Submission> findByCourseAndStudentOrderedByUnit(CourseId courseId, UserId studentId) {
+        log.debug("Fetching ordered history for courseId={} studentId={}",
+                courseId.getValue(), studentId.getValue());
+        return jpaRepository.findByCourseAndStudentOrderedByUnit(
+                        courseId.getValue(), studentId.getValue())
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
 }

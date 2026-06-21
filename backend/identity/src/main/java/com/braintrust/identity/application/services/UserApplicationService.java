@@ -37,7 +37,7 @@ public class UserApplicationService implements UserService {
         this.managementHelper = managementHelper;
         this.queryHelper = queryHelper;
 
-        log.info("✅ UserApplicationService initialized with specialized helpers");
+        log.info("UserApplicationService initialized");
     }
 
     @Override
@@ -66,8 +66,6 @@ public class UserApplicationService implements UserService {
         return registrationHelper.isEmailAvailable(email);
     }
 
-    // ==================== AUTHENTICATION OPERATIONS ====================
-
     @Override
     public AuthenticationResult authenticate(AuthenticateUserCommand command) {
         return authenticationHelper.authenticate(command);
@@ -77,8 +75,6 @@ public class UserApplicationService implements UserService {
     public AuthenticationResult refreshToken(RefreshTokenCommand command) {
         return authenticationHelper.refreshToken(command);
     }
-
-    // ==================== USER MANAGEMENT OPERATIONS ====================
 
     @Override
     public void updateUserPersonalInfo(UpdateUserInfoCommand command) {
@@ -114,8 +110,6 @@ public class UserApplicationService implements UserService {
     public void deleteUser(UserId userId) {
         managementHelper.deleteUser(userId);
     }
-
-    // ==================== QUERY OPERATIONS ====================
 
     @Override
     @Transactional(readOnly = true)

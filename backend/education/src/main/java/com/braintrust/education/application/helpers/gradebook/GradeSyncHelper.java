@@ -35,7 +35,7 @@ public class GradeSyncHelper {
     }
 
     public void syncAssignmentGrade(CourseId courseId, UserId studentId, AssignmentId assignmentId) {
-        log.info("Cascade update: Assignment {} → Unit for Student {}",
+        log.info("Cascade update: Assignment {} Unit for Student {}",
                 assignmentId.getValue(), studentId.getValue());
 
         Submission submission = submissionRepository
@@ -65,11 +65,11 @@ public class GradeSyncHelper {
         unitGrade.addAssignmentGrade(assignmentId, submission.getGrade());
         unitGradeRepository.save(unitGrade);
 
-        log.info("Cascade update completed: Assignment → Unit (Gradebook NOT updated)");
+        log.info("Cascade update completed: Assignment Unit (Gradebook NOT updated)");
     }
 
     public void syncQuizGrade(CourseId courseId, UserId studentId, QuizId quizId) {
-        log.info("Cascade update: Quiz {} → Unit → Course for Student {}",
+        log.info("Cascade update: Quiz {} Unit Course for Student {}",
                 quizId.getValue(), studentId.getValue());
 
         QuizSubmission quizSubmission = quizSubmissionRepository
@@ -97,7 +97,7 @@ public class GradeSyncHelper {
         unitGrade.addQuizGrade(quizId, quizSubmission.getGrade());
         unitGradeRepository.save(unitGrade);
 
-        log.info("Cascade update completed: Quiz → Unit → Course");
+        log.info("Cascade update completed: Quiz Unit Course");
     }
 
     public void syncUnitGrade(Gradebook gradebook, UnitId unitId, UserId studentId) {

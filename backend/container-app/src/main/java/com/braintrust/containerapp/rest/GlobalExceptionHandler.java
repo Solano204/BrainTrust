@@ -2,30 +2,25 @@ package com.braintrust.containerapp.rest;
 
 import com.braintrust.identity.domain.exceptions.CatalogInUseException;
 import com.braintrust.identity.domain.exceptions.InvalidPasswordException;
-import com.braintrust.identity.infraestructure.security.exception.JwtTokenException;
 import com.braintrust.shared.application.dtos.dtos.ErrorResponseDTO;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
 import com.braintrust.shared.domain.exception.DomainException;
 import com.braintrust.shared.domain.exception.NotFoundException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 
 @RestControllerAdvice
@@ -55,7 +50,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
 
-        log.error("❌ Resource not found: {}", ex.getMessage(), ex);
+        log.error("Resource not found: {}", ex.getMessage(), ex);
 
 
         ErrorResponseDTO error = new ErrorResponseDTO(
@@ -121,7 +116,7 @@ public class GlobalExceptionHandler {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
-            log.debug("  - Field '{}': {}", fieldName, errorMessage);
+            log.debug("- Field '{}': {}", fieldName, errorMessage);
         });
 
         return ResponseEntity.badRequest().body(errors);
@@ -132,14 +127,14 @@ public class GlobalExceptionHandler {
             InvalidPasswordException ex,
             WebRequest request
     ) {
-        log.error("❌ Invalid password error at {}: {}",
+        log.error("Invalid password error at {}: {}",
                 request.getDescription(false), ex.getMessage(), ex);
 
         ErrorResponseDTO error = new ErrorResponseDTO(
                 Instant.now().toString(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Invalid Password",
-                ex.getMessage(), // ✅ Mensaje específico del dominio
+                ex.getMessage(),
                 request.getDescription(false).replace("uri=", "")
         );
 
@@ -154,7 +149,7 @@ public class GlobalExceptionHandler {
             IllegalStateException ex,
             WebRequest request
     ) {
-        log.error("❌ Illegal state at {}: {}",
+        log.error("Illegal state at {}: {}",
                 request.getDescription(false), ex.getMessage(), ex);
 
         ErrorResponseDTO error = new ErrorResponseDTO(
@@ -175,7 +170,7 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex,
             WebRequest request
     ) {
-        log.error("❌ Illegal argument at {}: {}",
+        log.error("Illegal argument at {}: {}",
                 request.getDescription(false), ex.getMessage(), ex);
 
         ErrorResponseDTO error = new ErrorResponseDTO(
@@ -198,7 +193,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
 
-        log.error("❌ Domain exception at {}: {} | Exception Type: {}",
+        log.error("Domain exception at {}: {} | type={}",
                 request.getDescription(false),
                 ex.getMessage(),
                 ex.getClass().getSimpleName(),
@@ -224,7 +219,7 @@ public class GlobalExceptionHandler {
             WebRequest request
     ) {
 
-        log.error("❌❌❌ UNEXPECTED ERROR at {}: {} | Exception Type: {} | Root Cause: {}",
+        log.error("Unexpected error at {}: {} | type={} | cause={}",
                 request.getDescription(false),
                 ex.getMessage(),
                 ex.getClass().getName(),
@@ -238,7 +233,7 @@ public class GlobalExceptionHandler {
                 Instant.now().toString(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
-                detailedMessage, // ✅ More informative message
+                detailedMessage,
                 request.getDescription(false).replace("uri=", "")
         );
 

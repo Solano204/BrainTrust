@@ -7,5 +7,6 @@ public record DetectedSegmentDTO(
         String aiProbability,
         String percentage,
         String reason,
-        boolean isHighConfidence
+        boolean isHighConfidence,
+        String segmentType
 ) {}

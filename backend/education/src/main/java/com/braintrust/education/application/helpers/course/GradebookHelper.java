@@ -5,7 +5,7 @@ import com.braintrust.education.application.ports.out.GradebookRepository;
 import com.braintrust.education.domain.model.Enrollment;
 import com.braintrust.education.domain.model.Gradebook;
 import com.braintrust.education.domain.valueobjects.CourseId;
-import com.braintrust.education.domain.valueobjects.Grade;  // ⭐ CAMBIADO: de model a valueobjects
+import com.braintrust.education.domain.valueobjects.Grade;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,21 +30,21 @@ public class GradebookHelper {
             boolean gradebookExists = gradebookRepository.existsByCourseAndStudent(courseId, studentId);
 
             if (!gradebookExists) {
-                log.info("📚 Creating empty Gradebook for Student {} in Course {}",
+                log.info("Creating empty Gradebook for Student {} in Course {}",
                         studentId.getValue(), courseId.getValue());
 
                 Gradebook emptyGradebook = Gradebook.create(courseId, studentId);
                 gradebookRepository.save(emptyGradebook);
 
-                log.info("✅ Empty Gradebook created for Student {} in Course {}",
+                log.info("Empty Gradebook created for Student {} in Course {}",
                         studentId.getValue(), courseId.getValue());
             } else {
-                log.debug("📚 Gradebook already exists for Student {} in Course {}",
+                log.debug("Gradebook already exists for Student {} in Course {}",
                         studentId.getValue(), courseId.getValue());
             }
 
         } catch (Exception e) {
-            log.error("❌ Failed to create Gradebook for Student {} in Course {}: {}",
+            log.error("Failed to create Gradebook for Student {} in Course {}: {}",
                     studentId.getValue(), courseId.getValue(), e.getMessage(), e);
         }
     }
@@ -94,14 +94,14 @@ public class GradebookHelper {
         try {
             var gradebooks = gradebookRepository.findByCourseId(courseId);
             if (!gradebooks.isEmpty()) {
-                log.info("🗑️ Deleting {} gradebooks for Course ID: {}", gradebooks.size(), courseId.getValue());
+                log.info("Deleting {} gradebooks for Course ID: {}", gradebooks.size(), courseId.getValue());
                 for (Gradebook gradebook : gradebooks) {
                     gradebookRepository.delete(gradebook);
                 }
-                log.info("✅ Gradebooks deleted for Course ID: {}", courseId.getValue());
+                log.info("Gradebooks deleted for Course ID: {}", courseId.getValue());
             }
         } catch (Exception e) {
-            log.error("❌ Failed to delete gradebooks for Course ID {}: {}", courseId.getValue(), e.getMessage());
+            log.error("Failed to delete gradebooks for Course ID {}: {}", courseId.getValue(), e.getMessage());
         }
     }
 }

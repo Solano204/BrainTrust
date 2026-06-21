@@ -38,7 +38,7 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public Page<Course> findAll(Pageable pageable) {
-        log.debug("📊 Fetching paginated courses. Page: {}, Size: {}",
+        log.debug("Fetching paginated courses. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
         Page<CourseJpaEntity> entityPage = jpaRepository.findAll(pageable);
         return entityPage.map(mapper::toDomain);
@@ -46,7 +46,7 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public Page<Course> findActiveCourses(Pageable pageable) {
-        log.debug("📊 Fetching paginated active courses. Page: {}, Size: {}",
+        log.debug("Fetching paginated active courses. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
         Page<CourseJpaEntity> entityPage = jpaRepository.findByActiveTrue(pageable);
         return entityPage.map(mapper::toDomain);
@@ -54,7 +54,7 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public Page<Course> findByTeacherId(UserId teacherId, Pageable pageable) {
-        log.debug("📊 Fetching paginated courses for Teacher ID: {}. Page: {}, Size: {}",
+        log.debug("Fetching paginated courses for Teacher ID: {}. Page: {}, Size: {}",
                 teacherId.getValue(), pageable.getPageNumber(), pageable.getPageSize());
         Page<CourseJpaEntity> entityPage = jpaRepository.findByTeacherId(teacherId.getValue(), pageable);
         return entityPage.map(mapper::toDomain);
@@ -62,7 +62,7 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public Page<Course> findByStudentId(UserId studentId, Pageable pageable) {
-        log.debug("📊 Fetching paginated courses for Student ID: {}. Page: {}, Size: {}",
+        log.debug("Fetching paginated courses for Student ID: {}. Page: {}, Size: {}",
                 studentId.getValue(), pageable.getPageNumber(), pageable.getPageSize());
         Page<CourseJpaEntity> entityPage = jpaRepository.findByStudentId(studentId.getValue(), pageable);
         return entityPage.map(mapper::toDomain);
@@ -70,7 +70,7 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public List<Course> findAll() {
-        log.debug("📊 Fetching all courses (without pagination)");
+        log.debug("Fetching all courses (without pagination)");
         return jpaRepository.findAll()
                 .stream()
                 .map(mapper::toDomain)
@@ -79,7 +79,7 @@ public class JpaCourseRepositoryAdapter implements CourseRepository {
 
     @Override
     public List<Course> findActiveCourses() {
-        log.debug("📊 Fetching all active courses (without pagination)");
+        log.debug("Fetching all active courses (without pagination)");
         return jpaRepository.findByActiveTrue()
                 .stream()
                 .map(mapper::toDomain)

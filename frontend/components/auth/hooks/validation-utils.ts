@@ -35,7 +35,7 @@ export function sanitizeString(input: string): string {
 
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-  const maxSize = 5 * 1024 * 1024 // 5MB
+  const maxSize = 20 * 1024 * 1024 // 20MB
 
   if (!validTypes.includes(file.type)) {
     return {

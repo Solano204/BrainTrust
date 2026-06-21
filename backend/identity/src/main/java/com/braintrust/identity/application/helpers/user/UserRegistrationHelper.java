@@ -39,7 +39,7 @@ public class UserRegistrationHelper {
         Email email = new Email(command.email());
         long startTime = System.currentTimeMillis();
 
-        log.info("🎓 Starting TEACHER registration for email: {}", command.email());
+        log.info("Registering teacher email={}", command.email());
 
         try {
             validateEmailNotExists(email);
@@ -57,7 +57,7 @@ public class UserRegistrationHelper {
             User savedUser = userRepository.save(teacher);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ TEACHER registered in {}ms. User ID: {}, Person ID: {}",
+            log.info("Teacher registered durationMs={} userId={} personId={}",
                     duration, savedUser.getId().getValue(), savedPerson.getId().getValue());
 
             return savedUser.getId();
@@ -65,7 +65,7 @@ public class UserRegistrationHelper {
         } catch (EmailAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to register teacher {}: {}", command.email(), e.getMessage(), e);
+            log.error("Failed to register teacher email={}: {}", command.email(), e.getMessage(), e);
             throw new RuntimeException("Failed to register teacher", e);
         }
     }
@@ -75,7 +75,7 @@ public class UserRegistrationHelper {
         Email email = new Email(command.email());
         long startTime = System.currentTimeMillis();
 
-        log.info("🎒 Starting STUDENT registration for email: {}", command.email());
+        log.info("Registering student email={}", command.email());
 
         try {
             validateEmailNotExists(email);
@@ -93,7 +93,7 @@ public class UserRegistrationHelper {
             User savedUser = userRepository.save(student);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ STUDENT registered in {}ms. User ID: {}, Student Ref: {}",
+            log.info("Student registered durationMs={} userId={} studentRef={}",
                     duration, savedUser.getId().getValue(), command.studentId());
 
             return savedUser.getId();
@@ -101,7 +101,7 @@ public class UserRegistrationHelper {
         } catch (EmailAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to register student {}: {}", command.email(), e.getMessage(), e);
+            log.error("Failed to register student email={}: {}", command.email(), e.getMessage(), e);
             throw new RuntimeException("Failed to register student", e);
         }
     }
@@ -111,7 +111,7 @@ public class UserRegistrationHelper {
         Email email = new Email(command.email());
         long startTime = System.currentTimeMillis();
 
-        log.warn("🔐 Starting ADMIN registration for email: {}", command.email());
+        log.warn("Registering admin email={}", command.email());
 
         try {
             validateEmailNotExists(email);
@@ -129,14 +129,14 @@ public class UserRegistrationHelper {
             User savedUser = userRepository.save(admin);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ ADMIN registered in {}ms. User ID: {}", duration, savedUser.getId().getValue());
+            log.warn("Admin registered durationMs={} userId={}", duration, savedUser.getId().getValue());
 
             return savedUser.getId();
 
         } catch (EmailAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to register admin {}: {}", command.email(), e.getMessage(), e);
+            log.error("Failed to register admin email={}: {}", command.email(), e.getMessage(), e);
             throw new RuntimeException("Failed to register admin", e);
         }
     }
@@ -146,8 +146,7 @@ public class UserRegistrationHelper {
         long startTime = System.currentTimeMillis();
         Email email = new Email(command.email());
 
-        log.info("🚀 Creating complete user: {} {} ({})",
-                command.firstName(), command.lastName(), command.role());
+        log.info("Creating complete user email={} role={}", command.email(), command.role());
 
         try {
             validateEmailNotExists(email);
@@ -162,7 +161,7 @@ public class UserRegistrationHelper {
             CompleteUserDTO result = buildCompleteUserDTO(savedUser, savedPerson);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Complete user created in {}ms. User ID: {}, Person ID: {}",
+            log.info("Complete user created durationMs={} userId={} personId={}",
                     duration, savedUser.getId().getValue(), savedPerson.getId().getValue());
 
             return result;
@@ -170,7 +169,7 @@ public class UserRegistrationHelper {
         } catch (EmailAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to create complete user {}: {}", command.email(), e.getMessage(), e);
+            log.error("Failed to create complete user email={}: {}", command.email(), e.getMessage(), e);
             throw new RuntimeException("Failed to create complete user", e);
         }
     }
@@ -181,7 +180,7 @@ public class UserRegistrationHelper {
 
     private void validateEmailNotExists(Email email) {
         if (userRepository.existsByEmail(email)) {
-            log.warn("❌ Registration failed: Email already exists ({})", email.getValue());
+            log.warn("Registration failed: email already exists email={}", email.getValue());
             throw new EmailAlreadyExistsException("Email already registered: " + email.getValue());
         }
     }

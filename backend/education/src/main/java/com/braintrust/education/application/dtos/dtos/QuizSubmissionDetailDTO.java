@@ -14,8 +14,8 @@ public record QuizSubmissionDetailDTO(
         String submittedAt,
         String status,
         GradeDTO grade,
-        BigDecimal finalGrade,        // ✅ NEW — scaled to quiz totalScore
-        boolean canViewResults,       // ✅ NEW — student can see answers/feedback
+        BigDecimal finalGrade,
+        boolean canViewResults,
         boolean autoGraded,
         List<GradedQuestionResponseDTO> questionResponses,
         boolean timeExpired,

@@ -18,6 +18,6 @@ public record AIDetectionResultDTO(
         String status,
         String analyzedAt,
         String errorMessage,
-        List<DetectedSegmentDTO> detectedSegments, // ✅ AI detected segments are here
+        List<DetectedSegmentDTO> detectedSegments,
         Map<String, Object> metadata
 ) {}

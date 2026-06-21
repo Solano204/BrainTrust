@@ -1,5 +1,6 @@
 package com.braintrust.education.application.helpers.submission;
 
+import com.braintrust.education.application.helpers.plagiarism.SubmissionPlagiarismHelper;
 import com.braintrust.aidetectition.application.dtos.commands.AnalyzeSubmissionCommand;
 import com.braintrust.aidetectition.application.dtos.dtoResponse.AIDetectionResultDTO;
 import com.braintrust.aidetectition.application.dtos.dtoResponse.AnalysisResultDTO;
@@ -21,6 +22,7 @@ public class SubmissionAIAnalysisHelper {
     private static final Logger log = LoggerFactory.getLogger(SubmissionAIAnalysisHelper.class);
 
     private final AnalysisApplicationService analysisApplicationService;
+    private final SubmissionPlagiarismHelper plagiarismHelper;
 
     @Value("${ai.model-default-type:ENSEMBLE}")
     private String MODEL_IA;
@@ -31,8 +33,10 @@ public class SubmissionAIAnalysisHelper {
     @Value("${submission.ai-analysis.min-text-length:50}")
     private int minTextLengthForAnalysis;
 
-    public SubmissionAIAnalysisHelper(AnalysisApplicationService analysisApplicationService) {
+    public SubmissionAIAnalysisHelper(AnalysisApplicationService analysisApplicationService,
+                                      SubmissionPlagiarismHelper plagiarismHelper) {
         this.analysisApplicationService = analysisApplicationService;
+        this.plagiarismHelper = plagiarismHelper;
     }
 
     @Async("virtualTaskExecutor")
@@ -42,25 +46,22 @@ public class SubmissionAIAnalysisHelper {
             SubmissionFormat submissionFormat) {
 
         if (!aiAnalysisEnabled) {
-            log.info("🤖 AI analysis is disabled. Skipping for submission {}", submissionId.getValue());
+            log.info("AI analysis disabled, skipping submission={}", submissionId.getValue());
             return;
         }
 
         if (submissionFormat != SubmissionFormat.DIGITAL) {
-            log.warn("⚠️ AI analysis attempted for non-DIGITAL submission {} (Format: {}). Skipping.",
-                    submissionId.getValue(), submissionFormat.name());
+            log.warn("Skipping AI analysis: non-DIGITAL submission={} format={}", submissionId.getValue(), submissionFormat.name());
             return;
         }
 
         if (extractedText == null || extractedText.trim().isEmpty() ||
                 extractedText.length() < minTextLengthForAnalysis) {
-            log.warn("⚠️ Extracted text too short for AI analysis ({} chars). Minimum required: {}. Skipping.",
-                    extractedText != null ? extractedText.length() : 0, minTextLengthForAnalysis);
+            log.warn("Skipping AI analysis: text too short chars={} min={}", extractedText != null ? extractedText.length() : 0, minTextLengthForAnalysis);
             return;
         }
 
-        log.info("🤖 Starting async AI analysis for Submission {} (Text length: {} chars)",
-                submissionId.getValue(), extractedText.length());
+        log.info("Starting async AI analysis submission={} textLength={}", submissionId.getValue(), extractedText.length());
         long startTime = System.currentTimeMillis();
 
         try {
@@ -73,12 +74,12 @@ public class SubmissionAIAnalysisHelper {
             );
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ AI analysis completed for Submission {} in {}ms",
-                    submissionId.getValue(), duration);
+            log.info("AI analysis completed submission={} durationMs={}", submissionId.getValue(), duration);
+
+            plagiarismHelper.triggerPlagiarismCheckAsync(submissionId, extractedText);
 
         } catch (Exception e) {
-            log.error("❌ AI analysis failed for Submission {}: {}",
-                    submissionId.getValue(), e.getMessage(), e);
+            log.error("AI analysis failed submission={}: {}", submissionId.getValue(), e.getMessage(), e);
         }
     }
 
@@ -95,28 +96,27 @@ public class SubmissionAIAnalysisHelper {
             String extractedText,
             String submissionType) {
         if (!aiAnalysisEnabled) {
-            log.info("⏭️ AI analysis disabled globally for {} submission", submissionType);
+            log.info("AI analysis disabled globally for {} submission", submissionType);
             return;
         }
 
         if (format != SubmissionFormat.DIGITAL) {
-            log.info("📓 Skipping AI analysis for {} submission - {} format",
-                    submissionType, format.name());
+            log.info("Skipping AI analysis for {} submission - format={}", submissionType, format.name());
             return;
         }
 
         if (documents.isEmpty()) {
-            log.info("⏭️ Skipping AI analysis for {} submission - no documents", submissionType);
+            log.info("Skipping AI analysis for {} submission - no documents", submissionType);
             return;
         }
 
         if (extractedText == null || extractedText.trim().isEmpty()) {
-            log.info("⏭️ Skipping AI analysis for {} submission - no text extracted", submissionType);
+            log.info("Skipping AI analysis for {} submission - no text extracted", submissionType);
             return;
         }
 
         if (extractedText.length() < minTextLengthForAnalysis) {
-            log.info("⏭️ Skipping AI analysis for {} submission - extracted text too short ({} chars < {})",
+            log.info("Skipping AI analysis for {} submission - text too short chars={} min={}",
                     submissionType, extractedText.length(), minTextLengthForAnalysis);
         }
     }

@@ -7,7 +7,7 @@ import com.braintrust.identity.domain.valueobjects.*;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.CatRoleJpaEntity;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.entities.UserJpaEntity;
 import com.braintrust.identity.infraestructure.repositoriesPersistence.sql.repositories.CatRoleJpaRepository;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class UserEntityMapper {
                 user.getStudentId(),
                 user.getCreatedAt()
         );
-        entity.setRoleEntity(roleEntity); // ✅ attach the role
+        entity.setRoleEntity(roleEntity);
         return entity;
     }
 
@@ -51,7 +51,7 @@ public class UserEntityMapper {
                 PersonId.fromString(entity.getPersonId()),
                 new Email(entity.getEmail()),
                 Password.fromHash(entity.getPasswordHash()),
-                Role.valueOf(entity.getRole().name()), // ✅ reads from CatRoleJpaEntity.code
+                Role.valueOf(entity.getRole().name()),
                 entity.isActive(),
                 entity.getCreatedAt(),
                 entity.getStudentId()

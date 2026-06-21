@@ -46,13 +46,13 @@ public class GradeUpdateHelper {
 
         AssignmentId assignmentId = AssignmentId.fromString(command.activityId());
 
-        log.debug("📝 Updating assignment grade bidirectionally");
+        log.debug("Updating assignment grade bidirectionally");
 
         List<Submission> submissions = submissionRepository
                 .findByAssignmentAndStudent(assignmentId, studentId);
 
         if (submissions.isEmpty()) {
-            log.warn("⚠️ No submission found for assignment {}, creating placeholder",
+            log.warn("No submission found for assignment {}, creating placeholder",
                     assignmentId.getValue());
 
             Assignment assignment = assignmentRepository.findById(assignmentId)
@@ -74,7 +74,7 @@ public class GradeUpdateHelper {
             submission.grade(newGrade, command.feedback());
             submissionRepository.save(submission);
 
-            log.debug("✅ Source submission updated");
+            log.debug("Source submission updated");
         }
 
         Assignment assignment = assignmentRepository.findById(assignmentId)
@@ -100,7 +100,7 @@ public class GradeUpdateHelper {
 
         QuizId quizId = QuizId.fromString(command.activityId());
 
-        log.debug("📝 Updating quiz grade bidirectionally");
+        log.debug("Updating quiz grade bidirectionally");
 
         QuizSubmission quizSubmission = quizSubmissionRepository
                 .findLatestByQuizAndStudent(quizId, studentId)
@@ -114,7 +114,7 @@ public class GradeUpdateHelper {
         );
         quizSubmissionRepository.save(quizSubmission);
 
-        log.debug("✅ Source quiz submission updated");
+        log.debug("Source quiz submission updated");
 
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found"));
@@ -139,7 +139,7 @@ public class GradeUpdateHelper {
 
         UnitId unitId = UnitId.fromString(command.activityId());
 
-        log.warn("⚠️ Unit grades are auto-calculated. Only updating feedback.");
+        log.warn("Unit grades are auto-calculated. Only updating feedback.");
 
         UnitGrade unitGrade = unitGradeRepository
                 .findByUnitAndStudent(unitId, studentId)
@@ -156,7 +156,7 @@ public class GradeUpdateHelper {
             Grade assignmentGrade,
             Gradebook gradebook) {
 
-        log.debug("🔄 Cascading assignment grade to unit {}", unitId.getValue());
+        log.debug("Cascading assignment grade to unit {}", unitId.getValue());
 
         UnitGrade unitGrade = unitGradeRepository
                 .findByUnitAndStudent(unitId, studentId)
@@ -179,7 +179,7 @@ public class GradeUpdateHelper {
             Grade quizGrade,
             Gradebook gradebook) {
 
-        log.debug("🔄 Cascading quiz grade to unit {}", unitId.getValue());
+        log.debug("Cascading quiz grade to unit {}", unitId.getValue());
 
         UnitGrade unitGrade = unitGradeRepository
                 .findByUnitAndStudent(unitId, studentId)
@@ -194,6 +194,6 @@ public class GradeUpdateHelper {
             gradebook.updateUnitGrade(unitId, unitGradeForGradebook);
         }
 
-        log.debug("✅ Unit grade updated from quiz");
+        log.debug("Unit grade updated from quiz");
     }
 }

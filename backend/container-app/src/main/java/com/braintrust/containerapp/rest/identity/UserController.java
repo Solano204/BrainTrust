@@ -11,13 +11,13 @@ import com.braintrust.identity.domain.valueobjects.Email;
 import com.braintrust.identity.domain.valueobjects.PersonId;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
-import io.swagger.v3.oas.annotations.Operation; // ⬅️ OpenAPI Import
-import io.swagger.v3.oas.annotations.Parameter; // ⬅️ OpenAPI Import
-import io.swagger.v3.oas.annotations.media.Content; // ⬅️ OpenAPI Import
-import io.swagger.v3.oas.annotations.media.Schema; // ⬅️ OpenAPI Import
-import io.swagger.v3.oas.annotations.responses.ApiResponse; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag; // ⬅️ OpenAPI Import
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -67,12 +67,12 @@ public class UserController {
     public ResponseEntity<CompleteUserDTO> createCompleteUser(
             @RequestBody @Valid CreateCompleteUserCommand command) {
 
-        log.info("🎯 Creating complete user: {} {} ({})",
+        log.info("Creating complete user: {} {} ({})",
                 command.firstName(), command.lastName(), command.role());
 
         CompleteUserDTO result = userService.createCompleteUser(command);
 
-        log.info("✅ Complete user created successfully. User ID: {}, Person ID: {}",
+        log.info("Complete user created successfully. User ID: {}, Person ID: {}",
                 result.userId(), result.personId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
@@ -96,7 +96,7 @@ public class UserController {
                     example = "createdAt,desc")
             @RequestParam(defaultValue = "createdAt,desc") String sort) {
 
-        log.info("📊 Fetching paginated users. Page: {}, Size: {}, Sort: {}", page, size, sort);
+        log.info("Fetching paginated users. Page: {}, Size: {}, Sort: {}", page, size, sort);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
@@ -122,7 +122,7 @@ public class UserController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt,desc") String sort) {
 
-        log.info("📊 Fetching paginated users with role: {}. Page: {}, Size: {}", role, page, size);
+        log.info("Fetching paginated users with role: {}. Page: {}, Size: {}", role, page, size);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
@@ -152,7 +152,7 @@ public class UserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        log.info("🔍 Searching users by name: '{}'. Page: {}, Size: {}", name, page, size);
+        log.info("Searching users by name: '{}'. Page: {}, Size: {}", name, page, size);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<UserDTO> userPage = userService.searchUsersByName(name, pageable);
@@ -174,7 +174,7 @@ public class UserController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "firstName,asc") String sort) {
 
-        log.info("🔍 Searching users by name: '{}' with role: {}. Page: {}, Size: {}",
+        log.info("Searching users by name: '{}' with role: {}. Page: {}, Size: {}",
                 name, role, page, size);
 
         String[] sortParams = sort.split(",");
@@ -334,11 +334,11 @@ public class UserController {
     @Parameter(name = "userId", description = "The ID of the user to delete", required = true)
     @DeleteMapping("/{userId}")
     public ResponseEntity<SuccessResponseDTO> deleteUser(@PathVariable String userId) {
-        log.warn("🗑️ Delete request received for User ID: {}", userId);
+        log.warn("Delete request received for User ID: {}", userId);
 
             userService.deleteUser(UserId.fromString(userId));
 
-            log.info("✅ User ID {} deleted successfully.", userId);
+            log.info("User ID {} deleted successfully.", userId);
 
             return ResponseEntity.ok(
                     new SuccessResponseDTO(true, "User deleted successfully", null)
@@ -363,11 +363,11 @@ public class UserController {
     public ResponseEntity<SuccessResponseDTO> adminResetPassword(
             @RequestBody @Valid AdminChangePasswordCommand command) {
 
-        log.warn("🔐 ADMIN password reset requested by admin for User ID: {}", command.userId());
+        log.warn("ADMIN password reset requested by admin for User ID: {}", command.userId());
 
         userService.adminChangePassword(command);
 
-        log.warn("✅ ADMIN password reset completed for User ID: {}", command.userId());
+        log.warn("ADMIN password reset completed for User ID: {}", command.userId());
 
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "Password reset successfully", null)

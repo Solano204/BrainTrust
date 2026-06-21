@@ -71,7 +71,7 @@ public class PageEntityMapper {
             entity.setAttachments(new ArrayList<>());
         }
 
-        log.debug("✅ Page entity mapped successfully: ID={}, CourseId={}, UnitId={}, Title={}, Content length={}, Links={}, Attachments={}",
+        log.debug("Page entity mapped successfully: ID={}, CourseId={}, UnitId={}, Title={}, Content length={}, Links={}, Attachments={}",
                 entity.getId(), entity.getCourseId(), entity.getUnitId(),
                 entity.getTitle(),
                 entity.getContent() != null ? entity.getContent().length() : 0,

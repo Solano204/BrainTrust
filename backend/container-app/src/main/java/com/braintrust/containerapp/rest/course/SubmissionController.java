@@ -3,6 +3,7 @@ package com.braintrust.containerapp.rest.course;
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.*;
 import com.braintrust.education.application.ports.in.SubmissionService;
+import com.braintrust.education.application.service.PlagiarismApplicationService;
 import com.braintrust.education.domain.model.SubmissionStatus;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
@@ -31,9 +32,12 @@ public class SubmissionController {
             LoggerFactory.getLogger(SubmissionController.class);
 
     private final SubmissionService submissionService;
+    private final PlagiarismApplicationService plagiarismApplicationService;
 
-    public SubmissionController(SubmissionService submissionService) {
+    public SubmissionController(SubmissionService submissionService,
+                                PlagiarismApplicationService plagiarismApplicationService) {
         this.submissionService = submissionService;
+        this.plagiarismApplicationService = plagiarismApplicationService;
     }
 
 
@@ -114,7 +118,7 @@ public class SubmissionController {
         boolean isTeamSubmission = submissionService.isTeamSubmission(submissionIdObj);
 
         if (isTeamSubmission) {
-            log.info("🎯 Applying team grade to all members for submission: {}", submissionId);
+            log.info("Applying team grade to all members for submission: {}", submissionId);
             submissionService.gradeTeamSubmission(command);
         } else {
             submissionService.gradeSubmission(command);
@@ -179,9 +183,6 @@ public class SubmissionController {
     }
 
 
-    // ------------------------------------------------------------------
-    // ✅ SUBMISSION QUERIES
-    // ------------------------------------------------------------------
 
     @GetMapping("/{submissionId}")
     public ResponseEntity<SubmissionDTO> getSubmissionById(@PathVariable String submissionId) {
@@ -219,5 +220,24 @@ public class SubmissionController {
     public ResponseEntity<Void> deleteSubmission(@PathVariable String submissionId) {
         submissionService.deleteSubmission(SubmissionId.fromString(submissionId));
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{submissionId}/plagiarism")
+    public ResponseEntity<List<PlagiarismCheckDTO>> getPlagiarismResultsForSubmission(
+            @PathVariable String submissionId) {
+        log.debug("Fetching plagiarism results for submissionId={}", submissionId);
+        List<PlagiarismCheckDTO> results = plagiarismApplicationService
+                .getPlagiarismResultsForSubmission(submissionId);
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/course/{courseId}/students/{studentId}/history")
+    public ResponseEntity<StudentHistoryDTO> getStudentHistory(
+            @PathVariable String courseId,
+            @PathVariable String studentId) {
+        log.debug("Fetching student history courseId={} studentId={}", courseId, studentId);
+        StudentHistoryDTO history = submissionService.getStudentHistory(
+                CourseId.fromString(courseId), UserId.fromString(studentId));
+        return ResponseEntity.ok(history);
     }
 }

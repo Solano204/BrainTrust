@@ -31,7 +31,6 @@ public class RoleActivityService {
         this.activityRepo = activityRepo;
     }
 
-    // ==================== ROLES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatRoleDTO> getAllRoles(int page, int size) {
@@ -97,7 +96,6 @@ public class RoleActivityService {
         roleRepo.deleteById(id);
     }
 
-    // ==================== ROLE ACTIVITIES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogRoleActivityDTO> getAllActivities(int page, int size) {
@@ -173,7 +171,6 @@ public class RoleActivityService {
         activityRepo.deleteById(id);
     }
 
-    // ==================== HELPERS ====================
 
     private CatRoleDTO toRoleDTO(CatRoleJpaEntity role) {
         List<CatRoleDTO.RoleActivitySummaryDTO> activities = activityRepo

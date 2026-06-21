@@ -27,7 +27,7 @@ public class UserDtoMapper {
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
-    private final CatRoleActivityJpaRepository roleActivityRepository; // ✅ NEW
+    private final CatRoleActivityJpaRepository roleActivityRepository;
 
     public UserDtoMapper(UserRepository userRepository,
                          PersonRepository personRepository,
@@ -37,7 +37,7 @@ public class UserDtoMapper {
         this.roleActivityRepository = roleActivityRepository;
     }
 
-    // ─── Private helpers ──────────────────────────────────────────────────────
+    //  Private helpers 
 
     private List<RoleActivityDTO> getActivities(Role role) {
         return roleActivityRepository.findByRoleId(toRoleId(role))
@@ -54,7 +54,7 @@ public class UserDtoMapper {
         };
     }
 
-    // ─── UserDTO mappings ─────────────────────────────────────────────────────
+    //  UserDTO mappings 
 
     public UserDTO mapToUserDTO(User user, Person person) {
         List<RoleActivityDTO> activities = getActivities(user.getRole());
@@ -66,7 +66,7 @@ public class UserDtoMapper {
             Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
             return mapToUserDTO(user, person);
         } catch (Exception e) {
-            log.warn("⚠️ Failed to map user {} to DTO, using fallback: {}",
+            log.warn("Failed to map user {} to DTO, using fallback: {}",
                     user.getId().getValue(), e.getMessage());
             return toUserDTOFallback(user);
         }
@@ -81,13 +81,13 @@ public class UserDtoMapper {
         try {
             return mapToUserDTO(user);
         } catch (Exception e) {
-            log.warn("⚠️ Using fallback DTO for user {}: {}",
+            log.warn("Using fallback DTO for user {}: {}",
                     user.getId().getValue(), e.getMessage());
             return toUserDTOFallback(user);
         }
     }
 
-    // ─── MinimalUserInfoDTO mappings ──────────────────────────────────────────
+    //  MinimalUserInfoDTO mappings 
 
     public MinimalUserInfoDTO mapToMinimalUserInfoDTO(User user, Person person) {
         return new MinimalUserInfoDTO(
@@ -104,7 +104,7 @@ public class UserDtoMapper {
             Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
             return mapToMinimalUserInfoDTO(user, person);
         } catch (Exception e) {
-            log.warn("⚠️ Failed to map user {} to MinimalUserInfoDTO: {}",
+            log.warn("Failed to map user {} to MinimalUserInfoDTO: {}",
                     user.getId().getValue(), e.getMessage());
             return toMinimalUserInfoDTOFallback(user.getId().getValue());
         }
@@ -117,7 +117,7 @@ public class UserDtoMapper {
                             "User not found: " + userId.getValue()));
             return mapToMinimalUserInfoDTO(user);
         } catch (Exception e) {
-            log.warn("⚠️ Failed to fetch user {} for MinimalUserInfoDTO: {}",
+            log.warn("Failed to fetch user {} for MinimalUserInfoDTO: {}",
                     userId.getValue(), e.getMessage());
             return toMinimalUserInfoDTOFallback(userId.getValue());
         }
@@ -127,13 +127,13 @@ public class UserDtoMapper {
         try {
             return mapToMinimalUserInfoDTO(userId);
         } catch (Exception e) {
-            log.warn("⚠️ Using fallback MinimalUserInfoDTO for user {}: {}",
+            log.warn("Using fallback MinimalUserInfoDTO for user {}: {}",
                     userId.getValue(), e.getMessage());
             return toMinimalUserInfoDTOFallback(userId.getValue());
         }
     }
 
-    // ─── CompleteUserDTO mappings ─────────────────────────────────────────────
+    //  CompleteUserDTO mappings 
 
     public CompleteUserDTO mapToCompleteUserDTO(User user, Person person) {
         AddressDTO addressDTO = person.getAddress() != null
@@ -176,7 +176,7 @@ public class UserDtoMapper {
         return mapToCompleteUserDTO(user);
     }
 
-    // ─── Fallbacks ────────────────────────────────────────────────────────────
+    //  Fallbacks 
 
     private UserDTO toUserDTOFallback(User user) {
         PersonDTO fallbackPersonDTO = new PersonDTO(
@@ -199,7 +199,7 @@ public class UserDtoMapper {
                 user.getCreatedAt(),
                 fallbackPersonDTO,
                 user.getStudentId(),
-                List.of()  // ✅ empty activities on fallback
+                List.of()
         );
     }
 

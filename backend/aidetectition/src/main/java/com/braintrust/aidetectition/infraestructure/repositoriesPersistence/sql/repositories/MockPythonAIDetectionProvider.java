@@ -45,12 +45,12 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
 
     public MockPythonAIDetectionProvider() {
         this.objectMapper = new ObjectMapper();
-        log.info("✅ MockPythonAIDetectionProvider initialized for testing (TEXT ONLY)");
+        log.info("MockPythonAIDetectionProvider initialized for testing (TEXT ONLY)");
     }
 
     @Override
     public DetectionResult analyzeContent(String content, ModelType modelType) {
-        log.info("🧪 MOCK: Analyzing text content (length: {}) with model: {}", content.length(), modelType);
+        log.info("MOCK: Analyzing text content (length: {}) with model: {}", content.length(), modelType);
 
         simulateProcessingDelay(500, 1500);
 
@@ -61,7 +61,7 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
             List<DetectedSegment> detectedSegments = generateDetectedSegments(content, aiProbability);
             Map<String, Object> metadata = generateMockMetadata(content, aiProbability, modelType);
 
-            log.info("🧪 MOCK: Analysis completed. AI Probability: {}%",
+            log.info("MOCK: Analysis completed. AI Probability: {}%",
                     aiProbability.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
 
             return new DetectionResult(
@@ -73,20 +73,20 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
             );
 
         } catch (Exception e) {
-            log.error("🧪 MOCK: Error in mock analysis", e);
+            log.error("MOCK: Error in mock analysis", e);
             throw new RuntimeException("Mock analysis failed: " + e.getMessage(), e);
         }
     }
 
     @Override
     public List<ModelType> getAvailableModels() {
-        log.debug("🧪 MOCK: Returning available models");
+        log.debug("MOCK: Returning available models");
         return List.of(ModelType.ENSEMBLE, ModelType.GPT_DETECTOR, ModelType.BERT_CLASSIFIER);
     }
 
     @Override
     public ModelPerformance getModelPerformance(ModelType modelType) {
-        log.debug("🧪 MOCK: Getting performance for model: {}", modelType);
+        log.debug("MOCK: Getting performance for model: {}", modelType);
         return modelPerformanceMap.getOrDefault(modelType,
                 new ModelPerformance(modelType, "1.0",
                         new BigDecimal("0.80"), new BigDecimal("0.78"),
@@ -95,7 +95,7 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
 
     @Override
     public boolean isServiceAvailable() {
-        log.trace("🧪 MOCK: Checking service availability");
+        log.trace("MOCK: Checking service availability");
         return random.nextDouble() > 0.1;
     }
 
@@ -106,7 +106,7 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
                 new BigDecimal("0.95").add(new BigDecimal(random.nextDouble() * 0.05)) : // 0.95-1.0
                 new BigDecimal("0.0");
 
-        log.debug("🧪 MOCK: Service health: {}", health);
+        log.debug("MOCK: Service health: {}", health);
         return health;
     }
 
@@ -116,7 +116,7 @@ public class MockPythonAIDetectionProvider implements AIDetectionProvider {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("🧪 MOCK: Processing delay interrupted");
+            log.warn("MOCK: Processing delay interrupted");
         }
     }
 

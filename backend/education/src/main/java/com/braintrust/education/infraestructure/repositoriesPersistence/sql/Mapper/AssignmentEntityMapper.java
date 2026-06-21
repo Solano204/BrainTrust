@@ -33,7 +33,7 @@ public class AssignmentEntityMapper {
 
 
 
-    // AssignmentEntityMapper.java — add this method
+    // AssignmentEntityMapper.java  add this method
     public void updateEntity(AssignmentJpaEntity entity, Assignment domain) {
         // AssignmentEntityMapper.java
             entity.setId(domain.getId().getValue());
@@ -48,9 +48,9 @@ public class AssignmentEntityMapper {
             entity.setActive(domain.isActive());
             entity.setTargetType(domain.getTargetType().name());
             entity.setSubmissionFormat(domain.getSubmissionFormat().name());
-            // DO NOT touch documents or links here — handled by syncDocuments/syncLinks
+            // DO NOT touch documents or links here  handled by syncDocuments/syncLinks
 
-        // Use syncDocuments/syncLinks — mutates the SAME collection Hibernate tracks
+        // Use syncDocuments/syncLinks  mutates the SAME collection Hibernate tracks
         List<String[]> desiredDocs = domain.getAttachments().stream()
                 .map(d -> new String[]{d.getName(), d.getStoragePath()})
                 .toList();
@@ -82,7 +82,7 @@ public class AssignmentEntityMapper {
         AssignmentJpaEntity entity;
 
         if (existingOpt.isPresent()) {
-            // ── UPDATE path ───────────────────────────────────────────────────
+            //  UPDATE path 
             entity = existingOpt.get();
             entity.setCourseId(assignment.getCourseId().getValue());
             entity.setUnit(unitIdValue);
@@ -100,14 +100,14 @@ public class AssignmentEntityMapper {
                     .map(doc -> new String[]{doc.getName(), doc.getStoragePath()})
                     .collect(Collectors.toList());
 
-            // Use syncDocuments — mutates the SAME Hibernate-tracked collection
+            // Use syncDocuments  mutates the SAME Hibernate-tracked collection
             entity.syncDocuments(desiredDocs);
 
-            // Use syncLinks — mutates the SAME Hibernate-tracked collection
+            // Use syncLinks  mutates the SAME Hibernate-tracked collection
             entity.syncLinks(new ArrayList<>(assignment.getLinks()));
 
         } else {
-            // ── INSERT path ───────────────────────────────────────────────────
+            //  INSERT path 
             entity = new AssignmentJpaEntity(
                     assignment.getId().getValue(),
                     assignment.getCourseId().getValue(),
