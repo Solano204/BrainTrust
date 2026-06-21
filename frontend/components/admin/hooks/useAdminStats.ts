@@ -13,6 +13,7 @@ import {
   getCoursesByLate,
   getTopQuizzes,
   getOverdueAssignmentsPaginated,
+  getCourseEnrollments,
 } from "@/components/admin/api/adminStatsApi";
 
 import { generateAIInsights } from "@/components/admin/api/aiinsightsApi";
@@ -28,6 +29,8 @@ import type {
   OverdueAssignmentDTO,
   PaginatedStatsDTO,
 } from "@/components/admin/api/adminStatsApi";
+
+import type { AdminEnrollment } from "@/app/shared/models/admin-course.model";
 
 import type { AIInsightsResponse } from "@/components/admin/api/aiinsightsApi";
 
@@ -107,6 +110,16 @@ export function useOverdueAssignmentsPaginated(page = 0, size = 20) {
   return useQuery<PaginatedStatsDTO<OverdueAssignmentDTO>, Error>({
     queryKey: adminStatsKeys.overdueAssignments(page, size),
     queryFn: () => getOverdueAssignmentsPaginated(page, size),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCourseEnrollments(courseId: string | null) {
+  return useQuery<AdminEnrollment[], Error>({
+    queryKey: adminStatsKeys.courseEnrollments(courseId ?? ""),
+    queryFn: () => getCourseEnrollments(courseId!),
+    enabled: !!courseId,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });

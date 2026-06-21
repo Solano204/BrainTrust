@@ -2,6 +2,9 @@
 
 import { apiClient } from "@/app/shared/api/http";
 import { handleApiError } from "@/app/shared/utils/api-error";
+import type { AdminEnrollment } from "@/app/shared/models/admin-course.model";
+import type { EnrollmentDTO } from "@/app/shared/dtos/enrollment.dto";
+import { mapEnrollmentFromBackend } from "@/app/shared/mappers/course.mappers";
 
 
 export interface OverallStatsDTO {
@@ -344,6 +347,16 @@ export async function getAdminStatsHealth(): Promise<string> {
   try {
     const { data } = await apiClient.get<string>(`${BASE}/health`);
     return data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+/** GET /api/courses/{courseId}/enrollments — reused for the drill-down explorer */
+export async function getCourseEnrollments(courseId: string): Promise<AdminEnrollment[]> {
+  try {
+    const { data } = await apiClient.get<EnrollmentDTO[]>(`/api/courses/${courseId}/enrollments`);
+    return data.map(mapEnrollmentFromBackend);
   } catch (error) {
     return handleApiError(error);
   }

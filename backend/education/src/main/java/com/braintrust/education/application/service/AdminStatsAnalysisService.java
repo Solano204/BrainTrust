@@ -25,38 +25,38 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * AdminStatsAnalysisService — CORRECTED VERSION
+ * AdminStatsAnalysisService  CORRECTED VERSION
  *
  * KEY FIXES:
- * ──────────────────────────────────────────────────────────────────────────────
+ * 
  * 1. AI analysis data is fetched via SUBMISSION IDs (not assignment IDs).
  *    AnalysisRequest.submissionId links to Submission.id, NOT to Assignment.id.
  *
  * 2. Student names are resolved via UserService.getMinimalUserInfo() which
- *    joins User → Person → cat_first_names/cat_last_names for real names,
+ *    joins User -> Person -> cat_first_names/cat_last_names for real names,
  *    falling back to email when unavailable.
  *
  * 3. All data is loaded eagerly into maps for O(1) lookups. This trades memory
- *    for correctness and simplicity — per the user's explicit requirement.
+ *    for correctness and simplicity  per the user's explicit requirement.
  *
  * 4. resolveProbability() safely walks:
- *    AnalysisRequest → DetectionResult → AIProbability → BigDecimal
+ *    AnalysisRequest -> DetectionResult -> AIProbability -> BigDecimal
  *    returning ZERO when any link is null (PENDING/FAILED analyses).
  *
  * 5. Quiz submissions now included in AI-related stats where relevant.
  *
  * PUBLIC METHODS:
- * ──────────────────────────────────────────────────────────────────────────────
- *  getAdminStats()                              → full composite dashboard
- *  getAIDetectedAssignmentsPaginated(Pageable)  → old endpoint (backwards-compat)
- *  getOverdueAssignmentsPaginated(Pageable)     → overdue assignments
- *  getAIAssignmentsPaginated(Pageable)          → AI submissions WITH student info
- *  getAIStatsBreakdown()                        → % full-AI / high-AI / low-AI / human
- *  getUserCounts()                              → # students + # teachers
- *  getLateSubmissionsPaginated(Pageable)         → submissions after due-date
- *  getCoursesByAIPercentage(String sort)         → courses ranked by AI %
- *  getCoursesByLatePercentage(String sort)       → courses ranked by late %
- *  getTopQuizzesByGrade(int limit)              → top quiz submissions by grade
+ * 
+ *  getAdminStats()                              -> full composite dashboard
+ *  getAIDetectedAssignmentsPaginated(Pageable)  -> old endpoint (backwards-compat)
+ *  getOverdueAssignmentsPaginated(Pageable)     -> overdue assignments
+ *  getAIAssignmentsPaginated(Pageable)          -> AI submissions WITH student info
+ *  getAIStatsBreakdown()                        -> % full-AI / high-AI / low-AI / human
+ *  getUserCounts()                              -> # students + # teachers
+ *  getLateSubmissionsPaginated(Pageable)         -> submissions after due-date
+ *  getCoursesByAIPercentage(String sort)         -> courses ranked by AI %
+ *  getCoursesByLatePercentage(String sort)       -> courses ranked by late %
+ *  getTopQuizzesByGrade(int limit)              -> top quiz submissions by grade
  */
 @Service
 @Transactional(readOnly = true)
@@ -64,7 +64,7 @@ public class AdminStatsAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger(AdminStatsAnalysisService.class);
 
-    // ── Dependencies ──────────────────────────────────────────────────────────
+    //  Dependencies 
     private final AssignmentRepository      assignmentRepository;
     private final SubmissionRepository      submissionRepository;
     private final EnrollmentRepository      enrollmentRepository;
@@ -97,12 +97,12 @@ public class AdminStatsAnalysisService {
         this.userService               = userService;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // EXISTING — full composite dashboard
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // EXISTING  full composite dashboard
+    // 
 
     public AdminStatsDTO getAdminStats() {
-        log.info("🔍 Generating comprehensive admin statistics...");
+        log.info("Generating comprehensive admin statistics...");
         long startTime = System.currentTimeMillis();
 
         try {
@@ -119,18 +119,18 @@ public class AdminStatsAnalysisService {
             DeadlineStatsDTO               deadlineStats   = buildDeadlineStats(allAssignments, analysisBySubmissionId);
             List<TeacherAssignmentStatsDTO> teacherStats   = buildTeacherStats(allAssignments, analysisBySubmissionId);
 
-            log.info("✅ Admin statistics generated in {}ms", System.currentTimeMillis() - startTime);
+            log.info("Admin statistics generated in {}ms", System.currentTimeMillis() - startTime);
             return new AdminStatsDTO(overallStats, aiStats, assignmentStats, userStats, deadlineStats, teacherStats);
 
         } catch (Exception e) {
-            log.error("❌ Error generating admin statistics: {}", e.getMessage(), e);
+            log.error("Error generating admin statistics: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to generate admin statistics", e);
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // EXISTING — old paginated AI assignments (backwards-compat)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // EXISTING  old paginated AI assignments (backwards-compat)
+    // 
 
     public PaginatedStatsDTO<AssignmentDetailDTO> getAIDetectedAssignmentsPaginated(Pageable pageable) {
         List<Course>     allCourses     = courseRepository.findAll();
@@ -157,9 +157,9 @@ public class AdminStatsAnalysisService {
         return paginate(aiAssignments, pageable);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // EXISTING — overdue assignments
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // EXISTING  overdue assignments
+    // 
 
     public PaginatedStatsDTO<OverdueAssignmentDTO> getOverdueAssignmentsPaginated(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
@@ -176,12 +176,12 @@ public class AdminStatsAnalysisService {
         return paginate(overdueAssignments, pageable);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 1 — PAGINATED AI-DETECTED SUBMISSIONS (with student info)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 1  PAGINATED AI-DETECTED SUBMISSIONS (with student info)
+    // 
 
-    public PaginatedStatsDTO<AIAssignmentPageDTO> getAIAssignmentsPaginated(Pageable pageable) {
-        log.info("📄 [AI Assignments] page={} size={}", pageable.getPageNumber(), pageable.getPageSize());
+    public PaginatedStatsDTO<AIAssignmentPageDTO> getAIAssignmentsPaginated(Pageable pageable, String month) {
+        log.info("[AI Assignments] page={} size={} month={}", pageable.getPageNumber(), pageable.getPageSize(), month);
 
         // Load everything into memory
         Map<String, Course>     courseMap  = courseMap();
@@ -199,6 +199,9 @@ public class AdminStatsAnalysisService {
             List<AnalysisRequest> analyses = analysisBySubId.getOrDefault(sub.getId().getValue(), List.of());
             if (analyses.isEmpty()) continue;
 
+            if (month != null && !month.isBlank() && sub.getSubmittedAt() != null
+                    && !matchesMonth(sub.getSubmittedAt(), month)) continue;
+
             AnalysisRequest analysis = analyses.get(0);
             BigDecimal prob = resolveProbability(analysis);
 
@@ -206,7 +209,7 @@ public class AdminStatsAnalysisService {
             if (assignment == null) continue;
 
             Course course     = courseMap.get(assignment.getCourseId().getValue());
-            String courseName = course != null ? course.getName() : "—";
+            String courseName = course != null ? course.getName() : "-";
 
             // FIX: resolve student name properly via UserService
             String studentName  = resolveStudentName(sub.getStudentId().getValue());
@@ -237,12 +240,12 @@ public class AdminStatsAnalysisService {
         return paginate(items, pageable);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 2 — AI STATS BREAKDOWN (100% / 50-99% / 1-49% / 0%)
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 2  AI STATS BREAKDOWN (100% / 50-99% / 1-49% / 0%)
+    // 
 
     public AIStatsBreakdownDTO getAIStatsBreakdown() {
-        log.info("📊 [AI Stats Breakdown]");
+        log.info("[AI Stats Breakdown]");
 
         List<Course>     allCourses     = courseRepository.findAll();
         List<Submission> allSubmissions = collectAllSubmissions(allCourses);
@@ -284,12 +287,12 @@ public class AdminStatsAnalysisService {
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 3 — USER COUNTS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 3  USER COUNTS
+    // 
 
     public UserCountDTO getUserCounts() {
-        log.info("👥 [User Counts]");
+        log.info("[User Counts]");
 
         List<User> students = userRepository.findByRole(Role.STUDENT);
         List<User> teachers = userRepository.findByRole(Role.TEACHER);
@@ -305,12 +308,12 @@ public class AdminStatsAnalysisService {
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 4 — LATE SUBMISSIONS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 4  LATE SUBMISSIONS
+    // 
 
-    public PaginatedStatsDTO<LateSubmissionDTO> getLateSubmissionsPaginated(Pageable pageable) {
-        log.info("⏰ [Late Submissions] page={} size={}", pageable.getPageNumber(), pageable.getPageSize());
+    public PaginatedStatsDTO<LateSubmissionDTO> getLateSubmissionsPaginated(Pageable pageable, String month) {
+        log.info("[Late Submissions] page={} size={} month={}", pageable.getPageNumber(), pageable.getPageSize(), month);
 
         Map<String, Course>     courseMap  = courseMap();
         Map<String, Assignment> assignMap = assignmentRepository.findAll()
@@ -328,11 +331,12 @@ public class AdminStatsAnalysisService {
             if (assignment.getDueDate() == null) continue;
             if (sub.getSubmittedAt() == null)    continue;
             if (!sub.getSubmittedAt().isAfter(assignment.getDueDate())) continue;
+            if (month != null && !month.isBlank() && !matchesMonth(sub.getSubmittedAt(), month)) continue;
 
             long minutesLate = Duration.between(assignment.getDueDate(), sub.getSubmittedAt()).toMinutes();
 
             Course course     = courseMap.get(assignment.getCourseId().getValue());
-            String courseName = course != null ? course.getName() : "—";
+            String courseName = course != null ? course.getName() : "-";
 
             // FIX: resolve student name properly
             String studentName = resolveStudentName(sub.getStudentId().getValue());
@@ -366,36 +370,36 @@ public class AdminStatsAnalysisService {
         return paginate(items, pageable);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 5 — COURSES RANKED BY AI PERCENTAGE
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 5  COURSES RANKED BY AI PERCENTAGE
+    // 
 
     public List<CourseAIStatsDTO> getCoursesByAIPercentage(String sort) {
-        log.info("📚 [Courses by AI %] sort={}", sort);
+        log.info("[Courses by AI %] sort={}", sort);
         List<CourseAIStatsDTO> stats = buildCourseStats();
         Comparator<CourseAIStatsDTO> cmp = Comparator.comparing(CourseAIStatsDTO::aiPercentage);
         if (!"asc".equalsIgnoreCase(sort)) cmp = cmp.reversed();
         return stats.stream().sorted(cmp).collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 6 — COURSES RANKED BY LATE PERCENTAGE
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 6  COURSES RANKED BY LATE PERCENTAGE
+    // 
 
     public List<CourseAIStatsDTO> getCoursesByLatePercentage(String sort) {
-        log.info("📚 [Courses by Late %] sort={}", sort);
+        log.info("[Courses by Late %] sort={}", sort);
         List<CourseAIStatsDTO> stats = buildCourseStats();
         Comparator<CourseAIStatsDTO> cmp = Comparator.comparing(CourseAIStatsDTO::latePercentage);
         if (!"asc".equalsIgnoreCase(sort)) cmp = cmp.reversed();
         return stats.stream().sorted(cmp).collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // NEW 7 — TOP QUIZZES BY BEST GRADE
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
+    // NEW 7  TOP QUIZZES BY BEST GRADE
+    // 
 
     public List<QuizTopDTO> getTopQuizzesByGrade(int limit) {
-        log.info("🏆 [Top Quizzes by Grade] limit={}", limit);
+        log.info("[Top Quizzes by Grade] limit={}", limit);
 
         Map<String, Course> courseMap = courseMap();
         Map<String, Quiz>   quizMap  = quizRepository.findAll()
@@ -419,10 +423,10 @@ public class AdminStatsAnalysisService {
                         : BigDecimal.ZERO;
 
                 Quiz   quiz       = quizMap.get(qs.getQuizId().getValue());
-                String quizTitle  = quiz != null ? quiz.getTitle() : "—";
+                String quizTitle  = quiz != null ? quiz.getTitle() : "-";
                 String courseId   = quiz != null ? quiz.getCourseId().getValue() : course.getId().getValue();
                 Course c          = courseMap.get(courseId);
-                String courseName = c != null ? c.getName() : "—";
+                String courseName = c != null ? c.getName() : "-";
 
                 // FIX: resolve student name properly
                 String studentName = resolveStudentName(qs.getStudentId().getValue());
@@ -447,9 +451,9 @@ public class AdminStatsAnalysisService {
         return results.stream().limit(limit).collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // CORE DATA LOADING HELPERS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     /**
      * Collects ALL submissions across ALL courses into a single list.
@@ -462,10 +466,10 @@ public class AdminStatsAnalysisService {
     }
 
     /**
-     * CORE FIX — Loads ALL AnalysisRequests and indexes them by SUBMISSION ID.
+     * CORE FIX  Loads ALL AnalysisRequests and indexes them by SUBMISSION ID.
      *
      * The old code called findAnalyses(assignment.getId()) which looked up by
-     * assignment ID — but AnalysisRequest.submissionId points to Submission.id,
+     * assignment ID  but AnalysisRequest.submissionId points to Submission.id,
      * NOT Assignment.id. This caused all AI data to come back empty.
      *
      * Now we iterate every submission, query its analyses, and build a map
@@ -492,9 +496,9 @@ public class AdminStatsAnalysisService {
         return map;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // STUDENT NAME/EMAIL RESOLUTION
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     /**
      * Resolves the full name for a student ID.
@@ -542,7 +546,7 @@ public class AdminStatsAnalysisService {
         } catch (Exception e) {
             log.debug("Could not resolve email for {}: {}", studentIdValue, e.getMessage());
         }
-        return "—";
+        return "-";
     }
 
     /** Convenience overload for User objects */
@@ -557,18 +561,18 @@ public class AdminStatsAnalysisService {
         return user.getEmail().getValue();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // PROBABILITY EXTRACTION
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     /**
-     * CORE FIX — Extracts the AI probability from an AnalysisRequest safely.
+     * CORE FIX  Extracts the AI probability from an AnalysisRequest safely.
      *
      * AnalysisRequest has NO direct getProbability().
      * The value chain is:
-     *   AnalysisRequest.getResult()           → DetectionResult  (null when PENDING/FAILED)
-     *   DetectionResult.getProbability()       → AIProbability
-     *   AIProbability.getValue()               → BigDecimal
+     *   AnalysisRequest.getResult()           -> DetectionResult  (null when PENDING/FAILED)
+     *   DetectionResult.getProbability()       -> AIProbability
+     *   AIProbability.getValue()               -> BigDecimal
      *
      * Returns BigDecimal.ZERO when the analysis is not yet completed.
      */
@@ -598,9 +602,9 @@ public class AdminStatsAnalysisService {
         return maxProb;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // COMPOSITE DASHBOARD BUILDERS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     private OverallStatsDTO buildOverallStats(List<Assignment> allAssignments,
                                               List<Submission> allSubmissions,
@@ -678,7 +682,7 @@ public class AdminStatsAnalysisService {
                         e.getKey(),
                         e.getKey(),
                         e.getValue().size(),
-                        BigDecimal.ZERO)) // simplified — unit-level avg prob is expensive
+                        BigDecimal.ZERO)) // simplified  unit-level avg prob is expensive
                 .collect(Collectors.toList());
 
         return new AssignmentStatsDTO(totalActive, totalInactive, totalGroup, totalIndividual, byUnit);
@@ -793,9 +797,9 @@ public class AdminStatsAnalysisService {
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // COURSE STATS BUILDER
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     private List<CourseAIStatsDTO> buildCourseStats() {
         Map<String, User> teacherMap = userRepository.findByRole(Role.TEACHER)
@@ -859,9 +863,9 @@ public class AdminStatsAnalysisService {
         return result;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // DTO MAPPERS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     private AssignmentDetailDTO mapToAssignmentDetailDTO(Assignment assignment,
                                                          List<Submission> allSubmissions,
@@ -873,7 +877,7 @@ public class AdminStatsAnalysisService {
                 assignment.getId().getValue(),
                 assignment.getTitle(),
                 assignment.getCourseId().getValue(),
-                "—",
+                "-",
                 prob,
                 hasAnalysis ? "COMPLETED" : "PENDING",
                 assignment.getDueDate() != null ? assignment.getDueDate().toString() : "N/A"
@@ -890,18 +894,18 @@ public class AdminStatsAnalysisService {
                 assignment.getId().getValue(),
                 assignment.getTitle(),
                 assignment.getCourseId().getValue(),
-                "—",
-                "—",
-                "—",
+                "-",
+                "-",
+                "-",
                 assignment.getDueDate().toString(),
                 daysOverdue,
                 prob
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
     // SHARED UTILITIES
-    // ═══════════════════════════════════════════════════════════════════════════
+    // 
 
     private Map<String, Course> courseMap() {
         return courseRepository.findAll()
@@ -928,6 +932,19 @@ public class AdminStatsAnalysisService {
         return BigDecimal.valueOf(part)
                 .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
+    }
+
+    private boolean matchesMonth(LocalDateTime dt, String month) {
+        if (month == null || month.isBlank()) return true;
+        String[] parts = month.split("-");
+        if (parts.length != 2) return true;
+        try {
+            int year = Integer.parseInt(parts[0]);
+            int m    = Integer.parseInt(parts[1]);
+            return dt.getYear() == year && dt.getMonthValue() == m;
+        } catch (NumberFormatException e) {
+            return true;
+        }
     }
 
     private BigDecimal resolveGradeValue(QuizSubmission qs) {

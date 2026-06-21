@@ -10,7 +10,7 @@ import {
   Users, BookOpen, Brain, AlertCircle, Loader2, RefreshCw,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   GraduationCap, ArrowUpDown, Sparkles, ShieldAlert, Lightbulb,
-  CheckCircle2, AlertTriangle, Info,
+  CheckCircle2, AlertTriangle, Info, Search,
 } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -22,9 +22,11 @@ import {
 import {
   useAdminStats, useAIBreakdown, useUserCounts, useCoursesByAI,
   useCoursesByLate, useTopQuizzes, useLateSubmissionsPaginated,
-  useAIAssignmentsPaginated, useAIInsights,
+  useAIAssignmentsPaginated, useAIInsights, useCourseEnrollments,
 } from "@/components/admin/hooks/useAdminStats";
 
+import { StudentHistoryView } from "@/components/teacher/student-history-view";
+import type { CourseAIStatsDTO } from "@/components/admin/api/adminStatsApi";
 import type { AIInsight, InsightCategory } from "@/components/admin/api/aiinsightsApi";
 
 const C = {
@@ -215,7 +217,10 @@ export function StatisticsPanel() {
   const [quizLimit, setQuizLimit] = useState(10);
   const [latePage, setLatePage] = useState(0);
   const [aiAssignPage, setAiAssignPage] = useState(0);
-  const [selectedMonth, setSelectedMonth] = useState<string>("all"); // ← Month filter (default: all months)
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [drillCourse, setDrillCourse] = useState<CourseAIStatsDTO | null>(null);
+  const [drillStudent, setDrillStudent] = useState<{ id: string; name: string } | null>(null);
+  const [studentSearch, setStudentSearch] = useState("");
   const PAGE_SIZE = 10;
 
   const adminStats = useAdminStats();
@@ -227,6 +232,7 @@ export function StatisticsPanel() {
   const lateSubmissions = useLateSubmissionsPaginated(latePage, PAGE_SIZE, selectedMonth === "all" ? undefined : selectedMonth);
   const aiAssignments = useAIAssignmentsPaginated(aiAssignPage, PAGE_SIZE, selectedMonth === "all" ? undefined : selectedMonth);
   const aiInsights = useAIInsights(adminStats.data, aiBreakdown.data, userCounts.data, coursesByAI.data);
+  const courseEnrollments = useCourseEnrollments(drillCourse?.courseId ?? null);
 
   const getInsight = (cat: InsightCategory): AIInsight | undefined => aiInsights.data?.insights?.find((i) => i.category === cat);
   const iLoading = aiInsights.isFetching;
@@ -605,6 +611,109 @@ export function StatisticsPanel() {
             ) : <SectionLoader label="..." />}
           </ChartCard>
         </div>
+
+        <ChartCard
+          title="Explorador: Cursos → Estudiantes → Historial"
+          description="Selecciona un curso para ver sus estudiantes, luego selecciona un estudiante para ver su historial completo de entregas."
+        >
+          {drillStudent ? (
+            <StudentHistoryView
+              courseId={drillCourse!.courseId}
+              studentId={drillStudent.id}
+              studentName={drillStudent.name}
+              onBack={() => setDrillStudent(null)}
+            />
+          ) : drillCourse ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => { setDrillCourse(null); setStudentSearch(""); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Cursos
+                </button>
+                <span className="text-sm font-semibold text-foreground">{drillCourse.courseName}</span>
+                <span className="text-xs text-muted-foreground">· {drillCourse.totalSubmissions} entregas</span>
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <input
+                  placeholder="Buscar estudiante..."
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                />
+              </div>
+              {courseEnrollments.isLoading ? (
+                <SectionLoader label="Cargando estudiantes..." />
+              ) : !courseEnrollments.data?.length ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Sin estudiantes inscritos</p>
+              ) : (() => {
+                const filtered = courseEnrollments.data.filter(e =>
+                  e.studentName.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                  e.studentEmail.toLowerCase().includes(studentSearch.toLowerCase())
+                );
+                return filtered.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Sin resultados</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                    {filtered.map((enrollment) => (
+                      <button
+                        key={enrollment.id}
+                        onClick={() => setDrillStudent({ id: enrollment.studentId, name: enrollment.studentName })}
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 hover:border-primary/30 transition-all text-left group"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{enrollment.studentName}</p>
+                          <p className="text-xs text-muted-foreground truncate">{enrollment.studentEmail}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          {enrollment.finalGrade && (
+                            <span className="text-xs font-semibold text-foreground bg-muted px-2 py-0.5 rounded-lg">
+                              {enrollment.finalGrade.percentage}%
+                            </span>
+                          )}
+                          <span className={`text-xs px-2 py-0.5 rounded-lg font-medium ${enrollment.status === "ACTIVE" ? "badge-primary" : "badge-muted"}`}>
+                            {enrollment.status === "ACTIVE" ? "Activo" : enrollment.status}
+                          </span>
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (() => {
+            const allCourses = coursesByAI.data ?? coursesByLate.data ?? [];
+            return allCourses.length === 0 ? (
+              <SectionLoader label="Cargando cursos..." />
+            ) : (
+              <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                {allCourses.map((course) => (
+                  <button
+                    key={course.courseId}
+                    onClick={() => { setDrillCourse(course); setStudentSearch(""); }}
+                    className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted/50 hover:border-primary/30 transition-all text-left group"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{course.courseName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{course.teacherName}</p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-3">
+                      <div className="text-right">
+                        <p className="text-xs font-semibold text-rose-500">{Number(course.aiPercentage).toFixed(1)}% IA</p>
+                        <p className="text-xs text-muted-foreground">{course.totalSubmissions} entregas</p>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
+        </ChartCard>
 
       </div>
     </div>
