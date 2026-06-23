@@ -237,11 +237,7 @@ return (
             <div className="flex flex-wrap gap-4 sm:gap-6 justify-center text-sm sm:text-base">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="font-medium">{cantidadEstudiantes} Estudiantes</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="font-medium">{duracionCurso}</span>
+            
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />

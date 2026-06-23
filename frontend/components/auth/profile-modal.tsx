@@ -236,6 +236,134 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
         {isLoadingProfile ? (
           <div className="flex items-center justify-center py-24">
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : profile ? (
@@ -596,16 +724,17 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   </div>
                 </TabsContent>
 
+                {/* ── Security Tab ── */}
                 <TabsContent value="security" className="mt-0">
                   <div className="space-y-4 p-4 rounded-lg border bg-card">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-semibold">Cambiar contraseña</h3>
+                      <h3 className="text-base font-semibold">Change Password</h3>
                       <Shield className="h-4 w-4 text-muted-foreground" />
                     </div>
 
                     <div className="space-y-1.5">
                       <Label htmlFor="currentPassword" className="text-sm font-medium">
-                        Contraseña actual <span className="text-destructive">*</span>
+                        Current Password <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="currentPassword"
@@ -629,7 +758,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="newPassword" className="text-sm font-medium">
-                        Nueva contraseña <span className="text-destructive">*</span>
+                        New Password <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="newPassword"
@@ -653,7 +782,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                        Confirmar nueva contraseña <span className="text-destructive">*</span>
+                        Confirm New Password <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="confirmPassword"
@@ -676,19 +805,19 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     </div>
 
                     <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                      <p className="font-medium mb-1.5 text-sm">Requisitos de contraseña:</p>
+                      <p className="font-medium mb-1.5 text-sm">Password requirements:</p>
                       <ul className="space-y-1 text-muted-foreground text-xs">
                         <li className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                          Mínimo 8 caracteres
+                          At least 8 characters
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                          Una letra mayúscula y una minúscula
+                          One uppercase and one lowercase letter
                         </li>
                         <li className="flex items-center gap-2">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                          Un número y un carácter especial (@$!%*?&)
+                          One number and one special character (@$!%*?&)
                         </li>
                       </ul>
                     </div>
@@ -701,9 +830,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         size="sm"
                       >
                         {changePasswordMutation.isPending ? (
-                          <><Loader2 className="h-4 w-4 animate-spin" />Actualizando...</>
+                          <><Loader2 className="h-4 w-4 animate-spin" />Updating...</>
                         ) : (
-                          <><Lock className="h-4 w-4" />Cambiar contraseña</>
+                          <><Lock className="h-4 w-4" />Change Password</>
                         )}
                       </Button>
                     </div>
@@ -714,7 +843,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
-            No se pudo cargar la información del perfil
+            Unable to load profile information
           </div>
         )}
       </DialogContent>

@@ -409,11 +409,11 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                     </div>
                     <div className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
                       <p className="text-xs text-muted-foreground mb-0.5">Calificación</p>
-                      <p className="text-sm font-semibold text-foreground">
+                      <div className="text-sm font-semibold text-foreground">
                         {assignment.submission?.grade
                           ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
                           : "—"}
-                      </p>
+                      </div>
                     </div>
                   </div>
                   <button

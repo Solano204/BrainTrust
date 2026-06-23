@@ -24,15 +24,20 @@ export function useTaskInventoryMutations() {
   const updateGradeMutation = useMutation({
     mutationFn: ({
                    submissionId,
+                   teamMemberSubmissionIds,
                    gradeValue,
                    maxScore,
                    feedback
                  }: {
       submissionId: SubmissionId;
+      teamMemberSubmissionIds?: string[];
       gradeValue: string;
       maxScore: string;
       feedback: string;
-    }) => gradeSubmission(submissionId, gradeValue, maxScore, feedback),
+    }) => {
+      const ids = teamMemberSubmissionIds?.length ? teamMemberSubmissionIds : [submissionId];
+      return Promise.all(ids.map(id => gradeSubmission(id, gradeValue, maxScore, feedback)));
+    },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: taskInventoryKeys.submissionDetail(variables.submissionId)

@@ -46,6 +46,7 @@ interface PropsVistaDetalleEntrega {
   onBack: () => void;
   onUpdateGrade: (data: {
     submissionId: string;
+    teamMemberSubmissionIds?: string[];
     gradeValue: string;
     maxScore: string;
     feedback: string;
@@ -93,6 +94,7 @@ export function SubmissionDetailView({
     if (!data.submission) return;
     onUpdateGrade({
       submissionId: data.submission.id,
+      teamMemberSubmissionIds: data.submission.teamMemberSubmissionIds,
       gradeValue: valorCalificacion,
       maxScore: data.maxPoints.toString(),
       feedback: retroalimentacion,

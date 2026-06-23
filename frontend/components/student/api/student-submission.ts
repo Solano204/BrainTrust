@@ -97,7 +97,26 @@ export async function fetchTeacherSubmissions(
     const { data } = await apiClient.get<SubmissionDTO[]>(
         `/api/submissions/course/${courseId}/unit/${unitId}`
     );
-    return data.map(mapSubmissionToTask);
+
+    const teamGroups = new Map<string, SubmissionDTO[]>();
+    const individual: SubmissionDTO[] = [];
+
+    for (const sub of data) {
+      if (sub.isTeamSubmission && sub.teamId) {
+        const key = `${sub.assignmentId}-${sub.teamId}`;
+        if (!teamGroups.has(key)) teamGroups.set(key, []);
+        teamGroups.get(key)!.push(sub);
+      } else {
+        individual.push(sub);
+      }
+    }
+
+    const teamRepresentatives = Array.from(teamGroups.values()).map(members => {
+      const representative = members.find(m => m.content) ?? members[0];
+      return { ...representative, _teamMemberIds: members.map(m => m.id) };
+    });
+
+    return [...individual, ...teamRepresentatives].map(mapSubmissionToTask);
   } catch (error) {
     return handleApiError(error);
   }
