@@ -34,17 +34,18 @@ export async function uploadImageFile(
       const data = await response.json();
       return data.secure_url;
     } else {
-      const baseUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
+      const baseUrl = typeof window !== 'undefined'
+        ? window.location.origin
         : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      
+
       const response = await fetch(`${baseUrl}/api/upload-image`, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(`Upload failed: ${errorBody.error || response.statusText}`);
       }
 
       const data = await response.json();

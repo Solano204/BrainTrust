@@ -7,17 +7,13 @@ import { Button } from "@/components/ui/button";
 import {
   Clock,
   AlertTriangle,
-  MessageSquare,
   FileText,
   ArrowRight,
-  Trash2,
-  X,
   ClipboardList,
   Check,
   Loader2,
   Calendar,
   Users,
-  User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -104,9 +100,7 @@ const obtenerEstadoRecurso = (
     switch (tipo) {
       case "ASSIGNMENT":
         const tarea = recurso as Assignment;
-        const estaEntregado = tarea.submissions?.some(
-          (s) => s.studentId === userId
-        );
+        const estaEntregado = (tarea.submissions?.length ?? 0) > 0;
         const modoEntrega =
           tarea.deliveryMode === "TEAM" ? "Grupal" : "Individual";
         return estaEntregado
@@ -158,7 +152,6 @@ interface PropsSeccionLineaTiempo {
 
 export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
   const [mostrarTodo, setMostrarTodo] = React.useState(false);
-  const [descartandoId, setDescartandoId] = React.useState<string | null>(null);
   const [recursoActivo, setRecursoActivo] =
     React.useState<DatosRecursoLineaTiempo | null>(null);
   const [idRecursoSeleccionado, setIdRecursoSeleccionado] = React.useState<
@@ -195,10 +188,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
   const recursosLineaTiempo = React.useMemo(() => {
     return [...tareas, ...quizzes];
   }, [tareas, quizzes]);
-
-  const handleDescartar = (id: string) => {
-    setDescartandoId(null);
-  };
 
   const handleVerDetalles = (item: DatosRecursoLineaTiempo) => {
     setRecursoActivo(item);
@@ -532,41 +521,6 @@ export function TimelineSection({ userId, userType }: PropsSeccionLineaTiempo) {
                       )}
                     </div>
 
-                    <div
-                      className="flex items-center gap-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {descartandoId === item.id ? (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDescartar(item.id)}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setDescartandoId(null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => setDescartandoId(item.id)}
-                          title="Descartar"
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                        </Button>
-                      )}
-                    </div>
                   </div>
                 </div>
               );

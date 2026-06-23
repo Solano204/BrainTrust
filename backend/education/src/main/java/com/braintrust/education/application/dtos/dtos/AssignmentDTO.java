@@ -22,5 +22,6 @@ public record AssignmentDTO(
         boolean isTeamAssignment,
         String submissionFormat,
         List<DocumentDTO> attachments,
-        List<String> links
+        List<String> links,
+        String studentSubmissionStatus
 ) {}

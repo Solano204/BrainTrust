@@ -12,6 +12,8 @@ import com.braintrust.education.application.mappers.AssignmentDtoMapper;
 import com.braintrust.education.application.ports.in.AssignmentService;
 import com.braintrust.education.application.ports.out.AssignmentRepository;
 import com.braintrust.education.application.ports.out.CourseRepository;
+import com.braintrust.education.application.ports.out.SubmissionRepository;
+import com.braintrust.education.domain.model.Submission;
 import com.braintrust.education.domain.exceptions.AssignmentNotFoundException;
 import com.braintrust.education.domain.exceptions.CourseNotFoundException;
 import com.braintrust.education.domain.model.Assignment;
@@ -32,6 +34,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -41,6 +45,7 @@ public class AssignmentApplicationService implements AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final CourseRepository courseRepository;
+    private final SubmissionRepository submissionRepository;
 
     private final AssignmentValidator validator;
     private final AssignmentDtoMapper dtoMapper;
@@ -51,6 +56,7 @@ public class AssignmentApplicationService implements AssignmentService {
     public AssignmentApplicationService(
             AssignmentRepository assignmentRepository,
             CourseRepository courseRepository,
+            SubmissionRepository submissionRepository,
             AssignmentValidator validator,
             AssignmentDtoMapper dtoMapper,
             DocumentStorageHelper documentStorageHelper,
@@ -58,6 +64,7 @@ public class AssignmentApplicationService implements AssignmentService {
             AssignmentLinkHelper linkHelper) {
         this.assignmentRepository = assignmentRepository;
         this.courseRepository = courseRepository;
+        this.submissionRepository = submissionRepository;
         this.validator = validator;
         this.dtoMapper = dtoMapper;
         this.documentStorageHelper = documentStorageHelper;
@@ -510,8 +517,21 @@ public class AssignmentApplicationService implements AssignmentService {
         List<Assignment> assignments = assignmentRepository.findAssignmentsByStudentForWeek(
                 studentId, weekStart, weekEnd);
 
+        Map<String, String> submissionStatusByAssignmentId = assignments.stream()
+                .map(Assignment::getCourseId)
+                .distinct()
+                .flatMap(courseId -> submissionRepository.findByCourseAndStudent(courseId, studentId).stream())
+                .collect(Collectors.toMap(
+                        s -> s.getAssignmentId().getValue(),
+                        s -> s.getStatus().name(),
+                        (existing, replacement) -> replacement
+                ));
+
         log.info("Found {} assignments for student", assignments.size());
-        return dtoMapper.toDTOList(assignments);
+        return assignments.stream()
+                .map(a -> dtoMapper.toDTOWithStudentStatus(
+                        a, submissionStatusByAssignmentId.get(a.getId().getValue())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -544,8 +564,21 @@ public class AssignmentApplicationService implements AssignmentService {
         List<Assignment> assignments = assignmentRepository.findAssignmentsByStudentForMonth(
                 studentId, monthStart, monthEnd);
 
+        Map<String, String> submissionStatusByAssignmentId = assignments.stream()
+                .map(Assignment::getCourseId)
+                .distinct()
+                .flatMap(courseId -> submissionRepository.findByCourseAndStudent(courseId, studentId).stream())
+                .collect(Collectors.toMap(
+                        s -> s.getAssignmentId().getValue(),
+                        s -> s.getStatus().name(),
+                        (existing, replacement) -> replacement
+                ));
+
         log.info("Found {} assignments for student month view", assignments.size());
-        return dtoMapper.toDTOList(assignments);
+        return assignments.stream()
+                .map(a -> dtoMapper.toDTOWithStudentStatus(
+                        a, submissionStatusByAssignmentId.get(a.getId().getValue())))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { taskInventoryKeys } from "@/app/infraestructure/api/task/task-inventory-keys";
 import { CourseId, SubmissionId } from "@/app/domain/valueObjects";
+import { toast } from "sonner";
 import React from "react";
 
 import { fetchTeacherSubmissions, gradeSubmission } from "@/components/student/api/student-submission";
@@ -13,8 +14,7 @@ export function useTaskInventory(courseId: CourseId | null, unitId: string | nul
     queryKey: taskInventoryKeys.inventoryByCourse(courseId || "", unitId || ""),
     queryFn: () => fetchTeacherSubmissions(courseId!, unitId!),
     enabled: !!courseId && !!unitId,
-    staleTime: 300000, // 5 minutes
-    refetchOnWindowFocus: false,
+    staleTime: 0,
   });
 }
 
@@ -40,9 +40,10 @@ export function useTaskInventoryMutations() {
       queryClient.invalidateQueries({
         queryKey: taskInventoryKeys.all
       });
+      toast.success("Calificación guardada exitosamente");
     },
     onError: (error: Error) => {
-      console.error("Error updating grade:", error.message);
+      toast.error(`Error al guardar la calificación: ${error.message}`);
     }
   });
 

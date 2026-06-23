@@ -13,6 +13,10 @@ import java.util.stream.Collectors;
 public class AssignmentDtoMapper {
 
     public AssignmentDTO toDTO(Assignment assignment) {
+        return toDTOWithStudentStatus(assignment, null);
+    }
+
+    public AssignmentDTO toDTOWithStudentStatus(Assignment assignment, String studentSubmissionStatus) {
         List<DocumentDTO> attachmentDTOs = assignment.getAttachments().stream()
                 .map(doc -> new DocumentDTO(
                         doc.getName(),
@@ -28,8 +32,8 @@ public class AssignmentDtoMapper {
                 assignment.getId().getValue(),
                 assignment.getCourseId().getValue(),
                 assignment.getUnitId().getValue(),
-                "Course Name", // TODO: Fetch from CourseRepository if needed
-                "Unit Name",   // TODO: Fetch from UnitRepository if needed
+                "Course Name",
+                "Unit Name",
                 assignment.getTitle(),
                 assignment.getDescription(),
                 assignment.getCreatedAt().toString(),
@@ -44,7 +48,8 @@ public class AssignmentDtoMapper {
                 isTeamAssignment,
                 submissionFormat,
                 attachmentDTOs,
-                assignment.getLinks()
+                assignment.getLinks(),
+                studentSubmissionStatus
         );
     }
 

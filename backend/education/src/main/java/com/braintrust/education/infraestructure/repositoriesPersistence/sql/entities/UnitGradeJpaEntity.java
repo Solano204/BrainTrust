@@ -5,11 +5,16 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "unit_grades", indexes = {
-        @Index(name = "idx_ugrade_unit", columnList = "unit_id"),
-        @Index(name = "idx_ugrade_student", columnList = "student_id"),
-        @Index(name = "idx_ugrade_unit_student", columnList = "unit_id,student_id")
-})
+@Table(name = "unit_grades",
+        indexes = {
+                @Index(name = "idx_ugrade_unit", columnList = "unit_id"),
+                @Index(name = "idx_ugrade_student", columnList = "student_id"),
+                @Index(name = "idx_ugrade_unit_student", columnList = "unit_id,student_id")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_unit_grade_unit_student", columnNames = {"unit_id", "student_id"})
+        }
+)
 public class UnitGradeJpaEntity {
 
     @Id

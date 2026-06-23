@@ -29,6 +29,7 @@ interface AssignmentDTO {
   targetType: string;
   isTeamAssignment: boolean;
   attachments: DocumentDTO[];
+  studentSubmissionStatus?: string | null;
 }
 
 interface DocumentDTO {
@@ -79,6 +80,10 @@ const handleApiError = async (error: unknown): Promise<never> => {
 };
 
 async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment> {
+  const submissions = dto.studentSubmissionStatus
+    ? [{ studentId: "current-user", status: dto.studentSubmissionStatus } as any]
+    : [];
+
   return {
     id: dto.id,
     title: dto.title,
@@ -98,7 +103,7 @@ async function mapAssignmentFromBackend(dto: AssignmentDTO): Promise<Assignment>
     dueDate: dto.dueDate,
     maxScore: { value: dto.maxPoints, maxPoints: dto.maxPoints },
     instructions: dto.instructions,
-    submissions: [],
+    submissions,
     allowLateSubmissions: dto.canAcceptSubmissions,
     idUser: "current-user"
   };

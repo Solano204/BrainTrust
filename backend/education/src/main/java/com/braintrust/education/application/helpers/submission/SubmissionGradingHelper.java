@@ -155,12 +155,6 @@ public class SubmissionGradingHelper {
                     assignment.getId(),
                     submission.getTeamId()
             );
-        } else {
-            gradebookService.syncAssignmentGrade(
-                    assignment.getCourseId(),
-                    submission.getStudentId(),
-                    submission.getAssignmentId()
-            );
         }
     }
 
