@@ -223,6 +223,103 @@ docker-compose up -d braintrust-backend
 
 ---
 
+## 13. HTTPS via nginx + nip.io (required for Vercel frontend)
+
+Vercel serves over HTTPS. Browsers block API calls from HTTPS pages to plain HTTP backends.
+Since Let's Encrypt requires a domain name (not a bare IP), we use **nip.io** — a free wildcard
+DNS service that maps `32-198-195-5.nip.io` to `32.198.195.5`.
+
+### Install nginx and Certbot on the EC2
+
+```bash
+sudo dnf install -y nginx python3-certbot-nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+
+### Write the nginx reverse proxy config
+
+```bash
+sudo tee /etc/nginx/conf.d/braintrust.conf > /dev/null <<'EOF'
+server {
+    listen 80;
+    server_name 32-198-195-5.nip.io;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Get the SSL certificate
+
+```bash
+sudo certbot --nginx -d 32-198-195-5.nip.io --non-interactive --agree-tos -m chucho@shippilot.ai
+```
+
+Certbot automatically modifies the nginx config to add port 443 and redirect HTTP → HTTPS.
+
+### Verify
+
+```bash
+curl https://32-198-195-5.nip.io/actuator/health
+# Expected: {"status":"UP","groups":["liveness","readiness"]}
+```
+
+### Update CORS on the backend
+
+Edit `/home/ec2-user/.env` (use `sed` — nano is not installed on Amazon Linux 2023):
+
+```bash
+sed -i 's|^CORS_ALLOWED_ORIGINS=.*|CORS_ALLOWED_ORIGINS=http://localhost:3000,https://32-198-195-5.nip.io,https://your-app.vercel.app|' /home/ec2-user/.env
+```
+
+Replace `your-app.vercel.app` with your actual Vercel URL after deploying the frontend. Then:
+
+```bash
+docker-compose up -d braintrust-backend
+```
+
+---
+
+## 14. Deploy Frontend to Vercel
+
+### Import the project
+1. Go to [vercel.com](https://vercel.com) → **Add New Project** → import the GitHub repo
+2. Set **Root Directory** to `frontend`
+3. Framework auto-detects as **Next.js**
+
+### Set Environment Variables in Vercel dashboard
+
+| Key | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://32-198-195-5.nip.io` |
+| `NEXT_PUBLIC_USE_MOCK_AUTH` | `false` |
+| `NEXT_PUBLIC_MOCK_ENABLED` | `false` |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | `divbcrhk5` |
+| `CLOUDINARY_API_KEY` | `319474513225569` |
+| `CLOUDINARY_API_SECRET` | `rgERK2mDaIzEptWZ7H1LQGf9FkY` |
+| `GOOGLE_VISION_API_KEY` | *(your key)* |
+| `JWT_SECRET` | *(strong random string — not the placeholder)* |
+
+`NODE_ENV` is set to `production` automatically by Vercel — do not set it manually.
+
+### After deploying
+Copy the Vercel URL (e.g. `https://braintrust-xyz.vercel.app`) and update CORS on the backend:
+
+```bash
+sed -i 's|https://your-app.vercel.app|https://braintrust-xyz.vercel.app|' /home/ec2-user/.env
+docker-compose up -d braintrust-backend
+```
+
+---
+
 ## docker-compose.yml Reference
 
 Located at `/home/ec2-user/docker-compose.yml` on the EC2.
