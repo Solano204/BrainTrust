@@ -27,7 +27,6 @@ public class RoleActivityController {
         this.roleActivityService = roleActivityService;
     }
 
-    // ==================== ROLES ====================
 
     @GetMapping("/roles")
     @Operation(summary = "Get paginated roles")
@@ -95,7 +94,6 @@ public class RoleActivityController {
         }
     }
 
-    // ==================== ROLE ACTIVITIES ====================
 
     @GetMapping("/role-activities")
     @Operation(summary = "Get paginated role activities (all roles)")

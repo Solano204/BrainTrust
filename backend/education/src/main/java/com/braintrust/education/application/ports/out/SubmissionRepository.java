@@ -28,4 +28,6 @@ public interface SubmissionRepository {
     List<Submission> findByCourseId(CourseId courseId);
 
     List<Submission> findByCourseAndStudent(CourseId courseId, UserId studentId);
+
+    List<Submission> findByCourseAndStudentOrderedByUnit(CourseId courseId, UserId studentId);
 }

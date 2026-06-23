@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
@@ -239,7 +239,6 @@ const MOCK_ASSIGNMENTS = [
   },
 ];
 
-// Mock task inventory data
 const MOCK_TASK_INVENTORY: TaskInventoryItem[] = [
   {
     id: "SUB-TASK-101-001",
@@ -298,7 +297,6 @@ const MOCK_TASK_INVENTORY: TaskInventoryItem[] = [
   },
 ];
 
-// Mock submission details
 const MOCK_SUBMISSION_DETAILS: { [key: string]: SubmissionDetailData } = {
   "SUB-TASK-101-001": {
     submission: {
@@ -877,6 +875,121 @@ export interface TaskInventoryItem {
 }
 
 export type TaskType = "ASSIGNMENT" | "QUIZ" | "FORUM";
+
+export interface SimilarParagraphDTO {
+  paragraphIndex: number;
+  originalText: string;
+  matchedText: string;
+  similarityPercentage: string | null;
+  segmentType: "AI" | "HUMAN" | null;
+}
+
+export interface PlagiarismSummaryDTO {
+  plagiarismCheckId: string;
+  comparedSubmissionId: string;
+  comparedStudentId: string;
+  comparedStudentName: string | null;
+  overallSimilarityPercentage: string | null;
+  similarParagraphsCount: number;
+  status: string;
+}
+
+export interface PlagiarismCheckDTO {
+  id: string;
+  sourceSubmissionId: string;
+  comparedSubmissionId: string;
+  comparedStudentId: string;
+  comparedStudentName: string | null;
+  assignmentId: string;
+  overallSimilarityPercentage: string | null;
+  similarParagraphs: SimilarParagraphDTO[];
+  status: string;
+  checkedAt: string | null;
+}
+
+export interface SubmissionHistoryItemDTO {
+  submissionId: string;
+  assignmentId: string;
+  assignmentName: string;
+  unitId: string | null;
+  unitName: string | null;
+  unitOrder: number;
+  submittedAt: string | null;
+  status: string;
+  grade: { value: string; maxScore: string; percentage: string } | null;
+  isLate: boolean;
+  aiProbabilityPercentage: string | null;
+  isLikelyAI: boolean;
+  hasAiAnalysis: boolean;
+  allSegments: SimilarParagraphDTO[];
+  plagiarismMatches: PlagiarismSummaryDTO[];
+}
+
+export interface StudentHistoryDTO {
+  studentId: string;
+  studentName: string;
+  courseId: string;
+  courseName: string;
+  submissions: SubmissionHistoryItemDTO[];
+}
+
+export async function fetchPlagiarismResultsForSubmission(
+  submissionId: string
+): Promise<PlagiarismCheckDTO[]> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth-token")?.value;
+    const apiClient = axios.create({
+      baseURL: API_BASE_URL,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const response = await apiClient.get<PlagiarismCheckDTO[]>(
+      `/api/submissions/${submissionId}/plagiarism`
+    );
+    return response.data;
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+export async function fetchPlagiarismResultsForAssignment(
+  assignmentId: string
+): Promise<PlagiarismCheckDTO[]> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth-token")?.value;
+    const apiClient = axios.create({
+      baseURL: API_BASE_URL,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const response = await apiClient.get<PlagiarismCheckDTO[]>(
+      `/api/assignments/${assignmentId}/plagiarism`
+    );
+    return response.data;
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
+
+export async function fetchStudentHistory(
+  courseId: string,
+  studentId: string
+): Promise<StudentHistoryDTO> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth-token")?.value;
+    const apiClient = axios.create({
+      baseURL: API_BASE_URL,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const response = await apiClient.get<StudentHistoryDTO>(
+      `/api/submissions/course/${courseId}/students/${studentId}/history`
+    );
+    return response.data;
+  } catch (error) {
+    return await handleApiError(error);
+  }
+}
 
 export interface SubmissionDetailData {
   submission: {

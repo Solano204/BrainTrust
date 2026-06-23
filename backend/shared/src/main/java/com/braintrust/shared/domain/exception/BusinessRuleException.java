@@ -3,7 +3,6 @@ package com.braintrust.shared.domain.exception;
 
 import java.util.Map;
 
-// 📍 shared/domain/exceptions/BusinessRuleException.java
 public abstract class BusinessRuleException extends DomainException {
 
     protected BusinessRuleException(String message) {

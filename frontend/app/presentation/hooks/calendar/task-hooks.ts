@@ -16,7 +16,7 @@ export function useTasksByMonth(
     queryKey: taskKeys.list(userId || "", monthStart, userType),
     queryFn: () => fetchTasksByMonth(userId!, monthStart, userType),
     enabled: !!userId && !!monthStart,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 }
 
@@ -30,7 +30,7 @@ export function useThisWeekTasks(
     queryKey: taskKeys.week(userId || "", weekStart, userType),
     queryFn: () => fetchThisWeekTasks(userId!, weekStart, userType),
     enabled: !!userId && !!weekStart,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 }
 

@@ -12,14 +12,14 @@ import java.util.Optional;
 
 public interface QuizRepository {
 
-    // ── Commands ──────────────────────────────────────────────────────────────
+    //  Commands 
     Quiz save(Quiz quiz);
     void delete(Quiz quiz);
 
-    // ── Queries ───────────────────────────────────────────────────────────────
+    //  Queries 
     Optional<Quiz> findById(QuizId quizId);
 
-    /** NEW — needed by AdminStatsAnalysisService.getTopQuizzesByGrade() */
+    /** needed by AdminStatsAnalysisService.getTopQuizzesByGrade() */
     List<Quiz> findAll();
 
     List<Quiz> findByCourseId(CourseId courseId);

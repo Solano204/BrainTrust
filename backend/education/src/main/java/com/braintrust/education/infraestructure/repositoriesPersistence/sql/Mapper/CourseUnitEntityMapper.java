@@ -4,7 +4,7 @@ import com.braintrust.education.domain.model.CourseUnit;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.education.domain.valueobjects.UnitId;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.CourseUnitJpaEntity;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import org.slf4j.Logger;

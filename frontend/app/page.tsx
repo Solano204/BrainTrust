@@ -1,7 +1,6 @@
+﻿ 
  
  
- 
-// app/dashboard/page.tsx
 "use client";
 
 import { DashboardHeader } from "@/components/layout/dashboard-header"
@@ -26,7 +25,6 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        {/* border-primary picks up Navy in light mode, Gold in dark mode */}
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     )
@@ -58,7 +56,6 @@ export default function DashboardPage() {
                     userId={user?.id || "user-001"}
                     userType={user?.role === 'teacher' ? 'teacher' : 'student'}
                   />
-                  {user?.id}
                 </div>
                 <div className="lg:col-span-1">
                   {user?.role === 'teacher' ? (

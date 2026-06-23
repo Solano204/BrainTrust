@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import * as React from "react";
 import { useState, useEffect } from "react";
@@ -74,9 +74,6 @@ import { User } from "@/app/shared/models/user.model";
 import { UserRole } from "@/app/shared/dtos/user.dto";
 import { PaginationParams } from "@/app/shared/types/pagination";
 
-// ─────────────────────────────────────────────
-// UserFormModal  (Datos personales + crear usuario)
-// ─────────────────────────────────────────────
 interface UserFormModalProps {
   open: boolean;
   onClose: () => void;
@@ -202,14 +199,13 @@ function UserFormModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div className="modal-overlay">
       <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-card shadow-2xl flex flex-col">
         <form onSubmit={handleSubmit} className="flex flex-col min-h-0">
 
-          {/* ── Header ── */}
           <div className="flex justify-between items-center px-5 py-4 sm:px-7 sm:py-5 border-b border-border sticky top-0 bg-card z-10 rounded-t-3xl">
             <div className="flex items-center gap-3">
-              <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+              <span className="icon-badge">
                 <Users className="h-4 w-4 text-primary" />
               </span>
               <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
@@ -220,18 +216,16 @@ function UserFormModal({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-40"
+              className="icon-btn transition-all disabled:opacity-40"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
-          {/* ── Body ── */}
           <div className="px-5 py-6 sm:px-7 space-y-8 flex-1 overflow-y-auto">
 
-            {/* Información Personal */}
             <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+              <h3 className="section-label">
                 Información Personal
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -298,10 +292,9 @@ function UserFormModal({
               </div>
             </div>
 
-            {/* Información de Cuenta — SOLO CREAR */}
             {!isEditMode && (
               <div className="space-y-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                <h3 className="section-label">
                   Información de Cuenta
                 </h3>
                 <div className="space-y-1.5">
@@ -354,9 +347,8 @@ function UserFormModal({
               </div>
             )}
 
-            {/* Dirección */}
             <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              <h3 className="section-label flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5" />
                 Dirección
                 {!isEditMode && (
@@ -440,7 +432,6 @@ function UserFormModal({
 
           </div>
 
-          {/* ── Footer ── */}
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 px-5 py-4 sm:px-7 border-t border-border bg-muted/30 sticky bottom-0 rounded-b-3xl">
             <Button
               type="button"
@@ -471,9 +462,6 @@ function UserFormModal({
   );
 }
 
-// ─────────────────────────────────────────────
-// UserDetailModal
-// ─────────────────────────────────────────────
 interface UserDetailModalProps {
   user: User | null;
   open: boolean;
@@ -495,13 +483,12 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+    <div className="modal-overlay">
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-card shadow-2xl flex flex-col">
 
-        {/* ── Header ── */}
         <div className="flex justify-between items-center px-5 py-4 sm:px-7 sm:py-5 border-b border-border sticky top-0 bg-card z-10 rounded-t-3xl">
           <div className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <span className="icon-badge">
               <Eye className="h-4 w-4 text-primary" />
             </span>
             <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
@@ -510,16 +497,14 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            className="icon-btn transition-all"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* ── Body ── */}
         <div className="px-5 py-6 sm:px-7 space-y-6 flex-1">
 
-          {/* Avatar + nombre */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-6 border-b border-border">
             <div className="h-20 w-20 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold flex-shrink-0 shadow-md">
               {user.person.firstName[0]}
@@ -538,9 +523,8 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
             </div>
           </div>
 
-          {/* Información personal */}
           <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+            <h4 className="section-label mb-3">
               Datos Personales
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -569,10 +553,9 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
             </div>
           </div>
 
-          {/* Dirección */}
           {user.person.address && (
             <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h4 className="section-label mb-3 flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5" />
                 Dirección
               </h4>
@@ -591,7 +574,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
 
         </div>
 
-        {/* ── Footer ── */}
         <div className="px-5 py-4 sm:px-7 border-t border-border sticky bottom-0 bg-card rounded-b-3xl">
           <Button
             onClick={onClose}
@@ -606,9 +588,6 @@ function UserDetailModal({ user, open, onClose }: UserDetailModalProps) {
   );
 }
 
-// ─────────────────────────────────────────────
-// Controles de Paginación
-// ─────────────────────────────────────────────
 interface PaginationControlsProps {
   currentPage: number;
   totalPages: number;
@@ -632,7 +611,6 @@ function PaginationControls({
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-4 pb-4">
 
-      {/* Contador */}
       <p className="text-xs text-muted-foreground">
         Mostrando{" "}
         <span className="font-medium text-foreground">{startItem}–{endItem}</span>
@@ -643,7 +621,6 @@ function PaginationControls({
 
       <div className="flex items-center gap-4">
 
-        {/* Tamaño de página */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             Filas por página:
@@ -664,7 +641,6 @@ function PaginationControls({
           </Select>
         </div>
 
-        {/* Navegación */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => onPageChange(0)}
@@ -710,9 +686,6 @@ function PaginationControls({
   );
 }
 
-// ─────────────────────────────────────────────
-// Vista de Datos Personales (exportación principal)
-// ─────────────────────────────────────────────
 export default function PersonalDataView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -793,7 +766,6 @@ export default function PersonalDataView() {
     updateAddress: updateAddressMutation,
   } = useUserMutations();
 
-  // ── Manejadores ──────────────────────────────
   const handleEdit = (user: User) => {
     setSelectedUser(user);
     setShowFormModal(true);
@@ -890,7 +862,6 @@ export default function PersonalDataView() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Funciones Auxiliares ───────────────────────────────
   const getRoleBadge = (role: UserRole) => {
     const roleLabels: Record<UserRole, string> = {
       ADMIN: "Administrador",
@@ -931,7 +902,6 @@ export default function PersonalDataView() {
       </span>
     ) : null;
 
-  // ── Cargando / Error ────────────────────────
   if (isLoading && page === 0) {
     return (
       <div className="p-8 text-center">
@@ -958,7 +928,6 @@ export default function PersonalDataView() {
   return (
     <div className="space-y-5">
 
-      {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -972,7 +941,7 @@ export default function PersonalDataView() {
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40 transition-all"
+            className="btn-ghost"
           >
             <Loader2 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Actualizar
@@ -987,7 +956,6 @@ export default function PersonalDataView() {
         </div>
       </div>
 
-      {/* ── Pestañas de filtro por rol ── */}
       <Tabs
         value={activeTab}
         onValueChange={(v: any) => { setActiveTab(v); setPage(0); }}
@@ -1017,7 +985,6 @@ export default function PersonalDataView() {
         </TabsList>
       </Tabs>
 
-      {/* ── Barra de búsqueda ── */}
       <div className="flex gap-2 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1036,7 +1003,6 @@ export default function PersonalDataView() {
         )}
       </div>
 
-      {/* ── Tabla ── */}
       <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
         <div className="overflow-x-auto">
           <Table>
@@ -1081,7 +1047,6 @@ export default function PersonalDataView() {
                 users.map((user) => (
                   <TableRow key={user.id} className="hover:bg-muted/30 transition-colors group">
 
-                    {/* Avatar */}
                     <TableCell>
                       <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                         {user.person.firstName[0]}
@@ -1089,19 +1054,16 @@ export default function PersonalDataView() {
                       </div>
                     </TableCell>
 
-                    {/* Nombre */}
                     <TableCell className="font-semibold text-sm text-foreground">
                       {user.person.firstName} {user.person.lastName}
                     </TableCell>
 
-                    {/* Teléfono */}
                     <TableCell className="text-sm text-muted-foreground">
                       {user.person.phone || (
                         <span className="italic opacity-40">—</span>
                       )}
                     </TableCell>
 
-                    {/* Género */}
                     <TableCell className="text-sm text-muted-foreground">
                       {user.person.gender ? (
                         user.person.gender === "MALE" ? "Masculino"
@@ -1112,7 +1074,6 @@ export default function PersonalDataView() {
                       )}
                     </TableCell>
 
-                    {/* Dirección */}
                     <TableCell className="text-sm text-muted-foreground max-w-[220px]">
                       {user.person.address ? (
                         <span className="truncate block">
@@ -1128,12 +1089,10 @@ export default function PersonalDataView() {
                       )}
                     </TableCell>
 
-                    {/* Fecha */}
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(user.person.registrationDate).toLocaleDateString("es-MX")}
                     </TableCell>
 
-                    {/* Acciones */}
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1199,7 +1158,6 @@ export default function PersonalDataView() {
         )}
       </div>
 
-      {/* ── Modales ── */}
       <UserFormModal
         open={showFormModal}
         onClose={() => { setShowFormModal(false); setSelectedUser(null); }}
@@ -1213,7 +1171,6 @@ export default function PersonalDataView() {
         onClose={() => { setShowDetailModal(false); setSelectedUser(null); }}
       />
 
-      {/* ── Diálogo de Activar / Desactivar ── */}
       <AlertDialog open={showActivateModal} onOpenChange={setShowActivateModal}>
         <AlertDialogContent className="rounded-3xl border-border bg-card">
           <AlertDialogHeader>
@@ -1249,7 +1206,6 @@ export default function PersonalDataView() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Diálogo de Eliminar ── */}
       <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
         <AlertDialogContent className="rounded-3xl border-border bg-card">
           <AlertDialogHeader>
@@ -1296,4 +1252,3 @@ export default function PersonalDataView() {
   );
 }
 
-// CÓDIGO FINAL

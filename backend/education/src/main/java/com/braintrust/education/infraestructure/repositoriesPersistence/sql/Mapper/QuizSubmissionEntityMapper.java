@@ -71,8 +71,8 @@ public class QuizSubmissionEntityMapper {
                 answersJson,
                 submission.getGrade() != null ? submission.getGrade().getValue()    : null,
                 submission.getGrade() != null ? submission.getGrade().getMaxScore() : null,
-                submission.getFinalGrade(),        // ✅ NEW
-                submission.isCanViewResults(),     // ✅ NEW
+                submission.getFinalGrade(),
+                submission.isCanViewResults(),
                 submission.isAutoGraded(),
                 questionGradesJson
         );
@@ -131,8 +131,8 @@ public class QuizSubmissionEntityMapper {
                 QuizSubmissionStatus.valueOf(entity.getStatus()),
                 answers,
                 grade,
-                entity.getFinalGrade(),        // ✅ NEW
-                entity.isCanViewResults(),     // ✅ NEW
+                entity.getFinalGrade(),
+                entity.isCanViewResults(),
                 entity.isAutoGraded(),
                 questionGrades
         );

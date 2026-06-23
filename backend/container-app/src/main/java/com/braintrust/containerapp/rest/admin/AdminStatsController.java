@@ -16,22 +16,22 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * AdminStatsController — all admin-dashboard endpoints.
+ * AdminStatsController  all admin-dashboard endpoints.
  *
  * Base URL: /api/admin/stats
  *
  * ENDPOINTS
- * ─────────────────────────────────────────────────────────────────────────────
- * GET  /                             → full composite stats (existing)
- * GET  /ai-assignments               → paginated AI submissions WITH student info
- * GET  /ai-breakdown                 → % full-AI / high-AI / low-AI / human
- * GET  /user-counts                  → # students + # teachers
- * GET  /late-submissions             → paginated late submissions
- * GET  /courses/by-ai                → all courses sorted by AI %
- * GET  /courses/by-late              → all courses sorted by late %
- * GET  /quizzes/top                  → top N quiz submissions by grade
- * GET  /overdue-assignments          → paginated overdue assignments (legacy)
- * GET  /health                       → health check
+ * 
+ * GET  /                             -> full composite stats (existing)
+ * GET  /ai-assignments               -> paginated AI submissions WITH student info
+ * GET  /ai-breakdown                 -> % full-AI / high-AI / low-AI / human
+ * GET  /user-counts                  -> # students + # teachers
+ * GET  /late-submissions             -> paginated late submissions
+ * GET  /courses/by-ai                -> all courses sorted by AI %
+ * GET  /courses/by-late              -> all courses sorted by late %
+ * GET  /quizzes/top                  -> top N quiz submissions by grade
+ * GET  /overdue-assignments          -> paginated overdue assignments (legacy)
+ * GET  /health                       -> health check
  */
 @RestController
 @RequestMapping("/api/admin/stats")
@@ -47,9 +47,7 @@ public class AdminStatsController {
         this.statsService = statsService;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // EXISTING — full composite dashboard
-    // ─────────────────────────────────────────────────────────────────────────
+    // EXISTING  full composite dashboard
 
     @GetMapping
     @Operation(
@@ -57,13 +55,11 @@ public class AdminStatsController {
             description = "Returns a composite object with all system statistics. Admin only."
     )
     public ResponseEntity<AdminStatsDTO> getAllStats() {
-        log.info("📊 Admin requesting comprehensive statistics");
+        log.info("Admin requesting comprehensive statistics");
         return ResponseEntity.ok(statsService.getAdminStats());
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // 1. PAGINATED AI ASSIGNMENTS (with student info)
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/ai-assignments")
     @Operation(
@@ -74,16 +70,15 @@ public class AdminStatsController {
     )
     public ResponseEntity<PaginatedStatsDTO<AIAssignmentPageDTO>> getAIAssignments(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0")  int page,
-            @Parameter(description = "Page size")             @RequestParam(defaultValue = "20") int size
+            @Parameter(description = "Page size")             @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Month filter (YYYY-MM)") @RequestParam(required = false)   String month
     ) {
-        log.info("📄 [GET /ai-assignments] page={} size={}", page, size);
+        log.info("[GET /ai-assignments] page={} size={} month={}", page, size, month);
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(statsService.getAIAssignmentsPaginated(pageable));
+        return ResponseEntity.ok(statsService.getAIAssignmentsPaginated(pageable, month));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // 2. AI STATS BREAKDOWN
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/ai-breakdown")
     @Operation(
@@ -93,13 +88,11 @@ public class AdminStatsController {
                     "Also includes the overall average AI probability."
     )
     public ResponseEntity<AIStatsBreakdownDTO> getAIBreakdown() {
-        log.info("📊 [GET /ai-breakdown]");
+        log.info("[GET /ai-breakdown]");
         return ResponseEntity.ok(statsService.getAIStatsBreakdown());
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // 3. USER COUNTS
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/user-counts")
     @Operation(
@@ -107,13 +100,11 @@ public class AdminStatsController {
             description = "Returns count of students, teachers and their active subsets."
     )
     public ResponseEntity<UserCountDTO> getUserCounts() {
-        log.info("👥 [GET /user-counts]");
+        log.info("[GET /user-counts]");
         return ResponseEntity.ok(statsService.getUserCounts());
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // 4. LATE SUBMISSIONS
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/late-submissions")
     @Operation(
@@ -124,16 +115,15 @@ public class AdminStatsController {
     )
     public ResponseEntity<PaginatedStatsDTO<LateSubmissionDTO>> getLateSubmissions(
             @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "Month filter (YYYY-MM)") @RequestParam(required = false) String month
     ) {
-        log.info("⏰ [GET /late-submissions] page={} size={}", page, size);
+        log.info("[GET /late-submissions] page={} size={} month={}", page, size, month);
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(statsService.getLateSubmissionsPaginated(pageable));
+        return ResponseEntity.ok(statsService.getLateSubmissionsPaginated(pageable, month));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // 5. COURSES RANKED BY AI PERCENTAGE
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/courses/by-ai")
     @Operation(
@@ -145,13 +135,11 @@ public class AdminStatsController {
             @Parameter(description = "'asc' or 'desc' (default)")
             @RequestParam(defaultValue = "desc") String sort
     ) {
-        log.info("📚 [GET /courses/by-ai] sort={}", sort);
+        log.info("[GET /courses/by-ai] sort={}", sort);
         return ResponseEntity.ok(statsService.getCoursesByAIPercentage(sort));
     }
 
-        // ─────────────────────────────────────────────────────────────────────────
         // 6. COURSES RANKED BY LATE PERCENTAGE
-        // ─────────────────────────────────────────────────────────────────────────
 
         @GetMapping("/courses/by-late")
         @Operation(
@@ -163,13 +151,11 @@ public class AdminStatsController {
             @Parameter(description = "'asc' or 'desc' (default)")
             @RequestParam(defaultValue = "desc") String sort
     ) {
-        log.info("📚 [GET /courses/by-late] sort={}", sort);
+        log.info("[GET /courses/by-late] sort={}", sort);
         return ResponseEntity.ok(statsService.getCoursesByLatePercentage(sort));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // 7. TOP QUIZZES BY GRADE
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/quizzes/top")
     @Operation(
@@ -181,14 +167,12 @@ public class AdminStatsController {
             @Parameter(description = "How many results to return (default 20)")
             @RequestParam(defaultValue = "20") int limit
     ) {
-        log.info("🏆 [GET /quizzes/top] limit={}", limit);
-        int safeLimit = Math.max(1, Math.min(limit, 200)); // clamp 1–200
+        log.info("[GET /quizzes/top] limit={}", limit);
+        int safeLimit = Math.max(1, Math.min(limit, 200)); // clamp 1-200
         return ResponseEntity.ok(statsService.getTopQuizzesByGrade(safeLimit));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // EXISTING — overdue assignments (kept for backwards compatibility)
-    // ─────────────────────────────────────────────────────────────────────────
+    // EXISTING  overdue assignments (kept for backwards compatibility)
 
     @GetMapping("/overdue-assignments")
     @Operation(
@@ -199,18 +183,16 @@ public class AdminStatsController {
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        log.info("📋 [GET /overdue-assignments] page={} size={}", page, size);
+        log.info("[GET /overdue-assignments] page={} size={}", page, size);
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(statsService.getOverdueAssignmentsPaginated(pageable));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // HEALTH CHECK
-    // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/health")
     @Operation(summary = "Health check")
     public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("Admin stats service is running ✅");
+        return ResponseEntity.ok("Admin stats service is running");
     }
 }

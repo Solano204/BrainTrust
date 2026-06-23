@@ -1,4 +1,4 @@
-export interface QuizDTO {
+﻿export interface QuizDTO {
   id: string;
   courseId: string;
   courseName: string;
@@ -111,7 +111,6 @@ export interface QuizSubmissionDetailDTO {
   timeExpired: boolean;
 }
 
-// DETAILS
 export interface QuizSubmissionDetailDTONew {
   id: string;
   quizId: string;

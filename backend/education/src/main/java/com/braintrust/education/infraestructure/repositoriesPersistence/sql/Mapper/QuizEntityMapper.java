@@ -28,7 +28,6 @@ public class QuizEntityMapper {
     public QuizJpaEntity toEntity(Quiz quiz) {
         log.debug("Mapping Quiz Domain {} to JPA Entity", quiz.getId().getValue());
 
-        // ✅ FIX: result is now assigned to `entity`
         QuizJpaEntity entity = new QuizJpaEntity(
                 quiz.getId().getValue(),
                 quiz.getCourseId().getValue(),
@@ -41,8 +40,8 @@ public class QuizEntityMapper {
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
                 quiz.isShowCorrectAnswers(),
-                quiz.isAllowSeeResults(),   // ✅ NEW
-                quiz.getTotalScore(),       // ✅ NEW
+                quiz.isAllowSeeResults(),
+                quiz.getTotalScore(),
                 quiz.getCreatedAt(),
                 quiz.isActive()
         );
@@ -115,8 +114,8 @@ public class QuizEntityMapper {
                 entity.getMaxAttempts(),
                 entity.isShuffleQuestions(),
                 entity.isShowCorrectAnswers(),
-                entity.isAllowSeeResults(),   // ✅ NEW
-                entity.getTotalScore(),       // ✅ NEW
+                entity.isAllowSeeResults(),
+                entity.getTotalScore(),
                 entity.getCreatedAt(),
                 questions,
                 entity.isActive()
@@ -173,8 +172,8 @@ public class QuizEntityMapper {
                 entity.getMaxAttempts(),
                 entity.isShuffleQuestions(),
                 entity.isShowCorrectAnswers(),
-                entity.isAllowSeeResults(),   // ✅ NEW
-                entity.getTotalScore(),       // ✅ NEW
+                entity.isAllowSeeResults(),
+                entity.getTotalScore(),
                 entity.getCreatedAt(),
                 new ArrayList<>(),            // basic quiz = no questions loaded
                 entity.isActive()

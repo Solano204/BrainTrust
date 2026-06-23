@@ -40,7 +40,7 @@ public class QuizApplicationService implements QuizService {
         this.dtoMapper = dtoMapper;
         this.questionHelper = questionHelper;
         this.dateHelper = dateHelper;
-        log.info("✅ QuizApplicationService initialized with refactored helpers");
+        log.info("QuizApplicationService initialized");
     }
 
     @Override
@@ -55,52 +55,40 @@ public class QuizApplicationService implements QuizService {
                 dateHelper.parseDateTimeNullable(command.availableFrom()),
                 dateHelper.parseDateTimeNullable(command.availableUntil()),
                 command.timeLimitMinutes(),
-                command.allowSeeResults(),   // ✅ NEW
-                command.totalScore()         // ✅ NEW
+                command.allowSeeResults(),
+                command.totalScore()
         );
 
         Quiz saved = quizRepository.save(quiz);
-        log.info("Quiz created: {}", saved.getId().getValue());
+        log.info("Quiz created id={}", saved.getId().getValue());
         return saved.getId();
     }
     @Override
     public QuizId createQuizWithQuestions(CreateQuizWithQuestionsCommand command) {
+        log.info("Creating quiz '{}' with {} questions courseId={} unitId={}",
+                command.title(), command.questions().size(), command.courseId(), command.unitId());
         try {
-            log.info("🚀 Starting createQuizWithQuestions");
-            log.info("📋 Command - Title: {}, CourseId: {}, UnitId: {}, Questions: {}",
-                    command.title(), command.courseId(), command.unitId(), command.questions().size());
-
             CourseId courseId = CourseId.fromString(command.courseId());
             UnitId unitId = command.unitId() != null ? UnitId.fromString(command.unitId()) : null;
-
-            log.info("✅ IDs parsed successfully");
 
             LocalDateTime availableFrom;
             LocalDateTime availableUntil;
 
             try {
                 availableFrom = dateHelper.parseInstant(command.availableFrom());
-                log.info("✅ availableFrom parsed: {}", availableFrom);
             } catch (Exception e) {
-                log.error("❌ Error parsing availableFrom: {}", command.availableFrom(), e);
+                log.warn("Failed to parse availableFrom='{}', defaulting to now: {}", command.availableFrom(), e.getMessage());
                 availableFrom = LocalDateTime.now();
-                log.warn("⚠️ Using current time as fallback for availableFrom");
             }
 
             try {
                 availableUntil = dateHelper.parseInstant(command.availableUntil());
-
-                // ✨ SUMA EL TIME LIMIT AL AVAILABLE UNTIL
                 if (command.timeLimitMinutes() != null && command.timeLimitMinutes() > 0) {
                     availableUntil = availableUntil.plusMinutes(command.timeLimitMinutes());
-                    log.info("✅ availableUntil adjusted with timeLimitMinutes: {}", availableUntil);
                 }
-
-                log.info("✅ availableUntil parsed: {}", availableUntil);
             } catch (Exception e) {
-                log.error("❌ Error parsing availableUntil: {}", command.availableUntil(), e);
+                log.warn("Failed to parse availableUntil='{}', defaulting to +1 year: {}", command.availableUntil(), e.getMessage());
                 availableUntil = LocalDateTime.now().plusYears(1);
-                log.warn("⚠️ Using current time + 1 year as fallback for availableUntil");
             }
 
             Quiz quiz = Quiz.create(
@@ -108,32 +96,27 @@ public class QuizApplicationService implements QuizService {
                     command.title(), command.description(),
                     availableFrom, availableUntil,
                     command.timeLimitMinutes(),
-                    command.allowSeeResults(),   // ✅ NEW
-                    command.totalScore()         // ✅ NEW
+                    command.allowSeeResults(),
+                    command.totalScore()
             );
-            log.info("✅ Quiz object created, adding {} questions...", command.questions().size());
 
             int questionIndex = 0;
             for (CreateQuizWithQuestionsCommand.QuizQuestionData questionData : command.questions()) {
                 try {
-                    log.info("➕ Adding question {}: {}", questionIndex, questionData.questionText());
                     quiz.addQuestion(createQuestionFromData(questionData));
-                    log.info("✅ Question {} added", questionIndex);
                     questionIndex++;
                 } catch (Exception e) {
-                    log.error("❌ Error adding question {}", questionIndex, e);
+                    log.error("Failed to add question at index {}: {}", questionIndex, e.getMessage(), e);
                     throw new IllegalArgumentException("Error adding question " + questionIndex + ": " + e.getMessage(), e);
                 }
             }
 
-            log.info("💾 Saving quiz...");
             Quiz saved = quizRepository.save(quiz);
-            log.info("✅ Quiz saved successfully with ID: {}", saved.getId().getValue());
-
+            log.info("Quiz created with {} questions id={}", questionIndex, saved.getId().getValue());
             return saved.getId();
 
         } catch (Exception e) {
-            log.error("❌ CRITICAL ERROR in createQuizWithQuestions", e);
+            log.error("Failed to create quiz '{}': {}", command.title(), e.getMessage(), e);
             throw new RuntimeException("Failed to create quiz: " + e.getMessage(), e);
         }
     }
@@ -152,8 +135,8 @@ public class QuizApplicationService implements QuizService {
                 command.title(), command.description(),
                 availableFrom, availableUntil,
                 command.timeLimitMinutes(),
-                command.allowSeeResults(),   // ✅ NEW
-                command.totalScore()         // ✅ NEW
+                command.allowSeeResults(),
+                command.totalScore()
         );
 
         quizRepository.save(quiz);
@@ -268,7 +251,7 @@ public class QuizApplicationService implements QuizService {
     @Override
     @Transactional(readOnly = true)
     public List<QuizDTO> getQuizzesForStudentWeek(UserId studentId, String weekStart) {
-        log.info("📅 Fetching week calendar quizzes for Student ID: {} starting {}",
+        log.info("Fetching week calendar quizzes for Student ID: {} starting {}",
                 studentId.getValue(), weekStart);
 
         LocalDateTime start = dateHelper.parseDateTime(weekStart);
@@ -276,14 +259,14 @@ public class QuizApplicationService implements QuizService {
 
         List<Quiz> quizzes = quizRepository.findQuizzesByStudentForWeek(studentId, start, end);
 
-        log.info("✅ Found {} quizzes for student week view", quizzes.size());
+        log.info("Found {} quizzes for student week view", quizzes.size());
         return dtoMapper.toQuizDTOList(quizzes);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<QuizDTO> getQuizzesForTeacherWeek(UserId teacherId, String weekStart) {
-        log.info("📅 Fetching week calendar quizzes for Teacher ID: {} starting {}",
+        log.info("Fetching week calendar quizzes for Teacher ID: {} starting {}",
                 teacherId.getValue(), weekStart);
 
         LocalDateTime start = dateHelper.parseDateTime(weekStart);
@@ -291,14 +274,14 @@ public class QuizApplicationService implements QuizService {
 
         List<Quiz> quizzes = quizRepository.findQuizzesByTeacherForWeek(teacherId, start, end);
 
-        log.info("✅ Found {} quizzes for teacher week view", quizzes.size());
+        log.info("Found {} quizzes for teacher week view", quizzes.size());
         return dtoMapper.toQuizDTOList(quizzes);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<QuizDTO> getQuizzesForStudentMonth(UserId studentId, String monthStart) {
-        log.info("📅 Fetching month calendar quizzes for Student ID: {} starting {}",
+        log.info("Fetching month calendar quizzes for Student ID: {} starting {}",
                 studentId.getValue(), monthStart);
 
         LocalDateTime start = dateHelper.parseDateTime(monthStart);
@@ -306,14 +289,14 @@ public class QuizApplicationService implements QuizService {
 
         List<Quiz> quizzes = quizRepository.findQuizzesByStudentForMonth(studentId, start, end);
 
-        log.info("✅ Found {} quizzes for student month view", quizzes.size());
+        log.info("Found {} quizzes for student month view", quizzes.size());
         return dtoMapper.toQuizDTOList(quizzes);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<QuizDTO> getQuizzesForTeacherMonth(UserId teacherId, String monthStart) {
-        log.info("📅 Fetching month calendar quizzes for Teacher ID: {} starting {}",
+        log.info("Fetching month calendar quizzes for Teacher ID: {} starting {}",
                 teacherId.getValue(), monthStart);
 
         LocalDateTime start = dateHelper.parseDateTime(monthStart);
@@ -321,7 +304,7 @@ public class QuizApplicationService implements QuizService {
 
         List<Quiz> quizzes = quizRepository.findQuizzesByTeacherForMonth(teacherId, start, end);
 
-        log.info("✅ Found {} quizzes for teacher month view", quizzes.size());
+        log.info("Found {} quizzes for teacher month view", quizzes.size());
         return dtoMapper.toQuizDTOList(quizzes);
     }
 

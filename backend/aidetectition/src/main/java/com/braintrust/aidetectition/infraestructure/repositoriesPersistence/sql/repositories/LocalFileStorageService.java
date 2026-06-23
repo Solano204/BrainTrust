@@ -43,7 +43,7 @@ public class LocalFileStorageService implements DocumentStorageService {
 
     @Override
     public List<DocumentMetadata> storeDocument(String targetId, List<MultipartFile> files) {
-        log.info("📁 Starting storage for {} documents associated with Submission ID: {}",
+        log.info("Starting storage for {} documents associated with Submission ID: {}",
                 files.size(), targetId);
 
         List<DocumentMetadata> results = new ArrayList<>();
@@ -77,11 +77,11 @@ public class LocalFileStorageService implements DocumentStorageService {
                 );
                 results.add(metadata);
 
-                log.info("✅ Stored file '{}'. Path: {}", originalFilename, filePath);
+                log.info("Stored file '{}'. Path: {}", originalFilename, filePath);
             }
 
         } catch (Exception e) {
-            log.error("❌ Failed to store documents for submission: {}.", targetId, e);
+            log.error("Failed to store documents for submission: {}.", targetId, e);
 
             results.forEach(m -> {
                 try {
@@ -237,7 +237,7 @@ public class LocalFileStorageService implements DocumentStorageService {
 
     @Override
     public boolean deleteDocument(SubmissionId submissionId) {
-        log.warn("🗑️ Deleting ALL documents associated with submission: {}", submissionId.getValue());
+        log.warn("Deleting ALL documents associated with submission: {}", submissionId.getValue());
 
         try {
             Path storagePath = Paths.get(baseStoragePath);
@@ -247,7 +247,7 @@ public class LocalFileStorageService implements DocumentStorageService {
                     .collect(Collectors.toList());
 
             if (filesToDelete.isEmpty()) {
-                log.warn("⚠️ No documents found for deletion for submission: {}", submissionId.getValue());
+                log.warn("No documents found for deletion for submission: {}", submissionId.getValue());
                 return false;
             }
 
@@ -255,12 +255,12 @@ public class LocalFileStorageService implements DocumentStorageService {
                 Files.delete(filePath);
             }
 
-            log.info("✅ Successfully deleted {} documents for submission ID {}.",
+            log.info("Successfully deleted {} documents for submission ID {}.",
                     filesToDelete.size(), submissionId.getValue());
             return true;
 
         } catch (Exception e) {
-            log.error("❌ Error deleting documents for submission: {}", submissionId.getValue(), e);
+            log.error("Error deleting documents for submission: {}", submissionId.getValue(), e);
             return false;
         }
     }

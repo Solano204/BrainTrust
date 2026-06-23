@@ -16,4 +16,6 @@ export const adminStatsKeys = {
   overdueAssignments: (page: number, size: number) =>
     [...adminStatsKeys.all, "overdue-assignments", { page, size }] as const,
   aiInsights: () => [...adminStatsKeys.all, "ai-insights"] as const,
+  courseEnrollments: (courseId: string) =>
+    [...adminStatsKeys.all, "course-enrollments", courseId] as const,
 };

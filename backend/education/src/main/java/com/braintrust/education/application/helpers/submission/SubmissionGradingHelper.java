@@ -46,7 +46,7 @@ public class SubmissionGradingHelper {
     public void gradeSubmission(GradeSubmissionCommand command) {
         SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
 
-        log.info("📝 Grading Submission {} with score: {}/{}",
+        log.info("Grading Submission {} with score: {}/{}",
                 submissionId.getValue(), command.gradeValue(), command.maxScore());
 
         try {
@@ -65,10 +65,10 @@ public class SubmissionGradingHelper {
 
             syncGradesAfterSubmission(savedSubmission, assignment);
 
-            log.info("✅ Submission {} graded successfully", submissionId.getValue());
+            log.info("Submission {} graded successfully", submissionId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to grade Submission {}: {}",
+            log.error("Failed to grade Submission {}: {}",
                     submissionId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -78,7 +78,7 @@ public class SubmissionGradingHelper {
     public void gradeTeamSubmission(GradeSubmissionCommand command) {
         SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
 
-        log.info("🎯 Grading TEAM Submission {} with score: {}/{}",
+        log.info("Grading TEAM Submission {} with score: {}/{}",
                 submissionId.getValue(), command.gradeValue(), command.maxScore());
 
         try {
@@ -101,11 +101,11 @@ public class SubmissionGradingHelper {
                     savedSubmission.getTeamId()
             );
 
-            log.info("✅ Team grade applied to all members of group {} with gradebook & unit updates",
+            log.info("Team grade applied to all members of group {} with gradebook & unit updates",
                     savedSubmission.getTeamId().getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to grade team submission {}: {}",
+            log.error("Failed to grade team submission {}: {}",
                     submissionId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -113,7 +113,7 @@ public class SubmissionGradingHelper {
 
     @Transactional
     public void deleteSubmission(SubmissionId submissionId) {
-        log.warn("🗑️ Deleting submission ID: {}", submissionId.getValue());
+        log.warn("Deleting submission ID: {}", submissionId.getValue());
 
         Submission submission = findSubmissionByIdOrThrow(submissionId);
         Assignment assignment = assignmentRepository.findById(submission.getAssignmentId())
@@ -131,7 +131,7 @@ public class SubmissionGradingHelper {
         }
 
         submissionRepository.delete(submission);
-        log.info("✅ Submission deleted and grade REMOVED from unit grade");
+        log.info("Submission deleted and grade REMOVED from unit grade");
     }
 
     private void syncGradesAfterSubmission(Submission submission, Assignment assignment) {
@@ -154,12 +154,6 @@ public class SubmissionGradingHelper {
             gradebookService.applyTeamGradeToAllMembers(
                     assignment.getId(),
                     submission.getTeamId()
-            );
-        } else {
-            gradebookService.syncAssignmentGrade(
-                    assignment.getCourseId(),
-                    submission.getStudentId(),
-                    submission.getAssignmentId()
             );
         }
     }

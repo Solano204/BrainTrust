@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -141,7 +141,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
   <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
     <div className="max-w-6xl mx-auto space-y-6">
 
-      {/* ── Encabezado ── */}
       <div className="space-y-4">
         <button
           onClick={onExit}
@@ -183,7 +182,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
         </div>
       </div>
 
-      {/* ── Tarjetas de estadísticas de calificación ── */}
       {isGraded && submission.grade && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="bg-card rounded-2xl border-2 border-primary p-4 text-center space-y-1">
@@ -218,10 +216,8 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* ── Contenido principal ── */}
         <div className="lg:col-span-2 space-y-5">
 
-          {/* Respuesta enviada */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="px-5 py-4 sm:px-6 border-b border-border">
               <div className="flex items-center gap-2">
@@ -242,7 +238,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
             </div>
           </div>
 
-          {/* Adjuntos */}
           {submission.attachments && submission.attachments.length > 0 && (
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="px-5 py-4 sm:px-6 border-b border-border">
@@ -279,7 +274,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
             </div>
           )}
 
-          {/* Análisis de IA */}
           {submission.aiAnalysis && (
             <div className={`bg-card rounded-2xl border-l-4 border-t border-r border-b border-border shadow-sm overflow-hidden ${
               submission.aiAnalysis.isLikelyAI ? 'border-l-destructive' : 'border-l-primary'
@@ -331,7 +325,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
             </div>
           )}
 
-          {/* Retroalimentación del profesor */}
           {submission.teacherFeedback && (
             <div className="bg-card rounded-2xl border-l-4 border-l-primary border-t border-r border-b border-border shadow-sm overflow-hidden">
               <div className="px-5 py-4 sm:px-6 border-b border-border">
@@ -369,10 +362,8 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
           )}
         </div>
 
-        {/* ── Barra lateral ── */}
         <div className="space-y-4">
 
-          {/* Detalles del envío */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-border">
               <h3 className="text-sm font-bold text-foreground">Detalles del Envío</h3>
@@ -435,7 +426,6 @@ export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSub
             </div>
           </div>
 
-          {/* Información de la tarea */}
           <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">

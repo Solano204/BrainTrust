@@ -1,18 +1,10 @@
-// ============================================================
-// FILE 1: types/catalog.types.ts
-// ============================================================
-
-// ─── Core DTOs ───────────────────────────────────────────────────
+﻿
 
 export interface CatalogItem {
   id: number;
   value: string;
 }
-// ============================================================
-// FILE 1: types/catalog.types.ts
-// ============================================================
 
-// ─── Core DTOs ───────────────────────────────────────────────────
 
 export interface CatalogItem {
   id: number;
@@ -64,7 +56,6 @@ export interface CatalogRoleActivity {
   description: string;
 }
 
-// ─── Pagination ───────────────────────────────────────────────────
 
 export interface PagedResponse<T> {
   content: T[];
@@ -82,7 +73,6 @@ export interface PageParams {
   search?: string;
 }
 
-// ─── Request Bodies ───────────────────────────────────────────────
 
 export interface CatalogValueRequest {
   value: string;
@@ -120,7 +110,6 @@ export interface CatalogRoleActivityRequest {
   description: string;
 }
 
-// ─── Backend Success/Error Response ──────────────────────────────
 
 export interface CatalogSuccessResponse {
   success: boolean;
@@ -175,7 +164,6 @@ export interface CatalogRoleActivity {
   [key: string]: unknown;
 }
 
-// ─── Pagination ───────────────────────────────────────────────────
 
 export interface PagedResponse<T> {
   content: T[];
@@ -193,7 +181,6 @@ export interface PageParams {
   search?: string;
 }
 
-// ─── Request Bodies ───────────────────────────────────────────────
 
 export interface CatalogValueRequest {
   value: string;
@@ -229,7 +216,6 @@ export interface CatalogRoleActivityRequest {
   [key: string]: unknown;
 }
 
-// ─── Backend Success/Error Response ──────────────────────────────
 
 export interface CatalogSuccessResponse {
   success: boolean;

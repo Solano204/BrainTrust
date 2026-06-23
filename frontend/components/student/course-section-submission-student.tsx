@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
@@ -99,9 +99,8 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
     console.log("submissions", assignments)
     if (!selectedUnitId) {
        return (
-  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+  <div className="page-container">
 
-    {/* ── Encabezado de página ── */}
     <div>
       <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
         Unidades del Curso
@@ -111,7 +110,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
       </p>
     </div>
 
-    {/* ── Estados ── */}
     {isLoadingUnits ? (
       <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
         <Loader2 className="w-7 h-7 animate-spin text-primary" />
@@ -144,7 +142,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
             onClick={() => handleSelectUnit(unit.id)}
             className="bg-card rounded-2xl border border-border p-5 cursor-pointer hover:border-primary/30 hover:shadow-md hover:scale-[1.02] transition-all duration-300 group flex flex-col gap-4"
           >
-            {/* Etiqueta + icono */}
             <div className="flex items-center justify-between">
               <span className="px-2.5 py-1 rounded-xl bg-primary/10 text-primary text-xs font-bold">
                 Unidad {unit.numUnity}
@@ -154,7 +151,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
               </span>
             </div>
 
-            {/* Nombre + descripción */}
             <div className="flex-1">
               <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors mb-1">
                 {unit.name}
@@ -164,7 +160,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
               </p>
             </div>
 
-            {/* Botón de acción */}
             <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all">
               <Eye className="w-4 h-4" />
               Ver Tareas y Cuestionarios
@@ -235,9 +230,8 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
     }
 
    return (
-  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+  <div className="page-container">
 
-    {/* ── Encabezado de página ── */}
     <div className="flex flex-col sm:flex-row sm:items-start gap-4">
       <div className="flex items-start gap-3">
         <button
@@ -281,7 +275,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
       </div>
     </div>
 
-    {/* ── Búsqueda ── */}
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <input
@@ -292,7 +285,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
       />
     </div>
 
-    {/* ── Banner de error ── */}
     {tasksError && (
       <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-5 flex items-center gap-3 text-destructive">
         <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -303,7 +295,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
       </div>
     )}
 
-    {/* ── Pestañas ── */}
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
       <TabsList className="w-full grid grid-cols-2 rounded-2xl bg-muted/50 p-1 h-auto">
         <TabsTrigger
@@ -328,7 +319,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
         </TabsTrigger>
       </TabsList>
 
-      {/* ══ Pestaña de Tareas ══ */}
       <TabsContent value="assignments" className="space-y-4">
         {isLoadingTasks ? (
           <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
@@ -347,7 +337,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
           </div>
         ) : (
           <>
-            {/* Tabla de escritorio */}
             <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <table className="w-full">
                 <thead className="bg-muted/40">
@@ -397,7 +386,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
               </table>
             </div>
 
-            {/* Tarjetas móviles */}
             <div className="space-y-3 lg:hidden">
               {filteredAssignments.map((assignment) => (
                 <div key={assignment.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
@@ -421,11 +409,11 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
                     </div>
                     <div className="bg-muted/30 rounded-xl px-3 py-2.5 border border-border">
                       <p className="text-xs text-muted-foreground mb-0.5">Calificación</p>
-                      <p className="text-sm font-semibold text-foreground">
+                      <div className="text-sm font-semibold text-foreground">
                         {assignment.submission?.grade
                           ? getGradeDisplay(assignment.submission.grade, assignment.maxPoints)
                           : "—"}
-                      </p>
+                      </div>
                     </div>
                   </div>
                   <button
@@ -446,7 +434,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
         )}
       </TabsContent>
 
-      {/* ══ Pestaña de Cuestionarios ══ */}
       <TabsContent value="quizzes" className="space-y-4">
         {isLoadingTasks ? (
           <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
@@ -465,7 +452,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
           </div>
         ) : (
           <>
-            {/* Tabla de escritorio */}
             <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <table className="w-full">
                 <thead className="bg-muted/40">
@@ -522,7 +508,6 @@ export function StudentCourseTaskOverview({ courseId }: StudentCourseTaskOvervie
               </table>
             </div>
 
-            {/* Tarjetas móviles */}
             <div className="space-y-3 lg:hidden">
               {filteredQuizzes.map((quiz) => (
                 <div key={quiz.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">

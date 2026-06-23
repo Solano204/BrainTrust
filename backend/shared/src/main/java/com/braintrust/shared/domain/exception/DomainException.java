@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-// 📍 shared/domain/exceptions/DomainException.java
 public abstract class DomainException extends RuntimeException {
 
     private final String errorCode;

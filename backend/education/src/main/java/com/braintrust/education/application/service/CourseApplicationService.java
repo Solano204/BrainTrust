@@ -56,7 +56,7 @@ public class CourseApplicationService implements CourseService {
         this.unitHelper = unitHelper;
         this.statsHelper = statsHelper;
         this.gradebookHelper = gradebookHelper;
-        log.info("✅ CourseApplicationService initialized with refactored helpers");
+        log.info("CourseApplicationService initialized");
     }
 
     @Override
@@ -181,7 +181,7 @@ public class CourseApplicationService implements CourseService {
 
     @Override
     public void deleteCourse(CourseId courseId) {
-        log.warn("🗑️ Deleting Course ID: {} with cascade", courseId.getValue());
+        log.warn("Deleting course id={} with cascade", courseId.getValue());
 
         Course course = findCourseByIdOrThrow(courseId);
 
@@ -189,7 +189,7 @@ public class CourseApplicationService implements CourseService {
 
         courseRepository.delete(course);
 
-        log.info("✅ Course ID {} deleted successfully with cascade", courseId.getValue());
+        log.info("Course deleted id={}", courseId.getValue());
     }
 
     @Override
@@ -231,7 +231,7 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public List<CourseDTO> getActiveCourses() {
-        log.debug("📊 Fetching all active courses (legacy method)");
+        log.debug("Fetching all active courses (legacy method)");
         List<Course> courses = courseRepository.findActiveCourses();
         return courses.stream()
                 .map(courseMapper::mapToCourseDTO)
@@ -241,7 +241,7 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public Page<CourseDTO> getAllCourses(Pageable pageable) {
-        log.debug("📊 Fetching paginated courses. Page: {}, Size: {}",
+        log.debug("Fetching paginated courses. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
         long startTime = System.currentTimeMillis();
 
@@ -253,14 +253,14 @@ public class CourseApplicationService implements CourseService {
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved page {} of {} courses (total: {}) in {}ms",
+            log.info("Retrieved page {} of {} courses (total: {}) in {}ms",
                     pageable.getPageNumber(), dtos.size(),
                     coursePage.getTotalElements(), duration);
 
             return new PageImpl<>(dtos, pageable, coursePage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated courses: {}", e.getMessage(), e);
+            log.error("Failed to fetch paginated courses: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated courses", e);
         }
     }
@@ -268,7 +268,7 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public Page<CourseDTO> getActiveCourses(Pageable pageable) {
-        log.debug("📊 Fetching paginated active courses. Page: {}, Size: {}",
+        log.debug("Fetching paginated active courses. Page: {}, Size: {}",
                 pageable.getPageNumber(), pageable.getPageSize());
         long startTime = System.currentTimeMillis();
 
@@ -280,14 +280,14 @@ public class CourseApplicationService implements CourseService {
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved page {} of {} active courses (total: {}) in {}ms",
+            log.info("Retrieved page {} of {} active courses (total: {}) in {}ms",
                     pageable.getPageNumber(), dtos.size(),
                     coursePage.getTotalElements(), duration);
 
             return new PageImpl<>(dtos, pageable, coursePage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated active courses: {}", e.getMessage(), e);
+            log.error("Failed to fetch paginated active courses: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated active courses", e);
         }
     }
@@ -295,7 +295,7 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public Page<CourseDTO> getCoursesByTeacher(UserId teacherId, Pageable pageable) {
-        log.debug("📊 Fetching paginated courses for Teacher ID: {}. Page: {}, Size: {}",
+        log.debug("Fetching paginated courses for Teacher ID: {}. Page: {}, Size: {}",
                 teacherId.getValue(), pageable.getPageNumber(), pageable.getPageSize());
         long startTime = System.currentTimeMillis();
 
@@ -307,14 +307,14 @@ public class CourseApplicationService implements CourseService {
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved page {} of {} courses for Teacher {} (total: {}) in {}ms",
+            log.info("Retrieved page {} of {} courses for Teacher {} (total: {}) in {}ms",
                     pageable.getPageNumber(), dtos.size(), teacherId.getValue(),
                     coursePage.getTotalElements(), duration);
 
             return new PageImpl<>(dtos, pageable, coursePage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated courses for teacher {}: {}",
+            log.error("Failed to fetch paginated courses for teacher {}: {}",
                     teacherId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated courses for teacher", e);
         }
@@ -323,7 +323,7 @@ public class CourseApplicationService implements CourseService {
     @Override
     @Transactional(readOnly = true)
     public Page<CourseDTO> getCoursesByStudent(UserId studentId, Pageable pageable) {
-        log.debug("📊 Fetching paginated courses for Student ID: {}. Page: {}, Size: {}",
+        log.debug("Fetching paginated courses for Student ID: {}. Page: {}, Size: {}",
                 studentId.getValue(), pageable.getPageNumber(), pageable.getPageSize());
         long startTime = System.currentTimeMillis();
 
@@ -335,14 +335,14 @@ public class CourseApplicationService implements CourseService {
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved page {} of {} courses for Student {} (total: {}) in {}ms",
+            log.info("Retrieved page {} of {} courses for Student {} (total: {}) in {}ms",
                     pageable.getPageNumber(), dtos.size(), studentId.getValue(),
                     coursePage.getTotalElements(), duration);
 
             return new PageImpl<>(dtos, pageable, coursePage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated courses for student {}: {}",
+            log.error("Failed to fetch paginated courses for student {}: {}",
                     studentId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated courses for student", e);
         }
@@ -379,10 +379,6 @@ public class CourseApplicationService implements CourseService {
     public List<StudentSearchResultDTO> searchStudentsForEnrollment(String searchQuery, CourseId courseId) {
         return enrollmentHelper.searchStudentsForEnrollment(searchQuery, courseId);
     }
-
-    // ========================================
-    // UNIT OPERATIONS - DELEGATED
-    // ========================================
 
     @Override
     public UnitId addUnit(AddUnitCommand command) {

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
@@ -164,14 +164,13 @@ function UserFormModal({ open, onClose, initialData, onSave, isSaving }: UserFor
 
     if (!open) return null
 return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+  <div className="modal-overlay">
     <div className="bg-card rounded-3xl border border-border shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
 
-        {/* ── Encabezado ── */}
         <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
           <div className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <span className="icon-badge">
               <Users className="w-4 h-4 text-primary" />
             </span>
             <div>
@@ -187,16 +186,14 @@ return (
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-30"
+            className="icon-btn transition-all disabled:opacity-30"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* ── Cuerpo ── */}
         <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 space-y-5">
 
-          {/* Nombre + Apellidos */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="firstName" className="text-xs font-semibold text-foreground">
@@ -209,7 +206,7 @@ return (
                 required
                 disabled={isSaving}
                 placeholder="Ej: Juan"
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+                className="input-field"
               />
             </div>
             <div className="space-y-1.5">
@@ -223,12 +220,11 @@ return (
                 required
                 disabled={isSaving}
                 placeholder="Ej: Pérez García"
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+                className="input-field"
               />
             </div>
           </div>
 
-          {/* Email */}
           <div className="space-y-1.5">
             <label htmlFor="email" className="text-xs font-semibold text-foreground">
               Correo Electrónico *
@@ -241,11 +237,10 @@ return (
               required
               disabled={isSaving}
               placeholder="usuario@universidad.edu"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+              className="input-field"
             />
           </div>
 
-          {/* Teléfono */}
           <div className="space-y-1.5">
             <label htmlFor="phone" className="text-xs font-semibold text-foreground">
               Teléfono
@@ -257,11 +252,10 @@ return (
               onChange={handleChange}
               disabled={isSaving}
               placeholder="+52 961 123 4567"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+              className="input-field"
             />
           </div>
 
-          {/* Rol + Estado */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label htmlFor="role" className="text-xs font-semibold text-foreground">
@@ -272,7 +266,7 @@ return (
                 value={formData.role}
                 onChange={handleChange}
                 disabled={isSaving}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+                className="input-field"
               >
                 <option value="STUDENT">Estudiante</option>
                 <option value="TEACHER">Profesor</option>
@@ -288,7 +282,7 @@ return (
                 value={formData.status}
                 onChange={handleChange}
                 disabled={isSaving}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 disabled:opacity-30 transition-all"
+                className="input-field"
               >
                 <option value="ACTIVE">Activo</option>
                 <option value="INACTIVE">Inactivo</option>
@@ -299,7 +293,6 @@ return (
 
         </div>
 
-        {/* ── Pie de página ── */}
         <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button
@@ -339,13 +332,12 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
     }
 
     return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+  <div className="modal-overlay">
     <div className="bg-card rounded-3xl border border-border shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
 
-      {/* ── Encabezado ── */}
       <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
         <div className="flex items-center gap-3">
-          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <span className="icon-badge">
             <Eye className="w-4 h-4 text-primary" />
           </span>
           <div>
@@ -359,16 +351,14 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          className="icon-btn transition-all"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* ── Cuerpo ── */}
       <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 space-y-6">
 
-        {/* Avatar + nombre */}
         <div className="flex items-center gap-4 pb-5 border-b border-border">
           <img
             src={user.avatarUrl}
@@ -390,9 +380,8 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
           </span>
         </div>
 
-        {/* Información de contacto */}
         <div className="space-y-3">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+          <h4 className="section-label flex items-center gap-2">
             <Mail className="w-3.5 h-3.5" />
             Información de Contacto
           </h4>
@@ -409,9 +398,8 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
           </div>
         </div>
 
-        {/* Información de la cuenta */}
         <div className="space-y-3">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+          <h4 className="section-label flex items-center gap-2">
             <Shield className="w-3.5 h-3.5" />
             Información de la Cuenta
           </h4>
@@ -430,9 +418,8 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
           </div>
         </div>
 
-        {/* Estadísticas */}
         <div className="space-y-3">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+          <h4 className="section-label flex items-center gap-2">
             <BarChart3 className="w-3.5 h-3.5" />
             Estadísticas
           </h4>
@@ -454,11 +441,10 @@ function UserDetailModal({ user, open, onClose }: { user: User | null, open: boo
 
       </div>
 
-      {/* ── Pie de página ── */}
       <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
         <button
           onClick={onClose}
-          className="w-full flex items-center justify-center px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+          className="btn-ghost w-full"
         >
           Cerrar
         </button>
@@ -506,7 +492,6 @@ export default function AdminUsersModule() {
 
     const handleSave = (userData: Partial<User>) => {
         setIsSaving(true)
-        // Simular guardado
         setTimeout(() => {
             console.log('Guardando:', userData)
             setIsSaving(false)
@@ -538,9 +523,8 @@ export default function AdminUsersModule() {
     }
 
     return (
-  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+  <div className="page-container">
 
-    {/* ── Encabezado de página ── */}
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -560,7 +544,7 @@ export default function AdminUsersModule() {
         </button>
         <button
           onClick={() => { setSelectedUser(null); setShowFormModal(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+          className="btn-primary shadow-sm"
         >
           <Plus className="w-4 h-4" />
           Nuevo Usuario
@@ -568,10 +552,8 @@ export default function AdminUsersModule() {
       </div>
     </div>
 
-    {/* ── Estadísticas ── */}
     <UserStatsCards users={users} />
 
-    {/* ── Búsqueda ── */}
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <input
@@ -582,7 +564,6 @@ export default function AdminUsersModule() {
       />
     </div>
 
-    {/* ── Pestañas ── */}
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
       <TabsList className="w-full grid grid-cols-4 rounded-2xl bg-muted/50 p-1 h-auto">
         {[
@@ -606,7 +587,6 @@ export default function AdminUsersModule() {
 
       <TabsContent value={activeTab} className="space-y-4">
 
-        {/* Cargando */}
         {isLoading ? (
           <div className="bg-card rounded-2xl border border-border p-12 flex flex-col items-center gap-3 text-muted-foreground">
             <Loader2 className="w-7 h-7 animate-spin text-primary" />
@@ -620,7 +600,6 @@ export default function AdminUsersModule() {
 
         ) : (
           <>
-            {/* ── Tabla de escritorio ── */}
             <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <table className="w-full">
                 <thead className="bg-muted/40">
@@ -646,7 +625,6 @@ export default function AdminUsersModule() {
                   {filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-muted/30 transition-colors group">
 
-                      {/* Usuario */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
@@ -663,52 +641,47 @@ export default function AdminUsersModule() {
                         </div>
                        </td>
 
-                      {/* Contacto */}
                       <td className="px-6 py-4">
                         <p className="text-sm font-semibold text-foreground">{user.email}</p>
                         <p className="text-xs text-muted-foreground">{user.phone}</p>
                        </td>
 
-                      {/* Rol */}
                       <td className="px-6 py-4">
                         <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${getRoleBadge(user.role)}`}>
                           {user.role === 'ADMIN' ? 'Administrador' : user.role === 'TEACHER' ? 'Profesor' : 'Estudiante'}
                         </span>
                        </td>
 
-                      {/* Estado */}
                       <td className="px-6 py-4">
                         <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${getStatusBadge(user.status)}`}>
                           {user.status === 'ACTIVE' ? 'Activo' : user.status === 'INACTIVE' ? 'Inactivo' : 'Suspendido'}
                         </span>
                        </td>
 
-                      {/* Último acceso */}
                       <td className="px-6 py-4 text-xs text-muted-foreground">
                         {user.lastLogin
                           ? new Date(user.lastLogin).toLocaleDateString('es-MX')
                           : 'Nunca'}
                        </td>
 
-                      {/* Acciones */}
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                           <button
                             onClick={() => handleView(user)}
-                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                            className="icon-btn-primary transition-all"
                             title="Ver"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleEdit(user)}
-                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+                            className="icon-btn-primary transition-all"
                             title="Editar"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                            className="icon-btn-destructive transition-all"
                             title="Eliminar"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -722,12 +695,10 @@ export default function AdminUsersModule() {
               </table>
             </div>
 
-            {/* ── Tarjetas móviles ── */}
             <div className="lg:hidden space-y-3">
               {filteredUsers.map((user) => (
                 <div key={user.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
 
-                  {/* Avatar + nombre + etiquetas */}
                   <div className="flex items-start gap-3">
                     <img
                       src={user.avatarUrl}
@@ -750,7 +721,6 @@ export default function AdminUsersModule() {
                     </div>
                   </div>
 
-                  {/* Cuadrícula de información */}
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { label: 'Teléfono', value: user.phone },
@@ -763,7 +733,6 @@ export default function AdminUsersModule() {
                     ))}
                   </div>
 
-                  {/* Acciones */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleView(user)}
@@ -795,7 +764,6 @@ export default function AdminUsersModule() {
       </TabsContent>
     </Tabs>
 
-    {/* ── Modales ── */}
     <UserFormModal
       open={showFormModal}
       onClose={() => { setShowFormModal(false); setSelectedUser(null); }}

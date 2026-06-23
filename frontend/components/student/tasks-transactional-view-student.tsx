@@ -1,5 +1,4 @@
-//DARK
-"use client";
+﻿"use client";
 import React, { useState } from "react";
 import { TaskSubmissionView } from "@/components/student/quiz-view-tasks-student";
 import { useStudentTaskSubmission } from "@/components/teacher-student/hooks/submission-hooks";
@@ -75,7 +74,6 @@ export function VistaTareaEstudiante({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        {/* ✅ was: border-blue-600 → border-primary */}
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -125,11 +123,9 @@ return (
       />
     </div>
 
-    {/* ── Diálogo de confirmación de envío en cuaderno ── */}
     <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
       <DialogContent className="bg-card rounded-3xl border border-border shadow-2xl sm:max-w-md p-0 overflow-hidden">
 
-        {/* Encabezado */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
           <span className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
             <AlertTriangle className="w-4 h-4 text-accent-foreground" />
@@ -139,7 +135,6 @@ return (
           </h2>
         </div>
 
-        {/* Cuerpo */}
         <div className="px-6 py-5 space-y-4">
           <div className="p-4 bg-accent/5 rounded-2xl border border-accent/30">
             <div className="flex items-start gap-3">
@@ -170,7 +165,6 @@ return (
           </p>
         </div>
 
-        {/* Pie de página */}
         <div className="px-6 py-4 border-t border-border bg-muted/30 rounded-b-3xl">
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button
@@ -185,7 +179,7 @@ return (
               type="button"
               onClick={handleConfirmSubmission}
               disabled={isSubmitting}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all"
+              className="flex-1 btn-primary"
             >
               {isSubmitting ? (
                 <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />Enviando...</>

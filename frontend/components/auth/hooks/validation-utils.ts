@@ -1,4 +1,4 @@
-import { ZodError } from "zod"
+﻿import { ZodError } from "zod"
 
 export function formatZodErrors(error: ZodError): Record<string, string> {
   const errors: Record<string, string> = {}
@@ -35,7 +35,7 @@ export function sanitizeString(input: string): string {
 
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-  const maxSize = 5 * 1024 * 1024 // 5MB
+  const maxSize = 20 * 1024 * 1024 // 20MB
 
   if (!validTypes.includes(file.type)) {
     return {
@@ -68,7 +68,6 @@ export function getPasswordStrength(password: string): {
   if (/[0-9]/.test(password)) score++
   if (/[@$!%*?&]/.test(password)) score++
 
-  // Multiple special chars or numbers
   if ((password.match(/[0-9]/g) || []).length >= 2) score++
   if ((password.match(/[@$!%*?&]/g) || []).length >= 2) score++
 

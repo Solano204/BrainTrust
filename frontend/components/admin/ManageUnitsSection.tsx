@@ -1,4 +1,4 @@
- 'use client';
+﻿ 'use client';
 
 import { useState } from 'react';
 import { useAdminCourseUnits, useDeleteUnitAdmin } from '@/components/admin/hooks/useCourses';
@@ -46,9 +46,8 @@ export function ManageUnitsSection({ courseId, courseName }: ManageUnitsSectionP
 return (
   <div className="space-y-4">
 
-    {/* ── Encabezado ── */}
     <div className="flex items-center justify-between">
-      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+      <h3 className="section-label">
         Unidades del Curso
       </h3>
       <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-bold">
@@ -56,7 +55,6 @@ return (
       </span>
     </div>
 
-    {/* ── Lista de unidades ── */}
     <div className="space-y-3">
       {units.map((unit) => (
         <div
@@ -65,7 +63,6 @@ return (
         >
           <div className="flex items-start gap-4">
 
-            {/* Imagen de la unidad */}
             <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden bg-primary">
               {unit.urlImage ? (
                 <img
@@ -80,7 +77,6 @@ return (
               )}
             </div>
 
-            {/* Contenido */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -151,9 +147,8 @@ export function CourseUnitsCard({ courseId, courseName, onManageGrades }: Course
 return (
   <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
 
-    {/* ── Encabezado ── */}
     <div className="flex items-center justify-between mb-5">
-      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+      <h3 className="section-label">
         Gestión de Unidades
       </h3>
       {units && (
@@ -163,7 +158,6 @@ return (
       )}
     </div>
 
-    {/* ── Estados ── */}
     {isLoading ? (
       <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -178,7 +172,6 @@ return (
           >
             <div className="flex items-center justify-between gap-3">
 
-              {/* Información */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-sm text-foreground">
@@ -193,7 +186,6 @@ return (
                 </p>
               </div>
 
-              {/* Acciones */}
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 {onManageGrades && (
                   <button

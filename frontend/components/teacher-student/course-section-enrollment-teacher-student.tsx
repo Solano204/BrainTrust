@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { useState, useMemo } from "react";
@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, UserPlus, Settings, Mail, Trash2, Loader2, BookOpen, Eye, Users } from "lucide-react";
+import { Search, UserPlus, Settings, Mail, Trash2, Loader2, BookOpen, Eye, Users, History } from "lucide-react";
+import { StudentHistoryView } from "@/components/teacher/student-history-view";
 import { CourseId, UserId } from "@/app/domain/valueObjects";
 import { useAuth } from "@/app/context/AuthContext";
 import { 
@@ -48,6 +49,7 @@ export function CourseStudents({ courseId }: PropsEstudiantesCurso) {
   const [mostrarDetalleEstudiante, setMostrarDetalleEstudiante] = useState(false);
   const [inscripcionSeleccionada, setInscripcionSeleccionada] = useState<Enrollment | null>(null);
   const [terminoBusquedaInscripcion, setTerminoBusquedaInscripcion] = useState("");
+  const [historialEstudiante, setHistorialEstudiante] = useState<Enrollment | null>(null);
   const [idsUsuarioSeleccionados, setIdsUsuarioSeleccionados] = useState<UserId[]>([]);
 
   const {
@@ -212,6 +214,19 @@ if (!esProfesor) {
     );
   }
 
+  if (historialEstudiante) {
+    return (
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+        <StudentHistoryView
+          courseId={courseId as string}
+          studentId={historialEstudiante.studentId as string}
+          studentName={historialEstudiante.studentName}
+          onBack={() => setHistorialEstudiante(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -275,7 +290,6 @@ if (!esProfesor) {
         </Card>
       )}
 
-      {/* Modal de Inscripción */}
       <Dialog open={mostrarModalInscripcion} onOpenChange={setMostrarModalInscripcion}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -390,7 +404,6 @@ if (!esProfesor) {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Eliminación */}
       <Dialog open={mostrarModalEliminar} onOpenChange={setMostrarModalEliminar}>
         <DialogContent>
           <DialogHeader>
@@ -424,7 +437,11 @@ if (!esProfesor) {
         onClose={() => setMostrarDetalleEstudiante(false)}
         inscripcion={inscripcionSeleccionada}
         formatDate={formatearFecha}
-        isTeacher={true}
+        isTeacher={esProfesor}
+        onViewHistory={(inscripcion) => {
+          setMostrarDetalleEstudiante(false);
+          setHistorialEstudiante(inscripcion);
+        }}
       />
     </div>
   );
@@ -565,7 +582,8 @@ const DialogoDetalleEstudiante: React.FC<{
   inscripcion: Enrollment | null;
   formatDate: (date: string) => string;
   isTeacher: boolean;
-}> = ({ isOpen, onClose, inscripcion, formatDate, isTeacher }) => {
+  onViewHistory?: (inscripcion: Enrollment) => void;
+}> = ({ isOpen, onClose, inscripcion, formatDate, isTeacher, onViewHistory }) => {
   if (!inscripcion) return null;
 
   const iniciales = inscripcion.studentName.split(' ').map(n => n[0]).join('').substring(0, 2);
@@ -613,7 +631,17 @@ return (
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2">
+          {isTeacher && onViewHistory && (
+            <Button
+              variant="outline"
+              onClick={() => onViewHistory(inscripcion)}
+              className="gap-2"
+            >
+              <History className="h-4 w-4" />
+              Ver Historial
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose}>Cerrar</Button>
         </DialogFooter>
       </DialogContent>

@@ -8,7 +8,7 @@ import com.braintrust.aidetectition.domain.valueobjects.SubmissionId;
 import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.Mapper.AnalysisEntityMapper;
 import com.braintrust.aidetectition.infraestructure.repositoriesPersistence.sql.entities.AnalysisRequestJpaEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -87,15 +87,15 @@ public class JpaAnalysisRequestRepositoryAdapter implements AnalysisRequestRepos
                     })
                     .collect(Collectors.toList());
 
-            log.info("✅ Successfully batch saved {} AnalysisRequests.", savedAnalysisRequests.size());
+            log.info("Successfully batch saved {} AnalysisRequests.", savedAnalysisRequests.size());
             return savedAnalysisRequests;
 
         } catch (JsonProcessingException e) {
-            log.error("❌ JsonProcessingException during batch save operation.", e);
+            log.error("JsonProcessingException during batch save operation.", e);
             throw new RuntimeException("JsonProcessingException during batch save operation", e);
 
         } catch (Exception e) {
-            log.error("❌ Unexpected error during batch save operation.", e);
+            log.error("Unexpected error during batch save operation.", e);
             throw new RuntimeException("Failed to batch save AnalysisRequests", e);
         }
     }

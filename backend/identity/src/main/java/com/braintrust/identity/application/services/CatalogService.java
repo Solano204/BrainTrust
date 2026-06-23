@@ -47,7 +47,6 @@ public class CatalogService {
         this.postalCodeRepo = postalCodeRepo;
     }
 
-    // ==================== FIRST NAMES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogItemDTO> getAllFirstNames(int page, int size, String search) {
@@ -105,7 +104,6 @@ public class CatalogService {
         firstNameRepo.deleteById(id);
     }
 
-    // ==================== LAST NAMES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogItemDTO> getAllLastNames(int page, int size, String search) {
@@ -162,7 +160,6 @@ public class CatalogService {
         lastNameRepo.deleteById(id);
     }
 
-    // ==================== STATES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogItemDTO> getAllStates(int page, int size, String search) {
@@ -218,7 +215,6 @@ public class CatalogService {
         stateRepo.deleteById(id);
     }
 
-    // ==================== MUNICIPALITIES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogMunicipalityDTO> getAllMunicipalities(int page, int size, String search) {
@@ -297,7 +293,6 @@ public class CatalogService {
         municipalityRepo.deleteById(id);
     }
 
-    // ==================== COLONIES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogColonyDTO> getAllColonies(int page, int size, String search) {
@@ -376,7 +371,6 @@ public class CatalogService {
         colonyRepo.deleteById(id);
     }
 
-    // ==================== STREETS ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogStreetDTO> getAllStreets(int page, int size, String search) {
@@ -453,7 +447,6 @@ public class CatalogService {
         streetRepo.deleteById(id);
     }
 
-    // ==================== POSTAL CODES ====================
 
     @Transactional(readOnly = true)
     public PagedResponseDTO<CatalogPostalCodeDTO> getAllPostalCodes(int page, int size, String search) {
@@ -530,7 +523,6 @@ public class CatalogService {
         postalCodeRepo.deleteById(id);
     }
 
-    // ==================== HELPER ====================
     private String capitalize(String s) {
         if (s == null || s.isEmpty()) return s;
         return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();

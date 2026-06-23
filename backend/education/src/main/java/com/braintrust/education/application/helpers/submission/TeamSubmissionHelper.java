@@ -51,15 +51,15 @@ public class TeamSubmissionHelper {
                 submissionRepository.save(shadowSubmission);
                 shadowCount++;
 
-                log.debug("✅ Created shadow submission for team member: {}", memberId.getValue());
+                log.debug("Created shadow submission for team member: {}", memberId.getValue());
 
             } catch (Exception e) {
-                log.error("❌ Failed to create shadow submission for team member {}: {}",
+                log.error("Failed to create shadow submission for team member {}: {}",
                         memberId.getValue(), e.getMessage());
             }
         }
 
-        log.info("✅ Created {} shadow submissions for team {}", shadowCount, team.getId().getValue());
+        log.info("Created {} shadow submissions for team {}", shadowCount, team.getId().getValue());
     }
 
     public void validateTeamAssignment(com.braintrust.education.domain.model.Assignment assignment) {

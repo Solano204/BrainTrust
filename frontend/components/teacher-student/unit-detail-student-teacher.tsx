@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -129,11 +129,9 @@ export function UnitDetail({
     return "PAGE";
   }
 
-  // Verificar si el quiz está disponible para que el estudiante lo realice
   const estaQuizDisponible = (quiz: Quiz): { available: boolean; reason?: string } => {
     const ahora = new Date();
 
-    // Verificar si el quiz tiene fechas de disponibilidad
     if (quiz.availableFrom) {
       const disponibleDesde = new Date(quiz.availableFrom);
       if (ahora < disponibleDesde) {
@@ -154,7 +152,6 @@ export function UnitDetail({
       }
     }
 
-    // Verificar fecha de entrega si no hay availableUntil
     if (!quiz.availableUntil && quiz.dueDate && !quiz.acceptLateSubmissions) {
       const fechaEntrega = new Date(quiz.dueDate);
       if (ahora > fechaEntrega) {
@@ -240,7 +237,6 @@ export function UnitDetail({
   const handleVistaEstudiante = (recurso: UnitResource) => {
     const tipoRecurso = obtenerTipoRecurso(recurso);
 
-    // Si es un quiz y el usuario es estudiante, verificar disponibilidad
     if (tipoRecurso === "QUIZ" && esEstudiante) {
       const quiz = recurso as Quiz;
       const disponibilidad = estaQuizDisponible(quiz);
@@ -295,7 +291,6 @@ export function UnitDetail({
     if (!recursoActual || !user?.id) return;
 
     try {
-      // Verificar disponibilidad nuevamente antes de enviar
       const quiz = recursoActual as Quiz;
       const disponibilidad = estaQuizDisponible(quiz);
       
@@ -542,7 +537,6 @@ export function UnitDetail({
     (recursoCarruselActual as Assignment).deliveryMode === "TEAM";
 return (
   <div className="min-h-screen bg-background">
-    {/* Encabezado */}
     <div className="bg-card border-b border-border p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-4">
@@ -550,7 +544,7 @@ return (
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver al Curso
           </Button>
-          <Badge variant="secondary" className="bg-secondary text-foreground border border-border text-sm">
+          <Badge variant="secondary" className="bg-secondary text-foreground text-sm bg-amber-50 border border-border  dark:bg-amber-50 dark:text-accent-foreground ">
             {recursos.length}{" "}
             {recursos.length === 1 ? "recurso" : "recursos"}
           </Badge>
@@ -595,7 +589,6 @@ return (
 
     <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
       <Card className="overflow-hidden border-border shadow-sm">
-        {/* Banner de la tarjeta */}
         <div className="bg-primary p-6 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-wide">
             RECURSOS DE LA UNIDAD
@@ -626,7 +619,6 @@ return (
                 </Alert>
               )}
 
-              {/* Navegación del carrusel */}
               <div className="flex items-center justify-center gap-8">
                 <button
                   onClick={handleAnterior}
@@ -663,10 +655,9 @@ return (
                 </button>
               </div>
 
-              {/* Información del recurso */}
               <div className="text-center space-y-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <Badge className="bg-accent/10 text-accent-foreground border border-accent/20 text-sm">
+                  <Badge className="bg-accent/10 text-foreground border border-accent/20 text-sm bg-amber-50 dark:text-white dark:bg-black">
                     {tipoRecursoActual === "ASSIGNMENT" ? "TAREA" : tipoRecursoActual === "QUIZ" ? "QUIZ" : "PÁGINA"}
                   </Badge>
                   {esTareaGrupal && (
@@ -683,7 +674,7 @@ return (
                           ? "outline"
                           : "secondary"
                       }
-                      className="border-border text-foreground text-sm"
+                      className="border-border text-foreground text-sm bg-amber-50 dark:text-white dark:bg-black "
                     >
                       {(recursoCarruselActual as Assignment).submissionFormat === "NOTEBOOK" ? (
                         <>
@@ -719,7 +710,6 @@ return (
                 </p>
               </div>
 
-              {/* Botones de acción */}
               <div className="flex items-center justify-center gap-4">
                 {esEstudiante ? (
                   <Button
@@ -797,7 +787,6 @@ return (
                 )}
               </div>
 
-              {/* Indicadores de puntos */}
               <div className="flex justify-center gap-2 pt-4 pb-8">
                 {recursos.map((_, indice) => (
                   <button

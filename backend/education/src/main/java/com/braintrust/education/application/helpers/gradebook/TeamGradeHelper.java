@@ -35,7 +35,7 @@ public class TeamGradeHelper {
     }
 
     public void applyTeamGradeToAllMembers(AssignmentId assignmentId, StudentGroupId groupId) {
-        log.info("🎯 Applying team grade to all members of group {}", groupId.getValue());
+        log.info("Applying team grade to all members of group {}", groupId.getValue());
 
         List<Submission> teamSubmissions = submissionRepository.findByAssignmentId(assignmentId)
                 .stream()
@@ -74,7 +74,7 @@ public class TeamGradeHelper {
                             SubmissionStatus.GRADED,
                             groupId
                     );
-                    log.info("📝 Created team submission record for member: {}", memberId.getValue());
+                    log.info("Created team submission record for member: {}", memberId.getValue());
                 } else {
                     memberSubmission = memberSubmissions.get(0);
                 }
@@ -85,15 +85,15 @@ public class TeamGradeHelper {
                 updateUnitGradeOnlyForTeamMember(assignment, memberId, assignmentId, teamGrade);
 
                 updatedCount++;
-                log.debug("✅ Team grade applied to member: {}", memberId.getValue());
+                log.debug("Team grade applied to member: {}", memberId.getValue());
 
             } catch (Exception e) {
-                log.error("❌ Failed to apply team grade to member {}: {}",
+                log.error("Failed to apply team grade to member {}: {}",
                         memberId.getValue(), e.getMessage(), e);
             }
         }
 
-        log.info("✅ Team grade successfully applied to {}/{} members with UnitGrade updates only",
+        log.info("Team grade successfully applied to {}/{} members with UnitGrade updates only",
                 updatedCount, group.getMemberCount());
     }
 
@@ -105,13 +105,13 @@ public class TeamGradeHelper {
 
         UnitId unitId = assignment.getUnitId();
         if (unitId == null) {
-            log.debug("⚠️ Assignment {} not associated with any unit, skipping unit grade update",
+            log.debug("Assignment {} not associated with any unit, skipping unit grade update",
                     assignmentId.getValue());
             return;
         }
 
         try {
-            log.debug("➕ Adding team assignment grade to UnitGrade for student {} in unit {}",
+            log.debug("Adding team assignment grade to UnitGrade for student {} in unit {}",
                     studentId.getValue(), unitId.getValue());
 
             unitGradeService.addAssignmentGradeToUnit(
@@ -121,11 +121,11 @@ public class TeamGradeHelper {
                     teamGrade
             );
 
-            log.debug("✅ Team assignment grade ADDED to UnitGrade for student {} in unit {} (not replaced)",
+            log.debug("Team assignment grade ADDED to UnitGrade for student {} in unit {} (not replaced)",
                     studentId.getValue(), unitId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to update UnitGrade for student {}: {}",
+            log.error("Failed to update UnitGrade for student {}: {}",
                     studentId.getValue(), e.getMessage(), e);
         }
     }

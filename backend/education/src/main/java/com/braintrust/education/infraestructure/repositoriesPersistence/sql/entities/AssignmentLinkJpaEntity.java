@@ -47,7 +47,7 @@ public class AssignmentLinkJpaEntity {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
 
-    // AssignmentLinkJpaEntity.java — add these two methods
+    // AssignmentLinkJpaEntity.java  add these two methods
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

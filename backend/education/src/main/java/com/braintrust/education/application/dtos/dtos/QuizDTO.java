@@ -12,8 +12,8 @@ public record QuizDTO(
         int maxAttempts,
         boolean shuffleQuestions,
         boolean showCorrectAnswers,
-        boolean allowSeeResults,   // ✅ NEW
-        double totalScore,         // ✅ NEW
+        boolean allowSeeResults,
+        double totalScore,
         int totalPoints,
         int questionCount,
         String createdAt,

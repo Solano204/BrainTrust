@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from "react";
 import {
@@ -225,7 +225,6 @@ export function CreateEditCourseModal({
         let finalImageUrl = formData.imageUrl;
 
         if (imageFile) {
-          // TODO: Implement image upload to your backend
           console.log("Imagen lista para subir:", imageFile);
         }
 
@@ -352,10 +351,9 @@ return (
   <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
     <div className="bg-card rounded-3xl border border-border shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
 
-      {/* ── Header ── */}
       <div className="flex items-center justify-between px-5 py-4 sm:px-7 sm:py-5 border-b border-border bg-card rounded-t-3xl flex-shrink-0">
         <div className="flex items-center gap-3">
-          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <span className="icon-badge">
             <BookOpen className="w-4 h-4 text-primary" />
           </span>
           <div>
@@ -371,17 +369,15 @@ return (
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          className="icon-btn transition-all"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* ── Form ── */}
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto flex flex-col">
         <div className="px-5 py-6 sm:px-7 space-y-5 flex-1">
 
-          {/* Course Code — create only */}
           {!isEdit && (
             <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-2">
               <label className="text-xs font-semibold text-foreground flex items-center gap-2">
@@ -392,7 +388,7 @@ return (
                 type="text"
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                className="input-field"
                 placeholder="ej., CS-101, MATH-201, ENG-301"
                 required
               />
@@ -402,40 +398,37 @@ return (
             </div>
           )}
 
-          {/* Course Name */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">Nombre del Curso *</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+              className="input-field"
               placeholder="ej., Introducción a la Computación"
               required
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground">Descripción *</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all resize-none"
+              className="input-field resize-none"
               rows={3}
               placeholder="Descripción breve del contenido, objetivos y requisitos del curso..."
               required
             />
           </div>
 
-          {/* Grade + Group */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground">Nivel / Grado *</label>
               <input
                 value={formData.grade}
                 onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                className="input-field"
                 required
               />
             </div>
@@ -445,21 +438,19 @@ return (
                 type="text"
                 value={formData.group}
                 onChange={(e) => setFormData({ ...formData, group: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                className="input-field"
                 placeholder="ej., Sección A, Grupo 1"
                 required
               />
             </div>
           </div>
 
-          {/* Teacher picker */}
           <div className="relative space-y-1.5" ref={dropdownRef}>
             <label className="text-xs font-semibold text-foreground flex items-center gap-2">
               <UserCheck className="w-3.5 h-3.5 text-primary" />
               Asignar Profesor *
             </label>
 
-            {/* Search input */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
@@ -480,7 +471,6 @@ return (
               </div>
             </div>
 
-            {/* Selected teacher card */}
             {selectedTeacher && !showTeacherDropdown && (
               <div className="p-4 rounded-2xl border border-primary/30 bg-primary/5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -512,11 +502,9 @@ return (
               </div>
             )}
 
-            {/* Dropdown */}
             {showTeacherDropdown && (
               <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-2xl shadow-xl max-h-[400px] overflow-hidden flex flex-col">
 
-                {/* Dropdown header */}
                 <div className="px-4 py-3 border-b border-border bg-muted/40 flex-shrink-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                     <span className="text-xs font-semibold text-foreground">
@@ -553,7 +541,6 @@ return (
                   )}
                 </div>
 
-                {/* Loading */}
                 {isLoading && teachers.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
                     <Loader2 className="w-7 h-7 animate-spin text-primary mb-3" />
@@ -564,7 +551,6 @@ return (
                   </div>
                 ) : (
                   <>
-                    {/* List */}
                     <div ref={teachersListRef} className="flex-1 overflow-y-auto" style={{ maxHeight: "280px" }}>
                       {teachers.length > 0 ? (
                         teachers.map((teacher) => (
@@ -606,7 +592,6 @@ return (
                       )}
                     </div>
 
-                    {/* Dropdown pagination */}
                     {totalPages > 0 && (
                       <div className="border-t border-border bg-muted/30 flex-shrink-0">
                         <div className="px-4 py-2 border-b border-border/50 flex items-center justify-between text-xs text-muted-foreground">
@@ -667,7 +652,6 @@ return (
             )}
           </div>
 
-          {/* Image upload — create only */}
           {!isEdit && (
             <ImageUploadWithValidation
               currentImageUrl={imagePreview}
@@ -679,7 +663,6 @@ return (
 
         </div>
 
-        {/* ── Footer ── */}
         <div className="border-t border-border bg-muted/30 px-5 py-4 sm:px-7 sticky bottom-0 flex-shrink-0 rounded-b-3xl">
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button
@@ -707,7 +690,6 @@ return (
             </button>
           </div>
 
-          {/* Validation messages */}
           <div className="mt-3 space-y-2">
             {!formData.teacherId && (
               <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2.5">

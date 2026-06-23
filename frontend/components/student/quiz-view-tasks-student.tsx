@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useRef } from 'react';
 
 import { 
@@ -181,7 +181,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
     isLikelyAI ? 'border-l-destructive' : 'border-l-primary'
   }`}>
 
-    {/* ── Encabezado ── */}
     <div className="px-5 py-4 sm:px-6 border-b border-border">
       <div className="flex flex-wrap items-center gap-2">
         <span className="w-8 h-8 rounded-xl flex items-center justify-center bg-primary/10 flex-shrink-0">
@@ -200,13 +199,11 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
       </div>
     </div>
 
-    {/* ── Cuerpo ── */}
     <div className="px-5 py-5 sm:px-6 space-y-5">
 
-      {/* Barra de probabilidad */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+          <span className="section-label">
             Puntaje de Probabilidad de IA
           </span>
           <span className="text-sm font-bold text-foreground tabular-nums">{percentage}%</span>
@@ -228,10 +225,8 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
         </div>
       </div>
 
-      {/* Cuadrícula de detalles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-        {/* Confianza */}
         <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border">
           <span className="text-xs font-semibold text-muted-foreground">Nivel de Confianza</span>
           <span className={`px-2 py-0.5 rounded-md text-xs font-bold ${
@@ -243,7 +238,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
           </span>
         </div>
 
-        {/* Probabilidad */}
         <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border">
           <span className="text-xs font-semibold text-muted-foreground">Probabilidad</span>
           <span className="text-sm font-bold text-foreground tabular-nums">
@@ -251,13 +245,11 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
           </span>
         </div>
 
-        {/* Modelo */}
         <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border">
           <span className="text-xs font-semibold text-muted-foreground">Modelo de Detección</span>
           <span className="text-sm font-semibold text-foreground">{aiResult.modelUsed}</span>
         </div>
 
-        {/* Fecha */}
         <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3 border border-border">
           <span className="text-xs font-semibold text-muted-foreground">Fecha de Análisis</span>
           <span className="text-xs text-foreground">{formatDate(aiResult.analyzedAt)}</span>
@@ -265,7 +257,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
 
       </div>
 
-      {/* ID de Análisis */}
       <div className="flex items-center gap-2 bg-muted/30 rounded-xl px-4 py-3 border border-border">
         <Info className="w-4 h-4 text-primary flex-shrink-0" />
         <span className="text-xs font-semibold text-muted-foreground">ID de Análisis:</span>
@@ -274,7 +265,6 @@ export const TaskSubmissionView: React.FC<TaskSubmissionViewProps> = ({
         </code>
       </div>
 
-      {/* Guía de interpretación */}
       <div className="p-4 rounded-2xl bg-accent/10 border border-accent/30">
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-4 h-4 text-accent-foreground flex-shrink-0 mt-0.5" />
@@ -311,7 +301,6 @@ return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* ── Encabezado de página ── */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight truncate">
@@ -329,10 +318,8 @@ return (
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-          {/* ── Contenido principal ── */}
           <div className="lg:col-span-3 space-y-5">
 
-            {/* Resumen de la tarea */}
             <div className="bg-card rounded-2xl border-l-4 border-l-primary border-t border-r border-b border-border shadow-sm overflow-hidden">
               <div className="px-5 py-4 sm:px-6 border-b border-border">
                 <div className="flex items-center gap-2">
@@ -344,17 +331,15 @@ return (
               </div>
               <div className="px-5 py-5 sm:px-6 space-y-5">
 
-                {/* Descripción */}
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <p className="section-label flex items-center gap-2">
                     <Info className="w-3.5 h-3.5" />Descripción
                   </p>
                   <p className="text-sm text-foreground">{assignment.description}</p>
                 </div>
 
-                {/* Instrucciones */}
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <p className="section-label flex items-center gap-2">
                     <MessageSquare className="w-3.5 h-3.5" />Instrucciones
                   </p>
                   <div className="p-4 bg-muted/30 rounded-xl border border-border">
@@ -362,7 +347,6 @@ return (
                   </div>
                 </div>
 
-                {/* Cuadrícula de metadatos */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-5 border-t border-border">
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
@@ -415,7 +399,6 @@ return (
               </div>
             </div>
 
-            {/* Recursos */}
             {(assignment.urls.length > 0 || assignment.attachments.length > 0 || assignment.links.length > 0) && (
               <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                 <div className="px-5 py-4 sm:px-6 border-b border-border">
@@ -428,11 +411,10 @@ return (
                 </div>
                 <div className="px-5 py-5 sm:px-6 space-y-5">
 
-                  {/* Enlaces */}
                   {assignment.links.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <p className="section-label flex items-center gap-1.5">
                           <LinkIcon className="w-3.5 h-3.5" />
                           Enlaces de Referencia ({assignment.links.length})
                         </p>
@@ -455,11 +437,10 @@ return (
                     </div>
                   )}
 
-                  {/* Adjuntos */}
                   {assignment.attachments.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                        <p className="section-label flex items-center gap-1.5">
                           <Paperclip className="w-3.5 h-3.5" />
                           Adjuntos ({assignment.attachments.length})
                         </p>
@@ -505,7 +486,6 @@ return (
 
             {hasAIResult && renderAIDetectionResult()}
 
-            {/* Formulario de envío */}
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="px-5 py-4 sm:px-6 border-b border-border">
                 <div className="flex items-center gap-2">
@@ -517,7 +497,6 @@ return (
               </div>
               <div className="px-5 py-5 sm:px-6 space-y-5">
 
-                {/* Respuesta escrita */}
                 <div className="space-y-2">
                   <label htmlFor="content" className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <MessageSquare className="w-3.5 h-3.5" />
@@ -545,7 +524,6 @@ return (
                   </div>
                 </div>
 
-                {/* Carga de archivos */}
                 <div className="space-y-3">
                   <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <Upload className="w-3.5 h-3.5" />
@@ -575,7 +553,6 @@ return (
                     </div>
                   </button>
 
-                  {/* Progreso de carga */}
                   {uploadProgress > 0 && uploadProgress < 100 && (
                     <div className="space-y-1.5">
                       <div className="w-full bg-muted/50 rounded-full h-1.5">
@@ -590,10 +567,9 @@ return (
                     </div>
                   )}
 
-                  {/* Lista de archivos */}
                   {files.length > 0 && (
                     <div className="space-y-1.5">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                      <p className="section-label">
                         Archivos Seleccionados
                       </p>
                       {files.map((file, index) => (
@@ -623,10 +599,9 @@ return (
                   )}
                 </div>
 
-                {/* Archivos enviados anteriormente */}
                 {existingSubmission?.attachments && existingSubmission.attachments.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                    <p className="section-label flex items-center gap-1.5">
                       <CheckCircle className="w-3.5 h-3.5 text-primary" />
                       Archivos Enviados Anteriormente
                     </p>
@@ -658,7 +633,6 @@ return (
                   </div>
                 )}
 
-                {/* Banner de estado del envío */}
                 {isSubmitted && (
                   <div className={`p-4 rounded-2xl border ${
                     isGraded
@@ -709,7 +683,6 @@ return (
                   </div>
                 )}
 
-                {/* Botón de envío */}
                 {!isSubmitted && (
                   <button
                     onClick={handleSubmitConfirm}
@@ -728,10 +701,8 @@ return (
             </div>
           </div>
 
-          {/* ── Barra lateral ── */}
           <div className="space-y-4">
 
-            {/* Estadísticas */}
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
@@ -799,7 +770,6 @@ return (
               </div>
             </div>
 
-            {/* Pautas */}
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-border">
                 <div className="flex items-center gap-2">
@@ -825,7 +795,6 @@ return (
               </ul>
             </div>
 
-            {/* Tiempo restante */}
             {assignment.dueDate && (
               <div className={`bg-card rounded-2xl border-l-4 border-t border-r border-b border-border shadow-sm overflow-hidden ${
                 timeRemaining?.overdue                              ? 'border-l-destructive' :
@@ -857,7 +826,6 @@ return (
       </div>
     </div>
 
-    {/* ── Diálogo de salida ── */}
     <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
       <AlertDialogContent className="bg-card rounded-3xl border border-border shadow-2xl">
         <AlertDialogHeader>
@@ -887,7 +855,6 @@ return (
       </AlertDialogContent>
     </AlertDialog>
 
-    {/* ── Diálogo de confirmación de envío ── */}
     <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
       <AlertDialogContent className="bg-card rounded-3xl border border-border shadow-2xl">
         <AlertDialogHeader>

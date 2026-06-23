@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -477,7 +477,6 @@ export function CalendarView({ userId, userType }: PropsVistaCalendario) {
 return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <Card className="max-w-7xl mx-auto p-6 space-y-4">
-        {/* Encabezado del Calendario */}
         <div className="flex justify-between items-center border-b border-border pb-4">
           <Button onClick={irAlDiaActual} variant="outline" className="text-sm">
             Hoy
@@ -514,7 +513,6 @@ return (
           </div>
         </div>
 
-        {/* Estadísticas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="p-4 text-center border border-border">
             <div className="text-2xl font-bold text-primary">
@@ -552,7 +550,6 @@ return (
           </Card>
         </div>
 
-        {/* Nombres de los Días */}
         <div className="grid grid-cols-7 text-center font-bold text-sm uppercase tracking-wider text-muted-foreground border-b border-border/50">
           {nombresDias.map((dia) => (
             <div key={dia} className="p-2">
@@ -561,12 +558,10 @@ return (
           ))}
         </div>
 
-        {/* Cuadrícula del Calendario */}
         <div className="grid grid-cols-7 gap-px border border-border/50 rounded-lg overflow-hidden bg-border/50">
           {diasCalendario.map(renderizarCeldaDia)}
         </div>
 
-        {/* Leyenda */}
         <div className="flex flex-wrap gap-4 justify-center text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-destructive/20 border border-destructive/30 rounded"></div>
@@ -588,7 +583,6 @@ return (
           )}
         </div>
 
-        {/* Cargando */}
         {cargando && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
@@ -600,7 +594,6 @@ return (
           </div>
         )}
 
-        {/* Error */}
         {hayError && (
           <div className="text-center py-8 text-destructive">
             Error al cargar los datos del calendario. Por favor, intente de nuevo.

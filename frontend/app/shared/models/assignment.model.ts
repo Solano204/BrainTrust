@@ -102,6 +102,7 @@ export interface SubmissionData {
     aiAnalysis?: AIAnalysisData;
     isTeamSubmission?: boolean;
     teamName?: string;
+    teamMemberSubmissionIds?: string[];
 }
 
 export interface AttachmentData {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -274,7 +274,6 @@ return (
         )}
       </header>
 
-      {/* Estado de Carga */}
       {isLoading && (
         <div className="flex justify-center items-center h-48">
           <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />
@@ -284,7 +283,6 @@ return (
         </div>
       )}
 
-      {/* Estado de Error */}
       {error && (
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
@@ -310,7 +308,6 @@ return (
         </section>
       )}
 
-      {/* Estado Vacío */}
       {!isLoading && !error && cursos.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />

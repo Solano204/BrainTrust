@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -30,7 +30,6 @@ interface PropsVistaEntregasQuiz {
   puntuacionTotalQuiz?: number;
 }
 
-// ─── Ayudantes de pesos ───────────────────────────────────────────────────────────
 
 /**
  * Dada la lista de respuestas de preguntas, calcula el peso (%) de cada pregunta
@@ -72,7 +71,6 @@ function calcularCalificacionFinalPonderada(
   return Math.round(sumaPonderada * puntuacionTotalQuiz * 100) / 100;
 }
 
-// ─── Componente ────────────────────────────────────────────────────────────────
 
 export function QuizSubmissionsView({
   submissionId,
@@ -93,7 +91,6 @@ export function QuizSubmissionsView({
   const [calificacionGeneral, setCalificacionGeneral] = React.useState<string>("");
   const [mostrarTablaPesos, setMostrarTablaPesos] = React.useState(false);
 
-  // ── Valores derivados ──────────────────────────────────────────────────────────
 
   const respuestasPreguntas = detalleEntrega?.questionResponses ?? [];
 
@@ -137,7 +134,6 @@ export function QuizSubmissionsView({
     ? Math.round((calificacionFinalPonderada / puntuacionTotalResuelta) * 100)
     : 0;
 
-  // ── Efectos ─────────────────────────────────────────────────────────────────
 
   React.useEffect(() => {
     if (detalleEntrega?.questionResponses) {
@@ -155,7 +151,6 @@ export function QuizSubmissionsView({
     }
   }, [detalleEntrega]);
 
-  // ── Manejadores ─────────────────────────────────────────────────────────────────
 
   const normalizarTexto = (texto: string): string => {
     if (!texto) return "";
@@ -187,7 +182,6 @@ export function QuizSubmissionsView({
       {
         submissionId: detalleEntrega.id,
         grades: actualizacionesCalificacion,
-        // Pasar calificación final ponderada escalada a puntuacionTotalResuelta
         overallGrade: {
           earnedPoints: calificacionFinalPonderada,
           totalPoints: puntuacionTotalResuelta,
@@ -204,7 +198,6 @@ export function QuizSubmissionsView({
     );
   };
 
-  // ── Estados de carga / error ────────────────────────────────────────────────
 
   if (cargandoEntrega) {
     return (
@@ -233,10 +226,8 @@ export function QuizSubmissionsView({
     calificacionExistente?.value &&
     String(calificacionFinalPonderada) !== calificacionExistente.value;
 
-  // ── Renderizado ─────────────────────────────────────────────────────────────────
 return (
   <div className="p-4 md:p-6 lg:p-8 space-y-6">
-    {/* ── Encabezado ── */}
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <Button onClick={onBack} variant="outline" className="gap-2 mb-4 text-sm">
@@ -273,7 +264,6 @@ return (
       </div>
     </div>
 
-    {/* ── Advertencia de ya calificado ── */}
     {estaCalificado && calificacionExistente?.value && (
       <Card className="p-4 bg-accent/10 border-2 border-accent/30">
         <div className="flex items-start gap-3">
@@ -295,7 +285,6 @@ return (
       </Card>
     )}
 
-    {/* ── Alternativa de Tabla de Pesos ── */}
     <Card className="p-4 border border-primary/30 bg-primary/5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 flex-wrap">
@@ -407,7 +396,6 @@ return (
       )}
     </Card>
 
-    {/* ── Tarjeta de Entrega ── */}
     <Card className="p-4 border-l-4 border-primary">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
         <div>
@@ -445,7 +433,6 @@ return (
 
       {expandido && (
         <div className="space-y-4 mt-4 pt-4 border-t border-border">
-          {/* ── Preguntas ── */}
           {respuestasPreguntas.map((pregunta, indice) => {
             const esOpcionMultiple = pregunta.questionType === "MULTIPLE_CHOICE";
             const esRespuestaAbierta = pregunta.questionType === "OPEN_ENDED";
@@ -470,7 +457,6 @@ return (
 
             return (
               <div key={pregunta.questionId} className="p-3 sm:p-4 bg-card/50 rounded-lg border border-border">
-                {/* Encabezado de pregunta */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4 mb-3 flex-wrap">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-medium text-foreground text-sm sm:text-base">Pregunta {indice + 1}</h4>
@@ -501,7 +487,6 @@ return (
 
                 <p className="mb-3 font-medium text-foreground text-sm sm:text-base">{pregunta.questionText}</p>
 
-                {/* ── Respuesta del Estudiante ── */}
                 <div className="mb-3">
                   <strong className="text-xs sm:text-sm text-foreground">Respuesta del Estudiante:</strong>
 
@@ -602,9 +587,7 @@ return (
                   ) : null}
                 </div>
 
-                {/* ── Sección de Calificación ── */}
                 <div className="mt-4 sm:mt-6 pt-4 border-t border-border space-y-4">
-                  {/* Vista previa de puntuación ponderada */}
                   <div className="p-3 bg-primary/5 border border-primary/30 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3 text-xs sm:text-sm">
                     <div className="flex items-center gap-1.5">
                       <Scale className="h-4 w-4 text-primary flex-shrink-0" />
@@ -645,7 +628,6 @@ return (
                     </div>
                   </div>
 
-                  {/* Retroalimentación */}
                   <div>
                     <label className="text-xs sm:text-sm font-medium block mb-2 text-foreground">
                       Retroalimentación del Profesor (Opcional):
@@ -670,7 +652,6 @@ return (
             );
           })}
 
-          {/* ── Gestión de Calificación General ── */}
           <Card className="p-4 bg-primary/5 border border-primary/30">
             <h4 className="font-semibold text-primary mb-3 text-sm sm:text-base">
               Gestión de Calificación General
@@ -687,7 +668,6 @@ return (
               </div>
             )}
 
-            {/* Visualización de calificación ponderada auto-calculada */}
             <div className="p-3 bg-card rounded-lg border border-primary/30 mb-4">
               <p className="text-xs sm:text-sm font-semibold text-primary mb-1">
                 Calificación Ponderada Auto-Calculada:
@@ -717,7 +697,6 @@ return (
             )}
           </Card>
 
-          {/* ── Resumen de Puntuación ── */}
           <Card className="p-4 bg-primary/5 border border-primary/30">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
               <div>
@@ -750,7 +729,6 @@ return (
             </div>
           </Card>
 
-          {/* ── Botón Guardar ── */}
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button
               onClick={manejarEnvioCalificaciones}

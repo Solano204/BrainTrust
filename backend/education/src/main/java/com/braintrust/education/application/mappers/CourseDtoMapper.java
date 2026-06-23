@@ -5,7 +5,7 @@ import com.braintrust.education.application.dtos.dtos.GradeDTO;
 import com.braintrust.education.domain.model.Course;
 import com.braintrust.education.domain.model.Enrollment;
 
-import  com.braintrust.education.domain.valueobjects.Grade;  // ⭐ CAMBIADO: de model a valueobjects
+import  com.braintrust.education.domain.valueobjects.Grade;
 import com.braintrust.education.domain.valueobjects.CourseId;
 import com.braintrust.identity.application.dtos.dtos.UserDTO;
 import org.slf4j.Logger;

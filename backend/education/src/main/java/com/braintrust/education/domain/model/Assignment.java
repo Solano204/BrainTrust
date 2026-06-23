@@ -40,7 +40,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         this.submissionFormat = SubmissionFormat.DIGITAL;
     }
 
-    // ─── Factory Methods ──────────────────────────────────────────────────────
+    //  Factory Methods 
 
     public static Assignment create(CourseId courseId, UnitId unitId, String title, String description,
                                     LocalDateTime dueDate, int maxPoints, String instructions,
@@ -186,7 +186,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
                 submissions, active, targetType, SubmissionFormat.DIGITAL);
     }
 
-    // ─── Validation ───────────────────────────────────────────────────────────
+    //  Validation 
 
     private String validateTitle(String title) {
         if (title == null || title.trim().isEmpty()) {
@@ -198,7 +198,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         return title.trim();
     }
 
-    // ─── Attachment Methods ───────────────────────────────────────────────────
+    //  Attachment Methods 
 
     public void addAttachment(Document document) {
         if (document == null) {
@@ -223,14 +223,14 @@ public class Assignment extends AggregateRoot<AssignmentId> {
         if (documentName == null || documentName.trim().isEmpty()) {
             throw new IllegalArgumentException("Document name cannot be null or empty");
         }
-        // Just remove if found, don't throw if not found — idempotent
+        // Just remove if found, don't throw if not found  idempotent
         attachments.removeIf(d -> d.getName().equals(documentName.trim()));
     }
     public void removeAttachment(Document document) {
         if (document == null) {
             throw new IllegalArgumentException("Document cannot be null");
         }
-        // Try exact match first, then name-only — never throw
+        // Try exact match first, then name-only  never throw
         boolean removed = attachments.removeIf(d ->
                 d.getName().equals(document.getName()) &&
                         d.getStoragePath().equals(document.getStoragePath())
@@ -248,7 +248,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     public int getAttachmentCount() { return attachments.size(); }
     public boolean hasAttachments() { return !attachments.isEmpty(); }
 
-    // ─── Link Methods ─────────────────────────────────────────────────────────
+    //  Link Methods 
 
     public void addLink(String link) {
         if (link == null || link.trim().isEmpty()) {
@@ -298,7 +298,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
     public int getLinkCount() { return links.size(); }
     public boolean hasLinks() { return !links.isEmpty(); }
 
-    // ─── Business Logic ───────────────────────────────────────────────────────
+    //  Business Logic 
 
     public Submission submitWork(UserId studentId, String content, List<Document> submissionAttachments) {
         if (!this.active && dueDate != null && LocalDateTime.now().isAfter(dueDate)) {
@@ -357,7 +357,7 @@ public class Assignment extends AggregateRoot<AssignmentId> {
 
     public boolean isTeamAssignment() { return targetType == AssignmentTargetType.TEAM; }
 
-    // ─── Getters ──────────────────────────────────────────────────────────────
+    //  Getters 
 
     public CourseId getCourseId() { return courseId; }
     public UnitId getUnitId() { return unitId; }

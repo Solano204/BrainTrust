@@ -19,7 +19,6 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
     boolean existsByEmail(String email);
     Page<UserJpaEntity> findAll(Pageable pageable);
 
-    // ✅ CHANGED: u.role.id instead of u.roleId
     @Query("SELECT u FROM UserJpaEntity u WHERE u.role.id = :roleId")
     List<UserJpaEntity> findByRoleId(@Param("roleId") Integer roleId);
 
@@ -33,19 +32,17 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, String> 
     Page<UserJpaEntity> findByPersonIdIn(
             @Param("personIds") List<String> personIds, Pageable pageable);
 
-    // ✅ CHANGED: u.role.id instead of u.roleId
     @Query("SELECT u FROM UserJpaEntity u WHERE u.personId IN :personIds AND u.role.id = :roleId")
     Page<UserJpaEntity> findByPersonIdInAndRoleId(
             @Param("personIds") List<String> personIds,
             @Param("roleId") Integer roleId,
             Pageable pageable);
 
-    // ✅ CHANGED: u.role.id instead of u.roleId
     @Query("SELECT u FROM UserJpaEntity u WHERE u.role.id = :roleId")
     Page<UserJpaEntity> findByRoleIdWithPerson(
             @Param("roleId") Integer roleId, Pageable pageable);
 
-    // Native queries use SQL column names — these stay the same
+    // Native queries use SQL column names  these stay the same
     // because they join through user_roles table directly
     @Query(value = """
             SELECT u.* FROM users u

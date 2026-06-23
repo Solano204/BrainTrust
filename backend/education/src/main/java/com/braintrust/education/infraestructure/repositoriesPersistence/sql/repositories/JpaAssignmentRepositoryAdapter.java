@@ -75,7 +75,7 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
                 .map(mapper::toDomain);
     }
 
-    // ── NEW ───────────────────────────────────────────────────────────────────
+    //  NEW 
 
     @Override
     public List<Assignment> findAll() {
@@ -95,7 +95,6 @@ public class JpaAssignmentRepositoryAdapter implements AssignmentRepository {
                 .collect(Collectors.toList());
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
 
     @Override
     public List<Assignment> findByCourseId(CourseId courseId) {

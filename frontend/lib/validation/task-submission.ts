@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const VALIDATION_RULES = {
-  maxFileSize: 10 * 1024 * 1024,
+  maxFileSize: 50 * 1024 * 1024,
   allowedFileTypes: [
     'application/pdf',
     'application/msword',

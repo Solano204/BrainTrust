@@ -62,7 +62,7 @@ public class CourseController {
                     example = "createdAt,desc")
             @RequestParam(defaultValue = "createdAt,desc") String sort) {
 
-        log.info("📊 Fetching paginated courses. Page: {}, Size: {}, Sort: {}", page, size, sort);
+        log.info("Fetching paginated courses. Page: {}, Size: {}, Sort: {}", page, size, sort);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
@@ -87,7 +87,7 @@ public class CourseController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "name,asc") String sort) {
 
-        log.info("📊 Fetching paginated active courses. Page: {}, Size: {}", page, size);
+        log.info("Fetching paginated active courses. Page: {}, Size: {}", page, size);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
@@ -113,7 +113,7 @@ public class CourseController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "name,asc") String sort) {
 
-        log.info("📊 Fetching paginated courses for Teacher ID: {}. Page: {}, Size: {}", teacherId, page, size);
+        log.info("Fetching paginated courses for Teacher ID: {}. Page: {}, Size: {}", teacherId, page, size);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
@@ -139,7 +139,7 @@ public class CourseController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "name,asc") String sort) {
 
-        log.info("📊 Fetching paginated courses for Student ID: {}. Page: {}, Size: {}", studentId, page, size);
+        log.info("Fetching paginated courses for Student ID: {}. Page: {}, Size: {}", studentId, page, size);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])
@@ -167,7 +167,7 @@ public class CourseController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "name,asc") String sort) {
 
-        log.info("🔍 Searching courses by name: '{}'. Page: {}, Size: {}", name, page, size);
+        log.info("Searching courses by name: '{}'. Page: {}, Size: {}", name, page, size);
 
         String[] sortParams = sort.split(",");
         Sort.Direction direction = sortParams.length > 1 && "desc".equalsIgnoreCase(sortParams[1])

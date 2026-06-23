@@ -64,8 +64,8 @@ logging:
     com.braintrust: ${LOG_LEVEL_APP:INFO}
     org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
     org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    path: ${LOG_PATH:./logs}
 
 management:
   endpoints:

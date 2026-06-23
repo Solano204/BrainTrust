@@ -10,6 +10,6 @@ public record UpdateQuizCommand(
         int maxAttempts,
         boolean shuffleQuestions,
         boolean showCorrectAnswers,
-        boolean allowSeeResults,   // ✅ NEW
-        double totalScore          // ✅ NEW
+        boolean allowSeeResults,
+        double totalScore
 ) {}

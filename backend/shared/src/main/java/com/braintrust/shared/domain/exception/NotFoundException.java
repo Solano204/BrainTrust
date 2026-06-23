@@ -2,7 +2,6 @@ package com.braintrust.shared.domain.exception;
 
 import java.util.Map;
 
-// 📍 shared/domain/exceptions/NotFoundException.java
 public abstract class NotFoundException extends DomainException {
 
     protected NotFoundException(String message) {

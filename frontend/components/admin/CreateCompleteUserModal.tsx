@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from "react";
 import { 
@@ -118,9 +118,8 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
   <Dialog open={open} onOpenChange={onClose}>
     <DialogContent className="rounded-3xl border-border bg-card p-0 overflow-hidden max-w-2xl max-h-[90vh]">
 
-      {/* ── Header ── */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border sticky top-0 bg-card z-10 rounded-t-3xl">
-        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+        <span className="icon-badge">
           <UserPlus className="h-4 w-4 text-primary" />
         </span>
         <div>
@@ -133,12 +132,10 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
         </div>
       </div>
 
-      {/* ── Form ── */}
       <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5 overflow-y-auto max-h-[calc(90vh-80px)]">
 
-        {/* Personal info */}
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+          <h3 className="section-label mb-3">
             Información Personal
           </h3>
           <div className="space-y-4">
@@ -195,9 +192,8 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
           </div>
         </div>
 
-        {/* Account info */}
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+          <h3 className="section-label mb-3">
             Información de la Cuenta
           </h3>
           <div className="space-y-4">
@@ -275,9 +271,8 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
           </div>
         </div>
 
-        {/* Address */}
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+          <h3 className="section-label mb-3 flex items-center gap-2">
             <MapPin className="h-3.5 w-3.5" />
             Información de Dirección
             <span className="normal-case font-normal text-muted-foreground/60">(Opcional)</span>
@@ -340,7 +335,6 @@ export function CreateCompleteUserModal({ open, onClose }: CreateCompleteUserMod
           </div>
         </div>
 
-        {/* ── Footer ── */}
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border">
           <button
             type="button"

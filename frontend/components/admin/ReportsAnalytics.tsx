@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
@@ -208,7 +208,7 @@ function SimpleBarChart({ data, label }: { data: number[], label: string }) {
     const max = Math.max(...data)
 return (
   <div className="space-y-2">
-    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+    <p className="section-label">
       {label}
     </p>
     <div className="flex items-end gap-1.5 h-40">
@@ -249,7 +249,6 @@ function CourseReportsTab() {
 return (
   <div className="space-y-5">
 
-    {/* ── Búsqueda ── */}
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <input
@@ -260,7 +259,6 @@ return (
       />
     </div>
 
-    {/* ── Tabla de escritorio ── */}
     <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden">
       <table className="w-full">
         <thead className="bg-muted/40">
@@ -279,25 +277,21 @@ return (
           {filteredReports.map((report) => (
             <tr key={report.id} className="hover:bg-muted/30 transition-colors group">
 
-              {/* Curso */}
               <td className="px-6 py-4">
                 <p className="font-semibold text-sm text-foreground">{report.courseName}</p>
                 <p className="text-xs text-muted-foreground">{report.courseCode}</p>
               </td>
 
-              {/* Estudiantes */}
               <td className="px-6 py-4 text-center">
                 <p className="font-semibold text-sm text-foreground">{report.enrolledStudents}</p>
               </td>
 
-              {/* Calificación promedio */}
               <td className="px-6 py-4 text-center">
                 <p className={`font-bold text-lg ${getGradeColor(report.averageGrade)}`}>
                   {report.averageGrade}%
                 </p>
               </td>
 
-              {/* Finalización */}
               <td className="px-6 py-4 text-center">
                 <div className="flex flex-col items-center gap-1">
                   <p className="font-semibold text-sm text-foreground">{report.completionRate}%</p>
@@ -310,7 +304,6 @@ return (
                 </div>
               </td>
 
-              {/* Tareas */}
               <td className="px-6 py-4 text-center">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">{report.submittedAssignments}</span>
@@ -319,14 +312,12 @@ return (
                 </p>
               </td>
 
-              {/* Estudiantes activos */}
               <td className="px-6 py-4 text-center">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                <span className="badge-primary">
                   {report.activeStudents} / {report.enrolledStudents}
                 </span>
               </td>
 
-              {/* Acciones */}
               <td className="px-6 py-4 text-center">
                 <button className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
                   <Download className="w-4 h-4" />
@@ -339,12 +330,10 @@ return (
       </table>
     </div>
 
-    {/* ── Tarjetas móviles ── */}
     <div className="lg:hidden space-y-3">
       {filteredReports.map((report) => (
         <div key={report.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
 
-          {/* Nombre del curso + calificación */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="font-bold text-base text-foreground truncate">{report.courseName}</h3>
@@ -355,7 +344,6 @@ return (
             </p>
           </div>
 
-          {/* Cuadrícula de estadísticas */}
           <div className="grid grid-cols-2 gap-3">
             {[
               { label: 'Estudiantes', value: report.enrolledStudents },
@@ -370,7 +358,6 @@ return (
             ))}
           </div>
 
-          {/* Barra de finalización */}
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Finalización</span>
@@ -384,8 +371,7 @@ return (
             </div>
           </div>
 
-          {/* Descargar */}
-          <button className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
+          <button className="w-full btn-ghost">
             <Download className="w-4 h-4" />
             Descargar Reporte
           </button>
@@ -419,7 +405,6 @@ function StudentPerformanceTab() {
 return (
   <div className="space-y-5">
 
-    {/* ── Búsqueda ── */}
     <div className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <input
@@ -430,7 +415,6 @@ return (
       />
     </div>
 
-    {/* ── Tabla de escritorio ── */}
     <div className="hidden lg:block bg-card rounded-2xl border border-border overflow-hidden">
       <table className="w-full">
         <thead className="bg-muted/40">
@@ -456,32 +440,27 @@ return (
           {filteredStudents.map((student) => (
             <tr key={student.id} className="hover:bg-muted/30 transition-colors group">
 
-              {/* Estudiante */}
               <td className="px-6 py-4">
                 <p className="font-semibold text-sm text-foreground">{student.name}</p>
                 <p className="text-xs text-muted-foreground">{student.email}</p>
               </td>
 
-              {/* Cursos */}
               <td className="px-6 py-4 text-center">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-primary/10 text-primary text-xs font-semibold">
+                <span className="badge-primary">
                   {student.coursesEnrolled}
                 </span>
               </td>
 
-              {/* Calificación promedio */}
               <td className="px-6 py-4 text-center">
                 <p className={`font-bold text-lg ${getGradeColor(student.averageGrade)}`}>
                   {student.averageGrade}%
                 </p>
               </td>
 
-              {/* Total de tareas */}
               <td className="px-6 py-4 text-center">
                 <p className="text-sm text-muted-foreground">{student.totalAssignments}</p>
               </td>
 
-              {/* Finalización */}
               <td className="px-6 py-4 text-center">
                 <div className="flex flex-col items-center gap-1">
                   <p className="font-semibold text-sm text-foreground">
@@ -496,7 +475,6 @@ return (
                 </div>
               </td>
 
-              {/* Última actividad */}
               <td className="px-6 py-4">
                 <p className="text-xs text-muted-foreground">
                   {new Date(student.lastActivity).toLocaleString('es-MX', {
@@ -512,12 +490,10 @@ return (
       </table>
     </div>
 
-    {/* ── Tarjetas móviles ── */}
     <div className="lg:hidden space-y-3">
       {filteredStudents.map((student) => (
         <div key={student.id} className="bg-card rounded-2xl border border-border p-4 space-y-4">
 
-          {/* Nombre + calificación */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="font-bold text-sm text-foreground truncate">{student.name}</h3>
@@ -528,7 +504,6 @@ return (
             </p>
           </div>
 
-          {/* Cuadrícula de estadísticas */}
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'Cursos',  value: student.coursesEnrolled },
@@ -541,7 +516,6 @@ return (
             ))}
           </div>
 
-          {/* Barra de completadas */}
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Completadas</span>
@@ -567,9 +541,8 @@ return (
 
 export default function AdminReportsModule() {
    return (
-  <div className="bg-background min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+  <div className="page-container">
 
-    {/* ── Encabezado de página ── */}
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -584,17 +557,15 @@ export default function AdminReportsModule() {
           <Calendar className="w-4 h-4" />
           Período
         </button>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm">
+        <button className="btn-primary shadow-sm">
           <Download className="w-4 h-4" />
           Exportar Todo
         </button>
       </div>
     </div>
 
-    {/* ── Estadísticas generales ── */}
     <OverviewStats />
 
-    {/* ── Gráficos de barras ── */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
         <SimpleBarChart
@@ -610,7 +581,6 @@ export default function AdminReportsModule() {
       </div>
     </div>
 
-    {/* ── Pestañas ── */}
     <Tabs defaultValue="courses" className="space-y-5">
       <TabsList className="w-full grid grid-cols-2 rounded-2xl bg-muted/50 p-1 h-auto">
         <TabsTrigger

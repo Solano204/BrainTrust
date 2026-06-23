@@ -1,238 +1,135 @@
+"use client"
 
-"use client";
-
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/app/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/app/context/AuthContext'
+import { GraduationCap, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-    const [role, setRole] = useState<'student' | 'teacher'>('student');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    
-    const { login, register, isAuthenticated, isLoading: authLoading, user } = useAuth();
-    const router = useRouter();
-    const searchParams = useSearchParams();
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-    useEffect(() => {
-        if (!authLoading && isAuthenticated && user) {
-            const redirectUrl = getRedirectUrlByRole(user.role);
-            router.push(redirectUrl);
-        }
-    }, [isAuthenticated, authLoading, user, router]);
+  const { login, isLoading: authLoading } = useAuth()
+  const router = useRouter()
 
+  const getRedirectByRole = (role: string) => {
+    if (role?.toLowerCase() === 'admin') return '/admin/users'
+    return '/'
+  }
 
-    const getRedirectUrlByRole = (userRole: string): string => {
-        switch (userRole.toLowerCase()) {
-            case 'admin':
-                return '/admin/users';
-            case 'teacher':
-                return '/';
-            case 'student':
-                return '/';
-            default:
-                return '/';
-        }
-    };
-
-    if (authLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
-    }
-
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        const result = await login(email, password);
-        
-        if (result.success) {
-
-        } else {
-            setError(result.error || 'Login failed');
-            setIsLoading(false);
-        }
-    };
-
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        const result = await register({ email, password, name, role });
-        
-        if (result.success) {
-
-        } else {
-            setError(result.error || 'Registration failed');
-            setIsLoading(false);
-        }
-    };
-
+  // Show full-page spinner ONLY on initial auth check (before user interacts).
+  // Once the user has pressed submit (submitting=true) we keep the form mounted
+  // so the error can be displayed and state is not lost.
+  if (authLoading && !submitting) {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-2xl font-bold">EduLMS</CardTitle>
-                    <CardDescription>
-                Bienvenidos a EduLMS, la plataforma de gestión de aprendizaje diseñada para transformar la experiencia educativa. Ya seas un estudiante, un profesor o un administrador, EduLMS te ofrece las herramientas necesarias para gestionar cursos, tareas y evaluaciones de manera eficiente. Inicia sesión o regístrate para descubrir cómo EduLMS puede ayudarte a alcanzar tus objetivos educativos.
-                      </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Tabs defaultValue="login" className="w-full">
-                        <TabsList className="grid w-full grid-cols-1">
-                            <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                         
-                        </TabsList>
-                        
-                        <TabsContent value="login">
-                            <form onSubmit={handleLogin} className="space-y-4">
-                                {error && (
-                                    <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-                                        {error}
-                                    </div>
-                                )}
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="login-email">Email</Label>
-                                    <Input
-                                        id="login-email"
-                                        type="email"
-                                        placeholder="Enter your email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="login-password">Contraseña</Label>
-                                    <Input
-                                        id="login-password"
-                                        type="password"
-                                        placeholder="Enter your password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                
-                                <Button 
-                                    type="submit" 
-                                    className="w-full" 
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Iniciando sesión...
-                                        </>
-                                    ) : (
-                                        'Iniciar Sesión'
-                                    )}
-                                </Button>
-                                
-                               
-                            </form>
-                        </TabsContent>
-                        
-                        <TabsContent value="register">
-                            <form onSubmit={handleRegister} className="space-y-4">
-                                {error && (
-                                    <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-                                        {error}
-                                    </div>
-                                )}
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="register-name">Nombre Completo</Label>
-                                    <Input
-                                        id="register-name"
-                                        type="text"
-                                        placeholder="Enter your full name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        required
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="register-email">Email</Label>
-                                    <Input
-                                        id="register-email"
-                                        type="email"
-                                        placeholder="Enter your email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="register-password">Contraseña</Label>
-                                    <Input
-                                        id="register-password"
-                                        type="password"
-                                        placeholder="Create a password (min. 8 characters)"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        disabled={isLoading}
-                                        minLength={8}
-                                    />
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label htmlFor="register-role">Role</Label>
-                                    <select
-                                        id="register-role"
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-                                        value={role}
-                                        onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}
-                                        required
-                                        disabled={isLoading}
-                                    >
-                                        <option value="student">Estudiante</option>
-                                        <option value="teacher">Profesor</option>
-                                    </select>
-                                </div>
-                                
-                                <Button 
-                                    type="submit" 
-                                    className="w-full" 
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Creando cuenta...
-                                        </>
-                                    ) : (
-                                        'Create Account'
-                                    )}
-                                </Button>
-                            </form>
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setIsLoading(true)
+    setError('')
+
+    const result = await login(email, password)
+
+    if (result.success) {
+      // Keep isLoading=true so button stays in "loading" state during navigation.
+      // router.replace() avoids adding login to browser history.
+      router.replace(getRedirectByRole(result.role ?? ''))
+    } else {
+      setError(result.error || 'Correo o contraseña incorrectos. Inténtalo de nuevo.')
+      setIsLoading(false)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm">
+
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 rounded-3xl bg-primary flex items-center justify-center shadow-lg mb-4">
+            <GraduationCap className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">BrainTrust</h1>
+          <p className="text-sm text-muted-foreground mt-1">Plataforma de aprendizaje</p>
         </div>
-    );
+
+        <div className="card-padded space-y-5">
+          <h2 className="text-lg font-semibold text-foreground">Iniciar sesión</h2>
+
+          {error && (
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4" noValidate>
+            <div>
+              <label htmlFor="email" className="form-label">Correo electrónico</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                disabled={isLoading}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="form-label">Contraseña</label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  disabled={isLoading}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input-field pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword
+                    ? <EyeOff className="h-4 w-4" />
+                    : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary w-full"
+            >
+              {isLoading
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> Iniciando sesión...</>
+                : 'Iniciar sesión'}
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  )
 }

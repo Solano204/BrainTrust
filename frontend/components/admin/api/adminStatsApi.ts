@@ -1,13 +1,12 @@
-"use server";
+﻿"use server";
 
 import { apiClient } from "@/app/shared/api/http";
 import { handleApiError } from "@/app/shared/utils/api-error";
+import type { AdminEnrollment } from "@/app/shared/models/admin-course.model";
+import type { EnrollmentDTO } from "@/app/shared/dtos/enrollment.dto";
+import { mapEnrollmentFromBackend } from "@/app/shared/mappers/course.mappers";
 
-// ─────────────────────────────────────────────────────────────
-// DTOs — match the Java records from AdminStatsController
-// ─────────────────────────────────────────────────────────────
 
-// Sub-DTOs used inside AdminStatsDTO
 export interface OverallStatsDTO {
   totalAssignments: number;
   totalAnalyzed: number;
@@ -103,7 +102,6 @@ export interface TeacherAssignmentStatsDTO {
   recentAssignments: AssignmentDetailDTO[];
 }
 
-// Composite DTO returned by GET /api/admin/stats
 export interface AdminStatsDTO {
   overallStats: OverallStatsDTO;
   aiAnalysisStats: AIAnalysisStatsDTO;
@@ -113,7 +111,6 @@ export interface AdminStatsDTO {
   teacherStats: TeacherAssignmentStatsDTO[];
 }
 
-// GET /api/admin/stats/ai-assignments
 export interface AIAssignmentPageDTO {
   assignmentId: string;
   assignmentTitle: string;
@@ -130,7 +127,6 @@ export interface AIAssignmentPageDTO {
   isLate: boolean;
 }
 
-// GET /api/admin/stats/ai-breakdown
 export interface AIStatsBreakdownDTO {
   averageAIProbability: number;
   countFullAI: number;
@@ -145,7 +141,6 @@ export interface AIStatsBreakdownDTO {
   totalSubmissions: number;
 }
 
-// GET /api/admin/stats/user-counts
 export interface UserCountDTO {
   totalStudents: number;
   totalTeachers: number;
@@ -153,7 +148,6 @@ export interface UserCountDTO {
   totalActiveTeachers: number;
 }
 
-// GET /api/admin/stats/late-submissions
 export interface LateSubmissionDTO {
   submissionId: string;
   assignmentId: string;
@@ -169,7 +163,6 @@ export interface LateSubmissionDTO {
   grade: string;
 }
 
-// GET /api/admin/stats/courses/by-ai  &  /courses/by-late
 export interface CourseAIStatsDTO {
   courseId: string;
   courseName: string;
@@ -183,7 +176,6 @@ export interface CourseAIStatsDTO {
   averageAIProbability: number;
 }
 
-// GET /api/admin/stats/quizzes/top
 export interface QuizTopDTO {
   quizId: string;
   quizTitle: string;
@@ -198,7 +190,6 @@ export interface QuizTopDTO {
   attemptNumber: number;
 }
 
-// Generic paginated wrapper (matches PaginatedStatsDTO<T>)
 export interface PaginatedStatsDTO<T> {
   content: T[];
   pageNumber: number;
@@ -209,9 +200,6 @@ export interface PaginatedStatsDTO<T> {
   hasPrevious: boolean;
 }
 
-// ─────────────────────────────────────────────────────────────
-// API functions
-// ─────────────────────────────────────────────────────────────
 
 const BASE = "/api/admin/stats";
 
@@ -359,6 +347,16 @@ export async function getAdminStatsHealth(): Promise<string> {
   try {
     const { data } = await apiClient.get<string>(`${BASE}/health`);
     return data;
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+/** GET /api/courses/{courseId}/enrollments — reused for the drill-down explorer */
+export async function getCourseEnrollments(courseId: string): Promise<AdminEnrollment[]> {
+  try {
+    const { data } = await apiClient.get<EnrollmentDTO[]>(`/api/courses/${courseId}/enrollments`);
+    return data.map(mapEnrollmentFromBackend);
   } catch (error) {
     return handleApiError(error);
   }

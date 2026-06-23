@@ -31,13 +31,13 @@ public class PersonApplicationService implements PersonService {
             LoggerFactory.getLogger(PersonApplicationService.class);
     public PersonApplicationService(PersonRepository personRepository) {
         this.personRepository = personRepository;
-        log.info("✅ PersonApplicationService initialized with Virtual Threads support");
+        log.info("PersonApplicationService initialized with Virtual Threads support");
     }
 
 
     @Transactional(readOnly = true)
     public Page<PersonDTO> searchPersonsByName(String name, Pageable pageable) {
-        log.debug("🔍 Searching persons by name: '{}' with pagination", name);
+        log.debug("Searching persons by name: '{}' with pagination", name);
 
         try {
             Page<Person> allPersonsPage = personRepository.findAll(pageable);
@@ -54,14 +54,14 @@ public class PersonApplicationService implements PersonService {
             return new PageImpl<>(filteredPersons, pageable, allPersonsPage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to search persons by name: {}", e.getMessage(), e);
+            log.error("Failed to search persons by name: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to search persons", e);
         }
     }
 
     @Transactional(readOnly = true)
     public Page<PersonDTO> findPersonsByNameContaining(String name, Pageable pageable) {
-        log.debug("🔍 Finding persons by name containing: '{}'", name);
+        log.debug("Finding persons by name containing: '{}'", name);
 
 
         return searchPersonsByName(name, pageable);
@@ -72,7 +72,7 @@ public class PersonApplicationService implements PersonService {
     public PersonId createPerson(CreatePersonCommand command) {
         long startTime = System.currentTimeMillis();
 
-        log.info("🆕 Creating new Person: {} {}", command.firstName(), command.lastName());
+        log.info("Creating new Person: {} {}", command.firstName(), command.lastName());
 
         try {
 
@@ -88,12 +88,12 @@ public class PersonApplicationService implements PersonService {
             Person savedPerson = personRepository.save(person);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Person {} created in {}ms", savedPerson.getId().getValue(), duration);
+            log.info("Person {} created in {}ms", savedPerson.getId().getValue(), duration);
 
             return savedPerson.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed to create person {}: {}",
+            log.error("Failed to create person {}: {}",
                     command.firstName(), e.getMessage(), e);
             throw new RuntimeException("Failed to create person", e);
         }
@@ -104,7 +104,7 @@ public class PersonApplicationService implements PersonService {
         PersonId personId = PersonId.fromString(command.personId());
         long startTime = System.currentTimeMillis();
 
-        log.warn("🔐 Updating PII for Person ID: {}", personId.getValue());
+        log.warn("Updating PII for Person ID: {}", personId.getValue());
 
         try {
             Person person = findPersonByIdOrThrow(personId);
@@ -119,12 +119,12 @@ public class PersonApplicationService implements PersonService {
             personRepository.save(person);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ PII updated for Person {} in {}ms", personId.getValue(), duration);
+            log.warn("PII updated for Person {} in {}ms", personId.getValue(), duration);
 
         } catch (PersonNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to update PII for Person {}: {}",
+            log.error("Failed to update PII for Person {}: {}",
                     personId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to update personal info", e);
         }
@@ -135,7 +135,7 @@ public class PersonApplicationService implements PersonService {
         PersonId personId = PersonId.fromString(command.personId());
         long startTime = System.currentTimeMillis();
 
-        log.info("📍 Updating address for Person ID: {}", personId.getValue());
+        log.info("Updating address for Person ID: {}", personId.getValue());
 
         try {
             Person person = findPersonByIdOrThrow(personId);
@@ -152,13 +152,13 @@ public class PersonApplicationService implements PersonService {
             personRepository.save(person);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Address updated for Person {} in {}ms",
+            log.info("Address updated for Person {} in {}ms",
                     personId.getValue(), duration);
 
         } catch (PersonNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to update address for Person {}: {}",
+            log.error("Failed to update address for Person {}: {}",
                     personId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to update address", e);
         }
@@ -169,7 +169,7 @@ public class PersonApplicationService implements PersonService {
         PersonId personId = PersonId.fromString(command.personId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🖼️ Updating profile image for Person ID: {}", personId.getValue());
+        log.info("Updating profile image for Person ID: {}", personId.getValue());
 
         try {
             Person person = findPersonByIdOrThrow(personId);
@@ -177,13 +177,13 @@ public class PersonApplicationService implements PersonService {
             personRepository.save(person);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Image updated for Person {} in {}ms",
+            log.info("Image updated for Person {} in {}ms",
                     personId.getValue(), duration);
 
         } catch (PersonNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to update image for Person {}: {}",
+            log.error("Failed to update image for Person {}: {}",
                     personId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to update image", e);
         }
@@ -192,7 +192,7 @@ public class PersonApplicationService implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public PersonDTO getPersonById(PersonId personId) {
-        log.debug("📊 Fetching Person DTO by ID: {}", personId.getValue());
+        log.debug("Fetching Person DTO by ID: {}", personId.getValue());
         Person person = findPersonByIdOrThrow(personId);
         return mapToPersonDTO(person);
     }
@@ -200,7 +200,7 @@ public class PersonApplicationService implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public PersonDTO getPersonByUserId(UserId userId) {
-        log.error("❌ Method 'getPersonByUserId' is DEPRECATED - Use UserService instead");
+        log.error("Method 'getPersonByUserId' is DEPRECATED - Use UserService instead");
         throw new UnsupportedOperationException(
                 "Use UserService.getUserById instead - this method violates bounded context separation"
         );
@@ -210,7 +210,7 @@ public class PersonApplicationService implements PersonService {
     @Override
     @Transactional(readOnly = true)
     public Page<PersonDTO> getAllPersons(Pageable pageable) {
-        log.debug("📊 Fetching paginated persons. Page: {}, Size: {}, Sort: {}",
+        log.debug("Fetching paginated persons. Page: {}, Size: {}, Sort: {}",
                 pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
         long startTime = System.currentTimeMillis();
 
@@ -222,14 +222,14 @@ public class PersonApplicationService implements PersonService {
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Retrieved page {} of {} persons (total: {}) in {}ms",
+            log.info("Retrieved page {} of {} persons (total: {}) in {}ms",
                     pageable.getPageNumber(), dtos.size(),
                     personPage.getTotalElements(), duration);
 
             return new PageImpl<>(dtos, pageable, personPage.getTotalElements());
 
         } catch (Exception e) {
-            log.error("❌ Failed to fetch paginated persons: {}", e.getMessage(), e);
+            log.error("Failed to fetch paginated persons: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch paginated persons", e);
         }
     }
@@ -237,7 +237,7 @@ public class PersonApplicationService implements PersonService {
     private Person findPersonByIdOrThrow(PersonId personId) {
         return personRepository.findById(personId)
                 .orElseThrow(() -> {
-                    log.warn("❌ Person not found with ID: {}", personId.getValue());
+                    log.warn("Person not found with ID: {}", personId.getValue());
                     return new PersonNotFoundException(
                             "Person not found: " + personId.getValue()
                     );

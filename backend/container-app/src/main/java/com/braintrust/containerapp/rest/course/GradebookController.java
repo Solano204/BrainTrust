@@ -40,7 +40,7 @@ public class GradebookController {
             @PathVariable String studentId,
             @RequestBody AssignFinalGradeCommand command) {
 
-        log.info("🎯 Assigning final grade for student {} in course {}: {}",
+        log.info("Assigning final grade for student {} in course {}: {}",
                 studentId, courseId, command.gradeValue());
 
         gradebookService.assignFinalGrade(
@@ -94,13 +94,13 @@ public class GradebookController {
     public ResponseEntity<List<GradebookDTO>> getGradebooksByCourse(
             @PathVariable String courseId) {
 
-        log.debug("📊 Fetching gradebook table for course {}", courseId);
+        log.debug("Fetching gradebook table for course {}", courseId);
 
         List<GradebookDTO> gradebooks = gradebookService.getGradebooksByCourse(
                 CourseId.fromString(courseId)
         );
 
-        log.info("✅ Retrieved {} student gradebooks", gradebooks.size());
+        log.info("Retrieved {} student gradebooks", gradebooks.size());
         return ResponseEntity.ok(gradebooks);
     }
 

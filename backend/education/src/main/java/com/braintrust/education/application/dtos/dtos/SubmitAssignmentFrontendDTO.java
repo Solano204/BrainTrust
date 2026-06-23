@@ -19,6 +19,5 @@ public record SubmitAssignmentFrontendDTO(
         @Size(min = 10, message = "Content must be at least 10 characters")
         String content,
 
-        // ✅ ONLY extracted text and metadata from frontend
         List<FrontendDocumentDTOSub> frontendDocuments
 ) {}

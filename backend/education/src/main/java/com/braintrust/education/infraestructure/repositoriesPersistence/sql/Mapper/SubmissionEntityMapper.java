@@ -6,7 +6,7 @@ import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.DocumentJpaEntity;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.SubmissionJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

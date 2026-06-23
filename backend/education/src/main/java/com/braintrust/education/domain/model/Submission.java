@@ -146,7 +146,7 @@ public class Submission extends AggregateRoot<SubmissionId> {
         return dueDate != null && submittedAt.isAfter(dueDate);
     }
 
-    // Método para solicitar análisis IA (será llamado desde el Application Service)
+    // Mtodo para solicitar anlisis IA (ser llamado desde el Application Service)
     public void markForAIAnalysis() {
     }
 

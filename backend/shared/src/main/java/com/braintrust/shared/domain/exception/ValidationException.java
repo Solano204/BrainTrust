@@ -2,7 +2,6 @@ package com.braintrust.shared.domain.exception;
 
 import java.util.Map;
 
-// 📍 shared/domain/exceptions/ValidationException.java
 public abstract class ValidationException extends DomainException {
 
     protected ValidationException(String message) {

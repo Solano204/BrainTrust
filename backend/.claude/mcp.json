@@ -1,0 +1,78 @@
+{
+  "_README": [
+    "MCP servers for BrainTrust backend. These extend Claude Code with external capabilities.",
+    "To activate: copy the mcpServers block you want into settings.json or settings.local.json.",
+    "For secrets (API keys, DB passwords), always put them in settings.local.json (gitignored).",
+    "",
+    "Reference: https://docs.anthropic.com/en/docs/claude-code/mcp"
+  ],
+
+  "mcpServers": {
+
+    "filesystem": {
+      "_description": "Gives Claude direct access to the backend directory tree.",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\GAMER\\Music\\BrainTrust\\backend"
+      ]
+    },
+
+    "postgresql": {
+      "_description": "Direct PostgreSQL access. Claude can run SELECT queries, inspect schemas, check indexes, and debug data issues. NEVER runs DDL in prod.",
+      "_install": "npx -y @modelcontextprotocol/server-postgres",
+      "_activation": "Add to settings.local.json with your real DB URL",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:PASSWORD@localhost:5432/braintrust_dev"
+      ]
+    },
+
+    "github": {
+      "_description": "Access GitHub: read PRs, create issues, comment, check CI status for BrainTrust repo.",
+      "_install": "npx -y @modelcontextprotocol/server-github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_GITHUB_PAT_HERE"
+      }
+    },
+
+    "brave-search": {
+      "_description": "Web search for Spring Boot docs, Java 21 APIs, Hibernate references, security advisories.",
+      "_install": "No install — uses npx. Get key at https://brave.com/search/api/",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE"
+      }
+    },
+
+    "sequential-thinking": {
+      "_description": "Gives Claude a structured scratchpad for complex multi-step reasoning. Ideal for architecture decisions, debugging tricky async flows, or hexagonal refactors.",
+      "_install": "npx -y @modelcontextprotocol/server-sequential-thinking",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+
+    "memory": {
+      "_description": "Persistent knowledge graph across sessions. Claude can store domain facts (e.g., 'SubmissionId is a UUID value object') and recall them automatically.",
+      "_install": "npx -y @modelcontextprotocol/server-memory",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "C:\\Users\\GAMER\\.claude\\projects\\braintrust-backend\\mcp-memory.json"
+      }
+    },
+
+    "docker": {
+      "_description": "Control Docker containers. Claude can start/stop containers, read logs, inspect running services.",
+      "_install": "npx -y @modelcontextprotocol/server-docker",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-docker"]
+    }
+  }
+}

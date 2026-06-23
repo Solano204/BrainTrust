@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import { JWTUtils } from '@/app/utils/jwt';
 
 const axiosInstance = axios.create({
@@ -7,7 +7,6 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  // withCredentials: true,
 });
 
 let isRefreshing = false;

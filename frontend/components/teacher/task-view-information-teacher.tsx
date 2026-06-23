@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -329,7 +329,6 @@ export function VistaInfoTarea({ assignment, onClose }: PropsVistaInfoTarea) {
   return (
   <div className="min-h-screen bg-background p-4 md:p-6">
     <div className="max-w-6xl mx-auto">
-      {/* Encabezado */}
       <div className="mb-6">
         <Button
           variant="ghost"
@@ -428,9 +427,7 @@ export function VistaInfoTarea({ assignment, onClose }: PropsVistaInfoTarea) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Columna de Contenido Principal (2/3) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Tarjeta de Descripción */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -520,7 +517,6 @@ export function VistaInfoTarea({ assignment, onClose }: PropsVistaInfoTarea) {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Interfaz de Subida de Múltiples Archivos */}
               {agregandoArchivos && (
                 <div className="border-2 border-dashed border-border rounded-lg p-3 sm:p-4 space-y-4 bg-muted/20">
                   <div>
@@ -1053,7 +1049,6 @@ export function VistaInfoTarea({ assignment, onClose }: PropsVistaInfoTarea) {
         </div>
       </div>
 
-      {/* Pie de página */}
       <div className="mt-8 pt-6 border-t border-border">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>

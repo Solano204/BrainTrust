@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Command for creating a page with file attachments and external links
- * ✅ FIXED: Parameter order now matches controller usage
+ *  FIXED: Parameter order now matches controller usage
  */
 public record CreatePageWithAttachmentsCommand(
         String courseId,

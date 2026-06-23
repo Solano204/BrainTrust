@@ -43,10 +43,10 @@ public class QuizSubmissionJpaEntity {
     @Column(name = "grade_max_score", precision = 10, scale = 2)
     private BigDecimal gradeMaxScore;
 
-    @Column(name = "final_grade", precision = 10, scale = 2)   // ✅ NEW
+    @Column(name = "final_grade", precision = 10, scale = 2)
     private BigDecimal finalGrade;
 
-    @Column(name = "can_view_results", nullable = false)       // ✅ NEW
+    @Column(name = "can_view_results", nullable = false)
     private boolean canViewResults = false;
 
     @Column(name = "auto_graded", nullable = false)
@@ -60,7 +60,7 @@ public class QuizSubmissionJpaEntity {
     public QuizSubmissionJpaEntity(String id, String quizId, String studentId, int attemptNumber,
                                    LocalDateTime startedAt, LocalDateTime submittedAt, String status,
                                    String answersJson, BigDecimal gradeValue, BigDecimal gradeMaxScore,
-                                   BigDecimal finalGrade, boolean canViewResults,    // ✅ NEW
+                                   BigDecimal finalGrade, boolean canViewResults,
                                    boolean autoGraded, String questionGradesJson) {
         this.id = id;
         this.quizId = quizId;
@@ -78,7 +78,7 @@ public class QuizSubmissionJpaEntity {
         this.questionGradesJson = questionGradesJson;
     }
 
-    // ── Getters & Setters ────────────────────────────────────────────────────
+    //  Getters & Setters 
     public String getId()                              { return id; }
     public void setId(String id)                       { this.id = id; }
     public String getQuizId()                          { return quizId; }
@@ -99,10 +99,10 @@ public class QuizSubmissionJpaEntity {
     public void setGradeValue(BigDecimal gradeValue)   { this.gradeValue = gradeValue; }
     public BigDecimal getGradeMaxScore()               { return gradeMaxScore; }
     public void setGradeMaxScore(BigDecimal s)         { this.gradeMaxScore = s; }
-    public BigDecimal getFinalGrade()                  { return finalGrade; }          // ✅ NEW
-    public void setFinalGrade(BigDecimal finalGrade)   { this.finalGrade = finalGrade; }// ✅ NEW
-    public boolean isCanViewResults()                  { return canViewResults; }       // ✅ NEW
-    public void setCanViewResults(boolean b)           { this.canViewResults = b; }     // ✅ NEW
+    public BigDecimal getFinalGrade()                  { return finalGrade; }
+    public void setFinalGrade(BigDecimal finalGrade)   { this.finalGrade = finalGrade; }
+    public boolean isCanViewResults()                  { return canViewResults; }
+    public void setCanViewResults(boolean b)           { this.canViewResults = b; }
     public boolean isAutoGraded()                      { return autoGraded; }
     public void setAutoGraded(boolean autoGraded)      { this.autoGraded = autoGraded; }
     public String getQuestionGradesJson()              { return questionGradesJson; }

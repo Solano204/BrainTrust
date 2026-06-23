@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { Card } from "@/components/ui/card";
@@ -208,7 +208,6 @@ return (
     <div className="p-3 sm:p-4 md:p-6 lg:p-8 space-y-6 sm:space-y-8">
       <div className="relative">
         <Card className="overflow-hidden">
-          {/* Banner Hero */}
           <div className="relative h-48 sm:h-64 md:h-80 bg-gradient-to-br from-primary to-primary/70">
             <Image
               src={
@@ -234,16 +233,11 @@ return (
             </div>
           </div>
 
-          {/* Barra de Estadísticas */}
           <div className="bg-card border-t border-border p-4 sm:p-6">
             <div className="flex flex-wrap gap-4 sm:gap-6 justify-center text-sm sm:text-base">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="font-medium">{cantidadEstudiantes} Estudiantes</span>
-              </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="font-medium">{duracionCurso}</span>
+            
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -254,7 +248,6 @@ return (
         </Card>
       </div>
 
-      {/* Sección de Unidades */}
       <Card className="p-6 sm:p-8 lg:p-10">
         <div className="flex justify-between items-center mb-6">
           <TituloComponente className="text-2xl font-bold text-foreground">

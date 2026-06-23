@@ -1,5 +1,4 @@
-// DARK
-"use client"
+﻿"use client"
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,8 +9,6 @@ import { Course } from "@/app/domain/entities/CourseEntities"
 import { CourseId } from "@/app/domain/valueObjects/CourseValues"
 import { useStudentCourses } from "@/app/presentation/hooks/course/student/student-hooks"
 
-// ✅ was: returning hardcoded bg-blue-600, bg-purple-600, etc.
-// Same palette pattern as CoursesSectionTeacher for visual consistency.
 const COURSE_PALETTES = [
   { bg: "bg-primary",     text: "text-primary-foreground" },
   { bg: "bg-primary/75",  text: "text-primary-foreground" },
@@ -97,7 +94,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
   return (
   <div className="bg-card rounded-2xl border border-border p-5 sm:p-6">
 
-    {/* ── Encabezado ── */}
     <div className="mb-6">
       <h2 className="text-lg font-bold text-foreground tracking-tight">Mis Cursos</h2>
       <p className="text-xs text-muted-foreground mt-0.5">Actualmente inscrito</p>
@@ -115,7 +111,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
 
     <div className="relative">
 
-      {/* ── Flecha arriba ── */}
       {!showAllCourses && (
         <button
           onClick={scrollUp}
@@ -131,7 +126,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
         </button>
       )}
 
-      {/* ── Lista de cursos ── */}
       <div className={`overflow-hidden ${carouselHeight}`}>
         <div
           className={`transition-transform duration-500 ease-out space-y-3 ${showAllCourses ? 'grid grid-cols-1 sm:grid-cols-1 gap-3' : ''}`}
@@ -148,10 +142,8 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
                   className="group relative p-4 sm:p-5 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden"
                   style={{ minHeight: '10rem' }}
                 >
-                  {/* Banda lateral izquierda coloreada */}
                   <div className={`absolute left-0 top-0 bottom-0 w-1 ${palette.bg} rounded-l-2xl`} />
 
-                  {/* Etiqueta de archivado */}
                   {!course.active && (
                     <span className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-xs font-semibold">
                       Archivado
@@ -159,18 +151,15 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
                   )}
 
                   <div className="flex items-start gap-4 pl-2">
-                    {/* Icono */}
                     <div className={`w-11 h-11 rounded-xl ${palette.bg} flex items-center justify-center flex-shrink-0`}>
                       <BookOpen className={`w-5 h-5 ${palette.text}`} />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      {/* Etiqueta de código */}
                       <span className="inline-block mb-1.5 px-2 py-0.5 rounded-md bg-muted/50 border border-border text-xs font-semibold text-muted-foreground">
                         {course.code} • {course.grade}
                       </span>
 
-                      {/* Nombre + descripción */}
                       <h3 className="font-bold text-sm text-foreground leading-snug group-hover:text-primary transition-colors">
                         {course.name}
                       </h3>
@@ -180,7 +169,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
                         </p>
                       )}
 
-                      {/* Fila de estadísticas */}
                       <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Users className="w-3.5 h-3.5" />
@@ -192,7 +180,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
                         </span>
                       </div>
 
-                      {/* Fila de pie de página */}
                       <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground/70">
                         <Clock className="w-3 h-3" />
                         <span>{lastAccessTime}</span>
@@ -212,7 +199,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
         </div>
       </div>
 
-      {/* ── Flecha abajo ── */}
       {!showAllCourses && (
         <button
           onClick={scrollDown}
@@ -228,7 +214,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
         </button>
       )}
 
-      {/* ── Puntos de paginación ── */}
       {!showAllCourses && courses.length > initialItemsPerView && (
         <div className="flex justify-center gap-1.5 mt-6">
           {courses.map((_, index) => (
@@ -247,7 +232,6 @@ export function CoursesSectionStudent({ studentId }: StudentCoursesSectionProps)
       )}
     </div>
 
-    {/* ── Ver todos / Mostrar menos ── */}
     {courses.length > initialItemsPerView && (
       <button
         onClick={handleViewAllClick}

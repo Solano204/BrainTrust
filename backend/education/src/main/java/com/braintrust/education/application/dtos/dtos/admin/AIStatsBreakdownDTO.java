@@ -10,11 +10,11 @@ public record AIStatsBreakdownDTO(
         long countFullAI,
         BigDecimal percentageFullAI,
 
-        // 50–99% AI
+        // 5099% AI
         long countHighAI,
         BigDecimal percentageHighAI,
 
-        // 1–49% AI
+        // 149% AI
         long countLowAI,
         BigDecimal percentageLowAI,
 

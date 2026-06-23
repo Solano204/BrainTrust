@@ -33,7 +33,7 @@ public class PageDocumentProcessor {
             return 0;
         }
 
-        log.info("📎 Processing {} frontend documents for page", frontendDocuments.size());
+        log.info("Processing {} frontend documents for page", frontendDocuments.size());
 
         try {
             List<DocumentMetadata> metadataList = storeFrontendDocumentsWithRateLimit(
@@ -50,11 +50,11 @@ public class PageDocumentProcessor {
 
             documents.forEach(page::addAttachment);
 
-            log.info("✅ Successfully processed {} frontend documents", documents.size());
+            log.info("Successfully processed {} frontend documents", documents.size());
             return documents.size();
 
         } catch (Exception e) {
-            log.error("❌ Failed to process frontend documents: {}", e.getMessage(), e);
+            log.error("Failed to process frontend documents: {}", e.getMessage(), e);
             throw new RuntimeException("Frontend document processing failed", e);
         }
     }
@@ -64,7 +64,7 @@ public class PageDocumentProcessor {
             return 0;
         }
 
-        log.info("📎 Dynamically processing {} file attachments for page", attachments.size());
+        log.info("Dynamically processing {} file attachments for page", attachments.size());
 
         int successfulUploads = 0;
         int failedUploads = 0;
@@ -72,13 +72,13 @@ public class PageDocumentProcessor {
         for (MultipartFile file : attachments) {
             try {
                 if (file == null || file.isEmpty()) {
-                    log.warn("⚠️ Skipping null or empty file");
+                    log.warn("Skipping null or empty file");
                     failedUploads++;
                     continue;
                 }
 
                 if (file.getSize() > MAX_FILE_SIZE) {
-                    log.warn("⚠️ File too large: {} ({} bytes)",
+                    log.warn("File too large: {} ({} bytes)",
                             file.getOriginalFilename(), file.getSize());
                     failedUploads++;
                     continue;
@@ -94,19 +94,19 @@ public class PageDocumentProcessor {
                 Document document = new Document(documentName, storagePath);
                 page.addAttachment(document);
 
-                log.debug("✅ Dynamically added document: '{}' (Type: {}, Size: {} bytes)",
+                log.debug("Dynamically added document: '{}' (Type: {}, Size: {} bytes)",
                         documentName, contentType, fileSize);
 
                 successfulUploads++;
 
             } catch (Exception e) {
-                log.error("❌ Failed to process file '{}': {}",
+                log.error("Failed to process file '{}': {}",
                         file != null ? file.getOriginalFilename() : "null", e.getMessage());
                 failedUploads++;
             }
         }
 
-        log.info("📊 Dynamic file processing summary: {} successful, {} failed out of {} total files",
+        log.info("Dynamic file processing summary: {} successful, {} failed out of {} total files",
                 successfulUploads, failedUploads, attachments.size());
 
         return successfulUploads;

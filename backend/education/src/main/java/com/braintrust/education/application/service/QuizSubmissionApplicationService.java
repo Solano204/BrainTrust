@@ -142,10 +142,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
         QuizSubmission submission = QuizSubmission.start(quizId, studentId, currentAttempts + 1);
 
         processAnswers(submission, command.answers());
-        submission.submit(quiz);  // autoGrade + canViewResults snapshot happen inside
-
-        // ✅ If not auto-graded yet, finalGrade is null until manual grading
-        // If auto-graded, computeFinalGrade was already called inside autoGrade()
+        submission.submit(quiz);
 
         QuizSubmission saved = submissionRepository.save(submission);
         syncGradeAfterSubmission(saved, quiz);
@@ -166,7 +163,6 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
         validatePointsConsistency(command, questionGrades);
         applyManualGrading(submission, command, questionGrades);
 
-        // ✅ Scale raw points to quiz's totalScore
         submission.computeFinalGrade(quiz.getTotalScore());
 
         submissionRepository.save(submission);
@@ -188,7 +184,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
  
     @Override
     public void deleteSubmission(QuizSubmissionId submissionId) {
-        log.warn("🗑️ Deleting quiz submission ID: {}", submissionId.getValue());
+        log.warn("Deleting quiz submission id={}", submissionId.getValue());
 
         QuizSubmission submission = findSubmissionByIdOrThrow(submissionId);
         Quiz quiz = quizRepository.findById(submission.getQuizId())
@@ -201,7 +197,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
         handleUnitGradeRemovalBeforeDeletion(submission, unitId, studentId, quiz.getId());
         submissionRepository.delete(submission);
 
-        log.info("✅ Quiz submission deleted and grade REMOVED from unit grade");
+        log.info("Quiz submission deleted and unit grade updated id={}", submissionId.getValue());
     }
 
     @Override
@@ -228,8 +224,6 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
                 .map(this::mapToBasicDTO)
                 .collect(Collectors.toList());
     }
-
-    // Métodos privados de apoyo
 
     private QuizSubmission findSubmissionByIdOrThrow(QuizSubmissionId submissionId) {
         return submissionRepository.findById(submissionId)
@@ -356,8 +350,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
             Map<QuizQuestionId, QuestionGrade> questionGrades) {
 
         if (quiz.getUnitId() != null) {
-            log.info("➕ Adding quiz grade to Unit ID: {} for student {}",
-                    quiz.getUnitId().getValue(), submission.getStudentId().getValue());
+            log.info("Syncing quiz grade to unit={} for student={}", quiz.getUnitId().getValue(), submission.getStudentId().getValue());
 
             Grade grade = getGradeForUnitSync(submission, command);
             unitGradeService.addQuizGradeToUnit(
@@ -395,8 +388,7 @@ public class QuizSubmissionApplicationService implements QuizSubmissionService {
         boolean affectsUnitGrade = submission.getGrade() != null && unitId != null;
 
         if (affectsUnitGrade) {
-            log.info("➖ Removing quiz grade from Unit ID: {} for student {} before deletion",
-                    unitId.getValue(), studentId.getValue());
+            log.info("Removing quiz grade from unit={} for student={}", unitId.getValue(), studentId.getValue());
 
             unitGradeService.removeQuizGradeFromUnit(unitId, studentId, quizId);
 

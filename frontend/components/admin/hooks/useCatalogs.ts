@@ -1,8 +1,5 @@
-'use client';
+﻿'use client';
 
-// ============================================================
-// FILE 3: hooks/useCatalogs.ts
-// ============================================================
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -29,9 +26,6 @@ import type {
 
 const STALE = 1000 * 60 * 5;
 
-// ─────────────────────────────────────────────
-// Query Keys
-// ─────────────────────────────────────────────
 export const catalogKeys = {
   all: ['catalogs'] as const,
 
@@ -58,14 +52,10 @@ export const catalogKeys = {
   roleActivitiesByRole:   (roleId: number, params?: PageParams)       => [...catalogKeys.all, 'role-activities', 'by-role', roleId, params] as const,
 };
 
-// Helper to invalidate all variants of a key prefix
 function invalidatePrefix(qc: ReturnType<typeof useQueryClient>, key: readonly unknown[]) {
   qc.invalidateQueries({ queryKey: key, exact: false });
 }
 
-// ─────────────────────────────────────────────
-// FIRST NAMES
-// ─────────────────────────────────────────────
 export function useFirstNames(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.firstNames(params),
@@ -98,9 +88,6 @@ export function useDeleteFirstName() {
   });
 }
 
-// ─────────────────────────────────────────────
-// LAST NAMES
-// ─────────────────────────────────────────────
 export function useLastNames(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.lastNames(params),
@@ -133,9 +120,6 @@ export function useDeleteLastName() {
   });
 }
 
-// ─────────────────────────────────────────────
-// STATES
-// ─────────────────────────────────────────────
 export function useStates(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.states(params),
@@ -171,9 +155,6 @@ export function useDeleteState() {
   });
 }
 
-// ─────────────────────────────────────────────
-// MUNICIPALITIES
-// ─────────────────────────────────────────────
 export function useMunicipalities(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.municipalities(params),
@@ -218,9 +199,6 @@ export function useDeleteMunicipality() {
   });
 }
 
-// ─────────────────────────────────────────────
-// COLONIES
-// ─────────────────────────────────────────────
 export function useColonies(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.colonies(params),
@@ -266,9 +244,6 @@ export function useDeleteColony() {
   });
 }
 
-// ─────────────────────────────────────────────
-// STREETS
-// ─────────────────────────────────────────────
 export function useStreets(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.streets(params),
@@ -310,9 +285,6 @@ export function useDeleteStreet() {
   });
 }
 
-// ─────────────────────────────────────────────
-// POSTAL CODES
-// ─────────────────────────────────────────────
 export function usePostalCodes(params: PageParams = {}) {
   return useQuery({
     queryKey: catalogKeys.postalCodes(params),
@@ -354,9 +326,6 @@ export function useDeletePostalCode() {
   });
 }
 
-// ─────────────────────────────────────────────
-// ROLES
-// ─────────────────────────────────────────────
 export function useRoles(params: Omit<PageParams, 'search'> = {}) {
   return useQuery({
     queryKey: catalogKeys.roles(params),
@@ -403,9 +372,6 @@ export function useDeleteRole() {
   });
 }
 
-// ─────────────────────────────────────────────
-// ROLE ACTIVITIES
-// ─────────────────────────────────────────────
 export function useRoleActivities(params: Omit<PageParams, 'search'> = {}) {
   return useQuery({
     queryKey: catalogKeys.roleActivities(params),

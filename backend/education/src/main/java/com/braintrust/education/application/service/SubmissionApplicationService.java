@@ -39,6 +39,7 @@ public class SubmissionApplicationService implements SubmissionService {
     private final SubmissionAIAnalysisHelper aiAnalysisHelper;
     private final SubmissionGradingHelper gradingHelper;
     private final TeamSubmissionHelper teamSubmissionHelper;
+    private final StudentHistoryHelper studentHistoryHelper;
 
     public SubmissionApplicationService(
             SubmissionRepository submissionRepository,
@@ -48,7 +49,8 @@ public class SubmissionApplicationService implements SubmissionService {
             SubmissionDtoMapper submissionDtoMapper,
             SubmissionAIAnalysisHelper aiAnalysisHelper,
             SubmissionGradingHelper gradingHelper,
-            TeamSubmissionHelper teamSubmissionHelper) {
+            TeamSubmissionHelper teamSubmissionHelper,
+            StudentHistoryHelper studentHistoryHelper) {
 
         this.submissionRepository = submissionRepository;
         this.assignmentRepository = assignmentRepository;
@@ -58,8 +60,9 @@ public class SubmissionApplicationService implements SubmissionService {
         this.aiAnalysisHelper = aiAnalysisHelper;
         this.gradingHelper = gradingHelper;
         this.teamSubmissionHelper = teamSubmissionHelper;
+        this.studentHistoryHelper = studentHistoryHelper;
 
-        log.info("✅ SubmissionApplicationService initialized with helpers");
+        log.info("SubmissionApplicationService initialized");
     }
 
     @Override
@@ -68,7 +71,7 @@ public class SubmissionApplicationService implements SubmissionService {
         UserId studentId = UserId.fromString(command.studentId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Student {} submitting work for Assignment {}",
+        log.info("Student submitting assignment studentId={} assignmentId={}",
                 studentId.getValue(), assignmentId.getValue());
 
         try {
@@ -90,7 +93,7 @@ public class SubmissionApplicationService implements SubmissionService {
 
                 documents = submissionProcessor.convertToDocuments(metadataList);
 
-                log.info("📁 {} documents stored in {}ms", documents.size(), storageDuration);
+                log.info("Documents stored count={} durationMs={}", documents.size(), storageDuration);
 
                 if (submissionFormat == SubmissionFormat.DIGITAL && !documents.isEmpty()) {
                     extractedText = submissionProcessor.extractTextFromFirstPdf(command.attachments());
@@ -110,7 +113,7 @@ public class SubmissionApplicationService implements SubmissionService {
             Submission savedSubmission = submissionRepository.save(submission);
 
             long totalDuration = System.currentTimeMillis() - startTime;
-            log.info("✅ Submission {} created in {}ms (Attachments: {}, Format: {})",
+            log.info("Submission created id={} durationMs={} attachments={} format={}",
                     savedSubmission.getId().getValue(), totalDuration,
                     documents.size(), submissionFormat.name());
 
@@ -119,8 +122,7 @@ public class SubmissionApplicationService implements SubmissionService {
             return savedSubmission.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed to submit assignment for Student {}: {}",
-                    studentId.getValue(), e.getMessage(), e);
+            log.error("Failed to submit assignment studentId={}: {}", studentId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to submit assignment", e);
         }
     }
@@ -130,7 +132,7 @@ public class SubmissionApplicationService implements SubmissionService {
         AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
         UserId studentId = UserId.fromString(command.studentId());
 
-        log.info("🚀 Frontend extraction - Student {} submitting Assignment {}",
+        log.info("Frontend submission studentId={} assignmentId={}",
                 studentId.getValue(), assignmentId.getValue());
 
         try {
@@ -157,7 +159,7 @@ public class SubmissionApplicationService implements SubmissionService {
 
             Submission savedSubmission = submissionRepository.save(submission);
 
-            log.info("✅ Frontend extraction submission created: {}", savedSubmission.getId().getValue());
+            log.info("Frontend submission created id={}", savedSubmission.getId().getValue());
 
             String textForAnalysis = combinedExtractedText.isEmpty() ? command.content() : combinedExtractedText;
             triggerAIAnalysisIfNeeded(savedSubmission.getId(), textForAnalysis, submissionFormat, documents, "individual");
@@ -165,7 +167,7 @@ public class SubmissionApplicationService implements SubmissionService {
             return savedSubmission.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed frontend extraction submission: {}", e.getMessage(), e);
+            log.error("Frontend submission failed: {}", e.getMessage(), e);
             throw new RuntimeException("Frontend extraction submission failed", e);
         }
     }
@@ -175,7 +177,7 @@ public class SubmissionApplicationService implements SubmissionService {
         AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
         StudentGroupId teamId = StudentGroupId.fromString(command.groupId());
 
-        log.info("🚀 Team {} submitting work for Assignment {}",
+        log.info("Team submitting assignment teamId={} assignmentId={}",
                 teamId.getValue(), assignmentId.getValue());
 
         try {
@@ -197,7 +199,7 @@ public class SubmissionApplicationService implements SubmissionService {
 
                 documents = submissionProcessor.convertToDocuments(metadataList);
 
-                log.info("📁 {} documents stored for team submission", documents.size());
+                log.info("Team submission documents stored count={}", documents.size());
 
                 if (submissionFormat == SubmissionFormat.DIGITAL && !documents.isEmpty()) {
                     extractedText = submissionProcessor.extractTextFromFirstPdf(command.attachments());
@@ -218,7 +220,7 @@ public class SubmissionApplicationService implements SubmissionService {
 
             Submission savedSubmission = submissionRepository.save(submission);
 
-            log.info("✅ Team submission created for group: {} (Submitted by: {}, Format: {})",
+            log.info("Team submission created groupId={} submittedBy={} format={}",
                     teamId.getValue(), senderId.getValue(), submissionFormat.name());
 
             teamSubmissionHelper.createShadowSubmissionsForTeamMembers(team, assignmentId, savedSubmission, teamId);
@@ -228,8 +230,7 @@ public class SubmissionApplicationService implements SubmissionService {
             return savedSubmission.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed to submit team assignment for Group {}: {}",
-                    command.groupId(), e.getMessage(), e);
+            log.error("Failed to submit team assignment groupId={}: {}", command.groupId(), e.getMessage(), e);
             throw new RuntimeException("Failed to submit team assignment", e);
         }
     }
@@ -240,7 +241,7 @@ public class SubmissionApplicationService implements SubmissionService {
         StudentGroupId teamId = StudentGroupId.fromString(command.groupId());
         UserId senderId = UserId.fromString(command.studentSenderId());
 
-        log.info("🚀 Team frontend extraction - Team {} for Assignment {} by Student {}",
+        log.info("Team frontend submission teamId={} assignmentId={} senderId={}",
                 teamId.getValue(), assignmentId.getValue(), senderId.getValue());
 
         try {
@@ -270,7 +271,7 @@ public class SubmissionApplicationService implements SubmissionService {
 
             Submission savedSubmission = submissionRepository.save(submission);
 
-            log.info("✅ Team frontend extraction submission created for group: {}", teamId.getValue());
+            log.info("Team frontend submission created groupId={}", teamId.getValue());
 
             teamSubmissionHelper.createShadowSubmissionsForTeamMembers(team, assignmentId, savedSubmission, teamId);
 
@@ -280,12 +281,10 @@ public class SubmissionApplicationService implements SubmissionService {
             return savedSubmission.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed team frontend extraction submission: {}", e.getMessage(), e);
+            log.error("Team frontend submission failed: {}", e.getMessage(), e);
             throw new RuntimeException("Team frontend extraction submission failed", e);
         }
     }
-
-    // ==================== GRADING ====================
 
     @Override
     public void gradeSubmission(GradeSubmissionCommand command) {
@@ -305,7 +304,7 @@ public class SubmissionApplicationService implements SubmissionService {
     @Override
     @Transactional(readOnly = true)
     public SubmissionDTO getSubmissionById(SubmissionId submissionId) {
-        log.debug("📊 Fetching Submission DTO by ID: {}", submissionId.getValue());
+        log.debug("Fetching Submission DTO by ID: {}", submissionId.getValue());
         Submission submission = findSubmissionByIdOrThrow(submissionId);
         AIDetectionResultDTO aiAnalysis = aiAnalysisHelper.getAIAnalysisForSubmission(submissionId);
         return submissionDtoMapper.toSubmissionDTO(submission, aiAnalysis);
@@ -353,7 +352,7 @@ public class SubmissionApplicationService implements SubmissionService {
     @Override
     @Transactional(readOnly = true)
     public List<SubmissionDTO> getSubmissionsByStudent(UserId studentId) {
-        log.debug("📊 Fetching all submissions by Student: {}", studentId.getValue());
+        log.debug("Fetching all submissions by Student: {}", studentId.getValue());
 
         List<Submission> submissions = submissionRepository.findByStudentId(studentId);
 
@@ -368,7 +367,7 @@ public class SubmissionApplicationService implements SubmissionService {
     @Override
     @Transactional(readOnly = true)
     public List<SubmissionDTO> getSubmissionsByStudentAndCourse(UserId studentId, CourseId courseId) {
-        log.debug("📊 Fetching submissions for Student: {} in Course: {}",
+        log.debug("Fetching submissions for Student: {} in Course: {}",
                 studentId.getValue(), courseId.getValue());
 
         List<Submission> submissions = submissionRepository.findByCourseAndStudent(courseId, studentId);
@@ -399,8 +398,6 @@ public class SubmissionApplicationService implements SubmissionService {
         Submission submission = findSubmissionByIdOrThrow(submissionId);
         return submission.getTeamId() != null;
     }
-
-    // ==================== PRIVATE HELPER METHODS ====================
 
     private void triggerAIAnalysisIfNeeded(
             SubmissionId submissionId,
@@ -436,5 +433,12 @@ public class SubmissionApplicationService implements SubmissionService {
         if (!assignment.canAcceptSubmissions()) {
             throw new IllegalStateException("Assignment is closed and cannot accept submissions");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentHistoryDTO getStudentHistory(CourseId courseId, UserId studentId) {
+        log.debug("getStudentHistory courseId={} studentId={}", courseId.getValue(), studentId.getValue());
+        return studentHistoryHelper.buildStudentHistory(courseId, studentId);
     }
 }

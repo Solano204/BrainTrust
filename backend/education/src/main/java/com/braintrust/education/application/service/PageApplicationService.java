@@ -43,7 +43,7 @@ public class PageApplicationService implements PageService {
         this.documentProcessor = documentProcessor;
         this.attachmentHelper = attachmentHelper;
         this.linkHelper = linkHelper;
-        log.info("✅ PageApplicationService initialized with refactored helpers");
+        log.info("PageApplicationService initialized with refactored helpers");
     }
 
     @Override
@@ -65,11 +65,11 @@ public class PageApplicationService implements PageService {
         UnitId unitId = UnitId.fromString(command.unitId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating page with frontend extraction: '{}' for course {} and unit {}",
+        log.info("Creating page with frontend extraction: '{}' for course {} and unit {}",
                 command.title(), courseId.getValue(), unitId.getValue());
 
         try {
-            log.info("📋 Frontend extraction - Attachments: {}, Links: {}, Publish: {}",
+            log.info("Frontend extraction - Attachments: {}, Links: {}, Publish: {}",
                     command.attachments() != null ? command.attachments().size() : 0,
                     command.externalLinks() != null ? command.externalLinks().size() : 0,
                     command.publishImmediately());
@@ -99,14 +99,14 @@ public class PageApplicationService implements PageService {
             PageDTO result = dtoMapper.toCompleteDTO(savedPage);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Frontend extraction page created in {}ms. Page ID: {}, Published: {}, Files: {}, Links: {}",
+            log.info("Frontend extraction page created in {}ms. Page ID: {}, Published: {}, Files: {}, Links: {}",
                     duration, savedPage.getId().getValue(), savedPage.isPublished(),
                     filesProcessed, linksAdded);
 
             return result;
 
         } catch (Exception e) {
-            log.error("❌ Failed to create page with frontend extraction '{}': {}",
+            log.error("Failed to create page with frontend extraction '{}': {}",
                     command.title(), e.getMessage(), e);
             throw new RuntimeException("Failed to create page with frontend extraction", e);
         }
@@ -114,20 +114,20 @@ public class PageApplicationService implements PageService {
 
     @Override
     public PageDTO createPageWithFileAttachments(CreatePageWithAttachmentsCommand command) {
-        log.info("📋 DIAGNOSTIC - Command received:");
-        log.info("  courseId: {}", command.courseId());
-        log.info("  unitId: {}", command.unitId());
-        log.info("  title: '{}'", command.title());
-        log.info("  content: '{}'", command.content() != null ?
+        log.info("DIAGNOSTIC - Command received:");
+        log.info("courseId: {}", command.courseId());
+        log.info("unitId: {}", command.unitId());
+        log.info("title: '{}'", command.title());
+        log.info("content: '{}'", command.content() != null ?
                 (command.content().length() > 50 ? command.content().substring(0, 50) + "..." : command.content())
                 : "null");
-        log.info("  publishImmediately: {}", command.publishImmediately());
+        log.info("publishImmediately: {}", command.publishImmediately());
 
         CourseId courseId = CourseId.fromString(command.courseId());
         UnitId unitId = UnitId.fromString(command.unitId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating page dynamically: '{}' for course {} and unit {} - Links: {}, Files: {}, Publish: {}",
+        log.info("Creating page dynamically: '{}' for course {} and unit {} - Links: {}, Files: {}, Publish: {}",
                 command.title(), courseId.getValue(), unitId.getValue(),
                 command.externalLinks() != null ? command.externalLinks().size() : 0,
                 command.attachments() != null ? command.attachments().size() : 0,
@@ -163,14 +163,14 @@ public class PageApplicationService implements PageService {
             PageDTO result = dtoMapper.toCompleteDTO(savedPage);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Dynamic page creation completed in {}ms. Page ID: {}, Published: {}, Links: {}, Files: {}",
+            log.info("Dynamic page creation completed in {}ms. Page ID: {}, Published: {}, Links: {}, Files: {}",
                     duration, savedPage.getId().getValue(), savedPage.isPublished(),
                     linksAdded, filesProcessed);
 
             return result;
 
         } catch (Exception e) {
-            log.error("❌ Failed to create page dynamically '{}': {}",
+            log.error("Failed to create page dynamically '{}': {}",
                     command.title(), e.getMessage(), e);
             throw new RuntimeException("Failed to create page with dynamic content", e);
         }

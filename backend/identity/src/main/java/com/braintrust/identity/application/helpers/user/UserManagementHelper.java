@@ -42,28 +42,16 @@ public class UserManagementHelper {
     public void updateUserPersonalInfo(UpdateUserInfoCommand command) {
         UserId userId = UserId.fromString(command.userId());
         long startTime = System.currentTimeMillis();
-
-        log.warn("🔐 Updating PII for User ID: {}", userId.getValue());
-
+        log.warn("Updating PII for userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
             Person person = findPersonByIdOrThrow(user.getPersonId(), personRepository);
-
-            person.updatePersonalInfo(
-                    command.firstName(),
-                    command.lastName(),
-                    command.gender(),
-                    command.phone()
-            );
-
+            person.updatePersonalInfo(command.firstName(), command.lastName(), command.gender(), command.phone());
             personRepository.save(person);
-
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ PII updated in {}ms for User {} / Person {}",
-                    duration, userId.getValue(), person.getId().getValue());
-
+            log.warn("PII updated durationMs={} userId={} personId={}", duration, userId.getValue(), person.getId().getValue());
         } catch (Exception e) {
-            log.error("❌ Failed to update PII for User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Failed to update PII for userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw e;
         }
     }
@@ -72,28 +60,22 @@ public class UserManagementHelper {
     public void changeUserEmail(ChangeEmailCommand command) {
         UserId userId = UserId.fromString(command.userId());
         long startTime = System.currentTimeMillis();
-
-        log.warn("📧 Attempting email change for User {} to: {}", userId.getValue(), command.newEmail());
-
+        log.warn("Email change requested userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
-
             Email newEmail = new Email(command.newEmail());
             if (userRepository.existsByEmail(newEmail)) {
-                log.warn("❌ Email change failed: New email {} already in use", command.newEmail());
+                log.warn("Email change failed: address already in use email={}", command.newEmail());
                 throw new EmailAlreadyExistsException("Email already in use");
             }
-
             user.changeEmail(newEmail);
             userRepository.save(user);
-
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ Email changed in {}ms for User {}", duration, userId.getValue());
-
+            log.warn("Email changed durationMs={} userId={}", duration, userId.getValue());
         } catch (EmailAlreadyExistsException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to change email for User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Failed to change email for userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw e;
         }
     }
@@ -102,29 +84,22 @@ public class UserManagementHelper {
     public void changeUserPassword(ChangePasswordCommand command) {
         UserId userId = UserId.fromString(command.userId());
         long startTime = System.currentTimeMillis();
-
-        log.warn("🔒 Processing password change for User ID: {}", userId.getValue());
-
+        log.warn("Password change requested userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
-
             if (!user.authenticate(command.currentPassword(), passwordEncoder)) {
-                log.error("❌ Password change failed: Incorrect current password for User {}", userId.getValue());
+                log.error("Password change failed: incorrect current password userId={}", userId.getValue());
                 throw new InvalidPasswordException("Current password is incorrect");
             }
-
             Password newPassword = Password.create(command.newPassword(), passwordEncoder);
             user.changePassword(newPassword);
-
             userRepository.save(user);
-
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ Password changed in {}ms for User {}", duration, userId.getValue());
-
+            log.warn("Password changed durationMs={} userId={}", duration, userId.getValue());
         } catch (InvalidPasswordException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to change password for User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Failed to change password for userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw e;
         }
     }
@@ -133,59 +108,47 @@ public class UserManagementHelper {
     public void adminChangePassword(AdminChangePasswordCommand command) {
         UserId userId = UserId.fromString(command.userId());
         long startTime = System.currentTimeMillis();
-
-        log.warn("🔐 ADMIN initiating password reset for User ID: {}", userId.getValue());
-
+        log.warn("Admin password reset initiated for userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
-
             Password newPassword = Password.create(command.newPassword(), passwordEncoder);
             user.changePassword(newPassword);
-
             userRepository.save(user);
-
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ ADMIN password reset completed in {}ms for User ID: {}", duration, userId.getValue());
-
+            log.warn("Admin password reset complete durationMs={} userId={}", duration, userId.getValue());
         } catch (UserNotFoundException e) {
-            log.error("❌ ADMIN password reset failed: User {} not found", userId.getValue());
+            log.error("Admin password reset failed: user not found userId={}", userId.getValue());
             throw e;
         } catch (Exception e) {
-            log.error("❌ ADMIN password reset failed for User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Admin password reset failed for userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to reset password", e);
         }
     }
 
     @Transactional
     public void activateUser(UserId userId) {
-        log.info("✅ Activating User ID: {}", userId.getValue());
-
+        log.info("Activating userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
             user.activate();
             userRepository.save(user);
-
-            log.info("✅ User {} is now ACTIVE", userId.getValue());
-
+            log.info("User activated userId={}", userId.getValue());
         } catch (Exception e) {
-            log.error("❌ Failed to activate User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Failed to activate userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw e;
         }
     }
 
     @Transactional
     public void deactivateUser(UserId userId) {
-        log.warn("⚠️ Deactivating User ID: {}", userId.getValue());
-
+        log.warn("Deactivating userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
             user.deactivate();
             userRepository.save(user);
-
-            log.warn("✅ User {} is now INACTIVE", userId.getValue());
-
+            log.warn("User deactivated userId={}", userId.getValue());
         } catch (Exception e) {
-            log.error("❌ Failed to deactivate User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Failed to deactivate userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw e;
         }
     }
@@ -193,26 +156,19 @@ public class UserManagementHelper {
     @Transactional
     public void deleteUser(UserId userId) {
         long startTime = System.currentTimeMillis();
-
-        log.warn("🗑️ Deleting User ID: {}", userId.getValue());
-
+        log.warn("Deleting userId={}", userId.getValue());
         try {
             User user = findUserByIdOrThrow(userId, userRepository);
-
             if (user.isActive()) {
-                log.warn("⚠️ Attempting to delete active user: {}", userId.getValue());
+                log.warn("Deleting active user userId={}", userId.getValue());
             }
-
             userRepository.deleteById(userId);
-
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("✅ User {} deleted in {}ms. Role: {}, Email: {}",
-                    userId.getValue(), duration, user.getRole().name(), user.getEmail().getValue());
-
+            log.warn("User deleted durationMs={} userId={} role={}", duration, userId.getValue(), user.getRole().name());
         } catch (UserNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to delete User {}: {}", userId.getValue(), e.getMessage(), e);
+            log.error("Failed to delete userId={}: {}", userId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to delete user", e);
         }
     }

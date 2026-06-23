@@ -22,7 +22,6 @@ public interface CatRoleActivityJpaRepository extends JpaRepository<CatRoleActiv
 
     boolean existsByCodeIgnoreCase(String code);
 
-    // ✅ FIXED: u.roleId → u.role.id
     @Query("SELECT COUNT(u) FROM UserJpaEntity u WHERE u.role.id = :roleId")
     long countUsersByRoleId(@Param("roleId") Integer roleId);
 }

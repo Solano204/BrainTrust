@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type React from "react"
 import { useState, useRef } from "react"
@@ -115,6 +115,8 @@ export function CreadorTarea({ open, onClose, onSave, idCourse, idUnit }: PropsC
   const [nuevaUrl, setNuevaUrl] = useState("")
   const [errorUrl, setErrorUrl] = useState("")
   const [errorArchivo, setErrorArchivo] = useState("")
+  const [dueDatePart, setDueDatePart] = useState("")
+  const [dueTimePart, setDueTimePart] = useState("23:59")
   const inputArchivoRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -244,6 +246,8 @@ const alEnviar = (data: DatosFormularioTarea) => {
     setNuevaUrl("")
     setErrorUrl("")
     setErrorArchivo("")
+    setDueDatePart("")
+    setDueTimePart("23:59")
     onClose()
   }
 
@@ -515,17 +519,32 @@ return (
           
           <div>
             <Label className="font-bold mb-2 block text-sm">Fecha de Entrega *</Label>
-            <Controller
-              name="dueDate"
-              control={control}
-              render={({ field }) => (
-                <Input 
-                  type="datetime-local"
-                  {...field}
-                  className={`text-sm ${errors.dueDate ? "border-destructive" : ""}`}
-                />
-              )}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={dueDatePart}
+                onChange={(e) => {
+                  const date = e.target.value
+                  setDueDatePart(date)
+                  const time = dueTimePart || "23:59"
+                  if (!dueTimePart) setDueTimePart(time)
+                  setValue("dueDate", date ? `${date}T${time}` : "", { shouldValidate: true })
+                }}
+                className={`text-sm flex-1 ${errors.dueDate ? "border-destructive" : ""}`}
+              />
+              <Input
+                type="time"
+                value={dueTimePart}
+                onChange={(e) => {
+                  const time = e.target.value
+                  setDueTimePart(time)
+                  if (dueDatePart) {
+                    setValue("dueDate", `${dueDatePart}T${time}`, { shouldValidate: true })
+                  }
+                }}
+                className={`text-sm w-28 ${errors.dueDate ? "border-destructive" : ""}`}
+              />
+            </div>
             {errors.dueDate && (
               <p className="text-xs sm:text-sm text-destructive mt-1">{errors.dueDate.message}</p>
             )}
@@ -613,7 +632,6 @@ return (
             )}
           </div>
 
-          {/* URLs */}
           <div>
             <Label className="text-xs sm:text-sm mb-2 block">Agregar URLs</Label>
             <div className="flex flex-col sm:flex-row gap-2 mb-2">

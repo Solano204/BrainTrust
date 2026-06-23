@@ -79,13 +79,13 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
         fileTypeTexts.put("sustainability", mockExtractedTexts.get(6));
         fileTypeTexts.put("blockchain", mockExtractedTexts.get(7));
 
-        log.info("✅ MockTextExtractionProvider initialized for testing");
+        log.info("MockTextExtractionProvider initialized for testing");
     }
 
     @Override
     public String extractTextFromPdf(MultipartFile pdfFile) {
         if (pdfFile == null || pdfFile.isEmpty()) {
-            log.warn("🧪 MOCK: Empty PDF file provided for extraction");
+            log.warn("MOCK: Empty PDF file provided for extraction");
             return "";
         }
 
@@ -93,7 +93,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
                 pdfFile.getOriginalFilename().toLowerCase() : "unknown.pdf";
         long fileSize = pdfFile.getSize();
 
-        log.info("🧪 MOCK: Extracting text from PDF: {} (size: {} bytes)", fileName, fileSize);
+        log.info("MOCK: Extracting text from PDF: {} (size: {} bytes)", fileName, fileSize);
 
         simulateProcessingDelay(800, 2500);
 
@@ -109,13 +109,13 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
 
             String fullText = extractedText + extractionInfo;
 
-            log.info("🧪 MOCK: Text extraction completed. Words: {}, Characters: {}",
+            log.info("MOCK: Text extraction completed. Words: {}, Characters: {}",
                     wordCount, charCount);
 
             return fullText;
 
         } catch (Exception e) {
-            log.error("🧪 MOCK: Error in mock text extraction", e);
+            log.error("MOCK: Error in mock text extraction", e);
             return "[Error extracting text from PDF: " + fileName + "]";
         }
     }
@@ -123,10 +123,10 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
     @Override
     public List<String> extractTextFromPdfs(List<MultipartFile> pdfFiles) {
         long startTime = System.currentTimeMillis();
-        log.info("🧪 MOCK: Starting batch text extraction for {} PDF files", pdfFiles.size());
+        log.info("MOCK: Starting batch text extraction for {} PDF files", pdfFiles.size());
 
         if (pdfFiles == null || pdfFiles.isEmpty()) {
-            log.warn("🧪 MOCK: Empty file list provided for batch extraction");
+            log.warn("MOCK: Empty file list provided for batch extraction");
             return List.of();
         }
 
@@ -139,7 +139,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
                         try {
                             return extractTextFromPdf(pdfFile);
                         } catch (Exception e) {
-                            log.error("🧪 MOCK: Failed to extract text from: {}",
+                            log.error("MOCK: Failed to extract text from: {}",
                                     pdfFile.getOriginalFilename(), e);
                             return "[Extraction failed: " + pdfFile.getOriginalFilename() + "]";
                         }
@@ -152,24 +152,24 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
                             return future.get();
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
-                            log.error("🧪 MOCK: Batch extraction interrupted", e);
+                            log.error("MOCK: Batch extraction interrupted", e);
                             return "[Extraction interrupted]";
                         } catch (ExecutionException e) {
-                            log.error("🧪 MOCK: Batch extraction failed", e.getCause());
+                            log.error("MOCK: Batch extraction failed", e.getCause());
                             return "[Extraction failed]";
                         }
                     })
                     .collect(Collectors.toList());
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("🧪 MOCK: Batch extraction completed in {}ms. Processed {} of {} files",
+            log.info("MOCK: Batch extraction completed in {}ms. Processed {} of {} files",
                     duration, results.size(), pdfFiles.size());
 
             virtualExecutor.shutdown();
             return results;
 
         } catch (Exception e) {
-            log.error("🧪 MOCK: Parallel PDF extraction failed", e);
+            log.error("MOCK: Parallel PDF extraction failed", e);
 
             List<String> results = new ArrayList<>();
             for (MultipartFile pdfFile : pdfFiles) {
@@ -189,7 +189,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
     public boolean isServiceAvailable() {
         boolean available = random.nextDouble() > 0.05;
 
-        log.trace("🧪 MOCK: Text extraction service availability: {}", available);
+        log.trace("MOCK: Text extraction service availability: {}", available);
         return available;
     }
 
@@ -200,7 +200,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
                 0.85 + random.nextDouble() * 0.15 :
                 0.1 + random.nextDouble() * 0.3;
 
-        log.debug("🧪 MOCK: Text extraction service health: {:.2f}", health);
+        log.debug("MOCK: Text extraction service health: {:.2f}", health);
         return health;
     }
 
@@ -210,7 +210,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("🧪 MOCK: Processing delay interrupted");
+            log.warn("MOCK: Processing delay interrupted");
         }
     }
 
@@ -283,7 +283,7 @@ public class MockTextExtractionProvider implements TextExtractionProvider {
     private String formatWithOcrArtifacts(String text) {
 
         if (random.nextDouble() > 0.95) {
-            log.debug("🧪 MOCK: Simulating OCR artifacts in extracted text");
+            log.debug("MOCK: Simulating OCR artifacts in extracted text");
 
             String[] replacements = {
                     "the", "t he",

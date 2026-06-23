@@ -88,7 +88,7 @@ export function mapSubmissionFromBackend(dto: SubmissionDTO): Submission {
     };
 }
 
-export function mapSubmissionToTask(submission: SubmissionDTO): SubmissionTask {
+export function mapSubmissionToTask(submission: SubmissionDTO & { _teamMemberIds?: string[] }): SubmissionTask {
     const deadline = submission.assignmentDeadline || new Date().toISOString();
     const isOverdue = new Date(deadline) < new Date() &&
         submission.status !== 'GRADED' &&
@@ -111,7 +111,9 @@ export function mapSubmissionToTask(submission: SubmissionDTO): SubmissionTask {
     return {
         id: submission.assignmentId,
         name: submission.assignmentTitle,
-        studentName: submission.studentName,
+        studentName: submission.isTeamSubmission && submission.teamName
+            ? submission.teamName
+            : submission.studentName,
         unit: submission.unitName,
         instructions: submission.assignmentInstructions || 'No instructions provided',
         maxPoints: maxPoints,
@@ -135,6 +137,7 @@ export function mapSubmissionToTask(submission: SubmissionDTO): SubmissionTask {
             aiAnalysis: aiAnalysis,
             isTeamSubmission: submission.isTeamSubmission,
             teamName: submission.teamName || undefined,
+            teamMemberSubmissionIds: submission._teamMemberIds,
         },
     };
 }

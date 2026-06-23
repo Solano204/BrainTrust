@@ -8,6 +8,6 @@ public record CreateQuizCommand(
         String availableFrom,
         String availableUntil,
         Integer timeLimitMinutes,
-        boolean allowSeeResults,   // ✅ NEW
-        double totalScore          // ✅ NEW
+        boolean allowSeeResults,
+        double totalScore
 ) {}

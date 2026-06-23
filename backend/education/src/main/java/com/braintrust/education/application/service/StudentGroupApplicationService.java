@@ -234,7 +234,6 @@ public class StudentGroupApplicationService implements StudentGroupService {
         }
     }
 
-    // ==================== Query Operations ====================
 
     @Override
     @Transactional(readOnly = true)

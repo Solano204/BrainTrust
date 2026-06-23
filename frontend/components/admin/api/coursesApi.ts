@@ -1,4 +1,4 @@
-
+﻿
 "use server";
 
 import { apiClient } from "@/app/shared/api/http";
@@ -206,7 +206,6 @@ export async function createCourse(
   command: CreateCourseCommand,
 ): Promise<AdminCourse> {
   try {
-    // Remover urlImage si existe, ya que el endpoint básico no lo acepta
     const { urlImage, ...commandWithoutImage } = command;
     const { data } = await apiClient.post<CourseDTO>(
       "/api/courses",

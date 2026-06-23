@@ -7,7 +7,7 @@ import com.braintrust.education.domain.valueobjects.EnrollmentId;
 import com.braintrust.education.domain.valueobjects.Grade;
 import com.braintrust.education.infraestructure.repositoriesPersistence.sql.entities.EnrollmentJpaEntity;
 import com.braintrust.identity.domain.valueobjects.UserId;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORT LOMBOK SLF4J ANNOTATION
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

@@ -12,6 +12,8 @@ import com.braintrust.education.application.mappers.AssignmentDtoMapper;
 import com.braintrust.education.application.ports.in.AssignmentService;
 import com.braintrust.education.application.ports.out.AssignmentRepository;
 import com.braintrust.education.application.ports.out.CourseRepository;
+import com.braintrust.education.application.ports.out.SubmissionRepository;
+import com.braintrust.education.domain.model.Submission;
 import com.braintrust.education.domain.exceptions.AssignmentNotFoundException;
 import com.braintrust.education.domain.exceptions.CourseNotFoundException;
 import com.braintrust.education.domain.model.Assignment;
@@ -32,6 +34,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -41,6 +45,7 @@ public class AssignmentApplicationService implements AssignmentService {
 
     private final AssignmentRepository assignmentRepository;
     private final CourseRepository courseRepository;
+    private final SubmissionRepository submissionRepository;
 
     private final AssignmentValidator validator;
     private final AssignmentDtoMapper dtoMapper;
@@ -51,6 +56,7 @@ public class AssignmentApplicationService implements AssignmentService {
     public AssignmentApplicationService(
             AssignmentRepository assignmentRepository,
             CourseRepository courseRepository,
+            SubmissionRepository submissionRepository,
             AssignmentValidator validator,
             AssignmentDtoMapper dtoMapper,
             DocumentStorageHelper documentStorageHelper,
@@ -58,12 +64,13 @@ public class AssignmentApplicationService implements AssignmentService {
             AssignmentLinkHelper linkHelper) {
         this.assignmentRepository = assignmentRepository;
         this.courseRepository = courseRepository;
+        this.submissionRepository = submissionRepository;
         this.validator = validator;
         this.dtoMapper = dtoMapper;
         this.documentStorageHelper = documentStorageHelper;
         this.attachmentHelper = attachmentHelper;
         this.linkHelper = linkHelper;
-        log.info("✅ AssignmentApplicationService initialized with refactored helpers");
+        log.info("AssignmentApplicationService initialized with refactored helpers");
     }
 
     @Override
@@ -71,7 +78,7 @@ public class AssignmentApplicationService implements AssignmentService {
         CourseId courseId = CourseId.fromString(command.courseId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating {} assignment '{}' for Course ID: {}",
+        log.info("Creating {} assignment '{}' for Course ID: {}",
                 command.targetType(), command.title(), courseId.getValue());
 
         try {
@@ -93,13 +100,13 @@ public class AssignmentApplicationService implements AssignmentService {
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ {} assignment {} created in {}ms",
+            log.info("{} assignment {} created in {}ms",
                     targetType, savedAssignment.getId().getValue(), duration);
 
             return savedAssignment.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed to create assignment for Course {}: {}",
+            log.error("Failed to create assignment for Course {}: {}",
                     courseId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to create assignment", e);
         }
@@ -110,13 +117,13 @@ public class AssignmentApplicationService implements AssignmentService {
         CourseId courseId = CourseId.fromString(command.courseId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating {} assignment '{}' with frontend-extracted content for Course ID: {}",
+        log.info("Creating {} assignment '{}' with frontend-extracted content for Course ID: {}",
                 command.targetType(), command.title(), courseId.getValue());
 
         try {
             courseRepository.findById(courseId)
                     .orElseThrow(() -> {
-                        log.warn("❌ Course not found with ID: {}", courseId.getValue());
+                        log.warn("Course not found with ID: {}", courseId.getValue());
                         return new CourseNotFoundException("Course not found");
                     });
 
@@ -124,7 +131,7 @@ public class AssignmentApplicationService implements AssignmentService {
             SubmissionFormat submissionFormat = validator.validateSubmissionFormat(command.submissionFormat());
 
             AssignmentId tempAssignmentId = AssignmentId.generate();
-            log.info("📝 Generated temp Assignment ID: {}", tempAssignmentId.getValue());
+            log.info("Generated temp Assignment ID: {}", tempAssignmentId.getValue());
 
             List<Document> documents = new ArrayList<>();
             if (command.attachments() != null && !command.attachments().isEmpty()) {
@@ -136,12 +143,12 @@ public class AssignmentApplicationService implements AssignmentService {
                 );
 
                 long storageDuration = System.currentTimeMillis() - storageStart;
-                log.info("📁 {} frontend documents stored in {}ms", metadataList.size(), storageDuration);
+                log.info("{} frontend documents stored in {}ms", metadataList.size(), storageDuration);
 
                 documents = documentStorageHelper.convertToDocuments(metadataList);
             }
 
-            log.info("✅ {} frontend documents and {} links ready for assignment creation",
+            log.info("{} frontend documents and {} links ready for assignment creation",
                     documents.size(),
                     command.links() != null ? command.links().size() : 0);
 
@@ -162,7 +169,7 @@ public class AssignmentApplicationService implements AssignmentService {
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             long totalDuration = System.currentTimeMillis() - startTime;
-            log.info("✅ {} assignment created with {} frontend documents and {} links in {}ms",
+            log.info("{} assignment created with {} frontend documents and {} links in {}ms",
                     targetType,
                     documents.size(),
                     command.links() != null ? command.links().size() : 0,
@@ -173,7 +180,7 @@ public class AssignmentApplicationService implements AssignmentService {
         } catch (CourseNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to create assignment with frontend-extracted content for Course {}: {}",
+            log.error("Failed to create assignment with frontend-extracted content for Course {}: {}",
                     courseId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to create assignment with frontend-extracted content", e);
         }
@@ -184,7 +191,7 @@ public class AssignmentApplicationService implements AssignmentService {
         CourseId courseId = CourseId.fromString(command.courseId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating {} assignment with {} attachments and {} links for Course ID: {}",
+        log.info("Creating {} assignment with {} attachments and {} links for Course ID: {}",
                 command.targetType(),
                 command.attachments() != null ? command.attachments().size() : 0,
                 command.links() != null ? command.links().size() : 0,
@@ -193,7 +200,7 @@ public class AssignmentApplicationService implements AssignmentService {
         try {
             courseRepository.findById(courseId)
                     .orElseThrow(() -> {
-                        log.warn("❌ Course not found with ID: {}", courseId.getValue());
+                        log.warn("Course not found with ID: {}", courseId.getValue());
                         return new CourseNotFoundException("Course not found");
                     });
 
@@ -201,7 +208,7 @@ public class AssignmentApplicationService implements AssignmentService {
             SubmissionFormat submissionFormat = validator.validateSubmissionFormat(command.submissionFormat());
 
             AssignmentId tempAssignmentId = AssignmentId.generate();
-            log.info("📝 Generated temp Assignment ID: {}", tempAssignmentId.getValue());
+            log.info("Generated temp Assignment ID: {}", tempAssignmentId.getValue());
 
             List<Document> documents = new ArrayList<>();
             if (command.attachments() != null && !command.attachments().isEmpty()) {
@@ -211,12 +218,12 @@ public class AssignmentApplicationService implements AssignmentService {
                         command.attachments()
                 );
                 long storageDuration = System.currentTimeMillis() - storageStart;
-                log.info("📁 {} documents stored in {}ms", metadataList.size(), storageDuration);
+                log.info("{} documents stored in {}ms", metadataList.size(), storageDuration);
 
                 documents = documentStorageHelper.convertToDocuments(metadataList);
             }
 
-            log.info("✅ {} documents and {} links ready for assignment creation",
+            log.info("{} documents and {} links ready for assignment creation",
                     documents.size(),
                     command.links() != null ? command.links().size() : 0);
 
@@ -237,7 +244,7 @@ public class AssignmentApplicationService implements AssignmentService {
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             long totalDuration = System.currentTimeMillis() - startTime;
-            log.info("✅ {} assignment created with {} attachments and {} links in {}ms",
+            log.info("{} assignment created with {} attachments and {} links in {}ms",
                     targetType,
                     documents.size(),
                     command.links() != null ? command.links().size() : 0,
@@ -248,7 +255,7 @@ public class AssignmentApplicationService implements AssignmentService {
         } catch (CourseNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ Failed to create assignment with attachments/links for Course {}: {}",
+            log.error("Failed to create assignment with attachments/links for Course {}: {}",
                     courseId.getValue(), e.getMessage(), e);
             throw new RuntimeException("Failed to create assignment with attachments and links", e);
         }
@@ -259,7 +266,7 @@ public class AssignmentApplicationService implements AssignmentService {
         CourseId courseId = CourseId.fromString(command.courseId());
         long startTime = System.currentTimeMillis();
 
-        log.info("🚀 Creating TEAM assignment '{}' for Course {}",
+        log.info("Creating TEAM assignment '{}' for Course {}",
                 command.title(), courseId.getValue());
 
         try {
@@ -279,13 +286,13 @@ public class AssignmentApplicationService implements AssignmentService {
             Assignment savedAssignment = assignmentRepository.save(assignment);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ TEAM assignment created in {}ms: {}",
+            log.info("TEAM assignment created in {}ms: {}",
                     duration, savedAssignment.getId().getValue());
 
             return savedAssignment.getId();
 
         } catch (Exception e) {
-            log.error("❌ Failed to create team assignment: {}", e.getMessage(), e);
+            log.error("Failed to create team assignment: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create team assignment", e);
         }
     }
@@ -293,7 +300,7 @@ public class AssignmentApplicationService implements AssignmentService {
     @Override
     public void updateAssignmentDetails(UpdateAssignmentCommand command) {
         AssignmentId assignmentId = AssignmentId.fromString(command.assignmentId());
-        log.info("🔄 Updating details for Assignment ID: {}", assignmentId.getValue());
+        log.info("Updating details for Assignment ID: {}", assignmentId.getValue());
 
         try {
             Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
@@ -307,10 +314,10 @@ public class AssignmentApplicationService implements AssignmentService {
             );
 
             assignmentRepository.save(assignment);
-            log.info("✅ Assignment {} details updated", assignmentId.getValue());
+            log.info("Assignment {} details updated", assignmentId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to update assignment {}: {}",
+            log.error("Failed to update assignment {}: {}",
                     assignmentId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -318,7 +325,7 @@ public class AssignmentApplicationService implements AssignmentService {
 
     @Override
     public void extendDueDate(AssignmentId assignmentId, LocalDateTime newDueDate) {
-        log.info("📅 Extending due date for Assignment ID {} to {}",
+        log.info("Extending due date for Assignment ID {} to {}",
                 assignmentId.getValue(), newDueDate);
 
         try {
@@ -326,10 +333,10 @@ public class AssignmentApplicationService implements AssignmentService {
             assignment.extendDueDate(newDueDate);
             assignmentRepository.save(assignment);
 
-            log.info("✅ Due date extended for Assignment {}", assignmentId.getValue());
+            log.info("Due date extended for Assignment {}", assignmentId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to extend due date for Assignment {}: {}",
+            log.error("Failed to extend due date for Assignment {}: {}",
                     assignmentId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -337,17 +344,17 @@ public class AssignmentApplicationService implements AssignmentService {
 
     @Override
     public void activateAssignment(AssignmentId assignmentId) {
-        log.info("✅ Activating Assignment ID: {}", assignmentId.getValue());
+        log.info("Activating Assignment ID: {}", assignmentId.getValue());
 
         try {
             Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
             assignment.activate();
             assignmentRepository.save(assignment);
 
-            log.info("✅ Assignment {} activated", assignmentId.getValue());
+            log.info("Assignment {} activated", assignmentId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to activate Assignment {}: {}",
+            log.error("Failed to activate Assignment {}: {}",
                     assignmentId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -355,17 +362,17 @@ public class AssignmentApplicationService implements AssignmentService {
 
     @Override
     public void deactivateAssignment(AssignmentId assignmentId) {
-        log.warn("⚠️ Deactivating Assignment ID: {}", assignmentId.getValue());
+        log.warn("Deactivating Assignment ID: {}", assignmentId.getValue());
 
         try {
             Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
             assignment.deactivate();
             assignmentRepository.save(assignment);
 
-            log.warn("⚠️ Assignment {} deactivated", assignmentId.getValue());
+            log.warn("Assignment {} deactivated", assignmentId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to deactivate Assignment {}: {}",
+            log.error("Failed to deactivate Assignment {}: {}",
                     assignmentId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -373,22 +380,22 @@ public class AssignmentApplicationService implements AssignmentService {
 
     @Override
     public void deleteAssignment(AssignmentId assignmentId) {
-        log.info("🗑️ Deleting Assignment ID: {}", assignmentId.getValue());
+        log.info("Deleting Assignment ID: {}", assignmentId.getValue());
 
         try {
             Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
 
             if (!assignment.getSubmissions().isEmpty()) {
-                log.error("❌ Cannot delete assignment {}: It has {} submissions",
+                log.error("Cannot delete assignment {}: It has {} submissions",
                         assignmentId.getValue(), assignment.getSubmissions().size());
                 throw new IllegalStateException("Cannot delete assignment with existing submissions");
             }
 
             assignmentRepository.delete(assignment);
-            log.info("✅ Assignment {} deleted successfully", assignmentId.getValue());
+            log.info("Assignment {} deleted successfully", assignmentId.getValue());
 
         } catch (Exception e) {
-            log.error("❌ Failed to delete Assignment {}: {}",
+            log.error("Failed to delete Assignment {}: {}",
                     assignmentId.getValue(), e.getMessage(), e);
             throw e;
         }
@@ -457,7 +464,7 @@ public class AssignmentApplicationService implements AssignmentService {
     @Override
     @Transactional(readOnly = true)
     public AssignmentDTO getAssignmentById(AssignmentId assignmentId) {
-        log.info("📊 Fetching Assignment DTO by ID: {}", assignmentId.getValue());
+        log.info("Fetching Assignment DTO by ID: {}", assignmentId.getValue());
         Assignment assignment = findAssignmentByIdOrThrow(assignmentId);
         return dtoMapper.toDTO(assignment);
     }
@@ -465,7 +472,7 @@ public class AssignmentApplicationService implements AssignmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AssignmentDTO> getAssignmentsByCourse(CourseId courseId) {
-        log.info("📊 Fetching all assignments for Course ID: {}", courseId.getValue());
+        log.info("Fetching all assignments for Course ID: {}", courseId.getValue());
         List<Assignment> assignments = assignmentRepository.findByCourseId(courseId);
         return dtoMapper.toDTOList(assignments);
     }
@@ -473,7 +480,7 @@ public class AssignmentApplicationService implements AssignmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AssignmentDTO> getAssignmentsByUnit(CourseId courseId, UnitId unitId) {
-        log.info("📊 Fetching assignments for Course ID: {} and Unit ID: {}",
+        log.info("Fetching assignments for Course ID: {} and Unit ID: {}",
                 courseId.getValue(), unitId.getValue());
         List<Assignment> assignments = assignmentRepository.findByCourseIdAndUnitId(courseId, unitId);
         return dtoMapper.toDTOList(assignments);
@@ -482,7 +489,7 @@ public class AssignmentApplicationService implements AssignmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AssignmentDTO> getAssignmentsByStudentCourseUnit(UserId studentId, CourseId courseId, UnitId unitId) {
-        log.info("📊 Fetching assignments for Student {} in Course {} Unit {}",
+        log.info("Fetching assignments for Student {} in Course {} Unit {}",
                 studentId.getValue(), courseId.getValue(), unitId.getValue());
         List<Assignment> assignments = assignmentRepository.findByStudentCourseUnit(studentId, courseId, unitId);
         return dtoMapper.toDTOList(assignments);
@@ -491,7 +498,7 @@ public class AssignmentApplicationService implements AssignmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AssignmentDTO> getAssignmentByCourseAndUnit(CourseId courseId, UnitId unitId) {
-        log.info("📊 Fetching assignments for Course {} Unit {}",
+        log.info("Fetching assignments for Course {} Unit {}",
                 courseId.getValue(), unitId.getValue());
         List<Assignment> assignments = assignmentRepository.findByCourseIdAndUnitId(courseId, unitId);
         return dtoMapper.toDTOList(assignments);
@@ -504,14 +511,27 @@ public class AssignmentApplicationService implements AssignmentService {
             LocalDateTime weekStart,
             LocalDateTime weekEnd) {
 
-        log.info("📅 Fetching assignments for Student {} for week {} to {}",
+        log.info("Fetching assignments for Student {} for week {} to {}",
                 studentId.getValue(), weekStart.toLocalDate(), weekEnd.toLocalDate());
 
         List<Assignment> assignments = assignmentRepository.findAssignmentsByStudentForWeek(
                 studentId, weekStart, weekEnd);
 
-        log.info("✅ Found {} assignments for student", assignments.size());
-        return dtoMapper.toDTOList(assignments);
+        Map<String, String> submissionStatusByAssignmentId = assignments.stream()
+                .map(Assignment::getCourseId)
+                .distinct()
+                .flatMap(courseId -> submissionRepository.findByCourseAndStudent(courseId, studentId).stream())
+                .collect(Collectors.toMap(
+                        s -> s.getAssignmentId().getValue(),
+                        s -> s.getStatus().name(),
+                        (existing, replacement) -> replacement
+                ));
+
+        log.info("Found {} assignments for student", assignments.size());
+        return assignments.stream()
+                .map(a -> dtoMapper.toDTOWithStudentStatus(
+                        a, submissionStatusByAssignmentId.get(a.getId().getValue())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -521,13 +541,13 @@ public class AssignmentApplicationService implements AssignmentService {
             LocalDateTime weekStart,
             LocalDateTime weekEnd) {
 
-        log.info("📅 Fetching assignments for Teacher {} for week {} to {}",
+        log.info("Fetching assignments for Teacher {} for week {} to {}",
                 teacherId.getValue(), weekStart.toLocalDate(), weekEnd.toLocalDate());
 
         List<Assignment> assignments = assignmentRepository.findAssignmentsByTeacherForWeek(
                 teacherId, weekStart, weekEnd);
 
-        log.info("✅ Found {} assignments for teacher", assignments.size());
+        log.info("Found {} assignments for teacher", assignments.size());
         return dtoMapper.toDTOList(assignments);
     }
 
@@ -538,14 +558,27 @@ public class AssignmentApplicationService implements AssignmentService {
             LocalDateTime monthStart,
             LocalDateTime monthEnd) {
 
-        log.info("📅 Fetching assignments for Student {} for month {} to {}",
+        log.info("Fetching assignments for Student {} for month {} to {}",
                 studentId.getValue(), monthStart.toLocalDate(), monthEnd.toLocalDate());
 
         List<Assignment> assignments = assignmentRepository.findAssignmentsByStudentForMonth(
                 studentId, monthStart, monthEnd);
 
-        log.info("✅ Found {} assignments for student month view", assignments.size());
-        return dtoMapper.toDTOList(assignments);
+        Map<String, String> submissionStatusByAssignmentId = assignments.stream()
+                .map(Assignment::getCourseId)
+                .distinct()
+                .flatMap(courseId -> submissionRepository.findByCourseAndStudent(courseId, studentId).stream())
+                .collect(Collectors.toMap(
+                        s -> s.getAssignmentId().getValue(),
+                        s -> s.getStatus().name(),
+                        (existing, replacement) -> replacement
+                ));
+
+        log.info("Found {} assignments for student month view", assignments.size());
+        return assignments.stream()
+                .map(a -> dtoMapper.toDTOWithStudentStatus(
+                        a, submissionStatusByAssignmentId.get(a.getId().getValue())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -555,20 +588,20 @@ public class AssignmentApplicationService implements AssignmentService {
             LocalDateTime monthStart,
             LocalDateTime monthEnd) {
 
-        log.info("📅 Fetching assignments for Teacher {} for month {} to {}",
+        log.info("Fetching assignments for Teacher {} for month {} to {}",
                 teacherId.getValue(), monthStart.toLocalDate(), monthEnd.toLocalDate());
 
         List<Assignment> assignments = assignmentRepository.findAssignmentsByTeacherForMonth(
                 teacherId, monthStart, monthEnd);
 
-        log.info("✅ Found {} assignments for teacher month view", assignments.size());
+        log.info("Found {} assignments for teacher month view", assignments.size());
         return dtoMapper.toDTOList(assignments);
     }
 
     private Assignment findAssignmentByIdOrThrow(AssignmentId assignmentId) {
         return assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> {
-                    log.warn("❌ Assignment not found with ID: {}", assignmentId.getValue());
+                    log.warn("Assignment not found with ID: {}", assignmentId.getValue());
                     return new AssignmentNotFoundException(
                             "Assignment not found: " + assignmentId.getValue());
                 });

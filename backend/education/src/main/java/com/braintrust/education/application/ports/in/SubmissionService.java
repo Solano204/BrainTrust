@@ -38,4 +38,6 @@ public interface SubmissionService {
     List<SubmissionDTO> getSubmissionsByCourseAndUnit(CourseId courseId, UnitId unitId);
 
     List<SubmissionDTO> getSubmissionsByStudentAndCourseAndUnit(UserId studentId, CourseId courseId, UnitId unitId);
+
+    StudentHistoryDTO getStudentHistory(CourseId courseId, UserId studentId);
 }

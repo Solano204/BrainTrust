@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -87,7 +87,6 @@ export function VistaQuiz({ quiz, onClose }: PropsVistaQuiz) {
 return (
   <div className="min-h-screen bg-background p-4 md:p-6">
     <div className="max-w-6xl mx-auto">
-      {/* Encabezado */}
       <div className="mb-6 md:mb-8">
         <Button
           variant="ghost"
@@ -151,7 +150,6 @@ return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <div className="lg:col-span-2 space-y-6">
-          {/* Descripción del Quiz */}
           {quiz.description && (
             <Card>
               <CabeceraCard className="bg-primary/5 border-b border-border">

@@ -3,7 +3,9 @@ package com.braintrust.containerapp.rest.course;
 import com.braintrust.aidetectition.application.dtos.commands.FrontendDocumentDTO;
 import com.braintrust.education.application.dtos.commands.*;
 import com.braintrust.education.application.dtos.dtos.AssignmentDTO;
+import com.braintrust.education.application.dtos.dtos.PlagiarismCheckDTO;
 import com.braintrust.education.application.ports.in.AssignmentService;
+import com.braintrust.education.application.service.PlagiarismApplicationService;
 import com.braintrust.education.domain.valueobjects.*;
 import com.braintrust.identity.domain.valueobjects.UserId;
 import com.braintrust.shared.application.dtos.dtos.SuccessResponseDTO;
@@ -26,9 +28,12 @@ public class AssignmentController {
     private static final Logger log = LoggerFactory.getLogger(AssignmentController.class);
 
     private final AssignmentService assignmentService;
+    private final PlagiarismApplicationService plagiarismApplicationService;
 
-    public AssignmentController(AssignmentService assignmentService) {
+    public AssignmentController(AssignmentService assignmentService,
+                                PlagiarismApplicationService plagiarismApplicationService) {
         this.assignmentService = assignmentService;
+        this.plagiarismApplicationService = plagiarismApplicationService;
     }
 
     @PostMapping
@@ -395,5 +400,14 @@ public class AssignmentController {
         return ResponseEntity.ok(
                 new SuccessResponseDTO(true, "All attachments cleared successfully", null)
         );
+    }
+
+    @GetMapping("/{assignmentId}/plagiarism")
+    public ResponseEntity<List<PlagiarismCheckDTO>> getPlagiarismResultsForAssignment(
+            @PathVariable String assignmentId) {
+        log.debug("Fetching plagiarism results for assignmentId={}", assignmentId);
+        List<PlagiarismCheckDTO> results = plagiarismApplicationService
+                .getPlagiarismResultsForAssignment(assignmentId);
+        return ResponseEntity.ok(results);
     }
 }

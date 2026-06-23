@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,14 +37,11 @@ export function GradebookUnitsView({
   const [retroalimentacion, setRetroalimentacion] = useState('');
   const [asignandoCalificacion, setAsignandoCalificacion] = useState(false);
 
-  // ✅ Seguimiento de qué diálogo está abierto por fila de estudiante usando studentId
   const [dialogoAbiertoStudentId, setDialogoAbiertoStudentId] = useState<string | null>(null);
 
-  // ✅ Seguimiento del unitId seleccionado para la asignación de calificación actual
   const [unidadIdSeleccionada, setUnidadIdSeleccionada] = useState<string | null>(null);
 
   const [tareasPorUnidad, setTareasPorUnidad] = useState<Record<string, any[]>>({});
-  // Estado separado para cada tipo de diálogo
   const [dialogoUnidadStudentId, setDialogoUnidadStudentId] = useState<string | null>(null);
   const [dialogoCursoStudentId, setDialogoCursoStudentId] = useState<string | null>(null);
   
@@ -99,7 +96,6 @@ export function GradebookUnitsView({
   };
 
 
-  // Manejador para calificación de UNIDAD
   const handleAsignarCalificacionUnidad = async (libroCalificaciones: any, unidadId: string) => {
     if (!onAssignUnitFinalGrade || !valorCalificacion.trim() || !unidadId) return;
     try {
@@ -116,7 +112,6 @@ export function GradebookUnitsView({
     }
   };
 
-  // Manejador para calificación final del CURSO
   const handleAsignarCalificacionCurso = async (libroCalificaciones: any) => {
     if (!onAssignCourseFinalGrade || !valorCalificacion.trim()) return;
     try {
@@ -168,7 +163,6 @@ if (errorUnidades) {
 
 return (
   <div className="space-y-6">
-    {/* Barra de Búsqueda */}
     <div className="flex items-center gap-4">
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -181,7 +175,6 @@ return (
       </div>
     </div>
 
-    {/* ── VISTA DE ESTUDIANTE ── */}
     {!isTeacher && studentGradebook && (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {unidadesFiltradas.map((unidad) => {
@@ -215,10 +208,8 @@ return (
       </div>
     )}
 
-    {/* ── VISTA DE PROFESOR ── */}
     {isTeacher && (
       <div className="space-y-6">
-        {/* Tarjetas de unidades */}
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-foreground">Gestionar Calificaciones de Estudiantes</CardTitle>
@@ -267,7 +258,6 @@ return (
           </CardContent>
         </Card>
 
-        {/* Tabla de calificaciones generales de estudiantes */}
         {courseGradebooks && courseGradebooks.length > 0 && (
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-4">
@@ -310,7 +300,6 @@ return (
                           : 'Nunca'}
                       </TableCell>
                       <TableCell>
-                        {/* ── DIÁLOGO: Asignar Calificación Final del Curso ── */}
                         <Dialog
                           open={dialogoCursoStudentId === libroCalificaciones.studentId}
                           onOpenChange={(abierto) => {
@@ -397,7 +386,6 @@ return (
       </div>
     )}
 
-    {/* Estados Vacíos */}
     {unidadesFiltradas.length === 0 && (
       <Card className="border-border shadow-sm">
         <CardContent className="pt-6 pb-10">

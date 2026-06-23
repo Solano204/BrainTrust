@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useRef } from 'react';
 import { Upload, X, ImageIcon, AlertCircle, Check } from 'lucide-react';
@@ -156,7 +156,6 @@ return (
       {label}
     </label>
 
-    {/* Área de Vista Previa */}
     <div className="relative">
       {urlVistaPrevia ? (
         <div className="relative group">
@@ -188,7 +187,6 @@ return (
             )}
           </div>
 
-          {/* Insignia de Validación */}
           {estadoValidacion === "valid" && (
             <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
               <Check className="h-3 w-3" />
@@ -218,7 +216,6 @@ return (
       )}
     </div>
 
-    {/* Input de archivo oculto */}
     <input
       ref={referenciaInputArchivo}
       type="file"
@@ -228,7 +225,6 @@ return (
       className="hidden"
     />
 
-    {/* Estado de Validación */}
     {validando && (
       <div className="flex items-center gap-2 text-sm text-primary">
         <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
@@ -236,7 +232,6 @@ return (
       </div>
     )}
 
-    {/* Mensaje de Error */}
     {error && (
       <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
         <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />

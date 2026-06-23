@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 
 import type React from "react"
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +16,6 @@ import { z } from "zod"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-// ─── Esquemas ────────────────────────────────────────────────────────────────
 
 const esquemaPreguntaOpcionMultiple = z.object({
   id: z.string(),
@@ -116,7 +115,6 @@ const esquemaFormularioQuiz = z.object({
 
 type DatosFormularioQuiz = z.infer<typeof esquemaFormularioQuiz>
 
-// ─── Props ───────────────────────────────────────────────────────────────────
 
 interface PropsCreadorQuiz {
   open: boolean
@@ -126,7 +124,6 @@ interface PropsCreadorQuiz {
   courseId: string
 }
 
-// ─── Ayudantes ─────────────────────────────────────────────────────────────────
 
 function calcularPuntosReales(porcentaje: number, calificacionMaxima: number): number {
   return Math.round((porcentaje / 100) * calificacionMaxima * 100) / 100
@@ -139,7 +136,6 @@ function porcentajesPorDefecto(cantidad: number): number[] {
   return Array.from({ length: cantidad }, (_, i) => (i === 0 ? base + resto : base))
 }
 
-// ─── Componente ───────────────────────────────────────────────────────────────
 
 export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCreadorQuiz) {
   const {
@@ -184,7 +180,6 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
   const porcentajeOk = Math.round(porcentajeTotal) === 100
   const restante = 100 - porcentajeTotal
 
-  // ── redistribuir porcentajes equitativamente entre todas las preguntas ──────────────────
   const redistribuirUniformemente = () => {
     const porcentajesEq = porcentajesPorDefecto(preguntasObservadas.length)
     preguntasObservadas.forEach((_, i) => {
@@ -193,9 +188,7 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
     trigger("questions")
   }
 
-  // ── agregar pregunta ──────────────────────────────────────────────────────────
   const agregarPregunta = (tipo: "multiple-choice" | "open-ended") => {
-    // Al agregar, establecer nueva pregunta en 0% y dejar que el profesor decida
     const nuevaPregunta: any = {
       id: "" + new Date().getTime(),
       type: tipo,
@@ -215,7 +208,6 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
     trigger("questions")
   }
 
-  // ── ayudantes de opciones ────────────────────────────────────────────────────────
   const agregarOpcion = (indicePregunta: number) => {
     const q = preguntasObservadas[indicePregunta]
     if (q.type === "multiple-choice" && q.options) {
@@ -237,7 +229,6 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
     }
   }
 
-  // ── enviar ────────────────────────────────────────────────────────────────
   const alEnviar = (data: DatosFormularioQuiz) => {
     const quiz = {
       title: data.title,
@@ -250,7 +241,6 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
       acceptLateSubmissions: data.acceptLateSubmissions,
       questions: data.questions.map(q => ({
         ...q,
-        // Calcular puntos reales a partir del porcentaje × calificación máxima
         points: calcularPuntosReales(q.percentage, data.maxGrade),
         options: q.type === "multiple-choice" ? q.options : undefined,
         correctAnswer: q.type === "multiple-choice" ? q.correctAnswer : undefined,
@@ -293,7 +283,6 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
     return null
   }
 
-  // ── color de la barra de porcentaje ──────────────────────────────────────────────────
   const colorBarra = porcentajeOk
     ? "bg-green-500"
     : porcentajeTotal > 100
@@ -303,34 +292,30 @@ return (
   <Dialog open={open} onOpenChange={handleCerrar}>
     <DialogContent className="bg-card rounded-3xl border border-border shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col p-0 sm:max-w-[95vw] md:max-w-6xl">
 
-      {/* ── Encabezado ── */}
       <div className="flex items-center gap-3 px-5 py-4 sm:px-7 sm:py-5 border-b border-border flex-shrink-0 rounded-t-3xl">
-        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+        <span className="icon-badge">
           <HelpCircle className="w-4 h-4 text-primary" />
         </span>
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+          <DialogTitle className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
             Crear Quiz / Examen
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground mt-0.5">
             Configurar ajustes y agregar preguntas
-          </p>
+          </DialogDescription>
         </div>
       </div>
 
-      {/* ── Formulario ── */}
       <form onSubmit={handleSubmit(alEnviar)} className="flex-1 overflow-y-auto flex flex-col">
         <div className="px-5 py-6 sm:px-7 space-y-6 flex-1">
 
-          {/* ── Configuración del quiz ── */}
           <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            <h3 className="section-label">
               Configuración del Quiz
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-              {/* Título */}
               <div className="space-y-1.5">
                 <label htmlFor="quiz-title" className="text-xs font-semibold text-foreground">
                   Título del Quiz *
@@ -348,7 +333,6 @@ return (
                 {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
               </div>
 
-              {/* Límite de tiempo */}
               <div className="space-y-1.5">
                 <label htmlFor="time-limit" className="text-xs font-semibold text-foreground">
                   Límite de Tiempo (minutos)
@@ -369,7 +353,6 @@ return (
                 {errors.timeLimit && <p className="text-xs text-destructive">{errors.timeLimit.message}</p>}
               </div>
 
-              {/* Descripción */}
               <div className="space-y-1.5">
                 <label htmlFor="quiz-description" className="text-xs font-semibold text-foreground">
                   Descripción
@@ -388,7 +371,6 @@ return (
                 {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
               </div>
 
-              {/* Calificación máxima */}
               <div className="space-y-1.5">
                 <label htmlFor="max-grade-quiz" className="text-xs font-semibold text-foreground">
                   Calificación Máxima *
@@ -412,7 +394,6 @@ return (
                 </p>
               </div>
 
-              {/* Fecha de entrega */}
               <div className="space-y-1.5 sm:col-span-2">
                 <label htmlFor="due-date" className="text-xs font-semibold text-foreground">
                   Fecha de Entrega
@@ -430,7 +411,6 @@ return (
                 {errors.dueDate && <p className="text-xs text-destructive">{errors.dueDate.message}</p>}
               </div>
 
-              {/* Alternativa para permitir ver resultados */}
               <div className="sm:col-span-2">
                 <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5">
                   <div className="space-y-1 flex-1 min-w-0">
@@ -457,11 +437,10 @@ return (
             </div>
           </div>
 
-          {/* ── Encabezado de preguntas ── */}
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                <h3 className="section-label">
                   Preguntas ({fields.length})
                 </h3>
                 {errors.questions && typeof errors.questions === "object" && "message" in errors.questions && (
@@ -486,7 +465,6 @@ return (
               </div>
             </div>
 
-            {/* Barra de porcentaje */}
             {fields.length > 0 && (
               <div className="p-4 bg-card rounded-2xl border border-border space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -514,7 +492,6 @@ return (
                   </div>
                 </div>
 
-                {/* Barra apilada */}
                 <div className="w-full h-3 rounded-full bg-muted/50 overflow-hidden flex">
                   {preguntasObservadas.map((q, i) => {
                     const pct = Math.min(q.percentage || 0, 100)
@@ -552,7 +529,6 @@ return (
               </div>
             )}
 
-            {/* Tarjetas de preguntas */}
             {fields.map((field, indice) => {
               const pregunta           = preguntasObservadas[indice]
               const errorPregunta      = obtenerErrorPregunta(indice, "question")
@@ -571,7 +547,6 @@ return (
                 >
                   <div className="space-y-4">
 
-                    {/* Fila de encabezado */}
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
                         <GripVertical className="w-4 h-4 text-muted-foreground cursor-move flex-shrink-0 mt-2.5" />
@@ -605,7 +580,6 @@ return (
                         </div>
                       </div>
 
-                      {/* Porcentaje + eliminar */}
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         <div className="flex items-center gap-2">
                           <Controller
@@ -642,7 +616,6 @@ return (
                       </div>
                     </div>
 
-                    {/* Opciones de opción múltiple */}
                     {pregunta.type === "multiple-choice" && pregunta.options && (
                       <div className="space-y-3 sm:ml-7">
                         <div className="flex items-center justify-between">
@@ -706,7 +679,6 @@ return (
                       </div>
                     )}
 
-                    {/* Respuesta esperada para preguntas abiertas */}
                     {pregunta.type === "open-ended" && (
                       <div className="sm:ml-7 space-y-1.5">
                         <label
@@ -744,7 +716,6 @@ return (
               )
             })}
 
-            {/* Estado vacío */}
             {fields.length === 0 && (
               <div className="flex flex-col items-center justify-center gap-4 p-12 bg-card rounded-2xl border border-border text-center">
                 <p className="text-sm text-muted-foreground">
@@ -772,7 +743,6 @@ return (
           </div>
         </div>
 
-        {/* ── Pie de página ── */}
         <div className="px-5 py-4 sm:px-7 border-t border-border bg-muted/30 flex-shrink-0 rounded-b-3xl">
           <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button

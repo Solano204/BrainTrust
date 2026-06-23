@@ -87,12 +87,12 @@ public class UnitGradeApplicationService implements UnitGradeService {
                     assignFinalGrade(unitId, studentId, finalGrade, feedback, courseId);
                     successCount++;
 
-                    log.debug("✅ Updated unit grade for student {}: {}",
+                    log.debug("Updated unit grade for student {}: {}",
                             studentId.getValue(), finalGrade);
 
                 } catch (Exception e) {
                     failureCount++;
-                    log.error("❌ Failed to update grade for student {} in unit {}: {}",
+                    log.error("Failed to update grade for student {} in unit {}: {}",
                             gradeCommand.studentId(), unitId.getValue(), e.getMessage());
                 }
             }
@@ -115,52 +115,52 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
     @Override
     public void addAssignmentGradeToUnit(UnitId unitId, UserId studentId, AssignmentId assignmentId, Grade grade) {
-        log.info("➕ Adding assignment grade to unit {} for student {}: {}/{}",
+        log.info("Adding assignment grade to unit {} for student {}: {}/{}",
                 unitId.getValue(), studentId.getValue(), grade.getValue(), grade.getMaxScore());
 
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
 
         if (unitGrade.hasAssignmentGrade(assignmentId)) {
-            log.info("🔄 Updating existing assignment grade in unit");
+            log.info("Updating existing assignment grade in unit");
         }
 
         unitGrade.addAssignmentGrade(assignmentId, grade);
         unitGradeRepository.save(unitGrade);
 
-        log.info("✅ Assignment grade {} to unit. New calculated total: {}",
+        log.info("Assignment grade {} to unit. New calculated total: {}",
                 unitGrade.hasAssignmentGrade(assignmentId) ? "updated" : "added",
                 unitGrade.getCalculatedTotal() != null ? unitGrade.getCalculatedTotal() : "N/A");
     }
 
     @Override
     public void addQuizGradeToUnit(UnitId unitId, UserId studentId, QuizId quizId, Grade grade) {
-        log.info("➕ Adding quiz grade to unit {} for student {}: {}/{}",
+        log.info("Adding quiz grade to unit {} for student {}: {}/{}",
                 unitId.getValue(), studentId.getValue(), grade.getValue(), grade.getMaxScore());
 
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
 
         if (unitGrade.hasQuizGrade(quizId)) {
-            log.info("🔄 Updating existing quiz grade in unit");
+            log.info("Updating existing quiz grade in unit");
         }
 
         unitGrade.addQuizGrade(quizId, grade);
         unitGradeRepository.save(unitGrade);
 
-        log.info("✅ Quiz grade {} to unit. New calculated total: {}",
+        log.info("Quiz grade {} to unit. New calculated total: {}",
                 unitGrade.hasQuizGrade(quizId) ? "updated" : "added",
                 unitGrade.getCalculatedTotal() != null ? unitGrade.getCalculatedTotal() : "N/A");
     }
 
     @Override
     public void removeAssignmentGradeFromUnit(UnitId unitId, UserId studentId, AssignmentId assignmentId) {
-        log.info("➖ Removing assignment grade from unit {} for student {} (Assignment: {})",
+        log.info("Removing assignment grade from unit {} for student {} (Assignment: {})",
                 unitId.getValue(), studentId.getValue(), assignmentId.getValue());
 
         UnitGrade unitGrade = unitGradeRepository.findByUnitAndStudent(unitId, studentId)
                 .orElse(null);
 
         if (unitGrade == null) {
-            log.warn("⚠️ No unit grade found for student {} in unit {}, nothing to remove",
+            log.warn("No unit grade found for student {} in unit {}, nothing to remove",
                     studentId.getValue(), unitId.getValue());
             return;
         }
@@ -169,7 +169,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
         boolean hadAssignment = unitGrade.hasAssignmentGrade(assignmentId);
 
         if (!hadAssignment) {
-            log.warn("⚠️ Assignment {} not found in unit grade, nothing to remove", assignmentId.getValue());
+            log.warn("Assignment {} not found in unit grade, nothing to remove", assignmentId.getValue());
             return;
         }
 
@@ -178,21 +178,21 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
         BigDecimal newTotal = unitGrade.getCalculatedTotal();
 
-        log.info("✅ Assignment grade removed from unit. Total changed: {} → {}",
+        log.info("Assignment grade removed from unit. Total changed: {} {}",
                 oldTotal != null ? oldTotal : "N/A",
                 newTotal != null ? newTotal : "N/A");
     }
 
     @Override
     public void removeQuizGradeFromUnit(UnitId unitId, UserId studentId, QuizId quizId) {
-        log.info("➖ Removing quiz grade from unit {} for student {} (Quiz: {})",
+        log.info("Removing quiz grade from unit {} for student {} (Quiz: {})",
                 unitId.getValue(), studentId.getValue(), quizId.getValue());
 
         UnitGrade unitGrade = unitGradeRepository.findByUnitAndStudent(unitId, studentId)
                 .orElse(null);
 
         if (unitGrade == null) {
-            log.warn("⚠️ No unit grade found for student {} in unit {}, nothing to remove",
+            log.warn("No unit grade found for student {} in unit {}, nothing to remove",
                     studentId.getValue(), unitId.getValue());
             return;
         }
@@ -201,7 +201,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
         boolean hadQuiz = unitGrade.hasQuizGrade(quizId);
 
         if (!hadQuiz) {
-            log.warn("⚠️ Quiz {} not found in unit grade, nothing to remove", quizId.getValue());
+            log.warn("Quiz {} not found in unit grade, nothing to remove", quizId.getValue());
             return;
         }
 
@@ -210,7 +210,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
         BigDecimal newTotal = unitGrade.getCalculatedTotal();
 
-        log.info("✅ Quiz grade removed from unit. Total changed: {} → {}",
+        log.info("Quiz grade removed from unit. Total changed: {} {}",
                 oldTotal != null ? oldTotal : "N/A",
                 newTotal != null ? newTotal : "N/A");
     }
@@ -276,7 +276,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
             return;
         }
 
-        // ✅ This is the correct average: (66 + 55) / 2 = 60.5
         BigDecimal average = sum.divide(BigDecimal.valueOf(count), 2, java.math.RoundingMode.HALF_UP);
 
         log.info("Computed course average: {} / {} units = {}", sum, count, average);
@@ -288,7 +287,6 @@ public class UnitGradeApplicationService implements UnitGradeService {
                     return Gradebook.create(courseId, studentId);
                 });
 
-        // ✅ Use the computed average directly — NOT updateCalculatedTotal(unitGrades)
         gradebook.setCalculatedTotalDirect(average);
 
         gradebookRepository.save(gradebook);
@@ -317,7 +315,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
     @Override
     public void recalculateUnitGrade(UnitId unitId, UserId studentId) {
-        log.info("🔄 Recalculating unit grade for student {} in unit {}",
+        log.info("Recalculating unit grade for student {} in unit {}",
                 studentId.getValue(), unitId.getValue());
 
         UnitGrade unitGrade = getOrCreateUnitGrade(unitId, studentId);
@@ -331,7 +329,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
                     .filter(Submission::isGraded)
                     .findFirst()
                     .ifPresent(submission -> {
-                        log.debug("📝 Adding assignment grade for {}: {}/{}",
+                        log.debug("Adding assignment grade for {}: {}/{}",
                                 assignment.getId().getValue(),
                                 submission.getGrade().getValue(),
                                 submission.getGrade().getMaxScore());
@@ -345,7 +343,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
             quizSubmissionRepository.findLatestByQuizAndStudent(quiz.getId(), studentId)
                     .filter(sub -> sub.getGrade() != null)
                     .ifPresent(submission -> {
-                        log.debug("📊 Adding quiz grade for {}: {}/{}",
+                        log.debug("Adding quiz grade for {}: {}/{}",
                                 quiz.getId().getValue(),
                                 submission.getGrade().getValue(),
                                 submission.getGrade().getMaxScore());
@@ -356,7 +354,7 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
         unitGradeRepository.save(unitGrade);
 
-        log.info("✅ Unit grade recalculated for student {} in unit {}. Calculated total: {}",
+        log.info("Unit grade recalculated for student {} in unit {}. Calculated total: {}",
                 studentId.getValue(), unitId.getValue(),
                 unitGrade.getCalculatedTotal() != null ? unitGrade.getCalculatedTotal() : "N/A");
     }
@@ -467,11 +465,11 @@ public class UnitGradeApplicationService implements UnitGradeService {
 
     private String getUnitName(UnitId unitId) {
         try {
-            log.debug("🔍 Resolving unit name for Unit ID: {}", unitId.getValue());
+            log.debug("Resolving unit name for Unit ID: {}", unitId.getValue());
 
             Course course = courseRepository.findByUnitId(unitId)
                     .orElseThrow(() -> {
-                        log.warn("❌ Course not found for unit ID: {}", unitId.getValue());
+                        log.warn("Course not found for unit ID: {}", unitId.getValue());
                         return new CourseNotFoundException("Course not found for unit: " + unitId.getValue());
                     });
 
@@ -480,19 +478,19 @@ public class UnitGradeApplicationService implements UnitGradeService {
                     .findFirst()
                     .map(CourseUnit::getName)
                     .orElseThrow(() -> {
-                        log.warn("❌ Unit not found in course: {}", unitId.getValue());
+                        log.warn("Unit not found in course: {}", unitId.getValue());
                         return new IllegalStateException("Unit not found: " + unitId.getValue());
                     });
 
-            log.debug("✅ Resolved unit name '{}' for Unit ID: {}", unitName, unitId.getValue());
+            log.debug("Resolved unit name '{}' for Unit ID: {}", unitName, unitId.getValue());
             return unitName;
 
         } catch (CourseNotFoundException e) {
-            log.warn("⚠️ Could not resolve unit name for unit ID {}: Course not found",
+            log.warn("Could not resolve unit name for unit ID {}: Course not found",
                     unitId.getValue());
             return "Unit Not Found";
         } catch (Exception e) {
-            log.warn("⚠️ Could not resolve unit name for unit ID {}: {}",
+            log.warn("Could not resolve unit name for unit ID {}: {}",
                     unitId.getValue(), e.getMessage());
             return "Unit";
         }

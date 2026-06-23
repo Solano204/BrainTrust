@@ -66,7 +66,7 @@ public class PageLinkHelper {
                     log.debug("Added external link: {}", link);
                 }
             } catch (Exception e) {
-                log.warn("⚠️ Failed to add external link '{}': {}", link, e.getMessage());
+                log.warn("Failed to add external link '{}': {}", link, e.getMessage());
             }
         }
 

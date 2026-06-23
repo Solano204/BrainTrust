@@ -1,4 +1,4 @@
-
+﻿
 import { MonitorCheck } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
@@ -38,7 +38,6 @@ export const ModalSegmentosIA: React.FC<PropsModalSegmentosIA> = ({ isOpen, onCl
 return (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity p-4">
     <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-      {/* Encabezado */}
       <div className="flex justify-between items-center p-4 sm:p-6 border-b sticky top-0 bg-card z-10">
         <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-primary">
           <MonitorCheck className="h-5 w-5" />
@@ -49,7 +48,6 @@ return (
         </Button>
       </div>
 
-      {/* Contenido */}
       <div className="p-4 sm:p-6 space-y-4">
         {segments.length === 0 ? (
           <p className="text-muted-foreground italic text-sm">

@@ -106,8 +106,8 @@ public class QuizSubmissionMapper {
                 submission.getSubmittedAt() != null ? submission.getSubmittedAt().toString() : null,
                 submission.getStatus().name(),
                 gradeDTO,
-                submission.getFinalGrade(),     // ✅ NEW
-                submission.isCanViewResults(),  // ✅ NEW
+                submission.getFinalGrade(),
+                submission.isCanViewResults(),
                 submission.isAutoGraded(),
                 questionResponses,
                 submission.isTimeExpired(quiz.getTimeLimitMinutes()),
@@ -146,7 +146,7 @@ public class QuizSubmissionMapper {
         );
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    //  Private helpers 
 
     private GradeDTO buildGradeDTO(QuizSubmission submission) {
         if (submission.getGrade() == null) return null;

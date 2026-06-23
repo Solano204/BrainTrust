@@ -1,7 +1,4 @@
-'use client';
-
-// DARK NEW
-"use client";
+﻿'use client';
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,9 +75,8 @@ export function AdminResetPasswordModal({ user, open, onClose }: AdminResetPassw
   <Dialog open={open} onOpenChange={handleClose}>
     <DialogContent className="rounded-3xl border-border bg-card p-0 overflow-hidden max-w-md">
 
-      {/* ── Header ── */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-        <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+        <span className="icon-badge">
           <Shield className="h-4 w-4 text-primary" />
         </span>
         <div>
@@ -96,10 +92,8 @@ export function AdminResetPasswordModal({ user, open, onClose }: AdminResetPassw
         </div>
       </div>
 
-      {/* ── Form ── */}
       <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
 
-        {/* New Password */}
         <div className="space-y-1.5">
           <Label htmlFor="newPassword" className="text-xs font-semibold text-foreground">
             Nueva Contraseña
@@ -124,7 +118,6 @@ export function AdminResetPasswordModal({ user, open, onClose }: AdminResetPassw
           )}
         </div>
 
-        {/* Confirm Password */}
         <div className="space-y-1.5">
           <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground">
             Confirmar Contraseña
@@ -145,7 +138,6 @@ export function AdminResetPasswordModal({ user, open, onClose }: AdminResetPassw
           )}
         </div>
 
-        {/* ── Footer ── */}
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border mt-2">
           <button
             type="button"

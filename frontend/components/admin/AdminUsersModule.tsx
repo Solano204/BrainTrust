@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { useState, useEffect } from "react";
@@ -66,9 +66,6 @@ import { UserRole } from "@/app/shared/dtos/user.dto";
 import { PaginationParams } from "@/app/shared/types/pagination";
 import { User } from "@/app/shared/models/user.model";
 
-// ─────────────────────────────────────────────
-// PaginationControls
-// ─────────────────────────────────────────────
 interface PaginationControlsProps {
   currentPage: number;
   totalPages: number;
@@ -91,7 +88,6 @@ function PaginationControls({
 return (
   <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4 px-4 pb-4">
 
-    {/* Count */}
     <p className="text-xs text-muted-foreground">
       Mostrando{" "}
       <span className="font-medium text-foreground">{startItem}–{endItem}</span>
@@ -102,7 +98,6 @@ return (
 
     <div className="flex items-center gap-4">
 
-      {/* Page size */}
       <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           Filas por página:
@@ -123,7 +118,6 @@ return (
         </Select>
       </div>
 
-      {/* Nav */}
       <div className="flex items-center gap-1">
         <button
           onClick={() => onPageChange(0)}
@@ -169,9 +163,6 @@ return (
 );
 }
 
-// ─────────────────────────────────────────────
-// AccountManagementView  (main export)
-// ─────────────────────────────────────────────
 export default function AccountManagementView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -250,7 +241,6 @@ export default function AccountManagementView() {
 
   const { activateUser, deactivateUser, deleteUser } = useUserMutations();
 
-  // ── Handlers ──────────────────────────────
   const handleChangeEmail = (user: User) => {
     setSelectedUser(user);
     setShowChangeEmailModal(true);
@@ -306,7 +296,6 @@ export default function AccountManagementView() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // ── Helpers ───────────────────────────────
   const getRoleBadge = (role: UserRole) => {
     const colors: Record<UserRole, string> = {
       ADMIN: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
@@ -341,7 +330,6 @@ export default function AccountManagementView() {
       </span>
     ) : null;
 
-  // ── Loading / Error ────────────────────────
   if (isLoading && page === 0) {
     return (
       <div className="p-8 text-center">
@@ -367,7 +355,6 @@ export default function AccountManagementView() {
 return (
   <div className="space-y-5">
 
-    {/* ── Header ── */}
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -380,14 +367,13 @@ return (
       <button
         onClick={() => refetch()}
         disabled={isLoading}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-40 transition-all w-full md:w-auto"
+        className="btn-ghost w-full md:w-auto"
       >
         <Loader2 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
         Actualizar
       </button>
     </div>
 
-    {/* ── Role filter tabs ── */}
     <Tabs
       value={activeTab}
       onValueChange={(v: any) => { setActiveTab(v); setPage(0); }}
@@ -417,7 +403,6 @@ return (
       </TabsList>
     </Tabs>
 
-    {/* ── Search bar ── */}
     <div className="flex gap-2 items-center">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -436,7 +421,6 @@ return (
       )}
     </div>
 
-    {/* ── Table ── */}
     <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
       <div className="overflow-x-auto">
         <Table>
@@ -488,7 +472,6 @@ return (
               users.map((user) => (
                 <TableRow key={user.id} className="hover:bg-muted/30 transition-colors group">
 
-                  {/* Avatar */}
                   <TableCell>
                     <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
                       {user.person.firstName[0]}
@@ -496,28 +479,22 @@ return (
                     </div>
                   </TableCell>
 
-                  {/* Name */}
                   <TableCell className="font-semibold text-sm text-foreground">
                     {user.person.firstName} {user.person.lastName}
                   </TableCell>
 
-                  {/* Email */}
                   <TableCell className="text-sm text-muted-foreground">
                     {user.email}
                   </TableCell>
 
-                  {/* Role */}
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
 
-                  {/* Status */}
                   <TableCell>{getStatusBadge(user.active)}</TableCell>
 
-                  {/* Date */}
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(user.createdAt).toLocaleDateString("es-MX")}
                   </TableCell>
 
-                  {/* Actions */}
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -583,7 +560,6 @@ return (
       )}
     </div>
 
-    {/* ── Modals ── */}
     <ChangeEmailModal
       user={selectedUser }
       open={showChangeEmailModal}
@@ -595,7 +571,6 @@ return (
       onClose={() => { setShowResetPasswordModal(false); setSelectedUser(null); refetch(); }}
     />
 
-    {/* ── Activate / Deactivate dialog ── */}
     <AlertDialog open={showActivateModal} onOpenChange={setShowActivateModal}>
       <AlertDialogContent className="rounded-3xl border-border bg-card">
         <AlertDialogHeader>
@@ -631,7 +606,6 @@ return (
       </AlertDialogContent>
     </AlertDialog>
 
-    {/* ── Delete dialog ── */}
     <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
       <AlertDialogContent className="rounded-3xl border-border bg-card">
         <AlertDialogHeader>

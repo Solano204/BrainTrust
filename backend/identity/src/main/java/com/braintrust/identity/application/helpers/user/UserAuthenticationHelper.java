@@ -53,7 +53,7 @@ public class UserAuthenticationHelper {
     public AuthenticationResult authenticate(AuthenticateUserCommand command) {
         long startTime = System.currentTimeMillis();
 
-        log.info("🔐 Starting authentication for email: {}", command.email());
+        log.info("Authenticating user email={}", command.email());
 
         try {
 
@@ -69,7 +69,7 @@ public class UserAuthenticationHelper {
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             if (!user.isActive()) {
-                log.warn("❌ Authentication rejected: Inactive user tried to login: {}", command.email());
+                log.warn("Authentication rejected: inactive user email={}", command.email());
                 return AuthenticationResult.failure("User account is inactive");
             }
 
@@ -81,18 +81,18 @@ public class UserAuthenticationHelper {
             UserDTO userDTO = toUserDTO(user, person);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Authentication successful in {}ms. User ID: {}", duration, user.getId().getValue());
+            log.info("Authentication successful durationMs={} userId={}", duration, user.getId().getValue());
 
             return AuthenticationResult.success(userDTO, accessToken, refreshToken, 900L);
 
         } catch (BadCredentialsException e) {
             long duration = System.currentTimeMillis() - startTime;
-            log.warn("❌ Authentication failed in {}ms: Invalid credentials for email: {}", duration, command.email());
+            log.warn("Authentication failed: invalid credentials durationMs={} email={}", duration, command.email());
             return AuthenticationResult.failure("Invalid email or password");
 
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("❌ Authentication failed in {}ms for email {}: {}", duration, command.email(), e.getMessage(), e);
+            log.error("Authentication error durationMs={} email={}: {}", duration, command.email(), e.getMessage(), e);
             return AuthenticationResult.failure("Authentication failed: " + e.getMessage());
         }
     }
@@ -101,7 +101,7 @@ public class UserAuthenticationHelper {
     public AuthenticationResult refreshToken(RefreshTokenCommand command) {
         long startTime = System.currentTimeMillis();
 
-        log.debug("🔄 Processing refresh token request");
+        log.debug("Processing refresh token request");
 
         try {
             String username = jwtService.extractUsername(command.refreshToken());
@@ -109,7 +109,7 @@ public class UserAuthenticationHelper {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             if (!jwtService.isRefreshTokenValid(command.refreshToken(), userDetails)) {
-                log.warn("❌ Token refresh rejected: Invalid refresh token for user: {}", username);
+                log.warn("Token refresh rejected: invalid refresh token for user={}", username);
                 return AuthenticationResult.failure("Invalid refresh token");
             }
 
@@ -118,7 +118,7 @@ public class UserAuthenticationHelper {
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
 
             if (!user.isActive()) {
-                log.warn("❌ Token refresh rejected: Inactive user tried to refresh: {}", username);
+                log.warn("Token refresh rejected: inactive user={}", username);
                 return AuthenticationResult.failure("User account is inactive");
             }
 
@@ -129,13 +129,13 @@ public class UserAuthenticationHelper {
             UserDTO userDTO = toUserDTO(user, person);
 
             long duration = System.currentTimeMillis() - startTime;
-            log.info("✅ Token refresh successful in {}ms for user: {}", duration, username);
+            log.info("Token refresh successful durationMs={} user={}", duration, username);
 
             return AuthenticationResult.success(userDTO, newAccessToken, newRefreshToken, 900L);
 
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            log.error("❌ Token refresh failed in {}ms: {}", duration, e.getMessage(), e);
+            log.error("Token refresh failed durationMs={}: {}", duration, e.getMessage(), e);
             return AuthenticationResult.failure("Token refresh failed: " + e.getMessage());
         }
     }

@@ -32,7 +32,7 @@ public class CourseMapper {
 
     public CourseMapper(UserService userService) {
         this.userService = userService;
-        log.info("✅ CourseMapper initialized with UserService");
+        log.info("CourseMapper initialized with UserService");
     }
 
     public CourseDTO mapToCourseDTO(Course course) {

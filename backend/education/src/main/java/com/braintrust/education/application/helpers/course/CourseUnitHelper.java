@@ -125,7 +125,7 @@ public class CourseUnitHelper {
     }
 
     public void deleteUnit(UnitId unitId) {
-        log.warn("🗑️ Deleting Unit ID: {} with cascade", unitId.getValue());
+        log.warn("Deleting Unit ID: {} with cascade", unitId.getValue());
 
         Course course = findCourseByUnitIdOrThrow(unitId);
 
@@ -133,10 +133,10 @@ public class CourseUnitHelper {
 
         if (removed) {
             courseRepository.save(course);
-            log.info("✅ Unit ID {} deleted successfully from Course ID {}",
+            log.info("Unit ID {} deleted successfully from Course ID {}",
                     unitId.getValue(), course.getId().getValue());
         } else {
-            log.error("❌ Unit ID {} not found in Course ID {}",
+            log.error("Unit ID {} not found in Course ID {}",
                     unitId.getValue(), course.getId().getValue());
             throw new IllegalStateException("Unit not found in course");
         }

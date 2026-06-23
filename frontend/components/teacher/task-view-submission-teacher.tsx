@@ -1,11 +1,14 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { PlagiarismResultsPanel } from "@/components/teacher/plagiarism-results-panel";
+import { fetchPlagiarismResultsForSubmission } from "@/components/teacher/api/teacher-submission";
 import {
   ArrowLeft,
   FileText,
@@ -43,6 +46,7 @@ interface PropsVistaDetalleEntrega {
   onBack: () => void;
   onUpdateGrade: (data: {
     submissionId: string;
+    teamMemberSubmissionIds?: string[];
     gradeValue: string;
     maxScore: string;
     feedback: string;
@@ -72,6 +76,14 @@ export function SubmissionDetailView({
   );
   const [mostrarModalAnalisisIA, setMostrarModalAnalisisIA] = React.useState(false);
 
+  const submissionId = data.submission?.id ?? null;
+  const { data: plagiarismResults } = useQuery({
+    queryKey: ["plagiarism", submissionId],
+    queryFn: () => fetchPlagiarismResultsForSubmission(submissionId!),
+    enabled: !!submissionId,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const porcentaje = React.useMemo(() => {
     if (!data.submission?.grade) return 0;
     const calificacionNum = Number(valorCalificacion || data.submission.grade.value);
@@ -82,6 +94,7 @@ export function SubmissionDetailView({
     if (!data.submission) return;
     onUpdateGrade({
       submissionId: data.submission.id,
+      teamMemberSubmissionIds: data.submission.teamMemberSubmissionIds,
       gradeValue: valorCalificacion,
       maxScore: data.maxPoints.toString(),
       feedback: retroalimentacion,
@@ -125,242 +138,162 @@ export function SubmissionDetailView({
     if (!analisis) return null;
 
     const esIA = analisis.isLikelyAI;
-    const segmentosIA = analisis.segments?.filter((s) => s.isLikelyAI) ?? [];
-    const segmentosHumanos = analisis.segments?.filter((s) => !s.isLikelyAI) ?? [];
-    const totalSegmentos = analisis.segments?.length ?? 0;
+    const segments = analisis.segments ?? [];
+    const content = data.submission?.content ?? "";
 
-    const probabilidadPromedio =
-      totalSegmentos > 0
-        ? (
-            (analisis.segments!.reduce(
-              (sum, seg) => sum + parseFloat(seg.probability || "0"),
-              0
-            ) /
-              totalSegmentos) *
-            100
-          ).toFixed(1)
-        : "N/A";
+    // Reconstruct annotated text from startIndex/endIndex
+    const sortedSegs = [...segments].sort((a, b) => a.startIndex - b.startIndex);
+    type Part = { text: string; segment?: typeof segments[0] };
+    const parts: Part[] = [];
+    let cursor = 0;
+    for (const seg of sortedSegs) {
+      const start = Math.max(seg.startIndex, cursor);
+      const end = seg.endIndex;
+      if (start > cursor) parts.push({ text: content.slice(cursor, start) });
+      if (start < end) parts.push({ text: content.slice(start, end), segment: seg });
+      cursor = end;
+    }
+    if (cursor < content.length) parts.push({ text: content.slice(cursor) });
 
+    const hasAnnotated = content.length > 0 && parts.length > 0;
 
-return (
-  <Dialog open={mostrarModalAnalisisIA} onOpenChange={setMostrarModalAnalisisIA}>
-    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-0 shadow-2xl">
-      {/* Encabezado del Modal */}
-      <div
-        className={`px-6 sm:px-8 py-6 rounded-t-2xl ${
-          esIA
-            ? "bg-gradient-to-r from-destructive/90 to-destructive"
-            : "bg-gradient-to-r from-primary to-primary/80"
-        }`}
-      >
-        <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="p-2.5 bg-white/20 rounded-xl flex-shrink-0">
-                {esIA ? (
-                  <Cpu className="h-6 w-6 text-white" />
-                ) : (
-                  <CheckCircle2 className="h-6 w-6 text-white" />
-                )}
-              </div>
-              <div>
-                <DialogTitle className="text-white text-lg sm:text-xl font-bold leading-tight">
-                  {esIA ? "Contenido Generado por IA Detectado" : "Contenido Escrito por Humano Confirmado"}
-                </DialogTitle>
-                <DialogDescription className="text-white/75 text-sm mt-0.5">
-                  Analizado el {formatearFecha(analisis.analyzedAt)}
-                </DialogDescription>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMostrarModalAnalisisIA(false)}
-              className="text-white hover:bg-white/20 rounded-lg h-8 w-8 flex-shrink-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </DialogHeader>
-      </div>
+    const segProb = (seg: typeof segments[0]) =>
+      parseFloat(seg.aiProbability || "0");
 
-      <div className="px-6 sm:px-8 py-6 space-y-6 bg-card">
-        {/* Métricas Clave */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            {
-              icon: <Activity className="h-4 w-4 text-primary" />,
-              label: "Probabilidad IA",
-              value: analisis.probability,
-              bg: "bg-primary/10",
-            },
-            {
-              icon: <BarChart3 className="h-4 w-4 text-accent" />,
-              label: "Confianza",
-              value: `${analisis.percentage}%`,
-              bg: "bg-accent/10",
-            },
-            {
-              icon: <Shield className="h-4 w-4 text-accent" />,
-              label: "Nivel",
-              value: analisis.confidenceLevel,
-              bg: "bg-accent/10",
-              capitalizar: true,
-            },
-            {
-              icon: <Cpu className="h-4 w-4 text-muted-foreground" />,
-              label: "Modelo",
-              value: analisis.modelUsed,
-              bg: "bg-muted",
-            },
-          ].map((metrica, i) => (
-            <div
-              key={i}
-              className={`${metrica.bg} rounded-xl p-4 flex flex-col gap-2 border border-border/50`}
-            >
-              <div className="flex items-center gap-1.5">
-                {metrica.icon}
-                <span className="text-xs font-medium text-muted-foreground">
-                  {metrica.label}
-                </span>
-              </div>
-              <span
-                className={`text-lg font-bold leading-none text-foreground ${
-                  metrica.capitalizar ? "capitalize" : ""
-                }`}
-              >
-                {metrica.value}
-              </span>
-            </div>
-          ))}
-        </div>
+    const segColor = (seg: typeof segments[0]) => {
+      const p = segProb(seg);
+      if (p >= 0.7) return "bg-destructive/20 text-destructive";
+      if (p >= 0.4) return "bg-orange-400/20 text-orange-700 dark:text-orange-400";
+      return "bg-primary/10 text-primary";
+    };
 
-        {/* Resumen de Segmentos — solo si existen segmentos */}
-        {totalSegmentos > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            <div className="border border-border rounded-xl p-4 text-center bg-secondary/50">
-              <p className="text-2xl font-bold text-foreground">{totalSegmentos}</p>
-              <p className="text-xs text-muted-foreground mt-1">Segmentos Totales</p>
-            </div>
-            <div className="border border-destructive/30 bg-destructive/10 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-destructive">{segmentosIA.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Generados por IA</p>
-            </div>
-            <div className="border border-primary/30 bg-primary/10 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{segmentosHumanos.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Escritos por Humano</p>
-            </div>
-          </div>
-        )}
-
-        {/* Lista de Detalle de Segmentos */}
-        {totalSegmentos > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Desglose de Segmentos
-              </h4>
-              <Badge variant="outline" className="text-xs">
-                {totalSegmentos} segmentos
-              </Badge>
-            </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {analisis.segments!.map((segmento, indice) => (
-                <div
-                  key={indice}
-                  className={`rounded-xl border p-4 ${
-                    segmento.isLikelyAI
-                      ? "bg-destructive/10 border-destructive/30"
-                      : "bg-primary/10 border-primary/30"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {segmento.isLikelyAI ? (
-                        <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />
-                      ) : (
-                        <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" />
-                      )}
-                      <span className="text-sm font-semibold text-foreground">
-                        Segmento {indice + 1}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>
-                        IA:{" "}
-                        <strong>
-                          {(
-                            parseFloat(segmento.aiProbability || "0") * 100
-                          ).toFixed(1)}
-                          %
-                        </strong>
-                      </span>
-                      <span>
-                        Pos: {segmento.startIndex}–{segmento.endIndex}
-                      </span>
-                    </div>
+    return (
+      <Dialog open={mostrarModalAnalisisIA} onOpenChange={setMostrarModalAnalisisIA}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-2xl border-0 shadow-2xl">
+          <div className={`px-6 sm:px-8 py-6 rounded-t-2xl ${esIA ? "bg-gradient-to-r from-destructive/90 to-destructive" : "bg-gradient-to-r from-primary to-primary/80"}`}>
+            <DialogHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="p-2.5 bg-white/20 rounded-xl flex-shrink-0">
+                    {esIA ? <Cpu className="h-6 w-6 text-white" /> : <CheckCircle2 className="h-6 w-6 text-white" />}
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed bg-card/60 rounded-lg px-3 py-2 italic">
-                    "{segmento.text}"
-                  </p>
-                  {segmento.reasoning && (
-                    <p className="text-xs text-muted-foreground mt-2 pl-1">
-                      💡 {segmento.reasoning}
-                    </p>
+                  <div>
+                    <DialogTitle className="text-white text-lg sm:text-xl font-bold leading-tight">
+                      {esIA ? "Contenido Generado por IA Detectado" : "Contenido Escrito por Humano Confirmado"}
+                    </DialogTitle>
+                    <DialogDescription className="text-white/75 text-sm mt-0.5">
+                      Analizado el {formatearFecha(analisis.analyzedAt)}
+                    </DialogDescription>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setMostrarModalAnalisisIA(false)} className="text-white hover:bg-white/20 rounded-lg h-8 w-8 flex-shrink-0">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <div className="px-6 sm:px-8 py-6 space-y-6 bg-card">
+            {/* Annotated full text */}
+            {hasAnnotated && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Texto con segmentos analizados
+                </h4>
+                <div className="rounded-xl border border-border p-4 bg-muted/20 text-sm leading-relaxed whitespace-pre-wrap">
+                  {parts.map((part, i) =>
+                    part.segment ? (
+                      <span key={i} className={`rounded px-0.5 ${segColor(part.segment)}`}>
+                        {part.text}
+                        <Badge
+                          variant={segProb(part.segment) >= 0.7 ? "destructive" : "outline"}
+                          className="ml-1 text-[10px] align-middle py-0 h-4 leading-none"
+                        >
+                          IA {(segProb(part.segment) * 100).toFixed(0)}%
+                        </Badge>
+                      </span>
+                    ) : (
+                      <span key={i} className="text-foreground">{part.text}</span>
+                    )
                   )}
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* Fallback: no full content — show segment list */}
+            {!hasAnnotated && segments.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm text-foreground flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Segmentos detectados
+                </h4>
+                <div className="space-y-2">
+                  {segments.map((seg, i) => (
+                    <div key={i} className={`rounded-xl border p-3 ${seg.isLikelyAI ? "bg-destructive/10 border-destructive/30" : "bg-primary/10 border-primary/30"}`}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-muted-foreground">Segmento {i + 1}</span>
+                        <Badge variant={seg.isLikelyAI ? "destructive" : "default"} className="text-xs">
+                          IA {(segProb(seg) * 100).toFixed(1)}%
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-foreground leading-relaxed">"{seg.text}"</p>
+                      {seg.reasoning && (
+                        <p className="text-xs text-muted-foreground mt-1.5">{seg.reasoning}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Final result */}
+            <div className={`rounded-xl border p-5 ${esIA ? "bg-destructive/10 border-destructive/30" : "bg-primary/10 border-primary/30"}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {esIA ? <XCircle className="h-5 w-5 text-destructive" /> : <CheckCircle2 className="h-5 w-5 text-primary" />}
+                  <span className="font-semibold text-foreground">Resultado Final</span>
+                </div>
+                <span className={`text-3xl font-bold ${esIA ? "text-destructive" : "text-primary"}`}>
+                  {analisis.percentage}%
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 ml-7">
+                Probabilidad total de contenido generado por IA —{" "}
+                {esIA ? "Se recomienda revisión manual" : "El contenido parece escrito por el estudiante"}
+              </p>
+            </div>
+
+            {/* Warning */}
+            <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                <div className="space-y-1 text-sm text-accent-foreground">
+                  <p className="font-semibold">Consideraciones Importantes</p>
+                  <ul className="space-y-1 text-xs text-accent-foreground/80 list-disc list-inside">
+                    <li>Las herramientas de detección de IA pueden producir falsos positivos o negativos.</li>
+                    <li>El contenido humano que sigue patrones predecibles puede ser marcado.</li>
+                    <li>Use esto como una señal — no como la única base para decisiones.</li>
+                    <li>Compare con el estilo de escritura previo del estudiante y otras entregas.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-border">
+              <Button variant="outline" onClick={() => setMostrarModalAnalisisIA(false)} className="rounded-lg">
+                Cerrar Informe
+              </Button>
             </div>
           </div>
-        )}
-
-        {/* Referencia de Análisis */}
-        <div className="bg-muted/50 rounded-xl p-4 border border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
-            <Hash className="h-3.5 w-3.5" /> ID de Referencia de Análisis
-          </p>
-          <code className="text-xs font-mono text-foreground/70 break-all">
-            {analisis.analysisId}
-          </code>
-        </div>
-
-        {/* Descargo de Responsabilidad */}
-        <div className="bg-accent/10 border border-accent/30 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-            <div className="space-y-1 text-sm text-accent-foreground">
-              <p className="font-semibold">Consideraciones Importantes</p>
-              <ul className="space-y-1 text-xs text-accent-foreground/80 list-disc list-inside">
-                <li>Las herramientas de detección de IA pueden producir falsos positivos o negativos.</li>
-                <li>El contenido humano que sigue patrones predecibles puede ser marcado.</li>
-                <li>Use esto como una señal — no como la única base para decisiones.</li>
-                <li>Compare con el estilo de escritura previo del estudiante y otras entregas.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Cerrar */}
-        <div className="flex justify-end pt-2 border-t border-border">
-          <Button
-            variant="outline"
-            onClick={() => setMostrarModalAnalisisIA(false)}
-            className="rounded-lg"
-          >
-            Cerrar Informe
-          </Button>
-        </div>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
-};
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   /* ─── Vista Principal ─── */
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Encabezado */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <Button onClick={onBack} variant="outline" className="gap-2 mb-4">
@@ -403,9 +336,7 @@ return (
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Izquierda / Principal */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Resumen de la Tarea */}
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">Resumen de la Tarea</h2>
@@ -467,7 +398,6 @@ return (
             </div>
           </Card>
 
-          {/* Entrega del Estudiante */}
           {data.submission && (
             <Card className="p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -571,9 +501,7 @@ return (
           )}
         </div>
 
-        {/* Barra Lateral Derecha */}
         <div className="space-y-6">
-          {/* Calificación */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4 text-foreground">Calificar Entrega</h2>
             <div className="space-y-4">
@@ -634,7 +562,6 @@ return (
             </div>
           </Card>
 
-          {/* Tarjeta de Análisis IA */}
           <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <Brain className="h-5 w-5 text-accent" />
@@ -699,7 +626,6 @@ return (
             )}
           </Card>
 
-          {/* Detalles de la Entrega */}
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4 text-foreground">Detalles de la Entrega</h2>
             <div className="space-y-3">
@@ -766,6 +692,10 @@ return (
       </div>
 
       <ModalAnalisisIA />
+
+      {submissionId && (
+        <PlagiarismResultsPanel results={plagiarismResults ?? []} />
+      )}
     </div>
   );
 }

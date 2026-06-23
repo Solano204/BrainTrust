@@ -141,7 +141,7 @@ public class JpaQuizRepositoryAdapter implements QuizRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }/**
-     * NEW — returns every quiz in the system.
+     * NEW  returns every quiz in the system.
      * Used by AdminStatsAnalysisService.getTopQuizzesByGrade().
      */
     @Override

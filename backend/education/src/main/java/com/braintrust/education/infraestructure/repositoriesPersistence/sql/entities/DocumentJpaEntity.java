@@ -80,7 +80,7 @@ public class DocumentJpaEntity {
     public PageJpaEntity getPage() { return page; }
     public void setPage(PageJpaEntity page) { this.page = page; }
 
-    // DocumentJpaEntity.java — add these two methods
+    // DocumentJpaEntity.java  add these two methods
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

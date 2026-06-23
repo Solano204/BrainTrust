@@ -13,5 +13,5 @@ public record UserDTO(
         LocalDateTime createdAt,
         PersonDTO person,
         String studentId,
-        List<RoleActivityDTO> activities  // ✅ NEW
+        List<RoleActivityDTO> activities
 ) {}

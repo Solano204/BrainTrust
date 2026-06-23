@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
@@ -181,7 +181,6 @@ const {
       <div className="flex-1 flex flex-col lg:ml-64">
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1">
-          {/* Navigation Header */}
           <div className="bg-card border-b border-border sticky top-16 z-10">
             <div className="flex overflow-x-auto scrollbar-hide">
               <button

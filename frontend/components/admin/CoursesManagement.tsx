@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
@@ -252,13 +252,12 @@ function CourseFormModal({ open, onClose, initialData, onSave, isSaving }: Cours
 
     if (!open) return null
 return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+  <div className="modal-overlay">
     <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border bg-card shadow-2xl flex flex-col">
 
-      {/* ── Header ── */}
       <div className="flex justify-between items-center px-5 py-4 sm:px-7 sm:py-5 border-b border-border sticky top-0 bg-card z-10 rounded-t-3xl">
         <div className="flex items-center gap-3">
-          <span className="w-9 h-9 rounded-2xl flex items-center justify-center bg-primary/10 flex-shrink-0">
+          <span className="icon-badge">
             <BookOpen className="h-4 w-4 text-primary" />
           </span>
           <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
@@ -268,16 +267,14 @@ return (
         <button
           onClick={onClose}
           disabled={isSaving}
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all disabled:opacity-40"
+          className="icon-btn transition-all disabled:opacity-40"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      {/* ── Body ── */}
       <div className="px-5 py-6 sm:px-7 space-y-6 flex-1 overflow-y-auto">
 
-        {/* Name + Code */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-semibold text-foreground">
@@ -309,7 +306,6 @@ return (
           </div>
         </div>
 
-        {/* Description */}
         <div className="space-y-1.5">
           <Label htmlFor="description" className="text-xs font-semibold text-foreground">
             Descripción
@@ -325,7 +321,6 @@ return (
           />
         </div>
 
-        {/* Grade + Group + Max students */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="grade" className="text-xs font-semibold text-foreground">
@@ -370,7 +365,6 @@ return (
           </div>
         </div>
 
-        {/* Dates */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="startDate" className="text-xs font-semibold text-foreground">
@@ -400,7 +394,6 @@ return (
           </div>
         </div>
 
-        {/* Image URL */}
         <div className="space-y-1.5">
           <Label htmlFor="urlImage" className="text-xs font-semibold text-foreground">
             URL de Imagen (Opcional)
@@ -425,7 +418,6 @@ return (
           )}
         </div>
 
-        {/* Status */}
         <div className="space-y-1.5">
           <Label htmlFor="status" className="text-xs font-semibold text-foreground">
             Estado *
@@ -445,7 +437,6 @@ return (
 
       </div>
 
-      {/* ── Footer ── */}
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 px-5 py-4 sm:px-7 border-t border-border bg-muted/30 sticky bottom-0 rounded-b-3xl">
         <button
           type="button"
@@ -530,7 +521,6 @@ export default function AdminCoursesModule() {
 return (
   <div className="p-4 md:p-6 lg:p-8 space-y-6 bg-background min-h-screen">
 
-    {/* ── Header ── */}
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
@@ -555,10 +545,8 @@ return (
       </div>
     </div>
 
-    {/* ── Stats ── */}
     <CourseStatsCards courses={courses} />
 
-    {/* ── Search ── */}
     <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -571,7 +559,6 @@ return (
       </div>
     </div>
 
-    {/* ── Tabs ── */}
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-muted/50 p-1 h-auto">
         {[
@@ -606,7 +593,6 @@ return (
           </div>
         ) : (
           <>
-            {/* ── Desktop Table ── */}
             <div className="hidden lg:block rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
               <table className="w-full">
                 <thead>
@@ -623,7 +609,6 @@ return (
                   {filteredCourses.map((course) => (
                     <tr key={course.id} className="hover:bg-muted/30 transition-colors group">
 
-                      {/* Course */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img
@@ -638,20 +623,17 @@ return (
                         </div>
                       </td>
 
-                      {/* Teacher */}
                       <td className="px-6 py-4">
                         <p className="text-sm text-foreground">{course.teacherName}</p>
                         <p className="text-xs text-muted-foreground">{course.unitsCount} unidades</p>
                       </td>
 
-                      {/* Status */}
                       <td className="px-6 py-4">
                         <Badge className={getStatusBadge(course.status)}>
                           {course.status === 'ACTIVE' ? 'ACTIVO' : course.status === 'DRAFT' ? 'BORRADOR' : 'ARCHIVADO'}
                         </Badge>
                       </td>
 
-                      {/* Enrollment */}
                       <td className="px-6 py-4">
                         <p className={`text-sm font-semibold ${getEnrollmentColor(course.enrolledStudents, course.maxStudents)}`}>
                           {course.enrolledStudents} / {course.maxStudents}
@@ -661,13 +643,11 @@ return (
                         </p>
                       </td>
 
-                      {/* Dates */}
                       <td className="px-6 py-4">
                         <p className="text-sm text-foreground">{new Date(course.startDate).toLocaleDateString('es-MX')}</p>
                         <p className="text-xs text-muted-foreground">{new Date(course.endDate).toLocaleDateString('es-MX')}</p>
                       </td>
 
-                      {/* Actions */}
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all">
@@ -691,7 +671,6 @@ return (
               </table>
             </div>
 
-            {/* ── Mobile Cards ── */}
             <div className="lg:hidden space-y-3">
               {filteredCourses.map((course) => (
                 <div key={course.id} className="bg-card rounded-2xl border border-border p-4 shadow-sm">
