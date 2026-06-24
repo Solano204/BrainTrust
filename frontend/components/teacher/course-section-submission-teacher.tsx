@@ -443,7 +443,7 @@ export function CourseTaskOverviewTeacher({
       onUpdateGrade={updateGrade.mutate}
       onDownloadAttachment={(attachment) => {
         if (attachment.storagePath) {
-          window.open(attachment.storagePath, '_blank');
+          window.open(`/api/download-document?url=${encodeURIComponent(attachment.storagePath)}`, '_blank');
         }
       }}
       isUpdatingGrade={updateGrade.isPending}

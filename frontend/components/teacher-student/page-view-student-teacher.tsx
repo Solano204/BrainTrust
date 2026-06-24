@@ -539,7 +539,7 @@ return (
                             variant="ghost"
                             size="sm"
                             className="hover:bg-secondary"
-                            onClick={() => window.open(archivo.storagePath, '_blank')}
+                            onClick={() => window.open(`/api/download-document?url=${encodeURIComponent(archivo.storagePath)}`, '_blank')}
                           >
                             <Download className="h-4 w-4" />
                           </Button>

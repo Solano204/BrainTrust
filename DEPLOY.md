@@ -329,3 +329,7 @@ Located at `/home/ec2-user/docker-compose.yml` on the EC2.
 - Postgres service name: `postgres`, container name: `braintrust-db`
 - App port: `8080:8080`
 - Volumes: `./logs:/app/logs`, `./storage:/app/storage`, `./init:/docker-entrypoint-initdb.d`
+
+
+
+docker-compose logs -f braintrust-backend

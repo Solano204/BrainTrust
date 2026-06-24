@@ -67,9 +67,15 @@ export const QuizView: React.FC<QuizViewProps> = ({
   console.log("DATOS DEL CUESTIONARIO", quiz)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswers>({});
-  const [timeRemaining, setTimeRemaining] = useState<number>(
-    quiz.timeLimit * 60
-  );
+  const [timeRemaining, setTimeRemaining] = useState<number>(() => {
+    if (quiz.availableUntil) {
+      const secondsUntilEnd = Math.floor(
+        (new Date(quiz.availableUntil).getTime() - Date.now()) / 1000
+      );
+      return Math.max(0, Math.min(secondsUntilEnd, quiz.timeLimit * 60));
+    }
+    return quiz.timeLimit * 60;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(
     new Set()

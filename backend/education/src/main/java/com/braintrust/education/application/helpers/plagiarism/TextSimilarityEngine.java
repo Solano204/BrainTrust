@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -171,29 +173,66 @@ public class TextSimilarityEngine {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> resp = restTemplate.postForEntity(
-                url, new HttpEntity<>(body, headers), Map.class);
+        int maxAttempts = 4;
+        long delayMs = 2000;
 
-        List<Map<String, Object>> candidates =
-                (List<Map<String, Object>>) resp.getBody().get("candidates");
-        if (candidates == null || candidates.isEmpty()) return "{}";
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                log.debug("Calling Gemini similarity API model={} attempt={}/{}", model, attempt, maxAttempts);
+                ResponseEntity<Map> resp = restTemplate.postForEntity(url, entity, Map.class);
 
-        Map<String, Object> candidate = candidates.get(0);
-        String finishReason = (String) candidate.get("finishReason");
-        if ("MAX_TOKENS".equals(finishReason)) {
-            log.warn("Gemini response truncated (MAX_TOKENS), falling back to Jaccard");
-            return "{}";
+                List<Map<String, Object>> candidates =
+                        (List<Map<String, Object>>) resp.getBody().get("candidates");
+                if (candidates == null || candidates.isEmpty()) return "{}";
+
+                Map<String, Object> candidate = candidates.get(0);
+                String finishReason = (String) candidate.get("finishReason");
+                if ("MAX_TOKENS".equals(finishReason)) {
+                    log.warn("Gemini response truncated (MAX_TOKENS), falling back to Jaccard");
+                    return "{}";
+                }
+
+                Map<String, Object> content = (Map<String, Object>) candidate.get("content");
+                if (content == null) return "{}";
+
+                List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+                if (parts == null || parts.isEmpty()) return "{}";
+
+                String text = (String) parts.get(0).get("text");
+                return text != null ? text.trim() : "{}";
+
+            } catch (HttpServerErrorException e) {
+                if (e.getStatusCode().value() == 503 && attempt < maxAttempts) {
+                    log.warn("Gemini similarity 503 attempt={}/{}, retrying in {}ms", attempt, maxAttempts, delayMs);
+                    try { Thread.sleep(delayMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    delayMs *= 2;
+                } else {
+                    throw e;
+                }
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode().value() == 429) {
+                    String errBody = e.getResponseBodyAsString();
+                    boolean quotaExhausted = errBody.contains("FreeTier") || errBody.contains("PerDay") || errBody.contains("per_day");
+                    if (quotaExhausted) {
+                        log.error("Gemini similarity daily quota exhausted (free tier), not retrying model={}", model);
+                        throw e;
+                    }
+                    if (attempt < maxAttempts) {
+                        log.warn("Gemini similarity 429 attempt={}/{}, retrying in {}ms", attempt, maxAttempts, delayMs);
+                        try { Thread.sleep(delayMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                        delayMs *= 2;
+                    } else {
+                        throw e;
+                    }
+                } else {
+                    throw e;
+                }
+            }
         }
 
-        Map<String, Object> content = (Map<String, Object>) candidate.get("content");
-        if (content == null) return "{}";
-
-        List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
-        if (parts == null || parts.isEmpty()) return "{}";
-
-        String text = (String) parts.get(0).get("text");
-        return text != null ? text.trim() : "{}";
+        throw new RuntimeException("Gemini similarity call failed after " + maxAttempts + " attempts");
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────

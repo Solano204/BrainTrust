@@ -43,6 +43,10 @@ RUN ls -lh app.jar && \
     echo "=== Application JAR ready ===" && \
     echo "Size: $(du -h app.jar | cut -f1)"
 
+# Create storage/log directories with correct ownership before dropping privileges
+RUN mkdir -p /app/storage/documents /app/logs && \
+    chown -R appuser:appgroup /app/storage /app/logs
+
 # Switch to non-root user
 USER appuser
 

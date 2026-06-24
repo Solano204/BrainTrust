@@ -116,7 +116,7 @@ return (
         existingSubmission={existingSubmission || undefined}
         onSubmit={handleSubmitAttempt}
         onDownloadAttachment={(attachment) => {
-          if (attachment.storagePath) window.open(attachment.storagePath, "_blank");
+          if (attachment.storagePath) window.open(`/api/download-document?url=${encodeURIComponent(attachment.storagePath)}`, "_blank");
         }}
         isSubmitting={isSubmitting}
         onExit={onExit}

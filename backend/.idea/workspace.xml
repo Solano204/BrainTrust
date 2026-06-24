@@ -6,6 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/repositories/GoogleGeminiAIProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/repositories/GoogleGeminiAIProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/gradebook/GradeSyncHelper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/gradebook/GradeSyncHelper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/valueobjects/Grade.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/domain/valueobjects/Grade.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -426,7 +431,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/aidetectition/src/main/java/com/braintrust/aidetectition/infraestructure/repositoriesPersistence/sql/repositories/GoogleGeminiAIProvider.java</url>
-          <line>106</line>
+          <line>108</line>
           <option name="timeStamp" value="86" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
