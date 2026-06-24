@@ -8,5 +8,6 @@ export const handleApiError = async (error: unknown): Promise<never> => {
         console.error("API Error:", errorMessage);
         throw new Error(errorMessage);
     }
-    throw error;
+    if (error instanceof Error) throw error;
+    throw new Error(String(error));
 };
