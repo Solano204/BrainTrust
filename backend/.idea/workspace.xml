@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/BrainTrustApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/container-app/src/main/java/com/braintrust/containerapp/BrainTrustApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/quiz/QuizDtoMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/education/src/main/java/com/braintrust/education/application/helpers/quiz/QuizDtoMapper.java" afterDir="false" />
-    </list>
+    <list default="true" id="ad2b635d-a7af-4b63-b652-52ad18efeef6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
