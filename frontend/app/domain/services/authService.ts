@@ -126,18 +126,25 @@ class AuthService {
   }
 
   private async realRefreshTokens(refreshToken: string): Promise<TokenResponse> {
-    const response = await fetch(`${this.baseURL}/api/users/refresh-token`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ refreshToken }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseURL}/api/users/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch (networkError) {
+      const err = new Error('Network error during token refresh');
+      (err as Error & { isNetworkError: boolean }).isNetworkError = true;
+      throw err;
+    }
 
     const result: AuthenticationResult = await response.json();
-    
+
     if (!result.success || !result.user || !result.accessToken || !result.refreshToken) {
       throw new Error(result.failureReason || 'Token refresh failed');
     }

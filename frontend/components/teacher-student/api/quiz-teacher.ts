@@ -115,7 +115,8 @@ function mapUpdateQuizToBackendCommand(
   if (quizData.timeLimit !== undefined) command.timeLimitMinutes = quizData.timeLimit;
   if (quizData.dueDate) {
     command.availableFrom = new Date().toISOString();
-    command.availableUntil = quizData.dueDate;
+    const d = new Date(quizData.dueDate);
+    command.availableUntil = isNaN(d.getTime()) ? quizData.dueDate : d.toISOString();
   }
 
   command.maxAttempts = quizData.maxAttempts || 1;

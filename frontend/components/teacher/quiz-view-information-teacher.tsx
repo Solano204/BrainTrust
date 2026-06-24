@@ -58,6 +58,13 @@ function calcularRedistribucionPuntos(
 
 
 
+function utcToLocalInput(utcStr?: string | null): string {
+  if (!utcStr) return "";
+  const d = new Date(utcStr);
+  if (isNaN(d.getTime())) return "";
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
   const { user } = useAuth();
   const tipoUsuario = user?.role === "teacher" ? "teacher" : "student";
@@ -95,7 +102,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
     description: datosQuiz.description,
     timeLimit: datosQuiz.timeLimit.toString(),
     maxGrade: datosQuiz.maxGrade,
-    dueDate: datosQuiz.dueDate ?? "",
+    dueDate: utcToLocalInput(datosQuiz.dueDate),
     acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
     allowSeeResults: datosQuiz.allowSeeResults,
     totalScore: datosQuiz.maxGrade ?? datosQuiz.maxGrade ?? 100,
@@ -238,7 +245,7 @@ export function VistaQuiz({ quiz: quizInicial, onClose }: PropsVistaQuiz) {
       description: datosQuiz.description,
       timeLimit: datosQuiz.timeLimit.toString(),
       maxGrade: datosQuiz.maxGrade,
-      dueDate: datosQuiz.dueDate ?? "",
+      dueDate: utcToLocalInput(datosQuiz.dueDate),
       acceptLateSubmissions: datosQuiz.acceptLateSubmissions,
       allowSeeResults: datosQuiz.allowSeeResults,
       totalScore: datosQuiz.maxGrade ?? 100,

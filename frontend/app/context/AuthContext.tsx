@@ -247,6 +247,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return true;
     } catch (error) {
+      if ((error as Error & { isNetworkError?: boolean }).isNetworkError) {
+        console.warn('Token refresh skipped: network unreachable');
+        return false;
+      }
       console.error('Token refresh failed:', error);
       await logout();
       return false;
