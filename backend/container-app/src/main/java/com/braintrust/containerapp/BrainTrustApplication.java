@@ -26,7 +26,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 })
 @EnableScheduling
 public class BrainTrustApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(BrainTrustApplication.class, args);
-    }
+public static void main(String[] args) {
+    SpringApplication.run(BrainTrustApplication.class, args);
+}
 }
