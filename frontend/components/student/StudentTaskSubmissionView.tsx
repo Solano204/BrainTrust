@@ -69,7 +69,7 @@ const Label = ({ children, className }: { children: React.ReactNode; className?:
 
 const handleDownload = (file: AttachmentData) => {
     const link = document.createElement('a')
-    link.href = file.storagePath
+    link.href = `/api/download-document?url=${encodeURIComponent(file.storagePath)}`
     link.download = file.name
     link.target = '_blank'
     document.body.appendChild(link)

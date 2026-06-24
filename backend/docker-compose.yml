@@ -54,9 +54,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./storage:/app/storage
+      - storage_data:/app/storage
       - ./logs:/app/logs
 
 volumes:
-  # Define the named volume
   postgres_data:
+  storage_data:

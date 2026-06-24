@@ -617,7 +617,7 @@ export function VistaInfoTarea({ assignment, onClose }: PropsVistaInfoTarea) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(archivo.storagePath, '_blank')}
+                            onClick={() => window.open(`/api/download-document?url=${encodeURIComponent(archivo.storagePath)}`, '_blank')}
                           >
                             <Download className="h-4 w-4" />
                           </Button>

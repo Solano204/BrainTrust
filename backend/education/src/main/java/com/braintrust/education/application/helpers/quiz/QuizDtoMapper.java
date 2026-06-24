@@ -5,11 +5,14 @@ import com.braintrust.education.application.dtos.commands.QuestionOptionDTO;
 import com.braintrust.education.domain.model.Quiz;
 import com.braintrust.education.domain.model.QuizQuestion;
 import org.springframework.stereotype.Component;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
 public class QuizDtoMapper {
+
+    private static final DateTimeFormatter ISO_WITH_SECONDS = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     public QuizDTO toQuizDTO(Quiz quiz) {
         return new QuizDTO(
@@ -18,8 +21,8 @@ public class QuizDtoMapper {
                 "Course Name",
                 quiz.getTitle(),
                 quiz.getDescription(),
-                quiz.getAvailableFrom()  != null ? quiz.getAvailableFrom().toString()  : null,
-                quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().toString() : null,
+                quiz.getAvailableFrom()  != null ? quiz.getAvailableFrom().format(ISO_WITH_SECONDS)  + "Z" : null,
+                quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().format(ISO_WITH_SECONDS) + "Z" : null,
                 quiz.getTimeLimitMinutes(),
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),
@@ -55,8 +58,8 @@ public class QuizDtoMapper {
                 quiz.getUnitId() != null ? quiz.getUnitId().getValue() : null,
                 quiz.getTitle(),
                 quiz.getDescription(),
-                quiz.getAvailableFrom()  != null ? quiz.getAvailableFrom().toString()  : null,
-                quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().toString() : null,
+                quiz.getAvailableFrom()  != null ? quiz.getAvailableFrom().format(ISO_WITH_SECONDS)  + "Z" : null,
+                quiz.getAvailableUntil() != null ? quiz.getAvailableUntil().format(ISO_WITH_SECONDS) + "Z" : null,
                 quiz.getTimeLimitMinutes(),
                 quiz.getMaxAttempts(),
                 quiz.isShuffleQuestions(),

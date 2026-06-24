@@ -25,9 +25,6 @@ public class Grade extends ValueObject {
         if (maxScore.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Max score must be positive");
         }
-        if (value.compareTo(maxScore) > 0) {
-            throw new IllegalArgumentException("Grade cannot exceed max score");
-        }
     }
 
     public BigDecimal getValue() {

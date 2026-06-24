@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
@@ -134,49 +136,82 @@ public class GoogleGeminiAIProvider implements AIDetectionProvider {
     }
 
     private String callGeminiAPI(String prompt) {
-        try {
-            String url = String.format(
-                    "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
-                    detectionModel, apiKey
-            );
+        String url = String.format(
+                "https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s",
+                detectionModel, apiKey
+        );
 
-            Map<String, Object> requestBody = new HashMap<>();
-            Map<String, Object> content = new HashMap<>();
-            content.put("parts", List.of(Map.of("text", prompt)));
-            requestBody.put("contents", List.of(content));
+        Map<String, Object> requestBody = new HashMap<>();
+        Map<String, Object> content = new HashMap<>();
+        content.put("parts", List.of(Map.of("text", prompt)));
+        requestBody.put("contents", List.of(content));
 
-            Map<String, Object> generationConfig = new HashMap<>();
-            generationConfig.put("temperature", 0.2);
-            generationConfig.put("maxOutputTokens", 16384);
-            generationConfig.put("topP", 0.8);
-            generationConfig.put("topK", 40);
-            requestBody.put("generationConfig", generationConfig);
+        Map<String, Object> generationConfig = new HashMap<>();
+        generationConfig.put("temperature", 0.2);
+        generationConfig.put("maxOutputTokens", 16384);
+        generationConfig.put("topP", 0.8);
+        generationConfig.put("topK", 40);
+        requestBody.put("generationConfig", generationConfig);
 
-            List<Map<String, Object>> safetySettings = Arrays.asList(
-                    Map.of("category", "HARM_CATEGORY_HARASSMENT", "threshold", "BLOCK_NONE"),
-                    Map.of("category", "HARM_CATEGORY_HATE_SPEECH", "threshold", "BLOCK_NONE"),
-                    Map.of("category", "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold", "BLOCK_NONE"),
-                    Map.of("category", "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold", "BLOCK_NONE")
-            );
-            requestBody.put("safetySettings", safetySettings);
+        List<Map<String, Object>> safetySettings = Arrays.asList(
+                Map.of("category", "HARM_CATEGORY_HARASSMENT", "threshold", "BLOCK_NONE"),
+                Map.of("category", "HARM_CATEGORY_HATE_SPEECH", "threshold", "BLOCK_NONE"),
+                Map.of("category", "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold", "BLOCK_NONE"),
+                Map.of("category", "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold", "BLOCK_NONE")
+        );
+        requestBody.put("safetySettings", safetySettings);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+        int maxAttempts = 4;
+        long delayMs = 2000;
 
-            log.debug("Calling Gemini API with model: {}", detectionModel);
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                log.debug("Calling Gemini API with model: {} (attempt {}/{})", detectionModel, attempt, maxAttempts);
+                ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+                String extractedText = extractTextFromResponse(response.getBody());
+                log.debug("Gemini API response received: {} characters", extractedText.length());
+                return extractedText;
 
-            String extractedText = extractTextFromResponse(response.getBody());
-
-            log.debug("Gemini API response received: {} characters", extractedText.length());
-            return extractedText;
-
-        } catch (Exception e) {
-            log.error("Gemini API call failed", e);
-            throw new RuntimeException("Gemini API call failed: " + e.getMessage());
+            } catch (HttpServerErrorException e) {
+                if (e.getStatusCode().value() == 503 && attempt < maxAttempts) {
+                    log.warn("Gemini 503 overload on attempt {}/{}, retrying in {}ms", attempt, maxAttempts, delayMs);
+                    try { Thread.sleep(delayMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                    delayMs *= 2;
+                } else {
+                    log.error("Gemini API call failed", e);
+                    throw new RuntimeException("Gemini API call failed: " + e.getMessage());
+                }
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode().value() == 429) {
+                    String body = e.getResponseBodyAsString();
+                    boolean quotaExhausted = body.contains("FreeTier") || body.contains("PerDay") || body.contains("per_day");
+                    if (quotaExhausted) {
+                        log.error("Gemini daily quota exhausted (free tier limit reached), not retrying model={}", detectionModel);
+                        throw new RuntimeException("Gemini API call failed: " + e.getMessage());
+                    }
+                    if (attempt < maxAttempts) {
+                        log.warn("Gemini 429 rate limit attempt={}/{}, retrying in {}ms", attempt, maxAttempts, delayMs);
+                        try { Thread.sleep(delayMs); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                        delayMs *= 2;
+                    } else {
+                        log.error("Gemini API call failed", e);
+                        throw new RuntimeException("Gemini API call failed: " + e.getMessage());
+                    }
+                } else {
+                    log.error("Gemini API call failed", e);
+                    throw new RuntimeException("Gemini API call failed: " + e.getMessage());
+                }
+            } catch (Exception e) {
+                log.error("Gemini API call failed", e);
+                throw new RuntimeException("Gemini API call failed: " + e.getMessage());
+            }
         }
+
+        throw new RuntimeException("Gemini API call failed after " + maxAttempts + " attempts");
     }
 
     @SuppressWarnings("unchecked")

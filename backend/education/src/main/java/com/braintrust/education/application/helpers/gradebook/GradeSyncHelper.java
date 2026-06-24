@@ -109,7 +109,10 @@ public class GradeSyncHelper {
 
         java.math.BigDecimal unitDisplayValue = unitGrade.getDisplayGradeValue();
         if (unitDisplayValue != null) {
-            Grade unitGradeForGradebook = new Grade(unitDisplayValue, new java.math.BigDecimal("100"));
+            java.math.BigDecimal effectiveMax = unitDisplayValue.compareTo(new java.math.BigDecimal("100")) > 0
+                    ? unitDisplayValue
+                    : new java.math.BigDecimal("100");
+            Grade unitGradeForGradebook = new Grade(unitDisplayValue, effectiveMax);
             gradebook.updateUnitGrade(unitId, unitGradeForGradebook);
             log.info("Unit grade synced to gradebook");
         }
