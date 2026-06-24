@@ -1,8 +1,7 @@
-﻿"use server";
+"use server";
 
 import axios from "axios";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 const MOCK_ENABLED = false; // Set to false to use real API
 
@@ -491,9 +490,10 @@ const handleApiError = async (error: unknown): Promise<never> => {
   if (axios.isAxiosError(error)) {
     const errorMessage = error.response?.data?.message || error.message;
     console.error("API Error:", errorMessage);
-    redirect("/courses");
+    throw new Error(errorMessage);
   }
-  throw error;
+  if (error instanceof Error) throw error;
+  throw new Error(String(error));
 };
 
 const simulateDelay = async (ms: number = 500): Promise<void> =>
@@ -938,7 +938,7 @@ export async function fetchPlagiarismResultsForSubmission(
 ): Promise<PlagiarismCheckDTO[]> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth-token")?.value;
+    const token = cookieStore.get("session")?.value;
     const apiClient = axios.create({
       baseURL: API_BASE_URL,
       headers: { Authorization: `Bearer ${token}` },
@@ -957,7 +957,7 @@ export async function fetchPlagiarismResultsForAssignment(
 ): Promise<PlagiarismCheckDTO[]> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth-token")?.value;
+    const token = cookieStore.get("session")?.value;
     const apiClient = axios.create({
       baseURL: API_BASE_URL,
       headers: { Authorization: `Bearer ${token}` },
@@ -977,7 +977,7 @@ export async function fetchStudentHistory(
 ): Promise<StudentHistoryDTO> {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get("auth-token")?.value;
+    const token = cookieStore.get("session")?.value;
     const apiClient = axios.create({
       baseURL: API_BASE_URL,
       headers: { Authorization: `Bearer ${token}` },
