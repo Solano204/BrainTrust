@@ -67,30 +67,35 @@ export async function uploadDocumentFile(
 }
 
 export async function getPdfContent(file: File): Promise<string> {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
+  // Extract PDF text client-side in the browser using pdfjs-dist.
+  // Avoids server/Lambda limitations entirely.
+  const pdfjsLib = await import("pdfjs-dist");
 
-    const baseUrl =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).href;
 
-    const response = await fetch(`${baseUrl}/api/extract-pdf-text`, {
-      method: "POST",
-      body: formData,
-    });
+  const arrayBuffer = await file.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(arrayBuffer),
+    useSystemFonts: true,
+  });
 
-    if (!response.ok) {
-      throw new Error(`PDF extraction failed: ${response.statusText}`);
-    }
+  const pdf = await loadingTask.promise;
+  const pages: string[] = [];
 
-    const data = await response.json();
-    return data.text;
-  } catch (error) {
-    console.error("Error extracting PDF content:", error);
-    throw error;
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => ("str" in item ? (item as { str: string }).str : ""))
+      .join(" ");
+    pages.push(pageText);
   }
+
+  pdf.cleanup();
+  return pages.join("\n").trim();
 }
 
 export async function getPdfContentFromUrl(pdfUrl: string): Promise<string> {
