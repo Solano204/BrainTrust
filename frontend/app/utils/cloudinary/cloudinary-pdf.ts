@@ -189,6 +189,15 @@ export async function deleteMultipleDocuments(
   }
 }
 
+export function getCloudinaryDownloadUrl(url: string): string {
+  if (!url) return url;
+  let downloadUrl = url;
+  if (url.includes('cloudinary.com') && url.includes('/upload/') && !url.includes('fl_attachment')) {
+    downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
+  }
+  return downloadUrl.replace(/ /g, '%20');
+}
+
 export function extractPublicIdFromUrl(url: string): string | null {
   try {
     const urlParts = url.split("/");
