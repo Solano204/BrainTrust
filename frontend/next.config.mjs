@@ -9,7 +9,7 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  serverExternalPackages: ['pdfreader', 'pdf2json', 'pdf-parse'],
+  serverExternalPackages: ['pdfreader', 'pdf2json', 'pdf-parse', 'pdfjs-dist'],
   turbopack: {},
   experimental: {
     serverActions: {
