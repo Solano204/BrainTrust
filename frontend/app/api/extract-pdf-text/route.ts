@@ -1,20 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PdfReader } from 'pdfreader';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require('pdf-parse');
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let fullText = '';
-
-    new PdfReader().parseBuffer(buffer, (err: any, item: any) => {
-      if (err) {
-        reject(err);
-      } else if (!item) {
-        resolve(fullText.trim());
-      } else if (item.text) {
-        fullText += item.text + ' ';
-      }
-    });
-  });
+  const data = await pdfParse(buffer);
+  return (data.text as string) || '';
 }
 
 export async function POST(request: NextRequest) {
@@ -26,7 +16,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    if (!file.type.includes('pdf')) {
+    const filename = file.name?.toLowerCase() ?? '';
+    const isPdf = file.type.includes('pdf') || filename.endsWith('.pdf');
+    console.log(`[PDF Extract] file="${file.name}" type="${file.type}" size=${file.size} isPdf=${isPdf}`);
+
+    if (!isPdf) {
       return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 });
     }
 
@@ -34,9 +28,11 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const text = await extractTextFromPDF(buffer);
 
+    console.log(`[PDF Extract] result: ${text.length} chars | preview: "${text.slice(0, 200)}"`);
+
     return NextResponse.json({ text, success: true });
   } catch (error) {
-    console.error('Error extracting PDF text:', error);
+    console.error('[PDF Extract] Error extracting PDF text:', error);
     return NextResponse.json(
       { error: 'Failed to extract PDF text' },
       { status: 500 }

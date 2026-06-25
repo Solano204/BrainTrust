@@ -147,9 +147,7 @@ public class SubmissionApplicationService implements SubmissionService {
                     command.frontendDocuments()
             );
 
-            String submissionContent = command.content() != null && !command.content().trim().isEmpty()
-                    ? command.content().trim()
-                    : "Submitted with frontend-extracted documents";
+            String submissionContent = submissionProcessor.getSubmissionContent(command.content());
 
             Submission submission = Submission.create(
                     assignmentId,
