@@ -59,7 +59,7 @@ export default function AdminCoursesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="bg-background p-6">
       <AdminCoursesList
         onEditCourse={handleEditCourse}
         onManageEnrollments={handleManageEnrollments}
