@@ -12,6 +12,7 @@ import { Plus, Trash2, GripVertical, X, Eye, EyeOff, AlertCircle, HelpCircle } f
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Question } from "@/app/domain/entities/CourseEntities"
+import { localInputToUTC } from "@/app/utils/dates"
 import { z } from "zod"
 import { useForm, Controller, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -237,7 +238,7 @@ export function CreadorQuiz({ open, onClose, onSave, unitId, courseId }: PropsCr
       maxGrade: data.maxGrade,
       totalScore: data.maxGrade,          // ← NUEVO campo para el backend
       allowSeeResults: data.allowSeeResults, // ← NUEVO campo para el backend
-      dueDate: data.dueDate || null,
+      dueDate: localInputToUTC(data.dueDate),
       acceptLateSubmissions: data.acceptLateSubmissions,
       questions: data.questions.map(q => ({
         ...q,

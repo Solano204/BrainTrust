@@ -1,5 +1,6 @@
 ﻿"use client";
 import React, { useState, useEffect } from "react";
+import { formatDateTime } from "@/app/utils/dates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -232,9 +233,9 @@ export const QuizView: React.FC<QuizViewProps> = ({
 
   const getStatusMessage = () => {
     if (isTooEarly)
-      return `El examen se habilitará el: ${startDate?.toLocaleString()}`;
+      return `El examen se habilitará el: ${formatDateTime(quiz.availableFrom ?? null)}`;
     if (isTooLate)
-      return `El examen finalizó el: ${endDate?.toLocaleString()}`;
+      return `El examen finalizó el: ${formatDateTime(quiz.dueDate)}`;
     return null;
   };
 
