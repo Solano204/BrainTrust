@@ -9,7 +9,6 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       if (err) {
         reject(err);
       } else if (!item) {
-
         resolve(fullText.trim());
       } else if (item.text) {
         fullText += item.text + ' ';
