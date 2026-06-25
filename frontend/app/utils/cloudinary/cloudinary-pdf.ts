@@ -67,8 +67,10 @@ export async function uploadDocumentFile(
 }
 
 export async function getPdfContent(file: File): Promise<string> {
-  // Extract PDF text client-side in the browser using pdfjs-dist.
-  // Avoids server/Lambda limitations entirely.
+  // pdfjs-dist uses browser-only globals; bail out on the server (SSR pass).
+  // In practice File is browser-only, so this guard is just for the bundler.
+  if (typeof window === "undefined") return "";
+
   const pdfjsLib = await import("pdfjs-dist");
 
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
