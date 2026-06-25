@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -406,10 +408,25 @@ public class SubmissionApplicationService implements SubmissionService {
             List<Document> documents,
             String submissionType) {
 
-        if (aiAnalysisHelper.shouldTriggerAIAnalysis(submissionFormat, documents, extractedText)) {
-            aiAnalysisHelper.triggerAIAnalysisAsync(submissionId, extractedText, submissionFormat);
-        } else {
+        if (!aiAnalysisHelper.shouldTriggerAIAnalysis(submissionFormat, documents, extractedText)) {
             aiAnalysisHelper.logAIAnalysisSkipReason(submissionFormat, documents, extractedText, submissionType);
+            return;
+        }
+
+        int textLen = extractedText != null ? extractedText.length() : 0;
+        log.info("AI analysis scheduled after-commit submission={} format={} textLength={}",
+                submissionId.getValue(), submissionFormat.name(), textLen);
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("Triggering async AI analysis post-commit submission={}", submissionId.getValue());
+                    aiAnalysisHelper.triggerAIAnalysisAsync(submissionId, extractedText, submissionFormat);
+                }
+            });
+        } else {
+            aiAnalysisHelper.triggerAIAnalysisAsync(submissionId, extractedText, submissionFormat);
         }
     }
 

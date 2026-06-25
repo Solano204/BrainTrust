@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -46,11 +47,15 @@ public class AnalysisApplicationService implements AnalysisService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AnalysisId analyzeSubmission(AnalyzeSubmissionCommand command) throws JsonProcessingException {
         SubmissionId submissionId = SubmissionId.fromString(command.submissionId());
         long startTime = System.currentTimeMillis();
 
-        log.info("Starting text analysis for submission={}", submissionId.getValue());
+        log.info("AI analysis started submission={} textLength={} model={}",
+                submissionId.getValue(),
+                command.content() != null ? command.content().length() : 0,
+                command.preferredModel());
 
         validateContent(command.content());
 
