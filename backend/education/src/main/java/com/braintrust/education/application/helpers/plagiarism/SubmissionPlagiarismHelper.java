@@ -7,6 +7,7 @@ import com.braintrust.education.application.ports.out.SubmissionRepository;
 import com.braintrust.education.domain.model.PlagiarismCheck;
 import com.braintrust.education.domain.model.Submission;
 import com.braintrust.education.domain.valueobjects.AssignmentId;
+import com.braintrust.education.domain.valueobjects.SimilarParagraph;
 import com.braintrust.education.domain.valueobjects.SubmissionId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class SubmissionPlagiarismHelper {
@@ -75,7 +77,9 @@ public class SubmissionPlagiarismHelper {
 
             for (Submission peer : peers) {
                 if (peer.getId().getValue().equals(submissionId.getValue())) continue;
-                if (plagiarismCheckRepository.existsBySourceAndCompared(submissionId, peer.getId())) continue;
+                // Skip if either direction already exists to avoid duplicate comparisons
+                if (plagiarismCheckRepository.existsBySourceAndCompared(submissionId, peer.getId()) ||
+                        plagiarismCheckRepository.existsBySourceAndCompared(peer.getId(), submissionId)) continue;
 
                 String peerText = resolveTextForSubmission(peer);
                 if (peerText == null || peerText.isBlank()) {
@@ -84,20 +88,29 @@ public class SubmissionPlagiarismHelper {
                 }
 
                 try {
-                    PlagiarismCheck check = PlagiarismCheck.create(
-                            submissionId, peer.getId(), peer.getStudentId(), assignmentId);
-
                     TextSimilarityEngine.PlagiarismAnalysis analysis =
                             similarityEngine.analyze(extractedText, peerText);
 
-                    check.complete(analysis.overallSimilarity(), analysis.similarParagraphs());
+                    // Forward: new submission → peer
+                    PlagiarismCheck forwardCheck = PlagiarismCheck.create(
+                            submissionId, peer.getId(), peer.getStudentId(), assignmentId);
+                    forwardCheck.complete(analysis.overallSimilarity(), analysis.similarParagraphs());
+                    checks.add(forwardCheck);
+
+                    // Reverse: peer → new submission (so teacher viewing the peer's submission also sees the match)
+                    List<SimilarParagraph> reversedParagraphs = analysis.similarParagraphs().stream()
+                            .map(p -> new SimilarParagraph(
+                                    p.getParagraphIndex(), p.getMatchedText(), p.getOriginalText(), p.getSimilarity()))
+                            .collect(Collectors.toList());
+                    PlagiarismCheck reverseCheck = PlagiarismCheck.create(
+                            peer.getId(), submissionId, source.getStudentId(), assignmentId);
+                    reverseCheck.complete(analysis.overallSimilarity(), reversedParagraphs);
+                    checks.add(reverseCheck);
 
                     if (analysis.overallSimilarity().doubleValue() >= highSimilarityThreshold) {
                         log.warn("High similarity detected submission={} comparedTo={} similarity={}%",
                                 submissionId.getValue(), peer.getId().getValue(), analysis.overallSimilarity());
                     }
-
-                    checks.add(check);
                 } catch (Exception e) {
                     log.error("Plagiarism comparison failed submission={} peer={}: {}",
                             submissionId.getValue(), peer.getId().getValue(), e.getMessage());

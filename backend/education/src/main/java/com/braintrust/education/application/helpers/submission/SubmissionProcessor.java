@@ -140,7 +140,12 @@ public class SubmissionProcessor {
         StringBuilder combinedText = new StringBuilder();
 
         for (FrontendDocumentDTOSub document : frontendDocuments) {
-            if (document.extractedText() != null && !document.extractedText().trim().isEmpty()) {
+            String docText = document.extractedText();
+            log.info("Document received file={} extractedTextLength={} preview={}",
+                    document.originalFilename(),
+                    docText != null ? docText.length() : "null",
+                    docText != null && !docText.isEmpty() ? docText.substring(0, Math.min(200, docText.length())) : "(empty)");
+            if (docText != null && !docText.trim().isEmpty()) {
                 if (combinedText.length() > 0) {
                     combinedText.append("\n\n--- Document: ")
                             .append(document.originalFilename())
