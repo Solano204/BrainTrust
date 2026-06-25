@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const runtime = 'nodejs';
+
+// Import from the internal lib path to avoid pdf-parse's test harness, which
+// reads from the filesystem at module load time and crashes in Vercel serverless.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse');
+const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   const data = await pdfParse(buffer);
