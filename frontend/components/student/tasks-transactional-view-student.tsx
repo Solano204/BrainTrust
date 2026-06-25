@@ -1,5 +1,6 @@
 ﻿"use client";
 import React, { useState } from "react";
+import { getCloudinaryDownloadUrl } from "@/app/utils/cloudinary/cloudinary-pdf";
 import { TaskSubmissionView } from "@/components/student/quiz-view-tasks-student";
 import { useStudentTaskSubmission } from "@/components/teacher-student/hooks/submission-hooks";
 import { Assignment } from "@/app/domain/entities";
@@ -116,7 +117,7 @@ return (
         existingSubmission={existingSubmission || undefined}
         onSubmit={handleSubmitAttempt}
         onDownloadAttachment={(attachment) => {
-          if (attachment.storagePath) window.open(`/api/download-document?url=${encodeURIComponent(attachment.storagePath)}`, "_blank");
+          if (attachment.storagePath) window.open(getCloudinaryDownloadUrl(attachment.storagePath), "_blank");
         }}
         isSubmitting={isSubmitting}
         onExit={onExit}

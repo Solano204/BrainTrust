@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import * as React from "react";
+import { getCloudinaryDownloadUrl } from "@/app/utils/cloudinary/cloudinary-pdf";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -617,7 +618,7 @@ export function VistaInfoTarea({ assignment, onClose }: PropsVistaInfoTarea) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => window.open(`/api/download-document?url=${encodeURIComponent(archivo.storagePath)}`, '_blank')}
+                            onClick={() => window.open(getCloudinaryDownloadUrl(archivo.storagePath), '_blank')}
                           >
                             <Download className="h-4 w-4" />
                           </Button>

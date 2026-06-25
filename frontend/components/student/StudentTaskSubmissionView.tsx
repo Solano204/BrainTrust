@@ -1,6 +1,7 @@
 ﻿"use client"
 
 import React from 'react'
+import { getCloudinaryDownloadUrl } from "@/app/utils/cloudinary/cloudinary-pdf"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -68,13 +69,7 @@ const Label = ({ children, className }: { children: React.ReactNode; className?:
 )
 
 const handleDownload = (file: AttachmentData) => {
-    const link = document.createElement('a')
-    link.href = `/api/download-document?url=${encodeURIComponent(file.storagePath)}`
-    link.download = file.name
-    link.target = '_blank'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    window.open(getCloudinaryDownloadUrl(file.storagePath), '_blank');
 }
 
 export function StudentTaskSubmissionView({ assignment, onExit }: StudentTaskSubmissionViewProps) {

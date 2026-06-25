@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState, useMemo } from "react";
+import { getCloudinaryDownloadUrl } from "@/app/utils/cloudinary/cloudinary-pdf";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -443,7 +444,7 @@ export function CourseTaskOverviewTeacher({
       onUpdateGrade={updateGrade.mutate}
       onDownloadAttachment={(attachment) => {
         if (attachment.storagePath) {
-          window.open(`/api/download-document?url=${encodeURIComponent(attachment.storagePath)}`, '_blank');
+          window.open(getCloudinaryDownloadUrl(attachment.storagePath), '_blank');
         }
       }}
       isUpdatingGrade={updateGrade.isPending}
