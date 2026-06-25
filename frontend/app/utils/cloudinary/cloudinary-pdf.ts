@@ -67,26 +67,32 @@ export async function uploadDocumentFile(
 }
 
 export async function getPdfContent(file: File): Promise<string> {
-  // pdfjs-dist uses browser-only globals; bail out on the server (SSR pass).
-  // In practice File is browser-only, so this guard is just for the bundler.
-  if (typeof window === "undefined") return "";
+  const arrayBuffer = await file.arrayBuffer();
 
+  if (typeof window === "undefined") {
+    // Server Action context (Node.js / Vercel Lambda).
+    // pdf-parse is in serverExternalPackages so Turbopack never bundles it;
+    // it is loaded at runtime as a native Node.js module.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+    const result = await pdfParse(Buffer.from(arrayBuffer));
+    return (result.text as string) || "";
+  }
+
+  // Browser fallback (not currently used since submitTask is "use server",
+  // but kept for safety in case getPdfContent is called client-side).
   const pdfjsLib = await import("pdfjs-dist");
-
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     "pdfjs-dist/build/pdf.worker.min.mjs",
     import.meta.url
   ).href;
 
-  const arrayBuffer = await file.arrayBuffer();
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(arrayBuffer),
     useSystemFonts: true,
   });
-
   const pdf = await loadingTask.promise;
   const pages: string[] = [];
-
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
@@ -95,7 +101,6 @@ export async function getPdfContent(file: File): Promise<string> {
       .join(" ");
     pages.push(pageText);
   }
-
   pdf.cleanup();
   return pages.join("\n").trim();
 }
